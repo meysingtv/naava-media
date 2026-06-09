@@ -8,20 +8,22 @@ import { useTheme } from "@/lib/theme-context";
 import { radius, space } from "@/lib/theme";
 import type { FahrstundeMitRelationen, FahrstundeTyp } from "@/lib/types";
 
-// Farbe = Art der Fahrt.
+// Farbe = Art der Fahrt; ausgefallen = grau.
 const TYP_FARBE: Record<FahrstundeTyp, string> = {
   normal: "#2563EB",
   ueberland: "#16A34A",
   autobahn: "#EA580C",
   nacht: "#4F46E5",
-  pruefung: "#DC2626",
+  pruefung: "#4F46E5",
 };
+
+const PRUEFUNG = "#DB2777";
 
 export function FahrstundeKarte({ stunde, onPress }: { stunde: FahrstundeMitRelationen; onPress?: () => void }) {
   const { colors } = useTheme();
   const abgeschlossen = stunde.status === "abgeschlossen";
   const ausgefallen = stunde.status === "ausgefallen";
-  const typFarbe = ausgefallen ? colors.textMuted : TYP_FARBE[stunde.typ];
+  const farbe = ausgefallen ? "#64748B" : stunde.typ === "pruefung" ? PRUEFUNG : TYP_FARBE[stunde.typ];
   const schueler = stunde.fahrschueler;
   const name = schueler ? `${schueler.vorname} ${schueler.nachname}` : "Ohne Schüler";
   const meta = [
@@ -42,64 +44,29 @@ export function FahrstundeKarte({ stunde, onPress }: { stunde: FahrstundeMitRela
     <Pressable
       onPress={onPress}
       style={({ pressed }) => ({
-        flexDirection: "row",
-        backgroundColor: colors.card,
+        backgroundColor: farbe,
         borderRadius: radius.xl,
-        overflow: "hidden",
+        padding: space(4),
+        gap: space(2),
         opacity: pressed ? 0.92 : 1,
       })}
     >
-      {/* Farbiger Zeit-Block links */}
-      <View
-        style={{
-          width: 86,
-          paddingVertical: space(4),
-          paddingHorizontal: space(2),
-          backgroundColor: typFarbe,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "800" }}>{formatUhrzeit(stunde.uhrzeit)}</Text>
-        <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12, marginTop: 2 }}>
-          bis {endUhrzeit(stunde.uhrzeit, stunde.dauer_minuten)}
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>
+          {formatUhrzeit(stunde.uhrzeit)} – {endUhrzeit(stunde.uhrzeit, stunde.dauer_minuten)}
         </Text>
-      </View>
 
-      {/* Inhalt rechts */}
-      <View style={{ flex: 1, padding: space(4), gap: space(1.5), justifyContent: "center" }}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <Text style={{ fontSize: 11, fontWeight: "700", color: typFarbe, letterSpacing: 0.4 }}>
-            {TYP_LABEL[stunde.typ].toUpperCase()}
-          </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: space(2) }}>
           {abgeschlossen ? (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Ionicons name="checkmark-circle" size={14} color={colors.success} />
-              <Text style={{ fontSize: 11, fontWeight: "700", color: colors.success }}>Gefahren</Text>
+            <View style={{ backgroundColor: "#FFFFFF", paddingHorizontal: space(2), paddingVertical: 3, borderRadius: radius.sm }}>
+              <Text style={{ fontSize: 11, fontWeight: "800", color: farbe }}>Gefahren</Text>
             </View>
           ) : ausgefallen ? (
-            <Text style={{ fontSize: 11, fontWeight: "700", color: colors.textMuted }}>Ausgefallen</Text>
+            <View style={{ backgroundColor: "rgba(255,255,255,0.25)", paddingHorizontal: space(2), paddingVertical: 3, borderRadius: radius.sm }}>
+              <Text style={{ fontSize: 11, fontWeight: "800", color: "#FFFFFF" }}>Ausgefallen</Text>
+            </View>
           ) : null}
-        </View>
 
-        <Text
-          numberOfLines={1}
-          style={{
-            color: ausgefallen ? colors.textMuted : colors.text,
-            fontSize: 17,
-            fontWeight: "700",
-            textDecorationLine: ausgefallen ? "line-through" : "none",
-          }}
-        >
-          {name}
-        </Text>
-
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space(2) }}>
-          <Text numberOfLines={1} style={{ fontSize: 13, color: colors.textMuted, flex: 1 }}>
-            {meta || `${stunde.dauer_minuten} Min`}
-          </Text>
-
-          {/* Schnell-Abzeichnen */}
           {!ausgefallen ? (
             <Pressable
               onPress={toggle}
@@ -110,16 +77,26 @@ export function FahrstundeKarte({ stunde, onPress }: { stunde: FahrstundeMitRela
                 borderRadius: 16,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: abgeschlossen ? colors.success : "transparent",
-                borderWidth: abgeschlossen ? 0 : 1.5,
-                borderColor: colors.separator,
+                backgroundColor: abgeschlossen ? "#FFFFFF" : "rgba(255,255,255,0.22)",
               }}
             >
-              <Ionicons name="checkmark" size={18} color={abgeschlossen ? "#FFFFFF" : colors.textMuted} />
+              <Ionicons name="checkmark" size={19} color={abgeschlossen ? farbe : "#FFFFFF"} />
             </Pressable>
           ) : null}
         </View>
       </View>
+
+      <Text
+        numberOfLines={1}
+        style={{ color: "#FFFFFF", fontSize: 19, fontWeight: "800", textDecorationLine: ausgefallen ? "line-through" : "none" }}
+      >
+        {name}
+      </Text>
+
+      <Text numberOfLines={1} style={{ color: "rgba(255,255,255,0.9)", fontSize: 13, fontWeight: "500" }}>
+        {TYP_LABEL[stunde.typ]}
+        {meta ? ` · ${meta}` : ""}
+      </Text>
     </Pressable>
   );
 }
