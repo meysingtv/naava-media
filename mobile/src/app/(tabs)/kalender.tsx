@@ -1,26 +1,58 @@
-import { useMemo } from "react";
-import { RefreshControl, ScrollView, Text } from "react-native";
+import { useMemo, useState } from "react";
+import { useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
+import { Calendar, type ICalendarEventBase } from "react-native-big-calendar";
+import dayjs from "dayjs";
+import "dayjs/locale/de";
 
-import { FahrstundeRow } from "@/components/fahrstunde-row";
+import { CenterInfo, Screen, ScreenHeader, Segmented } from "@/components/ui";
 import { HeaderPlus } from "@/components/header-plus";
-import { CenterInfo, Row, Screen, ScreenHeader, Section } from "@/components/ui";
 import { useLoader } from "@/lib/use-loader";
 import { supabase } from "@/lib/supabase";
-import { formatDatumLang, heuteISO, plusTageISO } from "@/lib/format";
+import { heuteISO, plusTageISO } from "@/lib/format";
+import { TYP_LABEL } from "@/lib/constants";
 import { useTheme } from "@/lib/theme-context";
 import { space } from "@/lib/theme";
-import { FAHRSTUNDE_SELECT, type FahrstundeMitRelationen } from "@/lib/types";
+import {
+  FAHRSTUNDE_SELECT,
+  type FahrstundeMitRelationen,
+  type FahrstundeStatus,
+  type FahrstundeTyp,
+} from "@/lib/types";
 
-const TAGE_VORAUS = 28;
+dayjs.locale("de");
 
-export default function KalenderScreen() {
+type Modus = "day" | "3days" | "week";
+
+interface Termin extends ICalendarEventBase {
+  id: string;
+  typ: FahrstundeTyp;
+  status: FahrstundeStatus;
+}
+
+const TERMIN_FARBE: Record<FahrstundeTyp, string> = {
+  normal: "#2563EB",
+  ueberland: "#16A34A",
+  autobahn: "#EA580C",
+  nacht: "#4F46E5",
+  pruefung: "#DC2626",
+};
+
+function isoDatum(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+export default function TerminplanerScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const von = useMemo(() => heuteISO(), []);
-  const bis = useMemo(() => plusTageISO(von, TAGE_VORAUS), [von]);
+  const [modus, setModus] = useState<Modus>("3days");
+  const [hoehe, setHoehe] = useState(0);
+  const { height: fensterHoehe } = useWindowDimensions();
 
-  const { data, loading, refreshing, error, offline, refresh } = useLoader<FahrstundeMitRelationen[]>(
+  const von = useMemo(() => plusTageISO(heuteISO(), -14), []);
+  const bis = useMemo(() => plusTageISO(heuteISO(), 45), []);
+
+  const { data, loading, error } = useLoader<FahrstundeMitRelationen[]>(
     () =>
       supabase
         .from("fahrstunde")
@@ -28,53 +60,75 @@ export default function KalenderScreen() {
         .gte("datum", von)
         .lte("datum", bis)
         .order("datum", { ascending: true })
-        .order("uhrzeit", { ascending: true })
         .returns<FahrstundeMitRelationen[]>(),
-    { cacheKey: `kalender-${von}` },
+    { cacheKey: "terminplaner" },
   );
 
-  const tage = useMemo(() => {
-    const map = new Map<string, FahrstundeMitRelationen[]>();
-    for (const stunde of data ?? []) {
-      const liste = map.get(stunde.datum) ?? [];
-      liste.push(stunde);
-      map.set(stunde.datum, liste);
-    }
-    return Array.from(map, ([datum, stunden]) => ({ datum, stunden }));
+  const events = useMemo<Termin[]>(() => {
+    return (data ?? []).map((s) => {
+      const start = new Date(`${s.datum}T${s.uhrzeit}`);
+      const end = new Date(start.getTime() + (s.dauer_minuten ?? 45) * 60000);
+      const name = s.fahrschueler ? `${s.fahrschueler.vorname} ${s.fahrschueler.nachname}` : TYP_LABEL[s.typ];
+      return { id: s.id, title: name, start, end, typ: s.typ, status: s.status };
+    });
   }, [data]);
 
-  if (loading) return <CenterInfo loading />;
-  if (error) return <CenterInfo text={error} error />;
-
-  function label(datum: string) {
-    if (datum === von) return `Heute · ${formatDatumLang(datum)}`;
-    if (datum === plusTageISO(von, 1)) return `Morgen · ${formatDatumLang(datum)}`;
-    return formatDatumLang(datum);
-  }
+  const calTheme = useMemo(
+    () => ({
+      palette: {
+        primary: { main: colors.accent, contrastText: colors.onAccent },
+        nowIndicator: colors.danger,
+        gray: {
+          "100": colors.separator,
+          "200": colors.separator,
+          "300": colors.textMuted,
+          "500": colors.textMuted,
+          "800": colors.text,
+        },
+      },
+    }),
+    [colors],
+  );
 
   return (
     <Screen>
       <ScreenHeader title="Terminplaner" right={<HeaderPlus href="/fahrstunde/neu" />} />
-      <ScrollView
-        contentContainerStyle={{ padding: space(4), paddingBottom: space(8) }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />}
-      >
-        {offline ? <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: space(3) }}>Offline – zuletzt geladene Daten</Text> : null}
+      <View style={{ paddingHorizontal: space(4), paddingBottom: space(3) }}>
+        <Segmented<Modus>
+          options={[
+            { value: "day", label: "Tag" },
+            { value: "3days", label: "3 Tage" },
+            { value: "week", label: "Woche" },
+          ]}
+          value={modus}
+          onChange={setModus}
+        />
+      </View>
 
-        {tage.length === 0 ? (
-          <Section>
-            <Row title="Keine Fahrstunden in den nächsten Wochen" />
-          </Section>
+      <View style={{ flex: 1 }} onLayout={(e) => setHoehe(e.nativeEvent.layout.height)}>
+        {loading ? (
+          <CenterInfo loading />
+        ) : error ? (
+          <CenterInfo text={error} error />
         ) : (
-          tage.map((t) => (
-            <Section key={t.datum} title={label(t.datum)}>
-              {t.stunden.map((st) => (
-                <FahrstundeRow key={st.id} stunde={st} onPress={() => router.push(`/fahrstunde/${st.id}`)} />
-              ))}
-            </Section>
-          ))
+          <Calendar<Termin>
+            events={events}
+            height={hoehe > 0 ? hoehe : fensterHoehe - 220}
+            mode={modus}
+            ampm={false}
+            weekStartsOn={1}
+            locale="de"
+            scrollOffsetMinutes={7 * 60}
+            theme={calTheme}
+            eventCellStyle={(ev) => ({
+              backgroundColor: ev.status === "ausgefallen" ? colors.textMuted : TERMIN_FARBE[ev.typ],
+              borderRadius: 6,
+            })}
+            onPressEvent={(ev) => router.push(`/fahrstunde/${ev.id}`)}
+            onPressCell={(d) => router.push(`/fahrstunde/neu?datum=${isoDatum(d)}`)}
+          />
         )}
-      </ScrollView>
+      </View>
     </Screen>
   );
 }
