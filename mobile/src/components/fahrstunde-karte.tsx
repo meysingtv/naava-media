@@ -45,7 +45,6 @@ export function FahrstundeKarte({ stunde, onPress }: { stunde: FahrstundeMitRela
       onPress={onPress}
       style={({ pressed }) => ({
         backgroundColor: farbe,
-        borderRadius: radius.xl,
         padding: space(4),
         gap: space(2),
         opacity: pressed ? 0.92 : 1,

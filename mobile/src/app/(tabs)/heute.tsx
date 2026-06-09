@@ -1,33 +1,26 @@
-import { useMemo } from "react";
-import { RefreshControl, ScrollView, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import { FahrstundeKarte } from "@/components/fahrstunde-karte";
 import { HeaderPlus } from "@/components/header-plus";
 import { HomeHeader } from "@/components/home-header";
-import { CenterInfo, Screen } from "@/components/ui";
+import { CenterInfo, Screen, Segmented } from "@/components/ui";
 import { useLoader } from "@/lib/use-loader";
 import { useRealtime } from "@/lib/use-realtime";
 import { supabase } from "@/lib/supabase";
 import { formatDatumLang, heuteISO, plusTageISO } from "@/lib/format";
 import { useTheme } from "@/lib/theme-context";
-import { radius, space, type ThemeColors } from "@/lib/theme";
-import { FAHRSTUNDE_SELECT, type FahrstundeMitRelationen } from "@/lib/types";
+import { space } from "@/lib/theme";
+import { FAHRSTUNDE_SELECT, type FahrstundeMitRelationen, type Pinnwand } from "@/lib/types";
 
-function StatPill({ label, value, colors }: { label: string; value: number; colors: ThemeColors }) {
-  return (
-    <View style={{ flex: 1, backgroundColor: colors.card, borderRadius: radius.lg, paddingVertical: space(3), paddingHorizontal: space(3.5) }}>
-      <Text style={{ fontSize: 11, color: colors.textMuted, textTransform: "uppercase", letterSpacing: 0.4, fontWeight: "600" }}>
-        {label}
-      </Text>
-      <Text style={{ fontSize: 22, fontWeight: "800", color: colors.text, marginTop: 2 }}>{value}</Text>
-    </View>
-  );
-}
+type Tab = "termine" | "aufgaben";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const [tab, setTab] = useState<Tab>("termine");
   const von = useMemo(() => heuteISO(), []);
   const bis = useMemo(() => plusTageISO(von, 7), [von]);
 
@@ -44,32 +37,20 @@ export default function HomeScreen() {
     { cacheKey: `home-${von}` },
   );
 
-  const stats = useLoader<{ woche: number; schueler: number; pruefungen: number }>(
-    async () => {
-      const d = new Date();
-      const tag = (d.getDay() + 6) % 7;
-      const mo = new Date(d);
-      mo.setDate(d.getDate() - tag);
-      const so = new Date(mo);
-      so.setDate(mo.getDate() + 6);
-      const iso = (x: Date) =>
-        `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
-      const [w, s, p] = await Promise.all([
-        supabase.from("fahrstunde").select("*", { count: "exact", head: true }).gte("datum", iso(mo)).lte("datum", iso(so)),
-        supabase.from("fahrschueler").select("*", { count: "exact", head: true }),
-        supabase.from("fahrschueler").select("*", { count: "exact", head: true }).gte("pruefung_termin", von),
-      ]);
-      const error = w.error || s.error || p.error;
-      if (error) return { data: null, error };
-      return { data: { woche: w.count ?? 0, schueler: s.count ?? 0, pruefungen: p.count ?? 0 }, error: null };
-    },
-    { cacheKey: "dashboard" },
+  const aufgaben = useLoader<Pinnwand[]>(
+    () =>
+      supabase
+        .from("pinnwand")
+        .select("*")
+        .eq("typ", "todo")
+        .order("erledigt", { ascending: true })
+        .order("created_at", { ascending: false })
+        .returns<Pinnwand[]>(),
+    { cacheKey: "aufgaben" },
   );
 
-  useRealtime("home-stunden", "fahrstunde", () => {
-    stunden.refresh();
-    stats.refresh();
-  });
+  useRealtime("home-stunden", "fahrstunde", () => stunden.refresh());
+  useRealtime("home-aufgaben", "pinnwand", () => aufgaben.refresh());
 
   const tage = useMemo(() => {
     const map = new Map<string, FahrstundeMitRelationen[]>();
@@ -81,63 +62,127 @@ export default function HomeScreen() {
     return Array.from(map, ([datum, liste]) => ({ datum, liste }));
   }, [stunden.data]);
 
+  const aufgabenListe = aufgaben.data ?? [];
+  const offen = aufgabenListe.filter((a) => !a.erledigt).length;
+
   function label(datum: string) {
     if (datum === von) return "Heute";
     if (datum === plusTageISO(von, 1)) return "Morgen";
     return formatDatumLang(datum);
   }
 
+  async function toggleTodo(item: Pinnwand) {
+    await supabase.from("pinnwand").update({ erledigt: !item.erledigt }).eq("id", item.id);
+    aufgaben.refresh();
+  }
+
   return (
     <Screen>
-      <HomeHeader right={<HeaderPlus href="/fahrstunde/neu" />} title="Heute" subtitle={formatDatumLang(von)} />
+      <HomeHeader right={<HeaderPlus href="/fahrstunde/neu" />} />
+
+      <View style={{ paddingHorizontal: space(4), paddingBottom: space(3) }}>
+        <Segmented<Tab>
+          options={[
+            { value: "termine", label: `Termine (${stunden.data?.length ?? 0})` },
+            { value: "aufgaben", label: `Aufgaben (${offen})` },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
+      </View>
+
       <ScrollView
-        contentContainerStyle={{ padding: space(4), paddingTop: 0, paddingBottom: space(8), gap: space(5) }}
+        contentContainerStyle={{ paddingBottom: space(8) }}
         refreshControl={
           <RefreshControl
             refreshing={stunden.refreshing}
             onRefresh={() => {
               stunden.refresh();
-              stats.refresh();
+              aufgaben.refresh();
             }}
             tintColor={colors.accent}
           />
         }
       >
-        {stats.data ? (
-          <View style={{ flexDirection: "row", gap: space(2.5) }}>
-            <StatPill label="Diese Woche" value={stats.data.woche} colors={colors} />
-            <StatPill label="Schüler" value={stats.data.schueler} colors={colors} />
-            <StatPill label="Prüfungen" value={stats.data.pruefungen} colors={colors} />
-          </View>
-        ) : null}
-
-        {stunden.loading ? (
-          <CenterInfo loading />
-        ) : tage.length === 0 ? (
-          <View style={{ backgroundColor: colors.card, borderRadius: radius.lg, padding: space(8), alignItems: "center" }}>
-            <Text style={{ color: colors.textMuted, fontSize: 15 }}>Keine anstehenden Fahrstunden</Text>
-          </View>
-        ) : (
-          tage.map((t) => (
-            <View key={t.datum} style={{ gap: space(2.5) }}>
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: "800",
-                  color: colors.textMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
-                {label(t.datum)}
-              </Text>
-              {t.liste.map((st) => (
-                <FahrstundeKarte key={st.id} stunde={st} onPress={() => router.push(`/fahrstunde/${st.id}`)} />
+        {tab === "termine" ? (
+          stunden.loading ? (
+            <CenterInfo loading />
+          ) : tage.length === 0 ? (
+            <Leer text="Keine anstehenden Fahrstunden" colors={colors} />
+          ) : (
+            <View style={{ gap: space(4) }}>
+              {tage.map((t) => (
+                <View key={t.datum} style={{ gap: 2 }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: "800",
+                      color: colors.textMuted,
+                      textTransform: "uppercase",
+                      letterSpacing: 0.5,
+                      paddingHorizontal: space(4),
+                      paddingBottom: space(2),
+                    }}
+                  >
+                    {label(t.datum)}
+                  </Text>
+                  {t.liste.map((st) => (
+                    <FahrstundeKarte key={st.id} stunde={st} onPress={() => router.push(`/fahrstunde/${st.id}`)} />
+                  ))}
+                </View>
               ))}
             </View>
-          ))
+          )
+        ) : aufgabenListe.length === 0 ? (
+          <Leer text="Keine Aufgaben" colors={colors} />
+        ) : (
+          <View style={{ gap: 2 }}>
+            {aufgabenListe.map((item) => (
+              <Pressable
+                key={item.id}
+                onPress={() => toggleTodo(item)}
+                style={({ pressed }) => ({
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: space(3),
+                  backgroundColor: pressed ? colors.cardAlt : colors.card,
+                  paddingHorizontal: space(4),
+                  paddingVertical: space(3.5),
+                })}
+              >
+                <Ionicons
+                  name={item.erledigt ? "checkmark-circle" : "ellipse-outline"}
+                  size={24}
+                  color={item.erledigt ? colors.success : colors.textMuted}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "600",
+                      color: colors.text,
+                      textDecorationLine: item.erledigt ? "line-through" : "none",
+                    }}
+                  >
+                    {item.titel}
+                  </Text>
+                  {item.inhalt ? (
+                    <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}>{item.inhalt}</Text>
+                  ) : null}
+                </View>
+              </Pressable>
+            ))}
+          </View>
         )}
       </ScrollView>
     </Screen>
+  );
+}
+
+function Leer({ text, colors }: { text: string; colors: { card: string; textMuted: string } }) {
+  return (
+    <View style={{ margin: space(4), backgroundColor: colors.card, padding: space(8), alignItems: "center" }}>
+      <Text style={{ color: colors.textMuted, fontSize: 15 }}>{text}</Text>
+    </View>
   );
 }
