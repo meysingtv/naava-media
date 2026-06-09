@@ -4,7 +4,8 @@ import { useRouter } from "expo-router";
 
 import { FahrstundeKarte } from "@/components/fahrstunde-karte";
 import { HeaderPlus } from "@/components/header-plus";
-import { CenterInfo, Screen, ScreenHeader } from "@/components/ui";
+import { HomeHeader } from "@/components/home-header";
+import { CenterInfo, Screen } from "@/components/ui";
 import { useLoader } from "@/lib/use-loader";
 import { useRealtime } from "@/lib/use-realtime";
 import { supabase } from "@/lib/supabase";
@@ -13,11 +14,13 @@ import { useTheme } from "@/lib/theme-context";
 import { radius, space, type ThemeColors } from "@/lib/theme";
 import { FAHRSTUNDE_SELECT, type FahrstundeMitRelationen } from "@/lib/types";
 
-function StatKachel({ label, value, colors }: { label: string; value: number; colors: ThemeColors }) {
+function StatPill({ label, value, colors }: { label: string; value: number; colors: ThemeColors }) {
   return (
-    <View style={{ flex: 1, backgroundColor: colors.card, borderRadius: radius.lg, padding: space(3.5) }}>
-      <Text style={{ fontSize: 24, fontWeight: "800", color: colors.text }}>{value}</Text>
-      <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>{label}</Text>
+    <View style={{ flex: 1, backgroundColor: colors.card, borderRadius: radius.lg, paddingVertical: space(3), paddingHorizontal: space(3.5) }}>
+      <Text style={{ fontSize: 11, color: colors.textMuted, textTransform: "uppercase", letterSpacing: 0.4, fontWeight: "600" }}>
+        {label}
+      </Text>
+      <Text style={{ fontSize: 22, fontWeight: "800", color: colors.text, marginTop: 2 }}>{value}</Text>
     </View>
   );
 }
@@ -86,14 +89,14 @@ export default function HomeScreen() {
 
   return (
     <Screen>
-      <ScreenHeader
-        title="Heute"
-        subtitle={formatDatumLang(von)}
+      <HomeHeader
         logo={require("@/assets/images/logo.png")}
         right={<HeaderPlus href="/fahrstunde/neu" />}
+        title="Heute"
+        subtitle={formatDatumLang(von)}
       />
       <ScrollView
-        contentContainerStyle={{ padding: space(4), paddingBottom: space(8), gap: space(5) }}
+        contentContainerStyle={{ padding: space(4), paddingTop: 0, paddingBottom: space(8), gap: space(5) }}
         refreshControl={
           <RefreshControl
             refreshing={stunden.refreshing}
@@ -106,17 +109,17 @@ export default function HomeScreen() {
         }
       >
         {stats.data ? (
-          <View style={{ flexDirection: "row", gap: space(3) }}>
-            <StatKachel label="Diese Woche" value={stats.data.woche} colors={colors} />
-            <StatKachel label="Schüler" value={stats.data.schueler} colors={colors} />
-            <StatKachel label="Prüfungen" value={stats.data.pruefungen} colors={colors} />
+          <View style={{ flexDirection: "row", gap: space(2.5) }}>
+            <StatPill label="Diese Woche" value={stats.data.woche} colors={colors} />
+            <StatPill label="Schüler" value={stats.data.schueler} colors={colors} />
+            <StatPill label="Prüfungen" value={stats.data.pruefungen} colors={colors} />
           </View>
         ) : null}
 
         {stunden.loading ? (
           <CenterInfo loading />
         ) : tage.length === 0 ? (
-          <View style={{ backgroundColor: colors.card, borderRadius: radius.lg, padding: space(6), alignItems: "center" }}>
+          <View style={{ backgroundColor: colors.card, borderRadius: radius.lg, padding: space(8), alignItems: "center" }}>
             <Text style={{ color: colors.textMuted, fontSize: 15 }}>Keine anstehenden Fahrstunden</Text>
           </View>
         ) : (
@@ -124,11 +127,11 @@ export default function HomeScreen() {
             <View key={t.datum} style={{ gap: space(2.5) }}>
               <Text
                 style={{
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: "800",
                   color: colors.textMuted,
                   textTransform: "uppercase",
-                  letterSpacing: 0.3,
+                  letterSpacing: 0.5,
                 }}
               >
                 {label(t.datum)}

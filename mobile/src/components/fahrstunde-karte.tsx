@@ -8,7 +8,7 @@ import { useTheme } from "@/lib/theme-context";
 import { radius, space } from "@/lib/theme";
 import type { FahrstundeMitRelationen, FahrstundeTyp } from "@/lib/types";
 
-// Farbe markiert die ART der Fahrt (als schmaler Balken links + Punkt).
+// Farbe = Art der Fahrt.
 const TYP_FARBE: Record<FahrstundeTyp, string> = {
   normal: "#2563EB",
   ueberland: "#16A34A",
@@ -21,7 +21,7 @@ export function FahrstundeKarte({ stunde, onPress }: { stunde: FahrstundeMitRela
   const { colors } = useTheme();
   const abgeschlossen = stunde.status === "abgeschlossen";
   const ausgefallen = stunde.status === "ausgefallen";
-  const typFarbe = TYP_FARBE[stunde.typ];
+  const typFarbe = ausgefallen ? colors.textMuted : TYP_FARBE[stunde.typ];
   const schueler = stunde.fahrschueler;
   const name = schueler ? `${schueler.vorname} ${schueler.nachname}` : "Ohne Schüler";
   const meta = [
@@ -49,45 +49,39 @@ export function FahrstundeKarte({ stunde, onPress }: { stunde: FahrstundeMitRela
         opacity: pressed ? 0.92 : 1,
       })}
     >
-      {/* Farbiger Balken links = Art */}
-      <View style={{ width: 6, backgroundColor: ausgefallen ? colors.textMuted : typFarbe }} />
+      {/* Farbiger Zeit-Block links */}
+      <View
+        style={{
+          width: 86,
+          paddingVertical: space(4),
+          paddingHorizontal: space(2),
+          backgroundColor: typFarbe,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "800" }}>{formatUhrzeit(stunde.uhrzeit)}</Text>
+        <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 12, marginTop: 2 }}>
+          bis {endUhrzeit(stunde.uhrzeit, stunde.dauer_minuten)}
+        </Text>
+      </View>
 
-      <View style={{ flex: 1, padding: space(4), gap: space(2) }}>
-        {/* Kopfzeile: Uhrzeit + Status */}
+      {/* Inhalt rechts */}
+      <View style={{ flex: 1, padding: space(4), gap: space(1.5), justifyContent: "center" }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>
-            {formatUhrzeit(stunde.uhrzeit)} – {endUhrzeit(stunde.uhrzeit, stunde.dauer_minuten)}
+          <Text style={{ fontSize: 11, fontWeight: "700", color: typFarbe, letterSpacing: 0.4 }}>
+            {TYP_LABEL[stunde.typ].toUpperCase()}
           </Text>
           {abgeschlossen ? (
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 4,
-                backgroundColor: colors.success + "22",
-                paddingHorizontal: space(2),
-                paddingVertical: 3,
-                borderRadius: radius.sm,
-              }}
-            >
-              <Ionicons name="checkmark" size={12} color={colors.success} />
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Ionicons name="checkmark-circle" size={14} color={colors.success} />
               <Text style={{ fontSize: 11, fontWeight: "700", color: colors.success }}>Gefahren</Text>
             </View>
           ) : ausgefallen ? (
-            <View
-              style={{
-                backgroundColor: colors.textMuted + "22",
-                paddingHorizontal: space(2),
-                paddingVertical: 3,
-                borderRadius: radius.sm,
-              }}
-            >
-              <Text style={{ fontSize: 11, fontWeight: "700", color: colors.textMuted }}>Ausgefallen</Text>
-            </View>
+            <Text style={{ fontSize: 11, fontWeight: "700", color: colors.textMuted }}>Ausgefallen</Text>
           ) : null}
         </View>
 
-        {/* Name */}
         <Text
           numberOfLines={1}
           style={{
@@ -100,33 +94,30 @@ export function FahrstundeKarte({ stunde, onPress }: { stunde: FahrstundeMitRela
           {name}
         </Text>
 
-        {/* Art + Lehrer/Fahrzeug */}
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space(2) }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1 }}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: typFarbe }} />
-            <Text numberOfLines={1} style={{ fontSize: 13, color: colors.textMuted, flex: 1 }}>
-              {TYP_LABEL[stunde.typ]}
-              {meta ? ` · ${meta}` : ""}
-            </Text>
-          </View>
+          <Text numberOfLines={1} style={{ fontSize: 13, color: colors.textMuted, flex: 1 }}>
+            {meta || `${stunde.dauer_minuten} Min`}
+          </Text>
 
-          {/* Schnell-Abzeichnen-Button */}
-          <Pressable
-            onPress={toggle}
-            hitSlop={8}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: abgeschlossen ? colors.success : "transparent",
-              borderWidth: abgeschlossen ? 0 : 1.5,
-              borderColor: colors.separator,
-            }}
-          >
-            <Ionicons name="checkmark" size={20} color={abgeschlossen ? "#FFFFFF" : colors.textMuted} />
-          </Pressable>
+          {/* Schnell-Abzeichnen */}
+          {!ausgefallen ? (
+            <Pressable
+              onPress={toggle}
+              hitSlop={8}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: abgeschlossen ? colors.success : "transparent",
+                borderWidth: abgeschlossen ? 0 : 1.5,
+                borderColor: colors.separator,
+              }}
+            >
+              <Ionicons name="checkmark" size={18} color={abgeschlossen ? "#FFFFFF" : colors.textMuted} />
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </Pressable>
