@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
-import type { FahrstundeTyp } from "@/lib/types";
+import type { FahrstundeStatus, FahrstundeTyp } from "@/lib/types";
 
 export interface KalenderState {
   error?: string;
@@ -21,7 +21,8 @@ function minutenSeitMitternacht(uhrzeit: string): number {
   return (h || 0) * 60 + (m || 0);
 }
 
-export async function fahrstundeErstellen(
+/** Legt eine Fahrstunde an oder aktualisiert sie (abhängig vom Feld `id`). */
+export async function fahrstundeSpeichern(
   _prev: KalenderState,
   formData: FormData,
 ): Promise<KalenderState> {
@@ -30,6 +31,7 @@ export async function fahrstundeErstellen(
     return { error: "Keine Fahrschule gefunden." };
   }
 
+  const id = leerZuNull(formData.get("id"));
   const datum = leerZuNull(formData.get("datum"));
   const uhrzeit = leerZuNull(formData.get("uhrzeit"));
   if (!datum || !uhrzeit) {
@@ -41,30 +43,30 @@ export async function fahrstundeErstellen(
 
   const supabase = createClient();
 
-  // Fahrzeug-Konflikterkennung: Überschneidung am selben Tag prüfen.
+  // Fahrzeug-Konflikterkennung (eigene Stunde beim Bearbeiten ausschließen).
   if (fahrzeugId) {
-    const { data: bestehende } = await supabase
+    let query = supabase
       .from("fahrstunde")
-      .select("uhrzeit, dauer_minuten")
+      .select("id, uhrzeit, dauer_minuten")
       .eq("fahrzeug_id", fahrzeugId)
       .eq("datum", datum)
       .neq("status", "ausgefallen");
+    if (id) query = query.neq("id", id);
 
+    const { data: bestehende } = await query;
     const start = minutenSeitMitternacht(uhrzeit);
     const ende = start + dauer;
-    const konflikt = (bestehende ?? []).some((b) => {
+    const konflikt = (bestehende ?? []).some((b: { uhrzeit: string; dauer_minuten: number | null }) => {
       const bStart = minutenSeitMitternacht(b.uhrzeit);
       const bEnde = bStart + (b.dauer_minuten ?? 45);
       return start < bEnde && ende > bStart;
     });
-
     if (konflikt) {
       return { error: "Dieses Fahrzeug ist zu dieser Zeit bereits gebucht." };
     }
   }
 
-  const { error } = await supabase.from("fahrstunde").insert({
-    fahrschule_id: kontext.fahrschule.id,
+  const datensatz = {
     schueler_id: leerZuNull(formData.get("schueler_id")),
     fahrlehrer_id: leerZuNull(formData.get("fahrlehrer_id")),
     fahrzeug_id: fahrzeugId,
@@ -72,17 +74,35 @@ export async function fahrstundeErstellen(
     uhrzeit,
     dauer_minuten: dauer,
     typ: (String(formData.get("typ") ?? "normal") as FahrstundeTyp) || "normal",
-    status: "geplant",
     notiz: leerZuNull(formData.get("notiz")),
-  });
+  };
 
-  if (error) {
-    return { error: error.message };
+  if (id) {
+    const { error } = await supabase.from("fahrstunde").update(datensatz).eq("id", id);
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await supabase.from("fahrstunde").insert({
+      ...datensatz,
+      fahrschule_id: kontext.fahrschule.id,
+      status: "geplant",
+    });
+    if (error) return { error: error.message };
   }
 
   revalidatePath("/kalender");
   revalidatePath("/dashboard");
   return { ok: true };
+}
+
+export async function fahrstundeStatusSetzen(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  const status = String(formData.get("status") ?? "geplant") as FahrstundeStatus;
+  if (!id) return;
+
+  const supabase = createClient();
+  await supabase.from("fahrstunde").update({ status }).eq("id", id);
+  revalidatePath("/kalender");
+  revalidatePath("/dashboard");
 }
 
 export async function fahrstundeLoeschen(formData: FormData): Promise<void> {
@@ -92,4 +112,5 @@ export async function fahrstundeLoeschen(formData: FormData): Promise<void> {
   const supabase = createClient();
   await supabase.from("fahrstunde").delete().eq("id", id);
   revalidatePath("/kalender");
+  revalidatePath("/dashboard");
 }
