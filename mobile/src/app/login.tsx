@@ -25,16 +25,22 @@ export default function LoginScreen() {
   async function anmelden() {
     setFehler(null);
     setLaedt(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password: passwort,
-    });
-    setLaedt(false);
-    if (error) {
-      setFehler("Anmeldung fehlgeschlagen. Bitte E-Mail und Passwort prüfen.");
-      return;
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: passwort,
+      });
+      if (error) {
+        setFehler(error.message);
+        return;
+      }
+      router.replace("/(tabs)/heute");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setFehler(`Verbindungsfehler: ${msg}\nPrüfe die Supabase-Werte in mobile/.env.`);
+    } finally {
+      setLaedt(false);
     }
-    router.replace("/(tabs)/heute");
   }
 
   return (
