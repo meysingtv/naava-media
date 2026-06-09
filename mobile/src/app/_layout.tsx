@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { ThemeProvider, useTheme } from "@/lib/theme-context";
+import { planeErinnerungen } from "@/lib/notifications";
 
 function RootNavigator() {
   const { session, loading } = useAuth();
@@ -21,6 +22,13 @@ function RootNavigator() {
       router.replace("/(tabs)/heute");
     }
   }, [session, loading, segments, router]);
+
+  // Erinnerungen neu planen, sobald jemand angemeldet ist.
+  useEffect(() => {
+    if (session) {
+      planeErinnerungen();
+    }
+  }, [session]);
 
   if (loading) {
     return (
@@ -45,7 +53,8 @@ function RootNavigator() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="fahrstunde/[id]" options={{ title: "Fahrstunde" }} />
+        <Stack.Screen name="fahrstunde/neu" options={{ title: "Neue Fahrstunde" }} />
+        <Stack.Screen name="fahrstunde/[id]" options={{ title: "Fahrstunde bearbeiten" }} />
         <Stack.Screen name="schueler/[id]" options={{ title: "Schüler" }} />
       </Stack>
     </>

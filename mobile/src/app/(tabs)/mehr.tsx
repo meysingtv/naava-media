@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { Button, Card, Segmented } from "@/components/ui";
 import { useLoader } from "@/lib/use-loader";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
+import { erinnerungenAnfordern, erinnerungenErlaubt, planeErinnerungen } from "@/lib/notifications";
 import { useTheme, type ThemeMode } from "@/lib/theme-context";
 import { space, type ThemeColors } from "@/lib/theme";
 
@@ -18,6 +19,22 @@ export default function MehrScreen() {
     { cacheKey: "fahrschule-name" },
   );
   const name = fahrschule.data?.[0]?.name ?? "—";
+
+  const [erinnerungen, setErinnerungen] = useState(false);
+  useEffect(() => {
+    erinnerungenErlaubt().then(setErinnerungen);
+  }, []);
+
+  async function erinnerungenAktivieren() {
+    const ok = await erinnerungenAnfordern();
+    setErinnerungen(ok);
+    if (ok) {
+      await planeErinnerungen();
+      Alert.alert("Erinnerungen aktiv", "Du wirst 30 Minuten vor jeder geplanten Fahrstunde erinnert.");
+    } else {
+      Alert.alert("Nicht erlaubt", "Bitte Benachrichtigungen in den iOS-Einstellungen für FahrschulApp erlauben.");
+    }
+  }
 
   function abmelden() {
     Alert.alert("Abmelden", "Möchtest du dich wirklich abmelden?", [
@@ -56,6 +73,18 @@ export default function MehrScreen() {
           value={mode}
           onChange={setMode}
         />
+      </Card>
+
+      <Text style={s.sektion}>Benachrichtigungen</Text>
+      <Card>
+        {erinnerungen ? (
+          <View style={s.zeile}>
+            <Text style={s.label}>Fahrstunden-Erinnerungen</Text>
+            <Text style={[s.wert, { color: colors.success }]}>Aktiv ✓</Text>
+          </View>
+        ) : (
+          <Button title="Erinnerungen aktivieren" variant="ghost" onPress={erinnerungenAktivieren} />
+        )}
       </Card>
 
       <View style={{ marginTop: space(4) }}>

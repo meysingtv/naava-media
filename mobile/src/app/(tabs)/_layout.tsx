@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useTheme } from "@/lib/theme-context";
+import { HeaderPlus } from "@/components/header-plus";
 
 export default function TabsLayout() {
   const { colors } = useTheme();
@@ -21,6 +22,7 @@ export default function TabsLayout() {
         name="heute"
         options={{
           title: "Heute",
+          headerRight: () => <HeaderPlus />,
           tabBarIcon: ({ color, size }) => <Ionicons name="today-outline" size={size} color={color} />,
         }}
       />
@@ -28,6 +30,7 @@ export default function TabsLayout() {
         name="kalender"
         options={{
           title: "Kalender",
+          headerRight: () => <HeaderPlus />,
           tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
         }}
       />
