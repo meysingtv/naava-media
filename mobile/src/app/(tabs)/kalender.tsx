@@ -76,7 +76,7 @@ export default function TerminplanerScreen() {
   const calTheme = useMemo(
     () => ({
       palette: {
-        primary: { main: colors.accent, contrastText: colors.onAccent },
+        primary: { main: colors.accent, contrastText: colors.bg },
         nowIndicator: colors.danger,
         gray: {
           "100": colors.separator,
@@ -89,7 +89,7 @@ export default function TerminplanerScreen() {
       typography: {
         xs: { fontSize: 12 },
         sm: { fontSize: 13 },
-        xl: { fontSize: 16 },
+        xl: { fontSize: 15 },
       },
     }),
     [colors],
@@ -126,13 +126,24 @@ export default function TerminplanerScreen() {
             scrollOffsetMinutes={7 * 60}
             hourRowHeight={56}
             hourStyle={{ color: colors.text, fontWeight: "700", fontSize: 12 }}
+            dayHeaderHighlightColor={colors.text}
+            dayHeaderStyle={{ width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" }}
             theme={calTheme}
             eventCellStyle={(ev) => ({
               backgroundColor: ev.status === "ausgefallen" ? colors.textMuted : TERMIN_FARBE[ev.typ],
               borderRadius: 6,
             })}
             onPressEvent={(ev) => router.push(`/fahrstunde/${ev.id}`)}
-            onPressCell={(d) => router.push(`/fahrstunde/neu?datum=${isoDatum(d)}`)}
+            onPressCell={(d) => {
+              let h = d.getHours();
+              let m = Math.round(d.getMinutes() / 15) * 15;
+              if (m === 60) {
+                m = 0;
+                h += 1;
+              }
+              const uhr = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+              router.push(`/fahrstunde/neu?datum=${isoDatum(d)}&uhrzeit=${uhr}`);
+            }}
           />
         )}
       </View>

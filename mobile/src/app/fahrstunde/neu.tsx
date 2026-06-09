@@ -9,7 +9,7 @@ import { planeErinnerungen } from "@/lib/notifications";
 
 export default function NeueFahrstunde() {
   const router = useRouter();
-  const { datum } = useLocalSearchParams<{ datum?: string }>();
+  const { datum, uhrzeit } = useLocalSearchParams<{ datum?: string; uhrzeit?: string }>();
   const opt = useOptionen();
 
   if (opt.loading) return <CenterInfo loading />;
@@ -24,7 +24,7 @@ export default function NeueFahrstunde() {
         fahrlehrer_id: null,
         fahrzeug_id: null,
         datum: datum ?? heuteISO(),
-        uhrzeit: "09:00",
+        uhrzeit: uhrzeit ?? "09:00",
         dauer_minuten: 45,
         typ: "normal",
         status: "geplant",
