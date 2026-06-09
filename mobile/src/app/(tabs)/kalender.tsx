@@ -8,6 +8,7 @@ import "dayjs/locale/de";
 import { CenterInfo, Screen, ScreenHeader, Segmented } from "@/components/ui";
 import { HeaderPlus } from "@/components/header-plus";
 import { useLoader } from "@/lib/use-loader";
+import { useRealtime } from "@/lib/use-realtime";
 import { supabase } from "@/lib/supabase";
 import { heuteISO, plusTageISO } from "@/lib/format";
 import { TYP_LABEL } from "@/lib/constants";
@@ -52,7 +53,7 @@ export default function TerminplanerScreen() {
   const von = useMemo(() => plusTageISO(heuteISO(), -14), []);
   const bis = useMemo(() => plusTageISO(heuteISO(), 45), []);
 
-  const { data, loading, error } = useLoader<FahrstundeMitRelationen[]>(
+  const { data, loading, error, refresh } = useLoader<FahrstundeMitRelationen[]>(
     () =>
       supabase
         .from("fahrstunde")
@@ -63,6 +64,9 @@ export default function TerminplanerScreen() {
         .returns<FahrstundeMitRelationen[]>(),
     { cacheKey: "terminplaner" },
   );
+
+  // Live-Sync: Terminplaner aktualisiert sich automatisch.
+  useRealtime("terminplaner-stunden", "fahrstunde", refresh);
 
   const events = useMemo<Termin[]>(() => {
     return (data ?? []).map((s) => {

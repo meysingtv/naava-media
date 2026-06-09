@@ -7,6 +7,7 @@ import { FahrstundeRow } from "@/components/fahrstunde-row";
 import { HeaderPlus } from "@/components/header-plus";
 import { Row, Screen, ScreenHeader, Section } from "@/components/ui";
 import { useLoader } from "@/lib/use-loader";
+import { useRealtime } from "@/lib/use-realtime";
 import { supabase } from "@/lib/supabase";
 import { formatDatumLang, heuteISO } from "@/lib/format";
 import { useTheme } from "@/lib/theme-context";
@@ -61,6 +62,13 @@ export default function HeuteScreen() {
     { cacheKey: "dashboard" },
   );
 
+  // Live-Sync: aktualisiert sich automatisch, sobald irgendwo etwas geändert wird.
+  useRealtime("heute-stunden", "fahrstunde", () => {
+    stunden.refresh();
+    stats.refresh();
+  });
+  useRealtime("heute-pinnwand", "pinnwand", () => pinnwand.refresh());
+
   const liste = stunden.data ?? [];
   const pinnListe = pinnwand.data ?? [];
 
@@ -106,7 +114,12 @@ export default function HeuteScreen() {
           ) : (
             <Section title={`${liste.length} ${liste.length === 1 ? "Fahrstunde" : "Fahrstunden"}`}>
               {liste.map((st) => (
-                <FahrstundeRow key={st.id} stunde={st} onPress={() => router.push(`/fahrstunde/${st.id}`)} />
+                <FahrstundeRow
+                  key={st.id}
+                  stunde={st}
+                  quickAbzeichnen
+                  onPress={() => router.push(`/fahrstunde/${st.id}`)}
+                />
               ))}
             </Section>
           )}

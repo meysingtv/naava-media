@@ -1,16 +1,31 @@
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { Row } from "@/components/ui";
 import { TYP_LABEL } from "@/lib/constants";
 import { formatUhrzeit } from "@/lib/format";
+import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/lib/theme-context";
-import type { FahrstundeMitRelationen } from "@/lib/types";
+import type { FahrstundeMitRelationen, FahrstundeStatus } from "@/lib/types";
 
-export function FahrstundeRow({ stunde, onPress }: { stunde: FahrstundeMitRelationen; onPress?: () => void }) {
+async function statusSetzen(id: string, status: FahrstundeStatus) {
+  await supabase.from("fahrstunde").update({ status }).eq("id", id);
+}
+
+export function FahrstundeRow({
+  stunde,
+  onPress,
+  quickAbzeichnen,
+}: {
+  stunde: FahrstundeMitRelationen;
+  onPress?: () => void;
+  /** Wenn true, zeigt rechts einen Schnell-Abzeichnen-Button (Häkchen). */
+  quickAbzeichnen?: boolean;
+}) {
   const { colors } = useTheme();
   const schueler = stunde.fahrschueler;
   const ausgefallen = stunde.status === "ausgefallen";
+  const abgeschlossen = stunde.status === "abgeschlossen";
   const meta = [
     TYP_LABEL[stunde.typ],
     stunde.fahrlehrer ? `${stunde.fahrlehrer.vorname} ${stunde.fahrlehrer.nachname}` : null,
@@ -19,10 +34,36 @@ export function FahrstundeRow({ stunde, onPress }: { stunde: FahrstundeMitRelati
     .filter(Boolean)
     .join(" · ");
 
+  const trailing = quickAbzeichnen ? (
+    <Pressable
+      hitSlop={8}
+      onPress={(e) => {
+        e.stopPropagation?.();
+        statusSetzen(stunde.id, abgeschlossen ? "geplant" : "abgeschlossen");
+      }}
+      style={{
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: abgeschlossen ? colors.success : colors.fill,
+      }}
+    >
+      <Ionicons
+        name={abgeschlossen ? "checkmark" : "checkmark-outline"}
+        size={20}
+        color={abgeschlossen ? colors.onAccent : colors.textMuted}
+      />
+    </Pressable>
+  ) : abgeschlossen ? (
+    <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+  ) : undefined;
+
   return (
     <Row
       onPress={onPress}
-      chevron={Boolean(onPress)}
+      chevron={Boolean(onPress) && !quickAbzeichnen}
       leading={
         <View style={{ width: 60, alignItems: "center" }}>
           <Text
@@ -34,9 +75,7 @@ export function FahrstundeRow({ stunde, onPress }: { stunde: FahrstundeMitRelati
           <Text style={{ fontSize: 12, color: colors.textMuted }}>{stunde.dauer_minuten} Min</Text>
         </View>
       }
-      trailing={
-        stunde.status === "abgeschlossen" ? <Ionicons name="checkmark-circle" size={18} color={colors.success} /> : undefined
-      }
+      trailing={trailing}
     >
       <View style={{ flex: 1, gap: 2 }}>
         <Text
