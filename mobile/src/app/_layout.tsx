@@ -6,6 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { ThemeProvider, useTheme } from "@/lib/theme-context";
 import { planeErinnerungen } from "@/lib/notifications";
+import { HeaderCancel } from "@/components/header-cancel";
 
 function RootNavigator() {
   const { session, loading } = useAuth();
@@ -44,17 +45,30 @@ function RootNavigator() {
           headerTitleStyle: { color: colors.text },
           headerTintColor: colors.accent,
           headerShadowVisible: false,
+          headerBackButtonDisplayMode: "minimal",
           contentStyle: { backgroundColor: colors.bg },
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="fahrstunde/neu" options={{ title: "Neue Fahrstunde" }} />
-        <Stack.Screen name="fahrstunde/[id]" options={{ title: "Fahrstunde bearbeiten" }} />
+        <Stack.Screen
+          name="fahrstunde/neu"
+          options={{ title: "Neue Fahrstunde", presentation: "modal", headerLeft: () => <HeaderCancel /> }}
+        />
+        <Stack.Screen
+          name="fahrstunde/[id]"
+          options={{ title: "Fahrstunde", presentation: "modal", headerLeft: () => <HeaderCancel /> }}
+        />
         <Stack.Screen name="schueler/[id]" options={{ title: "Schüler" }} />
-        <Stack.Screen name="schueler/neu" options={{ title: "Neuer Schüler" }} />
-        <Stack.Screen name="schueler/bearbeiten/[id]" options={{ title: "Schüler bearbeiten" }} />
+        <Stack.Screen
+          name="schueler/neu"
+          options={{ title: "Neuer Schüler", presentation: "modal", headerLeft: () => <HeaderCancel /> }}
+        />
+        <Stack.Screen
+          name="schueler/bearbeiten/[id]"
+          options={{ title: "Schüler bearbeiten", presentation: "modal", headerLeft: () => <HeaderCancel /> }}
+        />
       </Stack>
     </>
   );
