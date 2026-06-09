@@ -8,6 +8,7 @@ import { useTheme } from "@/lib/theme-context";
 import { radius, space } from "@/lib/theme";
 import type { FahrstundeMitRelationen, FahrstundeTyp } from "@/lib/types";
 
+// Farbe markiert die ART der Fahrt (als schmaler Balken links + Punkt).
 const TYP_FARBE: Record<FahrstundeTyp, string> = {
   normal: "#2563EB",
   ueberland: "#16A34A",
@@ -20,7 +21,7 @@ export function FahrstundeKarte({ stunde, onPress }: { stunde: FahrstundeMitRela
   const { colors } = useTheme();
   const abgeschlossen = stunde.status === "abgeschlossen";
   const ausgefallen = stunde.status === "ausgefallen";
-  const farbe = ausgefallen ? colors.textMuted : TYP_FARBE[stunde.typ];
+  const typFarbe = TYP_FARBE[stunde.typ];
   const schueler = stunde.fahrschueler;
   const name = schueler ? `${schueler.vorname} ${schueler.nachname}` : "Ohne Schüler";
   const meta = [
@@ -41,44 +42,93 @@ export function FahrstundeKarte({ stunde, onPress }: { stunde: FahrstundeMitRela
     <Pressable
       onPress={onPress}
       style={({ pressed }) => ({
-        backgroundColor: farbe,
+        flexDirection: "row",
+        backgroundColor: colors.card,
         borderRadius: radius.xl,
-        padding: space(4),
-        gap: space(1),
+        overflow: "hidden",
         opacity: pressed ? 0.92 : 1,
       })}
     >
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "700" }}>
-          {formatUhrzeit(stunde.uhrzeit)} – {endUhrzeit(stunde.uhrzeit, stunde.dauer_minuten)}
-        </Text>
-        <Pressable
-          onPress={toggle}
-          hitSlop={8}
+      {/* Farbiger Balken links = Art */}
+      <View style={{ width: 6, backgroundColor: ausgefallen ? colors.textMuted : typFarbe }} />
+
+      <View style={{ flex: 1, padding: space(4), gap: space(2) }}>
+        {/* Kopfzeile: Uhrzeit + Status */}
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Text style={{ color: colors.text, fontSize: 14, fontWeight: "600" }}>
+            {formatUhrzeit(stunde.uhrzeit)} – {endUhrzeit(stunde.uhrzeit, stunde.dauer_minuten)}
+          </Text>
+          {abgeschlossen ? (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+                backgroundColor: colors.success + "22",
+                paddingHorizontal: space(2),
+                paddingVertical: 3,
+                borderRadius: radius.sm,
+              }}
+            >
+              <Ionicons name="checkmark" size={12} color={colors.success} />
+              <Text style={{ fontSize: 11, fontWeight: "700", color: colors.success }}>Gefahren</Text>
+            </View>
+          ) : ausgefallen ? (
+            <View
+              style={{
+                backgroundColor: colors.textMuted + "22",
+                paddingHorizontal: space(2),
+                paddingVertical: 3,
+                borderRadius: radius.sm,
+              }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: "700", color: colors.textMuted }}>Ausgefallen</Text>
+            </View>
+          ) : null}
+        </View>
+
+        {/* Name */}
+        <Text
+          numberOfLines={1}
           style={{
-            width: 30,
-            height: 30,
-            borderRadius: 15,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: abgeschlossen ? "#FFFFFF" : "rgba(255,255,255,0.25)",
+            color: ausgefallen ? colors.textMuted : colors.text,
+            fontSize: 17,
+            fontWeight: "700",
+            textDecorationLine: ausgefallen ? "line-through" : "none",
           }}
         >
-          <Ionicons name="checkmark" size={18} color={abgeschlossen ? farbe : "#FFFFFF"} />
-        </Pressable>
-      </View>
+          {name}
+        </Text>
 
-      <Text
-        numberOfLines={1}
-        style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "800", textDecorationLine: ausgefallen ? "line-through" : "none" }}
-      >
-        {name}
-      </Text>
-      <Text numberOfLines={1} style={{ color: "rgba(255,255,255,0.9)", fontSize: 13 }}>
-        {TYP_LABEL[stunde.typ]}
-        {meta ? ` · ${meta}` : ""}
-        {ausgefallen ? " · Ausgefallen" : ""}
-      </Text>
+        {/* Art + Lehrer/Fahrzeug */}
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space(2) }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1 }}>
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: typFarbe }} />
+            <Text numberOfLines={1} style={{ fontSize: 13, color: colors.textMuted, flex: 1 }}>
+              {TYP_LABEL[stunde.typ]}
+              {meta ? ` · ${meta}` : ""}
+            </Text>
+          </View>
+
+          {/* Schnell-Abzeichnen-Button */}
+          <Pressable
+            onPress={toggle}
+            hitSlop={8}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: abgeschlossen ? colors.success : "transparent",
+              borderWidth: abgeschlossen ? 0 : 1.5,
+              borderColor: colors.separator,
+            }}
+          >
+            <Ionicons name="checkmark" size={20} color={abgeschlossen ? "#FFFFFF" : colors.textMuted} />
+          </Pressable>
+        </View>
+      </View>
     </Pressable>
   );
 }

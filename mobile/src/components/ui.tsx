@@ -1,11 +1,13 @@
 import { Children, type ReactNode } from "react";
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
+  type ImageSourcePropType,
   type TextInputProps,
   type ViewStyle,
 } from "react-native";
@@ -25,7 +27,17 @@ export function Screen({ children, style }: { children: ReactNode; style?: ViewS
 }
 
 /** Fixierte Kopfzeile: großer Titel links, optionaler Button rechts (mit Safe-Area). */
-export function ScreenHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: ReactNode }) {
+export function ScreenHeader({
+  title,
+  subtitle,
+  right,
+  logo,
+}: {
+  title: string;
+  subtitle?: string;
+  right?: ReactNode;
+  logo?: ImageSourcePropType;
+}) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   return (
@@ -34,19 +46,24 @@ export function ScreenHeader({ title, subtitle, right }: { title: string; subtit
         paddingTop: insets.top + space(2),
         paddingHorizontal: space(4),
         paddingBottom: space(3),
-        flexDirection: "row",
-        alignItems: "flex-end",
-        justifyContent: "space-between",
-        gap: space(3),
+        gap: space(2),
       }}
     >
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 30, fontWeight: "700", color: colors.text }} numberOfLines={1}>
-          {title}
-        </Text>
-        {subtitle ? <Text style={{ fontSize: 14, color: colors.textMuted, marginTop: 2 }}>{subtitle}</Text> : null}
+      {logo ? (
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Image source={logo} style={{ width: 36, height: 36, borderRadius: 8 }} resizeMode="contain" />
+          {right}
+        </View>
+      ) : null}
+      <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", gap: space(3) }}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 30, fontWeight: "700", color: colors.text }} numberOfLines={1}>
+            {title}
+          </Text>
+          {subtitle ? <Text style={{ fontSize: 14, color: colors.textMuted, marginTop: 2 }}>{subtitle}</Text> : null}
+        </View>
+        {logo ? null : right}
       </View>
-      {right}
     </View>
   );
 }

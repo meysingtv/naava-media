@@ -86,7 +86,12 @@ export default function HomeScreen() {
 
   return (
     <Screen>
-      <ScreenHeader title="Heute" subtitle={formatDatumLang(von)} right={<HeaderPlus href="/fahrstunde/neu" />} />
+      <ScreenHeader
+        title="Heute"
+        subtitle={formatDatumLang(von)}
+        logo={require("@/assets/images/logo.png")}
+        right={<HeaderPlus href="/fahrstunde/neu" />}
+      />
       <ScrollView
         contentContainerStyle={{ padding: space(4), paddingBottom: space(8), gap: space(5) }}
         refreshControl={
