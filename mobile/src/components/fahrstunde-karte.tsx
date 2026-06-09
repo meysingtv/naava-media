@@ -8,22 +8,23 @@ import { useTheme } from "@/lib/theme-context";
 import { radius, space } from "@/lib/theme";
 import type { FahrstundeMitRelationen, FahrstundeTyp } from "@/lib/types";
 
-// Farbe = Art der Fahrt; ausgefallen = grau.
+// Farbpalette bewusst anders als typische Fahrschul-Apps (kein Blau/Orange-
+// Schema). Tiefere, harmonische Töne.
 const TYP_FARBE: Record<FahrstundeTyp, string> = {
-  normal: "#2563EB",
-  ueberland: "#16A34A",
-  autobahn: "#EA580C",
-  nacht: "#4F46E5",
-  pruefung: "#4F46E5",
+  normal: "#0F766E", // Teal
+  ueberland: "#15803D", // Tannengrün
+  autobahn: "#B45309", // Amber
+  nacht: "#1E1B4B", // Mitternachts-Indigo
+  pruefung: "#9333EA", // Violett
 };
 
-const PRUEFUNG = "#DB2777";
+const AUSGEFALLEN = "#475569";
 
 export function FahrstundeKarte({ stunde, onPress }: { stunde: FahrstundeMitRelationen; onPress?: () => void }) {
   const { colors } = useTheme();
   const abgeschlossen = stunde.status === "abgeschlossen";
   const ausgefallen = stunde.status === "ausgefallen";
-  const farbe = ausgefallen ? "#64748B" : stunde.typ === "pruefung" ? PRUEFUNG : TYP_FARBE[stunde.typ];
+  const farbe = ausgefallen ? AUSGEFALLEN : TYP_FARBE[stunde.typ];
   const schueler = stunde.fahrschueler;
   const name = schueler ? `${schueler.vorname} ${schueler.nachname}` : "Ohne Schüler";
   const meta = [
@@ -45,6 +46,7 @@ export function FahrstundeKarte({ stunde, onPress }: { stunde: FahrstundeMitRela
       onPress={onPress}
       style={({ pressed }) => ({
         backgroundColor: farbe,
+        borderRadius: radius.md,
         padding: space(4),
         gap: space(2),
         opacity: pressed ? 0.92 : 1,

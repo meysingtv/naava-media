@@ -12,7 +12,7 @@ import { useRealtime } from "@/lib/use-realtime";
 import { supabase } from "@/lib/supabase";
 import { formatDatumLang, heuteISO, plusTageISO } from "@/lib/format";
 import { useTheme } from "@/lib/theme-context";
-import { space } from "@/lib/theme";
+import { radius, space } from "@/lib/theme";
 import { FAHRSTUNDE_SELECT, type FahrstundeMitRelationen, type Pinnwand } from "@/lib/types";
 
 type Tab = "termine" | "aufgaben";
@@ -92,7 +92,7 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={{ paddingBottom: space(8) }}
+        contentContainerStyle={{ paddingBottom: space(8), paddingHorizontal: space(4) }}
         refreshControl={
           <RefreshControl
             refreshing={stunden.refreshing}
@@ -112,23 +112,23 @@ export default function HomeScreen() {
           ) : (
             <View style={{ gap: space(4) }}>
               {tage.map((t) => (
-                <View key={t.datum} style={{ gap: 2 }}>
+                <View key={t.datum} style={{ gap: space(2) }}>
                   <Text
                     style={{
                       fontSize: 12,
                       fontWeight: "800",
-                      color: colors.textMuted,
+                      color: colors.text,
                       textTransform: "uppercase",
                       letterSpacing: 0.5,
-                      paddingHorizontal: space(4),
-                      paddingBottom: space(2),
                     }}
                   >
                     {label(t.datum)}
                   </Text>
-                  {t.liste.map((st) => (
-                    <FahrstundeKarte key={st.id} stunde={st} onPress={() => router.push(`/fahrstunde/${st.id}`)} />
-                  ))}
+                  <View style={{ gap: space(2) }}>
+                    {t.liste.map((st) => (
+                      <FahrstundeKarte key={st.id} stunde={st} onPress={() => router.push(`/fahrstunde/${st.id}`)} />
+                    ))}
+                  </View>
                 </View>
               ))}
             </View>
@@ -136,7 +136,7 @@ export default function HomeScreen() {
         ) : aufgabenListe.length === 0 ? (
           <Leer text="Keine Aufgaben" colors={colors} />
         ) : (
-          <View style={{ gap: 2 }}>
+          <View style={{ gap: space(2) }}>
             {aufgabenListe.map((item) => (
               <Pressable
                 key={item.id}
@@ -146,6 +146,7 @@ export default function HomeScreen() {
                   alignItems: "center",
                   gap: space(3),
                   backgroundColor: pressed ? colors.cardAlt : colors.card,
+                  borderRadius: radius.md,
                   paddingHorizontal: space(4),
                   paddingVertical: space(3.5),
                 })}
@@ -181,7 +182,14 @@ export default function HomeScreen() {
 
 function Leer({ text, colors }: { text: string; colors: { card: string; textMuted: string } }) {
   return (
-    <View style={{ margin: space(4), backgroundColor: colors.card, padding: space(8), alignItems: "center" }}>
+    <View
+      style={{
+        backgroundColor: colors.card,
+        borderRadius: radius.md,
+        padding: space(8),
+        alignItems: "center",
+      }}
+    >
       <Text style={{ color: colors.textMuted, fontSize: 15 }}>{text}</Text>
     </View>
   );
