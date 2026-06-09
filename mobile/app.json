@@ -1,16 +1,19 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "FahrschulApp",
+    "slug": "fahrschulapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
-    "userInterfaceStyle": "automatic",
+    "scheme": "fahrschulapp",
+    "userInterfaceStyle": "light",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fahrschulapp.app"
     },
     "android": {
+      "package": "com.fahrschulapp.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -28,7 +31,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#2563EB",
           "android": {
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 76

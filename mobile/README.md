@@ -1,56 +1,57 @@
-# Welcome to your Expo app 👋
+# FahrschulApp – Mobile (iOS)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Native iOS-App (Expo / React Native) zur Fahrschul-Verwaltung. Nutzt **dasselbe
+Supabase-Backend** wie die Web-App – gleiche Zugangsdaten, gleiche Daten.
 
-## Get started
+**Screens:** Login · Heute (Fahrstunden des Tages) · Kalender (kommende Stunden) ·
+Schüler (Liste mit Suche).
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Einrichten
 
 ```bash
-npm run reset-project
+cd mobile
+npm install
+cp .env.example .env
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Trage in `.env` **dieselben Supabase-Werte** wie in der Web-App ein – nur mit dem
+Prefix `EXPO_PUBLIC_` statt `NEXT_PUBLIC_`:
 
-### Other setup steps
+```
+EXPO_PUBLIC_SUPABASE_URL=...        # = NEXT_PUBLIC_SUPABASE_URL
+EXPO_PUBLIC_SUPABASE_ANON_KEY=...   # = NEXT_PUBLIC_SUPABASE_ANON_KEY
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## In Xcode öffnen & testen (Mac)
 
-## Learn more
+```bash
+npx expo prebuild               # erzeugt den nativen ios/-Ordner (Xcode-Projekt)
+open ios/FahrschulApp.xcworkspace
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+In Xcode oben einen Simulator (oder dein iPhone) wählen und auf ▶️ **Run** drücken.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Alternativ alles in einem Befehl (baut & startet den Simulator über die Xcode-Toolchain):
 
-## Join the community
+```bash
+npx expo run:ios
+```
 
-Join our community of developers creating universal apps.
+> Der `ios/`-Ordner wird lokal generiert und ist absichtlich nicht eingecheckt
+> (Expo „Continuous Native Generation"). Nach Änderungen an `app.json`/Plugins
+> einfach erneut `npx expo prebuild` ausführen.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Schnelltest ohne Build (optional)
+
+Mit der **Expo Go**-App aus dem App Store:
+
+```bash
+npx expo start
+```
+
+Dann den QR-Code mit der Kamera/Expo Go scannen (iPhone im selben WLAN).
+
+## Veröffentlichung (später)
+
+Echte App-Store-Builds über **EAS** (`eas build` / `eas submit`) – funktioniert
+auch ohne Mac in der Cloud. Voraussetzung: Apple Developer Account.
