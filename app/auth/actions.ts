@@ -12,8 +12,10 @@ export interface FormState {
 }
 
 function basisUrl(): string {
-  const origin = headers().get("origin");
-  return origin ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  // Explizit konfigurierte URL hat Vorrang (z. B. LAN-IP fuer Mail-Links).
+  const konfiguriert = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (konfiguriert) return konfiguriert.replace(/\/+$/, "");
+  return headers().get("origin") ?? "http://localhost:3000";
 }
 
 /** Anmeldung mit E-Mail und Passwort. */

@@ -9,9 +9,10 @@ import { getKontext } from "@/lib/supabase/queries";
 import type { FahrlehrerRolle } from "@/lib/types";
 
 function basisUrl(): string {
-  return (
-    headers().get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
-  );
+  // Explizit konfigurierte URL hat Vorrang (z. B. LAN-IP fuer Mail-Links).
+  const konfiguriert = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (konfiguriert) return konfiguriert.replace(/\/+$/, "");
+  return headers().get("origin") ?? "http://localhost:3000";
 }
 
 export interface FahrlehrerState {
