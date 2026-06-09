@@ -1,18 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, ScrollView, Text, View } from "react-native";
 
-import { Button, Card, Segmented } from "@/components/ui";
+import { LargeTitle, Row, Screen, Section, Segmented } from "@/components/ui";
 import { useLoader } from "@/lib/use-loader";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { erinnerungenAnfordern, erinnerungenErlaubt, planeErinnerungen } from "@/lib/notifications";
 import { useTheme, type ThemeMode } from "@/lib/theme-context";
-import { space, type ThemeColors } from "@/lib/theme";
+import { space } from "@/lib/theme";
 
 export default function MehrScreen() {
   const { colors, mode, setMode } = useTheme();
   const { session } = useAuth();
-  const s = useMemo(() => makeStyles(colors), [colors]);
 
   const fahrschule = useLoader<{ name: string }[]>(
     () => supabase.from("fahrschule").select("name").limit(1).returns<{ name: string }[]>(),
@@ -44,73 +43,44 @@ export default function MehrScreen() {
   }
 
   return (
-    <ScrollView style={s.screen} contentContainerStyle={s.content}>
-      <Text style={s.sektion}>Konto</Text>
-      <Card>
-        <View style={s.zeile}>
-          <Text style={s.label}>Fahrschule</Text>
-          <Text style={s.wert} numberOfLines={1}>
-            {name}
-          </Text>
+    <Screen>
+      <ScrollView contentContainerStyle={{ paddingBottom: space(8) }}>
+        <LargeTitle title="Mehr" />
+        <View style={{ paddingHorizontal: space(4) }}>
+          <Section title="Konto">
+            <Row title="Fahrschule" value={name} />
+            <Row title="Angemeldet als" value={session?.user.email ?? "—"} />
+          </Section>
+
+          <Section title="Darstellung">
+            <View style={{ padding: space(3) }}>
+              <Segmented<ThemeMode>
+                options={[
+                  { value: "system", label: "System" },
+                  { value: "light", label: "Hell" },
+                  { value: "dark", label: "Dunkel" },
+                ]}
+                value={mode}
+                onChange={setMode}
+              />
+            </View>
+          </Section>
+
+          <Section title="Benachrichtigungen">
+            {erinnerungen ? (
+              <Row title="Fahrstunden-Erinnerungen" value="Aktiv" />
+            ) : (
+              <Row title="Erinnerungen aktivieren" chevron onPress={erinnerungenAktivieren} />
+            )}
+          </Section>
+
+          <Section>
+            <Row title="Abmelden" destructive onPress={abmelden} />
+          </Section>
+
+          <Text style={{ textAlign: "center", color: colors.textMuted, fontSize: 12 }}>FahrschulApp · Version 1.0.0</Text>
         </View>
-        <View style={s.trenner} />
-        <View style={s.zeile}>
-          <Text style={s.label}>Angemeldet als</Text>
-          <Text style={s.wert} numberOfLines={1}>
-            {session?.user.email ?? "—"}
-          </Text>
-        </View>
-      </Card>
-
-      <Text style={s.sektion}>Darstellung</Text>
-      <Card>
-        <Segmented<ThemeMode>
-          options={[
-            { value: "system", label: "System" },
-            { value: "light", label: "Hell" },
-            { value: "dark", label: "Dunkel" },
-          ]}
-          value={mode}
-          onChange={setMode}
-        />
-      </Card>
-
-      <Text style={s.sektion}>Benachrichtigungen</Text>
-      <Card>
-        {erinnerungen ? (
-          <View style={s.zeile}>
-            <Text style={s.label}>Fahrstunden-Erinnerungen</Text>
-            <Text style={[s.wert, { color: colors.success }]}>Aktiv ✓</Text>
-          </View>
-        ) : (
-          <Button title="Erinnerungen aktivieren" variant="ghost" onPress={erinnerungenAktivieren} />
-        )}
-      </Card>
-
-      <View style={{ marginTop: space(4) }}>
-        <Button title="Abmelden" variant="danger" onPress={abmelden} />
-      </View>
-
-      <Text style={s.version}>FahrschulApp · Version 1.0.0</Text>
-    </ScrollView>
+      </ScrollView>
+    </Screen>
   );
 }
-
-const makeStyles = (c: ThemeColors) =>
-  StyleSheet.create({
-    screen: { flex: 1, backgroundColor: c.bg },
-    content: { padding: space(4), gap: space(2) },
-    sektion: {
-      fontSize: 13,
-      fontWeight: "800",
-      color: c.textMuted,
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-      marginTop: space(3),
-    },
-    zeile: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: space(3) },
-    label: { fontSize: 15, color: c.textMuted },
-    wert: { fontSize: 15, fontWeight: "600", color: c.text, flexShrink: 1, textAlign: "right" },
-    trenner: { height: StyleSheet.hairlineWidth, backgroundColor: c.border, marginVertical: space(3) },
-    version: { textAlign: "center", color: c.textMuted, fontSize: 12, marginTop: space(6) },
-  });

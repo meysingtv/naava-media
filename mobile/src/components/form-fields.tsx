@@ -1,10 +1,21 @@
-import { useMemo, useState } from "react";
-import { FlatList, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import {
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+  type TextInputProps,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
+import { Row } from "@/components/ui";
 import { useTheme } from "@/lib/theme-context";
-import { radius, space, type ThemeColors } from "@/lib/theme";
+import { radius, space } from "@/lib/theme";
 import { formatDatumLang } from "@/lib/format";
 
 export type Option = { id: string; label: string; sub?: string };
@@ -29,37 +40,33 @@ function zeitString(d: Date): string {
   return `${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-// ---- Tappbare Zeile, die einen Picker öffnet -----------------------
-function SelectRow({
-  label,
-  anzeige,
-  placeholder,
-  icon,
-  onPress,
-}: {
-  label: string;
-  anzeige?: string;
-  placeholder: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  onPress: () => void;
-}) {
+export function FieldRow({ label, ...props }: { label: string } & TextInputProps) {
   const { colors } = useTheme();
-  const s = useMemo(() => makeStyles(colors), [colors]);
   return (
-    <View style={{ gap: space(1.5) }}>
-      <Text style={s.label}>{label}</Text>
-      <Pressable style={s.row} onPress={onPress}>
-        <Ionicons name={icon} size={18} color={colors.textMuted} />
-        <Text style={[s.rowText, !anzeige && { color: colors.textMuted }]} numberOfLines={1}>
-          {anzeige || placeholder}
-        </Text>
-        <Ionicons name="chevron-down" size={18} color={colors.textMuted} />
-      </Pressable>
-    </View>
+    <Row>
+      <Text style={{ width: 104, fontSize: 16, color: colors.text }}>{label}</Text>
+      <TextInput
+        placeholderTextColor={colors.textMuted}
+        {...props}
+        style={[{ flex: 1, fontSize: 16, color: colors.text, paddingVertical: 0 }, props.style]}
+      />
+    </Row>
   );
 }
 
-// ---- Bottom-Sheet -------------------------------------------------
+export function SwitchRow({
+  label,
+  value,
+  onValueChange,
+}: {
+  label: string;
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+}) {
+  const { colors } = useTheme();
+  return <Row title={label} trailing={<Switch value={value} onValueChange={onValueChange} trackColor={{ true: colors.accent, false: colors.fill }} />} />;
+}
+
 function BottomSheet({
   visible,
   onClose,
@@ -72,15 +79,24 @@ function BottomSheet({
   children: React.ReactNode;
 }) {
   const { colors } = useTheme();
-  const s = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={s.backdrop} onPress={onClose} />
-      <View style={s.sheet}>
-        <View style={s.sheetHead}>
-          <Text style={s.sheetTitle}>{title}</Text>
+      <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }} onPress={onClose} />
+      <View style={{ backgroundColor: colors.card, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingBottom: space(8) }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: space(4),
+            paddingVertical: space(3),
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderBottomColor: colors.separator,
+          }}
+        >
+          <Text style={{ fontSize: 16, fontWeight: "700", color: colors.text }}>{title}</Text>
           <Pressable onPress={onClose} hitSlop={10}>
-            <Text style={s.fertig}>Fertig</Text>
+            <Text style={{ fontSize: 17, fontWeight: "600", color: colors.accent }}>Fertig</Text>
           </Pressable>
         </View>
         {children}
@@ -89,7 +105,7 @@ function BottomSheet({
   );
 }
 
-export function PickerField({
+export function PickerRow({
   label,
   value,
   options,
@@ -105,40 +121,41 @@ export function PickerField({
   erlaubeLeer?: boolean;
 }) {
   const { colors } = useTheme();
-  const s = useMemo(() => makeStyles(colors), [colors]);
   const [open, setOpen] = useState(false);
   const aktuell = options.find((o) => o.id === value);
-  const liste: Option[] = erlaubeLeer ? [{ id: "", label: "— Keine Angabe" }, ...options] : options;
+  const liste: Option[] = erlaubeLeer ? [{ id: "", label: "Keine Angabe" }, ...options] : options;
 
   return (
     <>
-      <SelectRow
-        label={label}
-        anzeige={aktuell?.label}
-        placeholder={placeholder}
-        icon="chevron-expand-outline"
-        onPress={() => setOpen(true)}
-      />
+      <Row title={label} value={aktuell?.label ?? placeholder} chevron onPress={() => setOpen(true)} />
       <BottomSheet visible={open} onClose={() => setOpen(false)} title={label}>
         <FlatList
           data={liste}
           keyExtractor={(o) => o.id || "none"}
-          style={{ maxHeight: 360 }}
+          style={{ maxHeight: 380 }}
           renderItem={({ item }) => {
             const aktiv = (value ?? "") === item.id;
             return (
               <Pressable
-                style={s.option}
                 onPress={() => {
                   onChange(item.id === "" ? null : item.id);
                   setOpen(false);
                 }}
+                style={({ pressed }) => ({
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: space(4),
+                  paddingVertical: space(3.5),
+                  borderBottomWidth: StyleSheet.hairlineWidth,
+                  borderBottomColor: colors.separator,
+                  backgroundColor: pressed ? colors.cardAlt : "transparent",
+                })}
               >
                 <View style={{ flex: 1 }}>
-                  <Text style={s.optionText}>{item.label}</Text>
-                  {item.sub ? <Text style={s.optionSub}>{item.sub}</Text> : null}
+                  <Text style={{ fontSize: 16, color: colors.text }}>{item.label}</Text>
+                  {item.sub ? <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}>{item.sub}</Text> : null}
                 </View>
-                {aktiv ? <Ionicons name="checkmark" size={20} color={colors.brand} /> : null}
+                {aktiv ? <Ionicons name="checkmark" size={20} color={colors.accent} /> : null}
               </Pressable>
             );
           }}
@@ -148,12 +165,12 @@ export function PickerField({
   );
 }
 
-export function DateField({ label, value, onChange }: { label: string; value: string; onChange: (iso: string) => void }) {
+export function DateRow({ label, value, onChange }: { label: string; value: string; onChange: (iso: string) => void }) {
   const { schema } = useTheme();
   const [open, setOpen] = useState(false);
   return (
     <>
-      <SelectRow label={label} anzeige={formatDatumLang(value)} placeholder="Datum wählen" icon="calendar-outline" onPress={() => setOpen(true)} />
+      <Row title={label} value={formatDatumLang(value)} chevron onPress={() => setOpen(true)} />
       <BottomSheet visible={open} onClose={() => setOpen(false)} title={label}>
         <View style={{ alignItems: "center" }}>
           <DateTimePicker
@@ -161,7 +178,7 @@ export function DateField({ label, value, onChange }: { label: string; value: st
             mode="date"
             display="spinner"
             themeVariant={schema}
-            onChange={(_event, d) => {
+            onChange={(_e, d) => {
               if (d) onChange(datumString(d));
             }}
           />
@@ -171,12 +188,12 @@ export function DateField({ label, value, onChange }: { label: string; value: st
   );
 }
 
-export function TimeField({ label, value, onChange }: { label: string; value: string; onChange: (zeit: string) => void }) {
+export function TimeRow({ label, value, onChange }: { label: string; value: string; onChange: (zeit: string) => void }) {
   const { schema } = useTheme();
   const [open, setOpen] = useState(false);
   return (
     <>
-      <SelectRow label={label} anzeige={`${value} Uhr`} placeholder="Uhrzeit wählen" icon="time-outline" onPress={() => setOpen(true)} />
+      <Row title={label} value={`${value} Uhr`} chevron onPress={() => setOpen(true)} />
       <BottomSheet visible={open} onClose={() => setOpen(false)} title={label}>
         <View style={{ alignItems: "center" }}>
           <DateTimePicker
@@ -185,7 +202,7 @@ export function TimeField({ label, value, onChange }: { label: string; value: st
             display="spinner"
             is24Hour
             themeVariant={schema}
-            onChange={(_event, d) => {
+            onChange={(_e, d) => {
               if (d) onChange(zeitString(d));
             }}
           />
@@ -194,49 +211,3 @@ export function TimeField({ label, value, onChange }: { label: string; value: st
     </>
   );
 }
-
-const makeStyles = (c: ThemeColors) =>
-  StyleSheet.create({
-    label: { fontSize: 13, fontWeight: "800", color: c.textMuted, textTransform: "uppercase", letterSpacing: 0.5 },
-    row: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space(2.5),
-      backgroundColor: c.card,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
-      borderRadius: radius.md,
-      paddingHorizontal: space(3.5),
-      paddingVertical: space(3.5),
-    },
-    rowText: { flex: 1, fontSize: 16, color: c.text },
-    backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)" },
-    sheet: {
-      backgroundColor: c.card,
-      borderTopLeftRadius: radius.xl,
-      borderTopRightRadius: radius.xl,
-      paddingBottom: space(8),
-      paddingTop: space(2),
-    },
-    sheetHead: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingHorizontal: space(4),
-      paddingVertical: space(3),
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: c.border,
-    },
-    sheetTitle: { fontSize: 16, fontWeight: "800", color: c.text },
-    fertig: { fontSize: 16, fontWeight: "700", color: c.brand },
-    option: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingHorizontal: space(4),
-      paddingVertical: space(3.5),
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: c.border,
-    },
-    optionText: { fontSize: 16, color: c.text },
-    optionSub: { fontSize: 13, color: c.textMuted, marginTop: 2 },
-  });

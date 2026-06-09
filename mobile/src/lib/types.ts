@@ -57,6 +57,7 @@ export type Fahrstunde = {
   typ: FahrstundeTyp;
   status: FahrstundeStatus;
   notiz: string | null;
+  unterschrift: string | null;
 };
 
 export type FahrstundeMitRelationen = Fahrstunde & {

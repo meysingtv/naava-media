@@ -1,21 +1,20 @@
 import { useMemo } from "react";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { FahrstundeCard } from "@/components/fahrstunde-card";
-import { Banner, Card } from "@/components/ui";
+import { FahrstundeRow } from "@/components/fahrstunde-row";
+import { LargeTitle, Row, Screen, Section } from "@/components/ui";
 import { useLoader } from "@/lib/use-loader";
 import { supabase } from "@/lib/supabase";
 import { formatDatumLang, heuteISO } from "@/lib/format";
 import { useTheme } from "@/lib/theme-context";
-import { radius, space, type ThemeColors } from "@/lib/theme";
+import { space } from "@/lib/theme";
 import { FAHRSTUNDE_SELECT, type FahrstundeMitRelationen, type Pinnwand } from "@/lib/types";
 
 export default function HeuteScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const s = useMemo(() => makeStyles(colors), [colors]);
   const heute = useMemo(() => heuteISO(), []);
 
   const stunden = useLoader<FahrstundeMitRelationen[]>(
@@ -28,7 +27,6 @@ export default function HeuteScreen() {
         .returns<FahrstundeMitRelationen[]>(),
     { cacheKey: `heute-${heute}` },
   );
-
   const pinnwand = useLoader<Pinnwand[]>(
     () =>
       supabase
@@ -48,91 +46,61 @@ export default function HeuteScreen() {
     pinnwand.refresh();
   }
 
-  function refreshAll() {
-    stunden.refresh();
-    pinnwand.refresh();
-  }
-
   return (
-    <View style={s.screen}>
-      {stunden.offline ? <Banner text="Offline – zuletzt geladene Daten" /> : null}
+    <Screen>
       <ScrollView
-        contentContainerStyle={s.content}
+        contentContainerStyle={{ paddingBottom: space(8) }}
         refreshControl={
-          <RefreshControl refreshing={stunden.refreshing} onRefresh={refreshAll} tintColor={colors.brand} />
+          <RefreshControl
+            refreshing={stunden.refreshing}
+            onRefresh={() => {
+              stunden.refresh();
+              pinnwand.refresh();
+            }}
+            tintColor={colors.accent}
+          />
         }
       >
-        <Text style={s.datum}>{formatDatumLang(heute)}</Text>
-        <Text style={s.sub}>
-          {liste.length} {liste.length === 1 ? "Fahrstunde" : "Fahrstunden"} heute
-        </Text>
+        <LargeTitle title="Heute" subtitle={formatDatumLang(heute)} />
 
-        <View style={s.gruppe}>
+        <View style={{ paddingHorizontal: space(4) }}>
+          {stunden.offline ? (
+            <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: space(3) }}>Offline – zuletzt geladene Daten</Text>
+          ) : null}
+
           {liste.length === 0 ? (
-            <Card>
-              <Text style={s.leer}>Heute keine Fahrstunden 🎉</Text>
-            </Card>
+            <Section>
+              <Row title="Heute keine Fahrstunden" />
+            </Section>
           ) : (
-            liste.map((stunde) => (
-              <FahrstundeCard
-                key={stunde.id}
-                stunde={stunde}
-                onPress={() => router.push(`/fahrstunde/${stunde.id}`)}
-              />
-            ))
+            <Section title={`${liste.length} ${liste.length === 1 ? "Fahrstunde" : "Fahrstunden"}`}>
+              {liste.map((st) => (
+                <FahrstundeRow key={st.id} stunde={st} onPress={() => router.push(`/fahrstunde/${st.id}`)} />
+              ))}
+            </Section>
           )}
-        </View>
 
-        {pinnListe.length > 0 ? (
-          <View style={s.gruppe}>
-            <Text style={s.sektion}>Pinnwand</Text>
-            {pinnListe.map((item) => {
-              const istTodo = item.typ === "todo";
-              return (
-                <Pressable
+          {pinnListe.length > 0 ? (
+            <Section title="Pinnwand">
+              {pinnListe.map((item) => (
+                <Row
                   key={item.id}
-                  onPress={istTodo ? () => toggleTodo(item) : undefined}
-                  style={s.pinn}
-                >
-                  <Ionicons
-                    name={istTodo ? (item.erledigt ? "checkbox" : "square-outline") : "megaphone-outline"}
-                    size={20}
-                    color={item.erledigt ? colors.success : colors.brand}
-                    style={{ marginTop: 1 }}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[s.pinnTitel, item.erledigt && s.durch]}>{item.titel}</Text>
-                    {item.inhalt ? <Text style={s.pinnText}>{item.inhalt}</Text> : null}
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-        ) : null}
+                  onPress={item.typ === "todo" ? () => toggleTodo(item) : undefined}
+                  title={item.titel}
+                  subtitle={item.inhalt ?? undefined}
+                  leading={
+                    <Ionicons
+                      name={item.typ === "todo" ? (item.erledigt ? "checkmark-circle" : "ellipse-outline") : "megaphone-outline"}
+                      size={20}
+                      color={item.erledigt ? colors.success : colors.accent}
+                    />
+                  }
+                />
+              ))}
+            </Section>
+          ) : null}
+        </View>
       </ScrollView>
-    </View>
+    </Screen>
   );
 }
-
-const makeStyles = (c: ThemeColors) =>
-  StyleSheet.create({
-    screen: { flex: 1, backgroundColor: c.bg },
-    content: { padding: space(4), gap: space(2) },
-    datum: { fontSize: 22, fontWeight: "800", color: c.text },
-    sub: { fontSize: 14, color: c.textMuted },
-    gruppe: { gap: space(2.5), marginTop: space(4) },
-    sektion: { fontSize: 13, fontWeight: "800", color: c.textMuted, textTransform: "uppercase", letterSpacing: 0.5 },
-    leer: { color: c.textMuted, fontSize: 15, textAlign: "center", paddingVertical: space(2) },
-    pinn: {
-      flexDirection: "row",
-      gap: space(3),
-      backgroundColor: c.card,
-      borderRadius: radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
-      padding: space(3.5),
-    },
-    pinnTitel: { fontSize: 15, fontWeight: "600", color: c.text },
-    pinnText: { fontSize: 13, color: c.textMuted, marginTop: 2 },
-    durch: { textDecorationLine: "line-through", color: c.textMuted },
-  });

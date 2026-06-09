@@ -1,14 +1,14 @@
 import { useMemo } from "react";
-import { RefreshControl, SectionList, StyleSheet, Text, View } from "react-native";
+import { RefreshControl, ScrollView, Text } from "react-native";
 import { useRouter } from "expo-router";
 
-import { FahrstundeCard } from "@/components/fahrstunde-card";
-import { Banner, CenterInfo } from "@/components/ui";
+import { FahrstundeRow } from "@/components/fahrstunde-row";
+import { CenterInfo, Row, Screen, Section } from "@/components/ui";
 import { useLoader } from "@/lib/use-loader";
 import { supabase } from "@/lib/supabase";
 import { formatDatumLang, heuteISO, plusTageISO } from "@/lib/format";
 import { useTheme } from "@/lib/theme-context";
-import { space, type ThemeColors } from "@/lib/theme";
+import { space } from "@/lib/theme";
 import { FAHRSTUNDE_SELECT, type FahrstundeMitRelationen } from "@/lib/types";
 
 const TAGE_VORAUS = 28;
@@ -16,8 +16,6 @@ const TAGE_VORAUS = 28;
 export default function KalenderScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const s = useMemo(() => makeStyles(colors), [colors]);
-
   const von = useMemo(() => heuteISO(), []);
   const bis = useMemo(() => plusTageISO(von, TAGE_VORAUS), [von]);
 
@@ -34,53 +32,47 @@ export default function KalenderScreen() {
     { cacheKey: `kalender-${von}` },
   );
 
-  const sections = useMemo(() => {
+  const tage = useMemo(() => {
     const map = new Map<string, FahrstundeMitRelationen[]>();
     for (const stunde of data ?? []) {
       const liste = map.get(stunde.datum) ?? [];
       liste.push(stunde);
       map.set(stunde.datum, liste);
     }
-    return Array.from(map, ([datum, stunden]) => ({ datum, data: stunden }));
+    return Array.from(map, ([datum, stunden]) => ({ datum, stunden }));
   }, [data]);
 
   if (loading) return <CenterInfo loading />;
   if (error) return <CenterInfo text={error} error />;
 
+  function label(datum: string) {
+    if (datum === von) return `Heute · ${formatDatumLang(datum)}`;
+    if (datum === plusTageISO(von, 1)) return `Morgen · ${formatDatumLang(datum)}`;
+    return formatDatumLang(datum);
+  }
+
   return (
-    <View style={s.screen}>
-      {offline ? <Banner text="Offline – zuletzt geladene Daten" /> : null}
-      <SectionList
-        sections={sections}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <FahrstundeCard stunde={item} onPress={() => router.push(`/fahrstunde/${item.id}`)} />
+    <Screen>
+      <ScrollView
+        contentContainerStyle={{ padding: space(4), paddingBottom: space(8) }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />}
+      >
+        {offline ? <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: space(3) }}>Offline – zuletzt geladene Daten</Text> : null}
+
+        {tage.length === 0 ? (
+          <Section>
+            <Row title="Keine Fahrstunden in den nächsten Wochen" />
+          </Section>
+        ) : (
+          tage.map((t) => (
+            <Section key={t.datum} title={label(t.datum)}>
+              {t.stunden.map((st) => (
+                <FahrstundeRow key={st.id} stunde={st} onPress={() => router.push(`/fahrstunde/${st.id}`)} />
+              ))}
+            </Section>
+          ))
         )}
-        renderSectionHeader={({ section }) => {
-          const prefix =
-            section.datum === von ? "Heute · " : section.datum === plusTageISO(von, 1) ? "Morgen · " : "";
-          return (
-            <Text style={s.sectionTitle}>
-              {prefix}
-              {formatDatumLang(section.datum)}
-            </Text>
-          );
-        }}
-        contentContainerStyle={[s.list, sections.length === 0 && s.empty]}
-        ItemSeparatorComponent={() => <View style={{ height: space(2.5) }} />}
-        SectionSeparatorComponent={() => <View style={{ height: space(2) }} />}
-        ListEmptyComponent={<CenterInfo text="Keine Fahrstunden in den nächsten Wochen." />}
-        stickySectionHeadersEnabled={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.brand} />}
-      />
-    </View>
+      </ScrollView>
+    </Screen>
   );
 }
-
-const makeStyles = (c: ThemeColors) =>
-  StyleSheet.create({
-    screen: { flex: 1, backgroundColor: c.bg },
-    list: { padding: space(4) },
-    empty: { flexGrow: 1 },
-    sectionTitle: { fontSize: 15, fontWeight: "800", color: c.text },
-  });

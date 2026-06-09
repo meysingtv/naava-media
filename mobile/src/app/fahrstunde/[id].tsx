@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { CenterInfo } from "@/components/ui";
 import { FahrstundeForm } from "@/components/fahrstunde-form";
+import { UnterschriftFeld } from "@/components/unterschrift-feld";
 import { useOptionen } from "@/lib/optionen";
 import { useLoader } from "@/lib/use-loader";
 import { supabase } from "@/lib/supabase";
@@ -39,6 +40,7 @@ export default function FahrstundeBearbeiten() {
         notiz: stunde.notiz ?? "",
       }}
       speichernText="Speichern"
+      footer={<UnterschriftFeld fahrstundeId={id} initial={stunde.unterschrift ?? null} />}
       onSpeichern={async (w) => {
         const { error } = await supabase
           .from("fahrstunde")

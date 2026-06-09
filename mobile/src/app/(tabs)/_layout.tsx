@@ -9,12 +9,13 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.brand,
-        tabBarInactiveTintColor: colors.tabInactive,
-        tabBarStyle: { backgroundColor: colors.tabBar, borderTopColor: colors.border },
-        headerStyle: { backgroundColor: colors.card },
-        headerTitleStyle: { color: colors.text, fontWeight: "800" },
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.separator },
+        headerStyle: { backgroundColor: colors.bg },
+        headerTitleStyle: { color: colors.text, fontWeight: "700" },
         headerShadowVisible: false,
+        headerTintColor: colors.accent,
         sceneStyle: { backgroundColor: colors.bg },
       }}
     >
@@ -22,7 +23,7 @@ export default function TabsLayout() {
         name="heute"
         options={{
           title: "Heute",
-          headerRight: () => <HeaderPlus />,
+          headerRight: () => <HeaderPlus href="/fahrstunde/neu" />,
           tabBarIcon: ({ color, size }) => <Ionicons name="today-outline" size={size} color={color} />,
         }}
       />
@@ -30,7 +31,7 @@ export default function TabsLayout() {
         name="kalender"
         options={{
           title: "Kalender",
-          headerRight: () => <HeaderPlus />,
+          headerRight: () => <HeaderPlus href="/fahrstunde/neu" />,
           tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
         }}
       />
@@ -38,6 +39,7 @@ export default function TabsLayout() {
         name="schueler"
         options={{
           title: "Schüler",
+          headerRight: () => <HeaderPlus href="/schueler/neu" />,
           tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" size={size} color={color} />,
         }}
       />
@@ -45,7 +47,7 @@ export default function TabsLayout() {
         name="mehr"
         options={{
           title: "Mehr",
-          tabBarIcon: ({ color, size }) => <Ionicons name="ellipsis-horizontal" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="ellipsis-horizontal-circle-outline" size={size} color={color} />,
         }}
       />
     </Tabs>

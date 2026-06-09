@@ -23,17 +23,14 @@ function RootNavigator() {
     }
   }, [session, loading, segments, router]);
 
-  // Erinnerungen neu planen, sobald jemand angemeldet ist.
   useEffect(() => {
-    if (session) {
-      planeErinnerungen();
-    }
+    if (session) planeErinnerungen();
   }, [session]);
 
   if (loading) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg }}>
-        <ActivityIndicator color={colors.brand} />
+        <ActivityIndicator color={colors.accent} />
       </View>
     );
   }
@@ -43,9 +40,9 @@ function RootNavigator() {
       <StatusBar style={schema === "dark" ? "light" : "dark"} />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: colors.card },
+          headerStyle: { backgroundColor: colors.bg },
           headerTitleStyle: { color: colors.text },
-          headerTintColor: colors.brand,
+          headerTintColor: colors.accent,
           headerShadowVisible: false,
           contentStyle: { backgroundColor: colors.bg },
         }}
@@ -56,6 +53,8 @@ function RootNavigator() {
         <Stack.Screen name="fahrstunde/neu" options={{ title: "Neue Fahrstunde" }} />
         <Stack.Screen name="fahrstunde/[id]" options={{ title: "Fahrstunde bearbeiten" }} />
         <Stack.Screen name="schueler/[id]" options={{ title: "Schüler" }} />
+        <Stack.Screen name="schueler/neu" options={{ title: "Neuer Schüler" }} />
+        <Stack.Screen name="schueler/bearbeiten/[id]" options={{ title: "Schüler bearbeiten" }} />
       </Stack>
     </>
   );

@@ -36,3 +36,24 @@ export const PFLICHTFAHRTEN: { typ: FahrstundeTyp; label: string; soll: number }
   { typ: "autobahn", label: "Autobahnfahrten", soll: 4 },
   { typ: "nacht", label: "Nachtfahrten", soll: 3 },
 ];
+
+// Gängige Führerscheinklassen (Auswahl für Schüler).
+export const KLASSEN = ["B", "BE", "B96", "B197", "A1", "A2", "A", "AM", "L", "T"];
+
+// Avatar-Farben für Schüler.
+export const AVATAR_FARBEN = [
+  "#0A84FF",
+  "#34C759",
+  "#FF9500",
+  "#FF2D55",
+  "#AF52DE",
+  "#5856D6",
+  "#FF3B30",
+  "#30B0C7",
+  "#A2845E",
+  "#FF9F0A",
+];
+
+export function zufallsAvatarFarbe(): string {
+  return AVATAR_FARBEN[Math.floor(Math.random() * AVATAR_FARBEN.length)];
+}

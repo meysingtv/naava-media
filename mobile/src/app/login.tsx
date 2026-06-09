@@ -1,18 +1,17 @@
-import { useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { Button, Input } from "@/components/ui";
+import { Button, Screen, Section } from "@/components/ui";
+import { FieldRow } from "@/components/form-fields";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/lib/theme-context";
-import { radius, space, type ThemeColors } from "@/lib/theme";
+import { space } from "@/lib/theme";
 
 export default function LoginScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const s = useMemo(() => makeStyles(colors), [colors]);
-
   const [email, setEmail] = useState("");
   const [passwort, setPasswort] = useState("");
   const [fehler, setFehler] = useState<string | null>(null);
@@ -30,26 +29,33 @@ export default function LoginScreen() {
       router.replace("/(tabs)/heute");
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setFehler(`Verbindungsfehler: ${msg}\nPrüfe die Supabase-Werte in mobile/.env.`);
+      setFehler(`Verbindungsfehler: ${msg}`);
     } finally {
       setLaedt(false);
     }
   }
 
   return (
-    <SafeAreaView style={s.safe}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.container}>
-        <View style={s.header}>
-          <Text style={s.logo}>FahrschulApp</Text>
-          <Text style={s.subtitle}>Melde dich an, um deine Fahrschule zu verwalten.</Text>
-        </View>
+    <Screen>
+      <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={{ flex: 1, justifyContent: "center", padding: space(4) }}
+        >
+          <View style={{ alignItems: "center", marginBottom: space(8) }}>
+            <Text style={{ fontSize: 30, fontWeight: "700", color: colors.text }}>FahrschulApp</Text>
+            <Text style={{ fontSize: 15, color: colors.textMuted, marginTop: space(2), textAlign: "center" }}>
+              Melde dich an, um deine Fahrschule zu verwalten.
+            </Text>
+          </View>
 
-        <View style={s.form}>
-          {fehler ? <Text style={s.fehler}>{fehler}</Text> : null}
+          {fehler ? (
+            <Text style={{ color: colors.danger, textAlign: "center", marginBottom: space(3), fontSize: 14 }}>{fehler}</Text>
+          ) : null}
 
-          <View style={s.field}>
-            <Text style={s.label}>E-Mail</Text>
-            <Input
+          <Section>
+            <FieldRow
+              label="E-Mail"
               value={email}
               onChangeText={setEmail}
               placeholder="name@fahrschule.de"
@@ -58,11 +64,8 @@ export default function LoginScreen() {
               keyboardType="email-address"
               textContentType="emailAddress"
             />
-          </View>
-
-          <View style={s.field}>
-            <Text style={s.label}>Passwort</Text>
-            <Input
+            <FieldRow
+              label="Passwort"
               value={passwort}
               onChangeText={setPasswort}
               placeholder="••••••••"
@@ -70,31 +73,11 @@ export default function LoginScreen() {
               textContentType="password"
               onSubmitEditing={anmelden}
             />
-          </View>
+          </Section>
 
           <Button title="Anmelden" onPress={anmelden} loading={laedt} />
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </Screen>
   );
 }
-
-const makeStyles = (c: ThemeColors) =>
-  StyleSheet.create({
-    safe: { flex: 1, backgroundColor: c.bg },
-    container: { flex: 1, justifyContent: "center", padding: space(6), gap: space(8) },
-    header: { alignItems: "center", gap: space(2) },
-    logo: { fontSize: 32, fontWeight: "800", color: c.brand },
-    subtitle: { fontSize: 15, color: c.textMuted, textAlign: "center" },
-    form: { gap: space(4) },
-    field: { gap: space(1.5) },
-    label: { fontSize: 13, fontWeight: "600", color: c.text },
-    fehler: {
-      backgroundColor: c.danger,
-      color: "#FFFFFF",
-      padding: space(3),
-      borderRadius: radius.md,
-      fontSize: 14,
-      overflow: "hidden",
-    },
-  });
