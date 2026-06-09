@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Download } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
@@ -71,6 +71,11 @@ export default async function RechnungDetailPage({ params }: { params: { id: str
               </Button>
             </form>
           )}
+          <Button asChild variant="outline" size="sm">
+            <a href={`/rechnungen/${rechnung.id}/pdf`} target="_blank" rel="noopener noreferrer">
+              <Download className="h-4 w-4" /> PDF
+            </a>
+          </Button>
           <PrintButton />
           <LoeschenDialog
             action={rechnungLoeschen}

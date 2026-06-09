@@ -64,18 +64,23 @@ npm run dev
 | Rollen            |   ✅   | Chef / Fahrlehrer / Büro (Navigation & Zugriff rollenabhängig)         |
 | Dashboard         |   ✅   | Heutige Fahrstunden, offene Rechnungen, Prüfungen, Auslastung          |
 | Schüler           |   ✅   | Liste + Suche/Filter, Anlegen/Bearbeiten, Detail mit Prüfungsreife     |
-| Kalender          |   ✅   | Wochenansicht, Fahrstunde anlegen, Fahrzeug-Konflikterkennung          |
-| Rechnungen        |   ✅   | Erstellen (Positionen, MwSt.), Liste, druckbare Ansicht (PDF via Druck)|
-| Fahrlehrer        |   ✅   | Team-Liste, Mitarbeiter anlegen, Rolle zuweisen, deaktivieren          |
+| Kalender          |   ✅   | Wochen- **und** Tagesansicht (Fahrlehrer-Spalten), Slot-Klick, bearbeiten/verschieben, Status, Fahrzeug-Konflikt |
+| Rechnungen        |   ✅   | Erstellen (Positionen, MwSt.), Liste, **PDF-Download** + Druckansicht   |
+| Fahrlehrer        |   ✅   | Team-Liste, anlegen, **Einladung per E-Mail**, Rolle zuweisen, deaktivieren |
 | Fahrzeuge         |   ✅   | Flotte verwalten, aktiv/inaktiv                                        |
 | Einstellungen     |   ✅   | Firmenprofil (Stammdaten, Kontakt, Rechnungsdaten)                     |
 
+> **Hinweis zur Fahrlehrer-Einladung:** Der E-Mail-Versand nutzt die Supabase
+> Admin-API und benötigt `SUPABASE_SERVICE_ROLE_KEY` (server-seitig) sowie einen
+> in Supabase konfigurierten E-Mail-Versand. Ohne Key funktioniert das Anlegen
+> im Team weiterhin – nur ohne automatische Einladungs-Mail.
+
 **Noch offen / nächste Schritte:**
 
-- E-Mail-Einladung für Fahrlehrer (benötigt Supabase Service-Role + SMTP)
-- Echte PDF-Generierung & DATEV-Export (CSV)
-- Instruktor-Spalten im Kalender mit Zeitraster (Slot-Klick)
-- E-Mail-Benachrichtigungen, Schüler-Portal, Mobile-App
+- Kalender-Sync (universelles iCal-Abo, danach Exchange/Microsoft-Graph)
+- DATEV-Export (CSV)
+- E-Mail-Benachrichtigungen, Schüler-Portal
+- Mobile-App (Expo / React Native, iOS)
 
 ## Projektstruktur
 

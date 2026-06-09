@@ -127,12 +127,20 @@ export function EinladenDialog() {
             </div>
           </div>
 
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              name="einladen"
+              className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+            />
+            Login-Zugang per E-Mail einladen
+          </label>
           <div className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              Der Login-Zugang per E-Mail-Einladung wird aktiviert, sobald der E-Mail-Versand
-              eingerichtet ist. Der Mitarbeiter erscheint sofort im Team und kann Fahrstunden
-              zugewiesen bekommen.
+              Ohne Einladung erscheint der Mitarbeiter sofort im Team und kann Fahrstunden
+              zugewiesen bekommen. Mit Einladung erhält er zusätzlich eine E-Mail, um sein Passwort
+              zu setzen und sich anzumelden (E-Mail-Adresse erforderlich).
             </span>
           </div>
 

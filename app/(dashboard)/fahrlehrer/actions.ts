@@ -1,10 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getKontext } from "@/lib/supabase/queries";
 import type { FahrlehrerRolle } from "@/lib/types";
+
+function basisUrl(): string {
+  return (
+    headers().get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+  );
+}
 
 export interface FahrlehrerState {
   error?: string;
@@ -37,14 +45,39 @@ export async function fahrlehrerAnlegen(
 
   const rolle = (String(formData.get("rolle") ?? "fahrlehrer") as FahrlehrerRolle) || "fahrlehrer";
   const klassen = formData.getAll("klassen").map(String);
+  const email = leerZuNull(formData.get("email"));
+  const einladen = formData.get("einladen") === "on";
 
   const supabase = createClient();
+
+  // Optional: Login-Zugang per E-Mail einladen (benötigt Service-Role-Key).
+  let userId: string | null = null;
+  if (einladen) {
+    if (!email) {
+      return { error: "Für eine Einladung wird eine E-Mail-Adresse benötigt." };
+    }
+    const admin = createAdminClient();
+    if (!admin) {
+      return {
+        error:
+          "E-Mail-Einladung ist nicht eingerichtet. Bitte SUPABASE_SERVICE_ROLE_KEY in den Umgebungsvariablen setzen (siehe README).",
+      };
+    }
+    const { data, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${basisUrl()}/auth/callback?weiter=/auth/passwort-zuruecksetzen`,
+    });
+    if (inviteError) {
+      return { error: `Einladung fehlgeschlagen: ${inviteError.message}` };
+    }
+    userId = data.user?.id ?? null;
+  }
+
   const { error } = await supabase.from("fahrlehrer").insert({
     fahrschule_id: kontext.fahrschule.id,
-    user_id: null,
+    user_id: userId,
     vorname,
     nachname,
-    email: leerZuNull(formData.get("email")),
+    email,
     telefon: leerZuNull(formData.get("telefon")),
     fuehrerscheinklassen: klassen,
     rolle,
