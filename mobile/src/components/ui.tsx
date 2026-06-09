@@ -10,6 +10,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "@/lib/theme-context";
 import { radius, space } from "@/lib/theme";
@@ -23,13 +24,29 @@ export function Screen({ children, style }: { children: ReactNode; style?: ViewS
   return <View style={[{ flex: 1, backgroundColor: colors.bg }, style]}>{children}</View>;
 }
 
-/** Große Überschrift im Inhalt (native Anmutung). */
-export function LargeTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+/** Fixierte Kopfzeile: großer Titel links, optionaler Button rechts (mit Safe-Area). */
+export function ScreenHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: ReactNode }) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   return (
-    <View style={{ paddingHorizontal: space(4), paddingTop: space(2), paddingBottom: space(4) }}>
-      <Text style={{ fontSize: 32, fontWeight: "700", letterSpacing: 0.35, color: colors.text }}>{title}</Text>
-      {subtitle ? <Text style={{ fontSize: 15, color: colors.textMuted, marginTop: 2 }}>{subtitle}</Text> : null}
+    <View
+      style={{
+        paddingTop: insets.top + space(2),
+        paddingHorizontal: space(4),
+        paddingBottom: space(3),
+        flexDirection: "row",
+        alignItems: "flex-end",
+        justifyContent: "space-between",
+        gap: space(3),
+      }}
+    >
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 30, fontWeight: "700", color: colors.text }} numberOfLines={1}>
+          {title}
+        </Text>
+        {subtitle ? <Text style={{ fontSize: 14, color: colors.textMuted, marginTop: 2 }}>{subtitle}</Text> : null}
+      </View>
+      {right}
     </View>
   );
 }

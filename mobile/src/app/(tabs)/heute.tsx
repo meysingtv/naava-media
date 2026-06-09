@@ -4,7 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import { FahrstundeRow } from "@/components/fahrstunde-row";
-import { LargeTitle, Row, Screen, Section } from "@/components/ui";
+import { HeaderPlus } from "@/components/header-plus";
+import { Row, Screen, ScreenHeader, Section } from "@/components/ui";
 import { useLoader } from "@/lib/use-loader";
 import { supabase } from "@/lib/supabase";
 import { formatDatumLang, heuteISO } from "@/lib/format";
@@ -70,6 +71,7 @@ export default function HeuteScreen() {
 
   return (
     <Screen>
+      <ScreenHeader title="Heute" subtitle={formatDatumLang(heute)} right={<HeaderPlus href="/fahrstunde/neu" />} />
       <ScrollView
         contentContainerStyle={{ paddingBottom: space(8) }}
         refreshControl={
@@ -84,8 +86,6 @@ export default function HeuteScreen() {
           />
         }
       >
-        <LargeTitle title="Heute" subtitle={formatDatumLang(heute)} />
-
         <View style={{ paddingHorizontal: space(4) }}>
           {stats.data ? (
             <Section title="Überblick">

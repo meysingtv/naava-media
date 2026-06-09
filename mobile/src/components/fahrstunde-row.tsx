@@ -24,11 +24,14 @@ export function FahrstundeRow({ stunde, onPress }: { stunde: FahrstundeMitRelati
       onPress={onPress}
       chevron={Boolean(onPress)}
       leading={
-        <View style={{ width: 50, alignItems: "center" }}>
-          <Text style={{ fontSize: 16, fontWeight: "600", color: ausgefallen ? colors.textMuted : colors.text }}>
+        <View style={{ width: 60, alignItems: "center" }}>
+          <Text
+            numberOfLines={1}
+            style={{ fontSize: 16, fontWeight: "600", color: ausgefallen ? colors.textMuted : colors.text }}
+          >
             {formatUhrzeit(stunde.uhrzeit)}
           </Text>
-          <Text style={{ fontSize: 12, color: colors.textMuted }}>{stunde.dauer_minuten}m</Text>
+          <Text style={{ fontSize: 12, color: colors.textMuted }}>{stunde.dauer_minuten} Min</Text>
         </View>
       }
       trailing={

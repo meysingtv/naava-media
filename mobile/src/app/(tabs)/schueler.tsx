@@ -3,7 +3,8 @@ import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "rea
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { Avatar, Badge, CenterInfo, Input, Screen } from "@/components/ui";
+import { Avatar, Badge, CenterInfo, Input, Screen, ScreenHeader } from "@/components/ui";
+import { HeaderPlus } from "@/components/header-plus";
 import { useLoader } from "@/lib/use-loader";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/lib/theme-context";
@@ -32,7 +33,8 @@ export default function SchuelerScreen() {
 
   return (
     <Screen>
-      <View style={{ paddingHorizontal: space(4), paddingTop: space(2), paddingBottom: space(3) }}>
+      <ScreenHeader title="Schüler" right={<HeaderPlus href="/schueler/neu" />} />
+      <View style={{ paddingHorizontal: space(4), paddingBottom: space(3) }}>
         <Input value={suche} onChangeText={setSuche} placeholder="Schüler suchen" autoCapitalize="none" autoCorrect={false} />
         {offline ? <Text style={{ color: colors.textMuted, fontSize: 13, marginTop: space(2) }}>Offline – zuletzt geladene Daten</Text> : null}
       </View>

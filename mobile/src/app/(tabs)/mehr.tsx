@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 
-import { LargeTitle, Row, Screen, Section, Segmented } from "@/components/ui";
+import { Row, Screen, ScreenHeader, Section, Segmented } from "@/components/ui";
 import { useLoader } from "@/lib/use-loader";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
@@ -12,6 +13,7 @@ import { space } from "@/lib/theme";
 export default function MehrScreen() {
   const { colors, mode, setMode } = useTheme();
   const { session } = useAuth();
+  const router = useRouter();
 
   const fahrschule = useLoader<{ name: string }[]>(
     () => supabase.from("fahrschule").select("name").limit(1).returns<{ name: string }[]>(),
@@ -44,8 +46,8 @@ export default function MehrScreen() {
 
   return (
     <Screen>
+      <ScreenHeader title="Mehr" />
       <ScrollView contentContainerStyle={{ paddingBottom: space(8) }}>
-        <LargeTitle title="Mehr" />
         <View style={{ paddingHorizontal: space(4) }}>
           <Section title="Konto">
             <Row title="Fahrschule" value={name} />
@@ -72,6 +74,11 @@ export default function MehrScreen() {
             ) : (
               <Row title="Erinnerungen aktivieren" chevron onPress={erinnerungenAktivieren} />
             )}
+          </Section>
+
+          <Section title="Verwaltung">
+            <Row title="Fahrzeuge" chevron onPress={() => router.push("/fahrzeuge")} />
+            <Row title="Team" chevron onPress={() => router.push("/team")} />
           </Section>
 
           <Section>

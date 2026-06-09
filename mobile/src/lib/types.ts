@@ -34,15 +34,31 @@ export type Fahrschueler = {
   created_at: string;
 };
 
+export type FahrlehrerRolle = "chef" | "fahrlehrer" | "buero";
+
 export type Fahrlehrer = {
   id: string;
+  fahrschule_id: string;
+  user_id: string | null;
   vorname: string;
   nachname: string;
+  email: string | null;
+  telefon: string | null;
+  fuehrerscheinklassen: string[];
+  rolle: FahrlehrerRolle;
+  aktiv: boolean;
+  created_at: string;
 };
 
 export type Fahrzeug = {
   id: string;
+  fahrschule_id: string;
   kennzeichen: string;
+  marke: string | null;
+  modell: string | null;
+  klasse: string | null;
+  aktiv: boolean;
+  created_at: string;
 };
 
 export type Fahrstunde = {

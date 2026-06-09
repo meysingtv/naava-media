@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import { ThemeProvider, useTheme } from "@/lib/theme-context";
 import { planeErinnerungen } from "@/lib/notifications";
 import { HeaderCancel } from "@/components/header-cancel";
+import { HeaderPlus } from "@/components/header-plus";
 
 function RootNavigator() {
   const { session, loading } = useAuth();
@@ -52,6 +53,12 @@ function RootNavigator() {
           <Stack.Screen name="schueler/[id]" options={{ title: "Schüler" }} />
           <Stack.Screen name="schueler/neu" options={{ title: "Neuer Schüler", ...modal }} />
           <Stack.Screen name="schueler/bearbeiten/[id]" options={{ title: "Schüler bearbeiten", ...modal }} />
+          <Stack.Screen name="fahrzeuge/index" options={{ title: "Fahrzeuge", headerRight: () => <HeaderPlus href="/fahrzeuge/neu" /> }} />
+          <Stack.Screen name="fahrzeuge/neu" options={{ title: "Neues Fahrzeug", ...modal }} />
+          <Stack.Screen name="fahrzeuge/[id]" options={{ title: "Fahrzeug bearbeiten", ...modal }} />
+          <Stack.Screen name="team/index" options={{ title: "Team", headerRight: () => <HeaderPlus href="/team/neu" /> }} />
+          <Stack.Screen name="team/neu" options={{ title: "Neuer Mitarbeiter", ...modal }} />
+          <Stack.Screen name="team/[id]" options={{ title: "Mitarbeiter bearbeiten", ...modal }} />
         </Stack.Protected>
       </Stack>
     </>

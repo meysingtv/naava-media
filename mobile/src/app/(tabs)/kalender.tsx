@@ -3,7 +3,8 @@ import { RefreshControl, ScrollView, Text } from "react-native";
 import { useRouter } from "expo-router";
 
 import { FahrstundeRow } from "@/components/fahrstunde-row";
-import { CenterInfo, Row, Screen, Section } from "@/components/ui";
+import { HeaderPlus } from "@/components/header-plus";
+import { CenterInfo, Row, Screen, ScreenHeader, Section } from "@/components/ui";
 import { useLoader } from "@/lib/use-loader";
 import { supabase } from "@/lib/supabase";
 import { formatDatumLang, heuteISO, plusTageISO } from "@/lib/format";
@@ -53,6 +54,7 @@ export default function KalenderScreen() {
 
   return (
     <Screen>
+      <ScreenHeader title="Kalender" right={<HeaderPlus href="/fahrstunde/neu" />} />
       <ScrollView
         contentContainerStyle={{ padding: space(4), paddingBottom: space(8) }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />}

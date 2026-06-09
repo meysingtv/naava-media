@@ -1,4 +1,10 @@
-import type { FahrstundeStatus, FahrstundeTyp } from "./types";
+import type { FahrlehrerRolle, FahrstundeStatus, FahrstundeTyp } from "./types";
+
+export const ROLLEN: Record<FahrlehrerRolle, string> = {
+  chef: "Chef",
+  fahrlehrer: "Fahrlehrer",
+  buero: "Büro",
+};
 
 type Farbe = { bg: string; text: string };
 
