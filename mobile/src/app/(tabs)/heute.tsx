@@ -38,6 +38,28 @@ export default function HeuteScreen() {
     { cacheKey: "pinnwand" },
   );
 
+  const stats = useLoader<{ woche: number; schueler: number; pruefungen: number }>(
+    async () => {
+      const d = new Date();
+      const tag = (d.getDay() + 6) % 7;
+      const mo = new Date(d);
+      mo.setDate(d.getDate() - tag);
+      const so = new Date(mo);
+      so.setDate(mo.getDate() + 6);
+      const iso = (x: Date) =>
+        `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+      const [w, s, p] = await Promise.all([
+        supabase.from("fahrstunde").select("*", { count: "exact", head: true }).gte("datum", iso(mo)).lte("datum", iso(so)),
+        supabase.from("fahrschueler").select("*", { count: "exact", head: true }),
+        supabase.from("fahrschueler").select("*", { count: "exact", head: true }).gte("pruefung_termin", heute),
+      ]);
+      const error = w.error || s.error || p.error;
+      if (error) return { data: null, error };
+      return { data: { woche: w.count ?? 0, schueler: s.count ?? 0, pruefungen: p.count ?? 0 }, error: null };
+    },
+    { cacheKey: "dashboard" },
+  );
+
   const liste = stunden.data ?? [];
   const pinnListe = pinnwand.data ?? [];
 
@@ -56,6 +78,7 @@ export default function HeuteScreen() {
             onRefresh={() => {
               stunden.refresh();
               pinnwand.refresh();
+              stats.refresh();
             }}
             tintColor={colors.accent}
           />
@@ -64,6 +87,14 @@ export default function HeuteScreen() {
         <LargeTitle title="Heute" subtitle={formatDatumLang(heute)} />
 
         <View style={{ paddingHorizontal: space(4) }}>
+          {stats.data ? (
+            <Section title="Überblick">
+              <Row title="Stunden diese Woche" value={String(stats.data.woche)} />
+              <Row title="Aktive Schüler" value={String(stats.data.schueler)} />
+              <Row title="Anstehende Prüfungen" value={String(stats.data.pruefungen)} />
+            </Section>
+          ) : null}
+
           {stunden.offline ? (
             <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: space(3) }}>Offline – zuletzt geladene Daten</Text>
           ) : null}

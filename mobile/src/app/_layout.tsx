@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
 import { AuthProvider, useAuth } from "@/lib/auth";
@@ -11,18 +11,6 @@ import { HeaderCancel } from "@/components/header-cancel";
 function RootNavigator() {
   const { session, loading } = useAuth();
   const { colors, schema } = useTheme();
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (loading) return;
-    const aufLogin = segments[0] === "login";
-    if (!session && !aufLogin) {
-      router.replace("/login");
-    } else if (session && aufLogin) {
-      router.replace("/(tabs)/heute");
-    }
-  }, [session, loading, segments, router]);
 
   useEffect(() => {
     if (session) planeErinnerungen();
@@ -35,6 +23,8 @@ function RootNavigator() {
       </View>
     );
   }
+
+  const modal = { presentation: "modal" as const, headerLeft: () => <HeaderCancel /> };
 
   return (
     <>
@@ -50,25 +40,19 @@ function RootNavigator() {
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="fahrstunde/neu"
-          options={{ title: "Neue Fahrstunde", presentation: "modal", headerLeft: () => <HeaderCancel /> }}
-        />
-        <Stack.Screen
-          name="fahrstunde/[id]"
-          options={{ title: "Fahrstunde", presentation: "modal", headerLeft: () => <HeaderCancel /> }}
-        />
-        <Stack.Screen name="schueler/[id]" options={{ title: "Schüler" }} />
-        <Stack.Screen
-          name="schueler/neu"
-          options={{ title: "Neuer Schüler", presentation: "modal", headerLeft: () => <HeaderCancel /> }}
-        />
-        <Stack.Screen
-          name="schueler/bearbeiten/[id]"
-          options={{ title: "Schüler bearbeiten", presentation: "modal", headerLeft: () => <HeaderCancel /> }}
-        />
+
+        <Stack.Protected guard={!session}>
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+        </Stack.Protected>
+
+        <Stack.Protected guard={!!session}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="fahrstunde/neu" options={{ title: "Neue Fahrstunde", ...modal }} />
+          <Stack.Screen name="fahrstunde/[id]" options={{ title: "Fahrstunde", ...modal }} />
+          <Stack.Screen name="schueler/[id]" options={{ title: "Schüler" }} />
+          <Stack.Screen name="schueler/neu" options={{ title: "Neuer Schüler", ...modal }} />
+          <Stack.Screen name="schueler/bearbeiten/[id]" options={{ title: "Schüler bearbeiten", ...modal }} />
+        </Stack.Protected>
       </Stack>
     </>
   );

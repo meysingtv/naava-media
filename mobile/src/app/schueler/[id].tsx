@@ -6,7 +6,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Avatar, Badge, CenterInfo, ProgressBar, Row, Screen, Section } from "@/components/ui";
 import { useLoader } from "@/lib/use-loader";
 import { supabase } from "@/lib/supabase";
-import { formatDatumKurz } from "@/lib/format";
+import { formatDatumKurz, heuteISO } from "@/lib/format";
 import { PFLICHTFAHRTEN, STATUS_LABEL, TYP_LABEL } from "@/lib/constants";
 import { useTheme } from "@/lib/theme-context";
 import { space } from "@/lib/theme";
@@ -19,6 +19,12 @@ const STATUS_TONE: Record<FahrstundeStatus, "accent" | "success" | "neutral"> = 
   abgeschlossen: "success",
   ausgefallen: "neutral",
 };
+
+// Deutsche Handynummer für wa.me (international, ohne +): 0151… -> 49151…
+function waNummer(tel: string): string {
+  const d = tel.replace(/\D/g, "");
+  return d.startsWith("0") ? `49${d.slice(1)}` : d;
+}
 
 export default function SchuelerDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -47,6 +53,15 @@ export default function SchuelerDetail() {
 
   if (schuelerQ.loading) return <CenterInfo loading />;
   if (schuelerQ.error || !schueler) return <CenterInfo text={schuelerQ.error ?? "Schüler nicht gefunden."} error />;
+
+  const heute = heuteISO();
+  const naechste = stunden
+    .filter((x) => x.status === "geplant" && x.datum >= heute)
+    .sort((a, b) => (a.datum + a.uhrzeit < b.datum + b.uhrzeit ? -1 : 1))[0];
+  const reminderText = naechste
+    ? `Hallo ${schueler.vorname}, kurze Erinnerung an deine Fahrstunde am ${formatDatumKurz(naechste.datum)} um ${naechste.uhrzeit.slice(0, 5)} Uhr.`
+    : `Hallo ${schueler.vorname}, kurze Erinnerung an deine nächste Fahrstunde.`;
+  const tel = schueler.telefon ?? "";
 
   return (
     <Screen>
@@ -91,6 +106,23 @@ export default function SchuelerDetail() {
                   onPress={() => Linking.openURL(`mailto:${schueler.email}`)}
                 />
               ) : null}
+            </Section>
+          ) : null}
+
+          {schueler.telefon ? (
+            <Section title="Erinnerung" footer={naechste ? undefined : "Kein anstehender Termin – es wird eine allgemeine Erinnerung gesendet."}>
+              <Row
+                title="Per WhatsApp erinnern"
+                leading={<Ionicons name="logo-whatsapp" size={20} color="#25D366" />}
+                chevron
+                onPress={() => Linking.openURL(`https://wa.me/${waNummer(tel)}?text=${encodeURIComponent(reminderText)}`)}
+              />
+              <Row
+                title="Per SMS erinnern"
+                leading={<Ionicons name="chatbubble-outline" size={20} color={colors.accent} />}
+                chevron
+                onPress={() => Linking.openURL(`sms:${tel}&body=${encodeURIComponent(reminderText)}`)}
+              />
             </Section>
           ) : null}
 
