@@ -1,43 +1,44 @@
 import { useMemo } from "react";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { FahrstundeRow } from "@/components/fahrstunde-row";
+import { FahrstundeKarte } from "@/components/fahrstunde-karte";
 import { HeaderPlus } from "@/components/header-plus";
-import { Row, Screen, ScreenHeader, Section } from "@/components/ui";
+import { CenterInfo, Screen, ScreenHeader } from "@/components/ui";
 import { useLoader } from "@/lib/use-loader";
 import { useRealtime } from "@/lib/use-realtime";
 import { supabase } from "@/lib/supabase";
-import { formatDatumLang, heuteISO } from "@/lib/format";
+import { formatDatumLang, heuteISO, plusTageISO } from "@/lib/format";
 import { useTheme } from "@/lib/theme-context";
-import { space } from "@/lib/theme";
-import { FAHRSTUNDE_SELECT, type FahrstundeMitRelationen, type Pinnwand } from "@/lib/types";
+import { radius, space, type ThemeColors } from "@/lib/theme";
+import { FAHRSTUNDE_SELECT, type FahrstundeMitRelationen } from "@/lib/types";
 
-export default function HeuteScreen() {
+function StatKachel({ label, value, colors }: { label: string; value: number; colors: ThemeColors }) {
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.card, borderRadius: radius.lg, padding: space(3.5) }}>
+      <Text style={{ fontSize: 24, fontWeight: "800", color: colors.text }}>{value}</Text>
+      <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>{label}</Text>
+    </View>
+  );
+}
+
+export default function HomeScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const heute = useMemo(() => heuteISO(), []);
+  const von = useMemo(() => heuteISO(), []);
+  const bis = useMemo(() => plusTageISO(von, 7), [von]);
 
   const stunden = useLoader<FahrstundeMitRelationen[]>(
     () =>
       supabase
         .from("fahrstunde")
         .select(FAHRSTUNDE_SELECT)
-        .eq("datum", heute)
+        .gte("datum", von)
+        .lte("datum", bis)
+        .order("datum", { ascending: true })
         .order("uhrzeit", { ascending: true })
         .returns<FahrstundeMitRelationen[]>(),
-    { cacheKey: `heute-${heute}` },
-  );
-  const pinnwand = useLoader<Pinnwand[]>(
-    () =>
-      supabase
-        .from("pinnwand")
-        .select("*")
-        .order("erledigt", { ascending: true })
-        .order("created_at", { ascending: false })
-        .returns<Pinnwand[]>(),
-    { cacheKey: "pinnwand" },
+    { cacheKey: `home-${von}` },
   );
 
   const stats = useLoader<{ woche: number; schueler: number; pruefungen: number }>(
@@ -53,7 +54,7 @@ export default function HeuteScreen() {
       const [w, s, p] = await Promise.all([
         supabase.from("fahrstunde").select("*", { count: "exact", head: true }).gte("datum", iso(mo)).lte("datum", iso(so)),
         supabase.from("fahrschueler").select("*", { count: "exact", head: true }),
-        supabase.from("fahrschueler").select("*", { count: "exact", head: true }).gte("pruefung_termin", heute),
+        supabase.from("fahrschueler").select("*", { count: "exact", head: true }).gte("pruefung_termin", von),
       ]);
       const error = w.error || s.error || p.error;
       if (error) return { data: null, error };
@@ -62,88 +63,77 @@ export default function HeuteScreen() {
     { cacheKey: "dashboard" },
   );
 
-  // Live-Sync: aktualisiert sich automatisch, sobald irgendwo etwas geändert wird.
-  useRealtime("heute-stunden", "fahrstunde", () => {
+  useRealtime("home-stunden", "fahrstunde", () => {
     stunden.refresh();
     stats.refresh();
   });
-  useRealtime("heute-pinnwand", "pinnwand", () => pinnwand.refresh());
 
-  const liste = stunden.data ?? [];
-  const pinnListe = pinnwand.data ?? [];
+  const tage = useMemo(() => {
+    const map = new Map<string, FahrstundeMitRelationen[]>();
+    for (const s of stunden.data ?? []) {
+      const liste = map.get(s.datum) ?? [];
+      liste.push(s);
+      map.set(s.datum, liste);
+    }
+    return Array.from(map, ([datum, liste]) => ({ datum, liste }));
+  }, [stunden.data]);
 
-  async function toggleTodo(item: Pinnwand) {
-    await supabase.from("pinnwand").update({ erledigt: !item.erledigt }).eq("id", item.id);
-    pinnwand.refresh();
+  function label(datum: string) {
+    if (datum === von) return "Heute";
+    if (datum === plusTageISO(von, 1)) return "Morgen";
+    return formatDatumLang(datum);
   }
 
   return (
     <Screen>
-      <ScreenHeader title="Heute" subtitle={formatDatumLang(heute)} right={<HeaderPlus href="/fahrstunde/neu" />} />
+      <ScreenHeader title="Heute" subtitle={formatDatumLang(von)} right={<HeaderPlus href="/fahrstunde/neu" />} />
       <ScrollView
-        contentContainerStyle={{ paddingBottom: space(8) }}
+        contentContainerStyle={{ padding: space(4), paddingBottom: space(8), gap: space(5) }}
         refreshControl={
           <RefreshControl
             refreshing={stunden.refreshing}
             onRefresh={() => {
               stunden.refresh();
-              pinnwand.refresh();
               stats.refresh();
             }}
             tintColor={colors.accent}
           />
         }
       >
-        <View style={{ paddingHorizontal: space(4) }}>
-          {stats.data ? (
-            <Section title="Überblick">
-              <Row title="Stunden diese Woche" value={String(stats.data.woche)} />
-              <Row title="Aktive Schüler" value={String(stats.data.schueler)} />
-              <Row title="Anstehende Prüfungen" value={String(stats.data.pruefungen)} />
-            </Section>
-          ) : null}
+        {stats.data ? (
+          <View style={{ flexDirection: "row", gap: space(3) }}>
+            <StatKachel label="Diese Woche" value={stats.data.woche} colors={colors} />
+            <StatKachel label="Schüler" value={stats.data.schueler} colors={colors} />
+            <StatKachel label="Prüfungen" value={stats.data.pruefungen} colors={colors} />
+          </View>
+        ) : null}
 
-          {stunden.offline ? (
-            <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: space(3) }}>Offline – zuletzt geladene Daten</Text>
-          ) : null}
-
-          {liste.length === 0 ? (
-            <Section>
-              <Row title="Heute keine Fahrstunden" />
-            </Section>
-          ) : (
-            <Section title={`${liste.length} ${liste.length === 1 ? "Fahrstunde" : "Fahrstunden"}`}>
-              {liste.map((st) => (
-                <FahrstundeRow
-                  key={st.id}
-                  stunde={st}
-                  quickAbzeichnen
-                  onPress={() => router.push(`/fahrstunde/${st.id}`)}
-                />
+        {stunden.loading ? (
+          <CenterInfo loading />
+        ) : tage.length === 0 ? (
+          <View style={{ backgroundColor: colors.card, borderRadius: radius.lg, padding: space(6), alignItems: "center" }}>
+            <Text style={{ color: colors.textMuted, fontSize: 15 }}>Keine anstehenden Fahrstunden</Text>
+          </View>
+        ) : (
+          tage.map((t) => (
+            <View key={t.datum} style={{ gap: space(2.5) }}>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: "800",
+                  color: colors.textMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.3,
+                }}
+              >
+                {label(t.datum)}
+              </Text>
+              {t.liste.map((st) => (
+                <FahrstundeKarte key={st.id} stunde={st} onPress={() => router.push(`/fahrstunde/${st.id}`)} />
               ))}
-            </Section>
-          )}
-
-          {pinnListe.length > 0 ? (
-            <Section title="Pinnwand">
-              {pinnListe.map((item) => (
-                <Row
-                  key={item.id}
-                  onPress={item.typ === "todo" ? () => toggleTodo(item) : undefined}
-                  title={item.titel}
-                  subtitle={item.inhalt ?? undefined}
-                  leading={
-                    <Ionicons
-                      name={item.typ === "todo" ? (item.erledigt ? "checkmark-circle" : "ellipse-outline") : "megaphone-outline"}
-                      size={20}
-                      color={item.erledigt ? colors.success : colors.accent}
-                    />
-                  }
-                />
-              ))}
-            </Section>
-          ) : null}
-        </View>
+            </View>
+          ))
+        )}
       </ScrollView>
     </Screen>
   );

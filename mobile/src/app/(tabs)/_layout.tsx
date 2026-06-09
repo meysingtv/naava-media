@@ -10,7 +10,7 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.text,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarInactiveTintColor: colors.text,
         tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.separator },
         tabBarLabelStyle: { fontWeight: "700", fontSize: 11 },
         sceneStyle: { backgroundColor: colors.bg },

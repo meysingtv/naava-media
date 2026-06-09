@@ -19,6 +19,15 @@ export function formatUhrzeit(uhrzeit: string): string {
   return uhrzeit ? uhrzeit.slice(0, 5) : "";
 }
 
+/** Endzeit aus Startzeit + Dauer, z. B. ("09:00", 45) -> "09:45". */
+export function endUhrzeit(uhrzeit: string, dauerMinuten: number): string {
+  const [h, m] = uhrzeit.split(":").map(Number);
+  const total = (h || 0) * 60 + (m || 0) + (dauerMinuten || 0);
+  const eh = Math.floor(total / 60) % 24;
+  const em = total % 60;
+  return `${String(eh).padStart(2, "0")}:${String(em).padStart(2, "0")}`;
+}
+
 /** "2026-06-09" -> "Dienstag, 9. Juni" */
 export function formatDatumLang(iso: string): string {
   const d = parseISO(iso);
