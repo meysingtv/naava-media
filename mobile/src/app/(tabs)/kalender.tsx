@@ -54,7 +54,7 @@ export default function KalenderScreen() {
 
   return (
     <Screen>
-      <ScreenHeader title="Kalender" right={<HeaderPlus href="/fahrstunde/neu" />} />
+      <ScreenHeader title="Terminplaner" right={<HeaderPlus href="/fahrstunde/neu" />} />
       <ScrollView
         contentContainerStyle={{ padding: space(4), paddingBottom: space(8) }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />}

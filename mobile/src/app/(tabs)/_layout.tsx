@@ -9,27 +9,48 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.accent,
+        tabBarActiveTintColor: colors.text,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.separator },
+        tabBarLabelStyle: { fontWeight: "700", fontSize: 11 },
         sceneStyle: { backgroundColor: colors.bg },
       }}
     >
       <Tabs.Screen
         name="heute"
-        options={{ title: "Heute", tabBarIcon: ({ color, size }) => <Ionicons name="today-outline" size={size} color={color} /> }}
-      />
-      <Tabs.Screen
-        name="kalender"
-        options={{ title: "Kalender", tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} /> }}
+        options={{
+          title: "Home",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />
+          ),
+        }}
       />
       <Tabs.Screen
         name="schueler"
-        options={{ title: "Schüler", tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" size={size} color={color} /> }}
+        options={{
+          title: "Schüler",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "people" : "people-outline"} size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="kalender"
+        options={{
+          title: "Terminplaner",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "calendar" : "calendar-outline"} size={size} color={color} />
+          ),
+        }}
       />
       <Tabs.Screen
         name="mehr"
-        options={{ title: "Mehr", tabBarIcon: ({ color, size }) => <Ionicons name="ellipsis-horizontal-circle-outline" size={size} color={color} /> }}
+        options={{
+          title: "Mehr",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "grid" : "grid-outline"} size={size} color={color} />
+          ),
+        }}
       />
     </Tabs>
   );
