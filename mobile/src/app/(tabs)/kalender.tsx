@@ -81,10 +81,15 @@ export default function TerminplanerScreen() {
         gray: {
           "100": colors.separator,
           "200": colors.separator,
-          "300": colors.textMuted,
-          "500": colors.textMuted,
+          "300": colors.separator,
+          "500": colors.text,
           "800": colors.text,
         },
+      },
+      typography: {
+        xs: { fontSize: 12 },
+        sm: { fontSize: 13 },
+        xl: { fontSize: 16 },
       },
     }),
     [colors],
@@ -119,6 +124,8 @@ export default function TerminplanerScreen() {
             weekStartsOn={1}
             locale="de"
             scrollOffsetMinutes={7 * 60}
+            hourRowHeight={56}
+            hourStyle={{ color: colors.text, fontWeight: "700", fontSize: 12 }}
             theme={calTheme}
             eventCellStyle={(ev) => ({
               backgroundColor: ev.status === "ausgefallen" ? colors.textMuted : TERMIN_FARBE[ev.typ],
