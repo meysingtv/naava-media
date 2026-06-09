@@ -4,10 +4,11 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
 import { AuthProvider, useAuth } from "@/lib/auth";
-import { colors } from "@/lib/theme";
+import { ThemeProvider, useTheme } from "@/lib/theme-context";
 
 function RootNavigator() {
   const { session, loading } = useAuth();
+  const { colors, schema } = useTheme();
   const segments = useSegments();
   const router = useRouter();
 
@@ -29,14 +30,34 @@ function RootNavigator() {
     );
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <>
+      <StatusBar style={schema === "dark" ? "light" : "dark"} />
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.card },
+          headerTitleStyle: { color: colors.text },
+          headerTintColor: colors.brand,
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: colors.bg },
+        }}
+      >
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="fahrstunde/[id]" options={{ title: "Fahrstunde" }} />
+        <Stack.Screen name="schueler/[id]" options={{ title: "Schüler" }} />
+      </Stack>
+    </>
+  );
 }
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <StatusBar style="dark" />
-      <RootNavigator />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

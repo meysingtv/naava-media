@@ -1,97 +1,96 @@
 import { useMemo, useState } from "react";
-import { FlatList, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View, RefreshControl } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
-import { Avatar, Badge, Card, CenterInfo } from "@/components/ui";
+import { Avatar, Badge, Banner, CenterInfo, Input } from "@/components/ui";
 import { useLoader } from "@/lib/use-loader";
 import { supabase } from "@/lib/supabase";
-import { colors, radius, space } from "@/lib/theme";
+import { useTheme } from "@/lib/theme-context";
+import { radius, space, type ThemeColors } from "@/lib/theme";
 import type { Fahrschueler } from "@/lib/types";
 
 export default function SchuelerScreen() {
+  const router = useRouter();
+  const { colors } = useTheme();
+  const s = useMemo(() => makeStyles(colors), [colors]);
   const [suche, setSuche] = useState("");
-  const { data, loading, refreshing, error, refresh } = useLoader<Fahrschueler[]>(() =>
-    supabase.from("fahrschueler").select("*").order("nachname", { ascending: true }).returns<Fahrschueler[]>(),
+
+  const { data, loading, refreshing, error, offline, refresh } = useLoader<Fahrschueler[]>(
+    () => supabase.from("fahrschueler").select("*").order("nachname", { ascending: true }).returns<Fahrschueler[]>(),
+    { cacheKey: "schueler" },
   );
 
   const gefiltert = useMemo(() => {
     const q = suche.trim().toLowerCase();
     const alle = data ?? [];
     if (!q) return alle;
-    return alle.filter((s) => `${s.vorname} ${s.nachname}`.toLowerCase().includes(q));
+    return alle.filter((schueler) => `${schueler.vorname} ${schueler.nachname}`.toLowerCase().includes(q));
   }, [data, suche]);
 
   if (loading) return <CenterInfo loading />;
   if (error) return <CenterInfo text={error} error />;
 
   return (
-    <FlatList
-      style={styles.screen}
-      data={gefiltert}
-      keyExtractor={(s) => s.id}
-      renderItem={({ item }) => <SchuelerZeile schueler={item} />}
-      contentContainerStyle={[styles.list, gefiltert.length === 0 && styles.empty]}
-      ItemSeparatorComponent={() => <View style={{ height: space(2) }} />}
-      keyboardDismissMode="on-drag"
-      ListHeaderComponent={
-        <TextInput
-          style={styles.suche}
-          value={suche}
-          onChangeText={setSuche}
-          placeholder="Schüler suchen…"
-          placeholderTextColor={colors.textMuted}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-      }
-      ListEmptyComponent={<CenterInfo text="Keine Schüler gefunden." />}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.brand} />
-      }
-    />
+    <View style={s.screen}>
+      {offline ? <Banner text="Offline – zuletzt geladene Daten" /> : null}
+      <FlatList
+        data={gefiltert}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <Pressable
+            onPress={() => router.push(`/schueler/${item.id}`)}
+            style={({ pressed }) => [s.row, pressed && s.pressed]}
+          >
+            <Avatar vorname={item.vorname} nachname={item.nachname} farbe={item.avatar_farbe} />
+            <View style={s.info}>
+              <Text style={s.name} numberOfLines={1}>
+                {item.vorname} {item.nachname}
+              </Text>
+              <Text style={s.meta} numberOfLines={1}>
+                Klasse {item.fuehrerscheinklassen?.length ? item.fuehrerscheinklassen.join(", ") : "—"}
+              </Text>
+            </View>
+            {item.theorie_bestanden ? (
+              <Badge label="Theorie ✓" bg="#D1FAE5" color="#047857" />
+            ) : (
+              <Badge label="Theorie offen" bg="#F1F5F9" color="#475569" />
+            )}
+            <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+          </Pressable>
+        )}
+        contentContainerStyle={[s.list, gefiltert.length === 0 && s.empty]}
+        ItemSeparatorComponent={() => <View style={{ height: space(2) }} />}
+        keyboardDismissMode="on-drag"
+        ListHeaderComponent={
+          <View style={{ marginBottom: space(4) }}>
+            <Input value={suche} onChangeText={setSuche} placeholder="Schüler suchen…" autoCapitalize="none" autoCorrect={false} />
+          </View>
+        }
+        ListEmptyComponent={<CenterInfo text="Keine Schüler gefunden." />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.brand} />}
+      />
+    </View>
   );
 }
 
-function SchuelerZeile({ schueler }: { schueler: Fahrschueler }) {
-  const klassen = schueler.fuehrerscheinklassen?.length
-    ? schueler.fuehrerscheinklassen.join(", ")
-    : "—";
-  return (
-    <Card style={styles.row}>
-      <Avatar vorname={schueler.vorname} nachname={schueler.nachname} farbe={schueler.avatar_farbe} />
-      <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={1}>
-          {schueler.vorname} {schueler.nachname}
-        </Text>
-        <Text style={styles.meta} numberOfLines={1}>
-          Klasse {klassen}
-        </Text>
-      </View>
-      {schueler.theorie_bestanden ? (
-        <Badge label="Theorie ✓" bg="#D1FAE5" color="#047857" />
-      ) : (
-        <Badge label="Theorie offen" bg="#F1F5F9" color="#475569" />
-      )}
-    </Card>
-  );
-}
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
-  list: { padding: space(4) },
-  empty: { flexGrow: 1 },
-  suche: {
-    backgroundColor: colors.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: space(3.5),
-    paddingVertical: space(3),
-    fontSize: 16,
-    color: colors.text,
-    marginBottom: space(4),
-  },
-  row: { flexDirection: "row", alignItems: "center", gap: space(3) },
-  info: { flex: 1, gap: 2 },
-  name: { fontSize: 16, fontWeight: "600", color: colors.text },
-  meta: { fontSize: 13, color: colors.textMuted },
-});
+const makeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    screen: { flex: 1, backgroundColor: c.bg },
+    list: { padding: space(4) },
+    empty: { flexGrow: 1 },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space(3),
+      backgroundColor: c.card,
+      borderRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+      padding: space(3.5),
+    },
+    pressed: { opacity: 0.6 },
+    info: { flex: 1, gap: 2 },
+    name: { fontSize: 16, fontWeight: "600", color: c.text },
+    meta: { fontSize: 13, color: c.textMuted },
+  });

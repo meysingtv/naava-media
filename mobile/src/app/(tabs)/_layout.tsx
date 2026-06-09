@@ -1,19 +1,19 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-import { LogoutButton } from "@/components/logout-button";
-import { colors } from "@/lib/theme";
+import { useTheme } from "@/lib/theme-context";
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.brand,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarInactiveTintColor: colors.tabInactive,
+        tabBarStyle: { backgroundColor: colors.tabBar, borderTopColor: colors.border },
         headerStyle: { backgroundColor: colors.card },
-        headerTitleStyle: { color: colors.text, fontWeight: "700" },
+        headerTitleStyle: { color: colors.text, fontWeight: "800" },
         headerShadowVisible: false,
-        headerRight: () => <LogoutButton />,
         sceneStyle: { backgroundColor: colors.bg },
       }}
     >
@@ -36,6 +36,13 @@ export default function TabsLayout() {
         options={{
           title: "Schüler",
           tabBarIcon: ({ color, size }) => <Ionicons name="people-outline" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="mehr"
+        options={{
+          title: "Mehr",
+          tabBarIcon: ({ color, size }) => <Ionicons name="ellipsis-horizontal" size={size} color={color} />,
         }}
       />
     </Tabs>

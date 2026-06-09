@@ -29,3 +29,10 @@ export const STATUS_FARBE: Record<FahrstundeStatus, Farbe> = {
   abgeschlossen: { bg: "#D1FAE5", text: "#047857" },
   ausgefallen: { bg: "#F1F5F9", text: "#475569" },
 };
+
+// Gesetzliche Pflicht-Sonderfahrten (Klasse B) – Soll-Anzahl je Typ.
+export const PFLICHTFAHRTEN: { typ: FahrstundeTyp; label: string; soll: number }[] = [
+  { typ: "ueberland", label: "Überlandfahrten", soll: 5 },
+  { typ: "autobahn", label: "Autobahnfahrten", soll: 4 },
+  { typ: "nacht", label: "Nachtfahrten", soll: 3 },
+];

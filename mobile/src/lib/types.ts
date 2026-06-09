@@ -1,6 +1,17 @@
 // Datentypen – Spiegel des Supabase-Schemas (Teilmenge der Web-App).
 export type FahrstundeTyp = "normal" | "autobahn" | "nacht" | "ueberland" | "pruefung";
 export type FahrstundeStatus = "geplant" | "abgeschlossen" | "ausgefallen";
+export type PinnwandTyp = "news" | "todo";
+
+export type Pinnwand = {
+  id: string;
+  fahrschule_id: string;
+  typ: PinnwandTyp;
+  titel: string;
+  inhalt: string | null;
+  erledigt: boolean;
+  created_at: string;
+};
 
 export type Fahrschueler = {
   id: string;
@@ -8,11 +19,15 @@ export type Fahrschueler = {
   vorname: string;
   nachname: string;
   geburtsdatum: string | null;
+  strasse: string | null;
+  plz: string | null;
+  ort: string | null;
   telefon: string | null;
   email: string | null;
   fuehrerscheinklassen: string[];
   anmeldedatum: string;
   theorie_bestanden: boolean;
+  theorie_termin: string | null;
   pruefung_termin: string | null;
   notizen: string | null;
   avatar_farbe: string;
