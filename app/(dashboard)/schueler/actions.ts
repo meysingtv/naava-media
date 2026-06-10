@@ -97,7 +97,7 @@ export async function schuelerSpeichern(
 
   revalidatePath("/schueler");
   if (schuelerId) revalidatePath(`/schueler/${schuelerId}`);
-  redirect(`/schueler/${schuelerId}`);
+  redirect(`/schueler?id=${schuelerId}`);
 }
 
 /** Löscht einen Schüler vollständig (DSGVO – inkl. abhängiger Datensätze per Cascade). */

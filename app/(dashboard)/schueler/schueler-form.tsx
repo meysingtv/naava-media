@@ -273,7 +273,7 @@ export function SchuelerForm({ schueler }: { schueler?: Fahrschueler }) {
 
       <div className="flex justify-end gap-2">
         <Button asChild variant="outline" type="button">
-          <a href={schueler ? `/schueler/${schueler.id}` : "/schueler"}>Abbrechen</a>
+          <a href={schueler ? `/schueler?id=${schueler.id}` : "/schueler"}>Abbrechen</a>
         </Button>
         <SubmitButton>{schueler ? "Änderungen speichern" : "Schüler anlegen"}</SubmitButton>
       </div>
