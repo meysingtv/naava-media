@@ -18,17 +18,20 @@ export default async function SchuelerPage({
 }) {
   const supabase = createClient();
 
-  const [schuelerRes, rechnungRes, lessonsRes] = await Promise.all([
+  const [schuelerRes, rechnungRes, lessonsRes, lehrerRes] = await Promise.all([
+    // Liste: nur die wirklich benötigten Spalten (schlank, schnell).
     supabase
       .from("fahrschueler")
-      .select("*")
+      .select("id, vorname, nachname, avatar_farbe, fuehrerscheinklassen, kundennummer, kostentraeger, filiale")
       .order("nachname", { ascending: true })
       .order("vorname", { ascending: true }),
     supabase.from("rechnung").select("schueler_id, betrag_brutto, status"),
+    // Ohne Join – nur die IDs, das spart viel Übertragung.
     supabase
       .from("fahrstunde")
-      .select("schueler_id, fahrlehrer(vorname, nachname)")
-      .returns<{ schueler_id: string | null; fahrlehrer: { vorname: string; nachname: string } | null }[]>(),
+      .select("schueler_id, fahrlehrer_id")
+      .returns<{ schueler_id: string | null; fahrlehrer_id: string | null }[]>(),
+    supabase.from("fahrlehrer").select("id, vorname, nachname"),
   ]);
 
   const schueler = (schuelerRes.data ?? []) as Fahrschueler[];
@@ -45,13 +48,16 @@ export default async function SchuelerPage({
     saldoMap[r.schueler_id] = (saldoMap[r.schueler_id] ?? 0) + (r.status === "bezahlt" ? 0 : -brutto);
   }
 
-  // Fahrlehrer-Kürzel je Schüler (aus den Fahrstunden).
+  // Fahrlehrer-Kürzel je Schüler (fahrlehrer_id → Initialen, ohne Join).
+  const flInitialen: Record<string, string> = {};
+  for (const f of (lehrerRes.data ?? []) as { id: string; vorname: string; nachname: string }[]) {
+    flInitialen[f.id] = initialen(f.vorname, f.nachname);
+  }
   const lehrerSets: Record<string, Set<string>> = {};
   for (const row of lessonsRes.data ?? []) {
-    if (!row.schueler_id || !row.fahrlehrer) continue;
-    (lehrerSets[row.schueler_id] ??= new Set()).add(
-      initialen(row.fahrlehrer.vorname, row.fahrlehrer.nachname),
-    );
+    if (!row.schueler_id || !row.fahrlehrer_id) continue;
+    const ini = flInitialen[row.fahrlehrer_id];
+    if (ini) (lehrerSets[row.schueler_id] ??= new Set()).add(ini);
   }
   const lehrerMap: Record<string, string[]> = {};
   for (const [id, set] of Object.entries(lehrerSets)) lehrerMap[id] = Array.from(set);

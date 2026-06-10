@@ -19,6 +19,22 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { toast } from "sonner";
 import { cn, formatEuro } from "@/lib/utils";
 import type { Fahrschueler } from "@/lib/types";
+import { schuelerLaden } from "./actions";
+
+/** Kleiner CSS-Tooltip, der das Label über dem Element zeigt (ohne JS/Lib). */
+function Tip({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <span className="group relative inline-flex">
+      {children}
+      <span className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs font-medium text-background opacity-0 shadow transition-opacity duration-150 group-hover:opacity-100">
+        {label}
+      </span>
+    </span>
+  );
+}
+
+const toolbarBtn =
+  "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground";
 
 export function SchuelerListe({
   schueler,
@@ -72,11 +88,15 @@ export function SchuelerListe({
     downloadCsv("schueler.csv", csv);
   }
 
-  function csvFuerSchueler() {
-    const s = schueler.find((x) => x.id === selectedId);
-    if (!s) return;
+  async function csvFuerSchueler() {
+    if (!selectedId) return;
     setCsvOpen(true);
-
+    const s = await schuelerLaden(selectedId);
+    if (!s) {
+      setCsvOpen(false);
+      toast.error("Schüler nicht gefunden");
+      return;
+    }
     const jn = (b: boolean) => (b ? "Ja" : "Nein");
     const zeilen: [string, string | number | null][] = [
       ["Kundennummer", s.kundennummer],
@@ -128,13 +148,9 @@ export function SchuelerListe({
       .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";"))
       .join("\n");
     const datei = `${s.nachname}_${s.vorname}`.replace(/[^a-zA-Z0-9_-]/g, "") || "schueler";
-
-    // Kurz "wird generiert" zeigen, dann tatsächlich herunterladen.
-    window.setTimeout(() => {
-      downloadCsv(`${datei}.csv`, csv);
-      setCsvOpen(false);
-      toast.success("CSV-Datei erstellt");
-    }, 600);
+    downloadCsv(`${datei}.csv`, csv);
+    setCsvOpen(false);
+    toast.success("CSV-Datei erstellt");
   }
 
   if (schueler.length === 0) {
@@ -154,55 +170,53 @@ export function SchuelerListe({
     );
   }
 
-  const toolbarBtn =
-    "flex h-8 w-8 items-center justify-center rounded-md border border-input bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground";
-
   return (
     <div>
-      <Card className="overflow-hidden">
+      <Card>
         {/* Werkzeugleiste */}
-        <div className="flex flex-wrap items-center gap-2 border-b p-2">
-          <Link href="/schueler/neu" title="Neuen Schüler anlegen" className={toolbarBtn}>
-            <Plus className="h-4 w-4" />
-          </Link>
-          {selectedId ? (
-            <Link
-              href={`/schueler/${selectedId}/bearbeiten`}
-              title="Ausgewählten Schüler bearbeiten"
-              className={toolbarBtn}
-            >
-              <Pencil className="h-4 w-4" />
+        <div className="flex flex-wrap items-center gap-1 border-b p-2">
+          <Tip label="Neuer Schüler">
+            <Link href="/schueler/neu" aria-label="Neuer Schüler" className={toolbarBtn}>
+              <Plus className="h-4 w-4" />
             </Link>
-          ) : (
-            <span
-              title="Erst links einen Schüler auswählen"
-              aria-disabled="true"
-              className={cn(toolbarBtn, "cursor-not-allowed opacity-40")}
-            >
-              <Pencil className="h-4 w-4" />
-            </span>
-          )}
-          <button type="button" onClick={exportCsv} title="Liste als CSV exportieren" className={toolbarBtn}>
-            <Download className="h-4 w-4" />
-          </button>
-          {selectedId ? (
-            <button
-              type="button"
-              onClick={csvFuerSchueler}
-              title="CSV für ausgewählten Schüler"
-              className={toolbarBtn}
-            >
-              <FileSpreadsheet className="h-4 w-4" />
+          </Tip>
+          <Tip label={selectedId ? "Bearbeiten" : "Erst Schüler auswählen"}>
+            {selectedId ? (
+              <Link
+                href={`/schueler/${selectedId}/bearbeiten`}
+                aria-label="Ausgewählten Schüler bearbeiten"
+                className={toolbarBtn}
+              >
+                <Pencil className="h-4 w-4" />
+              </Link>
+            ) : (
+              <span aria-disabled="true" className={cn(toolbarBtn, "cursor-not-allowed opacity-40")}>
+                <Pencil className="h-4 w-4" />
+              </span>
+            )}
+          </Tip>
+          <Tip label="Liste als CSV">
+            <button type="button" onClick={exportCsv} aria-label="Liste als CSV exportieren" className={toolbarBtn}>
+              <Download className="h-4 w-4" />
             </button>
-          ) : (
-            <span
-              title="Erst links einen Schüler auswählen"
-              aria-disabled="true"
-              className={cn(toolbarBtn, "cursor-not-allowed opacity-40")}
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-            </span>
-          )}
+          </Tip>
+          <Tip label={selectedId ? "CSV für Schüler" : "Erst Schüler auswählen"}>
+            {selectedId ? (
+              <button
+                type="button"
+                onClick={csvFuerSchueler}
+                aria-label="CSV für ausgewählten Schüler"
+                className={toolbarBtn}
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+              </button>
+            ) : (
+              <span aria-disabled="true" className={cn(toolbarBtn, "cursor-not-allowed opacity-40")}>
+                <FileSpreadsheet className="h-4 w-4" />
+              </span>
+            )}
+          </Tip>
+
           <div className="relative ml-auto w-full sm:max-w-[240px]">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
