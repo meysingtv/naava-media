@@ -7,6 +7,7 @@ import { cn, initialen } from "@/lib/utils";
 import type { Fahrschueler } from "@/lib/types";
 import { SchuelerListe } from "./schueler-liste";
 import { SchuelerAkte } from "./schueler-akte";
+import { KiLernstatusDialog } from "./ki-lernstatus-dialog";
 
 export const metadata = { title: "Schüler · FahrschulApp" };
 
@@ -60,7 +61,9 @@ export default async function SchuelerPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Schüler" description={`${schueler.length} Schüler insgesamt`} />
+      <PageHeader title="Schüler" description={`${schueler.length} Schüler insgesamt`}>
+        <KiLernstatusDialog />
+      </PageHeader>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
         {/* Liste (links) */}
