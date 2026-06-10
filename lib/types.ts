@@ -58,6 +58,17 @@ export type Fahrschueler = {
   pruefung_termin: string | null;
   notizen: string | null;
   avatar_farbe: string;
+  // Kundenakte / Verwaltung (Migration 0004)
+  kundennummer: number | null;
+  kostentraeger: string | null;
+  filiale: string | null;
+  prueforganisation: string | null;
+  preisliste: string | null;
+  intensivkurs: boolean;
+  iban: string | null;
+  theorie_versuch: number;
+  praxis_versuch: number;
+  lernstatus: number;
   created_at: string;
 };
 

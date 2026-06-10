@@ -52,6 +52,15 @@ export async function schuelerSpeichern(
     theorie_termin: leerZuNull(formData.get("theorie_termin")),
     pruefung_termin: leerZuNull(formData.get("pruefung_termin")),
     notizen: leerZuNull(formData.get("notizen")),
+    // Kundenakte / Verwaltung
+    kostentraeger: leerZuNull(formData.get("kostentraeger")),
+    filiale: leerZuNull(formData.get("filiale")),
+    prueforganisation: leerZuNull(formData.get("prueforganisation")),
+    preisliste: leerZuNull(formData.get("preisliste")),
+    iban: leerZuNull(formData.get("iban")),
+    intensivkurs: formData.get("intensivkurs") === "on",
+    theorie_versuch: Number(formData.get("theorie_versuch") ?? 1) || 1,
+    praxis_versuch: Number(formData.get("praxis_versuch") ?? 1) || 1,
   };
 
   let schuelerId = id;

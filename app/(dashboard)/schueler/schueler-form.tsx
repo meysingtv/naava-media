@@ -194,6 +194,83 @@ export function SchuelerForm({ schueler }: { schueler?: Fahrschueler }) {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Verwaltung &amp; Prüfung</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="kostentraeger">Kostenträger</Label>
+            <Input
+              id="kostentraeger"
+              name="kostentraeger"
+              defaultValue={schueler?.kostentraeger ?? undefined}
+              placeholder="z. B. Jobcenter, Arbeitgeber"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="filiale">Filiale</Label>
+            <Input
+              id="filiale"
+              name="filiale"
+              defaultValue={schueler?.filiale ?? undefined}
+              placeholder="z. B. München"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="preisliste">Preisliste</Label>
+            <Input id="preisliste" name="preisliste" defaultValue={schueler?.preisliste ?? undefined} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="prueforganisation">Prüforganisation</Label>
+            <Input
+              id="prueforganisation"
+              name="prueforganisation"
+              defaultValue={schueler?.prueforganisation ?? undefined}
+              placeholder="z. B. TÜV Süd"
+            />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="iban">IBAN</Label>
+            <Input
+              id="iban"
+              name="iban"
+              defaultValue={schueler?.iban ?? undefined}
+              placeholder="DE…"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="theorie_versuch">Theorieprüfung – Versuch</Label>
+            <Input
+              id="theorie_versuch"
+              name="theorie_versuch"
+              type="number"
+              min="1"
+              defaultValue={schueler?.theorie_versuch ?? 1}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="praxis_versuch">Praktische Prüfung – Versuch</Label>
+            <Input
+              id="praxis_versuch"
+              name="praxis_versuch"
+              type="number"
+              min="1"
+              defaultValue={schueler?.praxis_versuch ?? 1}
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm font-medium sm:col-span-2">
+            <input
+              type="checkbox"
+              name="intensivkurs"
+              defaultChecked={schueler?.intensivkurs}
+              className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+            />
+            Intensivkurs
+          </label>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-end gap-2">
         <Button asChild variant="outline" type="button">
           <a href={schueler ? `/schueler/${schueler.id}` : "/schueler"}>Abbrechen</a>

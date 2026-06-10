@@ -1,15 +1,19 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  CalendarClock,
+  Building2,
   CheckCircle2,
   Clock,
+  CreditCard,
   FileText,
+  GraduationCap,
+  Hash,
   Mail,
   MapPin,
   Pencil,
   Phone,
   Receipt,
+  Smartphone,
 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
@@ -24,10 +28,11 @@ import { LoeschenDialog } from "@/components/shared/loeschen-dialog";
 import {
   FAHRSTUNDE_TYPEN,
   RECHNUNG_STATUS,
+  THEORIE_GRUNDSTOFF,
   pflichtFahrtenFuer,
   theoriePflichtFuer,
 } from "@/lib/constants";
-import { formatDatum, formatEuro, formatUhrzeit } from "@/lib/utils";
+import { cn, formatDatum, formatEuro, formatUhrzeit, initialen } from "@/lib/utils";
 import type { Fahrschueler, Fahrstunde, Rechnung } from "@/lib/types";
 import { schuelerLoeschen } from "../actions";
 
@@ -36,15 +41,27 @@ type FahrstundeDetail = Fahrstunde & {
   fahrzeug: { kennzeichen: string } | null;
 };
 
-function FortschrittZeile({
-  label,
-  ist,
-  soll,
-}: {
-  label: string;
-  ist: number;
-  soll: number;
-}) {
+function alterVon(geb: string | null): number | null {
+  if (!geb) return null;
+  const d = new Date(geb);
+  if (Number.isNaN(d.getTime())) return null;
+  const heute = new Date();
+  let a = heute.getFullYear() - d.getFullYear();
+  const m = heute.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && heute.getDate() < d.getDate())) a -= 1;
+  return a;
+}
+
+function Datenzeile({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="text-right font-medium">{children}</span>
+    </div>
+  );
+}
+
+function FortschrittZeile({ label, ist, soll }: { label: string; ist: number; soll: number }) {
   const prozent = soll > 0 ? Math.min(100, Math.round((ist / soll) * 100)) : 100;
   const fertig = ist >= soll;
   return (
@@ -102,41 +119,103 @@ export default async function SchuelerDetailPage({ params }: { params: { id: str
   const ueberland = zaehle("ueberland");
   const autobahn = zaehle("autobahn");
   const nacht = zaehle("nacht");
+  const normalfahrten = zaehle("normal");
+  const fehlstunden = fahrstunden.filter((f) => f.status === "ausgefallen").length;
 
   const primaerKlasse = s.fuehrerscheinklassen?.[0] ?? "B";
   const pflicht = pflichtFahrtenFuer(primaerKlasse);
   const theorieBesucht = theorieRes.count ?? 0;
   const theorieSoll = theoriePflichtFuer(primaerKlasse);
+  const zusatzSoll = Math.max(theorieSoll - THEORIE_GRUNDSTOFF, 0);
   const sonderfahrtenOk =
     ueberland >= pflicht.ueberland && autobahn >= pflicht.autobahn && nacht >= pflicht.nacht;
   const pruefungsreif = s.theorie_bestanden && sonderfahrtenOk;
+
+  // Finanzen aus den Rechnungen
+  const gesamt = rechnungen.reduce((sum, r) => sum + Number(r.betrag_brutto ?? 0), 0);
+  const bezahlt = rechnungen
+    .filter((r) => r.status === "bezahlt")
+    .reduce((sum, r) => sum + Number(r.betrag_brutto ?? 0), 0);
+  const saldo = bezahlt - gesamt;
+
+  // Fahrlehrer-Kürzel aus den bisherigen Fahrstunden
+  const lehrerMap = new Map<string, string>();
+  for (const f of fahrstunden) {
+    if (f.fahrlehrer) {
+      lehrerMap.set(
+        `${f.fahrlehrer.vorname} ${f.fahrlehrer.nachname}`,
+        initialen(f.fahrlehrer.vorname, f.fahrlehrer.nachname),
+      );
+    }
+  }
+  const lehrerKuerzel = Array.from(lehrerMap.entries());
+
+  const alter = alterVon(s.geburtsdatum);
 
   return (
     <div className="space-y-6">
       {/* Kopf */}
       <Card>
-        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
+        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-4">
             <SchuelerAvatar
               vorname={s.vorname}
               nachname={s.nachname}
               farbe={s.avatar_farbe}
-              className="h-14 w-14 text-lg"
+              className="h-16 w-16 text-xl"
             />
-            <div>
-              <h1 className="text-xl font-bold tracking-tight">
-                {s.vorname} {s.nachname}
-              </h1>
-              <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight">
+                  {s.vorname} {s.nachname}
+                </h1>
+                {pruefungsreif ? (
+                  <Badge variant="success">
+                    <CheckCircle2 className="mr-1 h-3 w-3" /> Prüfungsreif
+                  </Badge>
+                ) : (
+                  <Badge variant="outline">In Ausbildung</Badge>
+                )}
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                {s.kundennummer != null && (
+                  <span className="inline-flex items-center gap-1">
+                    <Hash className="h-3.5 w-3.5" /> {s.kundennummer}
+                  </span>
+                )}
+                {s.geburtsdatum && (
+                  <span>
+                    {formatDatum(s.geburtsdatum)}
+                    {alter != null ? ` (${alter})` : ""}
+                  </span>
+                )}
+                {s.ort && (
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" /> {s.ort}
+                  </span>
+                )}
+                {s.filiale && (
+                  <span className="inline-flex items-center gap-1">
+                    <Building2 className="h-3.5 w-3.5" /> {s.filiale}
+                  </span>
+                )}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 {s.fuehrerscheinklassen?.length ? (
                   s.fuehrerscheinklassen.map((k) => (
                     <Badge key={k} variant="secondary">
-                      Klasse {k}
+                      {k}
                     </Badge>
                   ))
                 ) : (
-                  <span className="text-sm text-muted-foreground">Keine Klasse hinterlegt</span>
+                  <span className="text-sm text-muted-foreground">Keine Klasse</span>
                 )}
+                {lehrerKuerzel.length > 0 && <Separator orientation="vertical" className="h-4" />}
+                {lehrerKuerzel.map(([name, kuerzel]) => (
+                  <Badge key={name} variant="outline" title={`Fahrlehrer: ${name}`}>
+                    {kuerzel}
+                  </Badge>
+                ))}
               </div>
             </div>
           </div>
@@ -150,206 +229,250 @@ export default async function SchuelerDetailPage({ params }: { params: { id: str
               action={schuelerLoeschen}
               id={s.id}
               titel="Schüler löschen?"
-              beschreibung="Der Schüler und alle zugehörigen Daten (Fortschritt, Fahrstunden-Zuordnung) werden dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden."
+              beschreibung="Der Schüler und alle zugehörigen Daten werden dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden."
             />
           </div>
         </CardContent>
       </Card>
 
+      {/* Obere Reihe: Kontakt · Finanzen · Apps */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Linke Spalte */}
-        <div className="space-y-6">
-          {/* Kontakt */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Kontaktdaten</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              {s.telefon ? (
-                <p className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  {s.telefon}
-                </p>
-              ) : null}
-              {s.email ? (
-                <p className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  {s.email}
-                </p>
-              ) : null}
-              {s.strasse || s.ort ? (
-                <p className="flex items-start gap-2">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span>
-                    {s.strasse}
-                    {s.strasse && <br />}
-                    {[s.plz, s.ort].filter(Boolean).join(" ")}
-                  </span>
-                </p>
-              ) : null}
-              {!s.telefon && !s.email && !s.strasse && !s.ort && (
-                <p className="text-muted-foreground">Keine Kontaktdaten hinterlegt.</p>
-              )}
-              <Separator />
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Geburtsdatum</span>
-                <span>{formatDatum(s.geburtsdatum)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Angemeldet seit</span>
-                <span>{formatDatum(s.anmeldedatum)}</span>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Kontakt & Person */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Kontakt &amp; Person</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            {s.telefon && (
+              <p className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                {s.telefon}
+              </p>
+            )}
+            {s.email && (
+              <p className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                {s.email}
+              </p>
+            )}
+            {(s.strasse || s.ort) && (
+              <p className="flex items-start gap-2">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <span>
+                  {s.strasse}
+                  {s.strasse && <br />}
+                  {[s.plz, s.ort].filter(Boolean).join(" ")}
+                </span>
+              </p>
+            )}
+            <Separator />
+            <Datenzeile label="Angemeldet seit">{formatDatum(s.anmeldedatum)}</Datenzeile>
+            <Datenzeile label="Kostenträger">{s.kostentraeger || "—"}</Datenzeile>
+          </CardContent>
+        </Card>
 
-          {/* Fortschritt / Prüfungsreife */}
-          <Card>
-            <CardHeader className="flex-row items-center justify-between">
-              <CardTitle>Fortschritt (Klasse {primaerKlasse})</CardTitle>
-              {pruefungsreif ? (
-                <Badge variant="success">
-                  <CheckCircle2 className="mr-1 h-3 w-3" /> Prüfungsreif
-                </Badge>
-              ) : (
-                <Badge variant="outline">In Ausbildung</Badge>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
-                <span className="font-medium">Theorieprüfung</span>
-                {s.theorie_bestanden ? (
-                  <Badge variant="success">Bestanden</Badge>
-                ) : (
-                  <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
-                    Offen
-                  </Badge>
+        {/* Finanzen */}
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Finanzen</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Datenzeile label="Zu zahlen">{formatEuro(gesamt)}</Datenzeile>
+            <Datenzeile label="Bezahlt">{formatEuro(bezahlt)}</Datenzeile>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Saldo</span>
+              <span
+                className={cn(
+                  "text-lg font-bold",
+                  saldo < 0 ? "text-destructive" : "text-success",
                 )}
-              </div>
-              <FortschrittZeile
-                label="Theoriestunden besucht"
-                ist={theorieBesucht}
-                soll={theorieSoll}
-              />
-              <FortschrittZeile label="Überlandfahrten" ist={ueberland} soll={pflicht.ueberland} />
-              <FortschrittZeile label="Autobahnfahrten" ist={autobahn} soll={pflicht.autobahn} />
-              <FortschrittZeile label="Nachtfahrten" ist={nacht} soll={pflicht.nacht} />
-              <Separator />
+              >
+                {formatEuro(saldo)}
+              </span>
+            </div>
+            <Button asChild variant="outline" size="sm" className="w-full">
+              <Link href="/rechnungen">Rechnungen öffnen</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Apps / Integrationen (Ansicht, noch ohne Anbindung) */}
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Lern-Apps</CardTitle>
+            <Smartphone className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Abgeschlossene Fahrstunden gesamt</span>
-                <span className="font-semibold">{abgeschlossen.length}</span>
+                <span className="font-medium">Theorie-Lernstatus</span>
+                <span className="text-muted-foreground">{s.lernstatus ?? 0}%</span>
               </div>
-              {s.theorie_termin && (
-                <p className="text-xs text-muted-foreground">
-                  Theorieprüfung am {formatDatum(s.theorie_termin)}
-                </p>
-              )}
-              {s.pruefung_termin && (
-                <p className="text-xs text-muted-foreground">
-                  Praktische Prüfung am {formatDatum(s.pruefung_termin)}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Rechte Spalte */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* Fahrstunden */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Fahrstunden</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {fahrstunden.length === 0 ? (
-                <EmptyState
-                  icon={Clock}
-                  title="Noch keine Fahrstunden"
-                  description="Trage im Kalender Fahrstunden für diesen Schüler ein."
-                />
-              ) : (
-                <ul className="divide-y">
-                  {fahrstunden.slice(0, 12).map((f) => {
-                    const typ = FAHRSTUNDE_TYPEN[f.typ];
-                    return (
-                      <li key={f.id} className="flex items-center gap-3 py-3 first:pt-0">
-                        <div className="w-20 shrink-0 text-sm">
-                          <p className="font-medium">{formatDatum(f.datum)}</p>
-                          <p className="text-xs text-muted-foreground">{formatUhrzeit(f.uhrzeit)}</p>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <Badge variant="outline" className={typ.badge}>
-                            {typ.kurz}
-                          </Badge>
-                          <p className="mt-1 truncate text-xs text-muted-foreground">
-                            {f.fahrlehrer
-                              ? `${f.fahrlehrer.vorname} ${f.fahrlehrer.nachname}`
-                              : "Kein Lehrer"}
-                            {f.fahrzeug ? ` · ${f.fahrzeug.kennzeichen}` : ""}
-                          </p>
-                        </div>
-                        <span className="shrink-0 text-xs text-muted-foreground">
-                          {f.dauer_minuten} Min
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Rechnungen */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Rechnungen</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {rechnungen.length === 0 ? (
-                <EmptyState
-                  icon={Receipt}
-                  title="Noch keine Rechnungen"
-                  description="Für diesen Schüler wurden noch keine Rechnungen erstellt."
-                />
-              ) : (
-                <ul className="divide-y">
-                  {rechnungen.map((r) => {
-                    const status = RECHNUNG_STATUS[r.status];
-                    return (
-                      <li key={r.id} className="flex items-center gap-3 py-3 first:pt-0">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">{r.nummer}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatDatum(r.rechnungsdatum)}
-                          </p>
-                        </div>
-                        <span className="text-sm font-medium">{formatEuro(Number(r.betrag_brutto))}</span>
-                        <Badge variant="outline" className={status.badge}>
-                          {status.label}
-                        </Badge>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Notizen */}
-          {s.notizen && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CalendarClock className="h-4 w-4" /> Notizen
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="whitespace-pre-wrap text-sm text-muted-foreground">{s.notizen}</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              <Progress value={s.lernstatus ?? 0} />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline">drive.buzz</Badge>
+              <Badge variant="outline">abibaro</Badge>
+              <Badge variant="outline">ClassicPay</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Ansicht vorbereitet – Anbindung folgt später.
+            </p>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Ausbildung · Prüfung */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Ausbildung */}
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Ausbildung (Klasse {primaerKlasse})</CardTitle>
+            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
+              <span className="font-medium">Theorieprüfung</span>
+              {s.theorie_bestanden ? (
+                <Badge variant="success">Bestanden</Badge>
+              ) : (
+                <Badge variant="outline">Offen</Badge>
+              )}
+            </div>
+            <FortschrittZeile label="Theorie – Grundstoff" ist={theorieBesucht} soll={THEORIE_GRUNDSTOFF} />
+            <FortschrittZeile label="Theorie – Zusatzstoff" ist={0} soll={zusatzSoll} />
+            <FortschrittZeile label="Überlandfahrten" ist={ueberland} soll={pflicht.ueberland} />
+            <FortschrittZeile label="Autobahnfahrten" ist={autobahn} soll={pflicht.autobahn} />
+            <FortschrittZeile label="Nachtfahrten" ist={nacht} soll={pflicht.nacht} />
+            <Separator />
+            <Datenzeile label="Übungsstunden (normal)">{normalfahrten}</Datenzeile>
+            <Datenzeile label="Fehlstunden">{fehlstunden}</Datenzeile>
+            <Datenzeile label="Abgeschlossen gesamt">{abgeschlossen.length}</Datenzeile>
+          </CardContent>
+        </Card>
+
+        {/* Prüfung */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Prüfung &amp; Verwaltung</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <Datenzeile label="Theorieprüfung">
+              {s.theorie_termin ? formatDatum(s.theorie_termin) : "—"}
+              <span className="ml-1 text-muted-foreground">({s.theorie_versuch ?? 1}. Versuch)</span>
+            </Datenzeile>
+            <Datenzeile label="Praktische Prüfung">
+              {s.pruefung_termin ? formatDatum(s.pruefung_termin) : "—"}
+              <span className="ml-1 text-muted-foreground">({s.praxis_versuch ?? 1}. Versuch)</span>
+            </Datenzeile>
+            <Separator />
+            <Datenzeile label="Prüforganisation">{s.prueforganisation || "—"}</Datenzeile>
+            <Datenzeile label="Preisliste">{s.preisliste || "—"}</Datenzeile>
+            <Datenzeile label="Intensivkurs">
+              {s.intensivkurs ? <Badge variant="secondary">Ja</Badge> : "Nein"}
+            </Datenzeile>
+            <Datenzeile label="IBAN">{s.iban || "—"}</Datenzeile>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Fahrstunden · Rechnungen */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Fahrstunden</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {fahrstunden.length === 0 ? (
+              <EmptyState
+                icon={Clock}
+                title="Noch keine Fahrstunden"
+                description="Trage im Terminplaner Fahrstunden für diesen Schüler ein."
+              />
+            ) : (
+              <ul className="divide-y">
+                {fahrstunden.slice(0, 12).map((f) => {
+                  const typ = FAHRSTUNDE_TYPEN[f.typ];
+                  return (
+                    <li key={f.id} className="flex items-center gap-3 py-3 first:pt-0">
+                      <div className="w-20 shrink-0 text-sm">
+                        <p className="font-medium">{formatDatum(f.datum)}</p>
+                        <p className="text-xs text-muted-foreground">{formatUhrzeit(f.uhrzeit)}</p>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <Badge variant="outline" className={typ.badge}>
+                          {typ.kurz}
+                        </Badge>
+                        <p className="mt-1 truncate text-xs text-muted-foreground">
+                          {f.fahrlehrer
+                            ? `${f.fahrlehrer.vorname} ${f.fahrlehrer.nachname}`
+                            : "Kein Lehrer"}
+                          {f.fahrzeug ? ` · ${f.fahrzeug.kennzeichen}` : ""}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {f.dauer_minuten} Min
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Rechnungen</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {rechnungen.length === 0 ? (
+              <EmptyState
+                icon={Receipt}
+                title="Noch keine Rechnungen"
+                description="Für diesen Schüler wurden noch keine Rechnungen erstellt."
+              />
+            ) : (
+              <ul className="divide-y">
+                {rechnungen.map((r) => {
+                  const status = RECHNUNG_STATUS[r.status];
+                  return (
+                    <li key={r.id} className="flex items-center gap-3 py-3 first:pt-0">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{r.nummer}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDatum(r.rechnungsdatum)}
+                        </p>
+                      </div>
+                      <span className="text-sm font-medium">
+                        {formatEuro(Number(r.betrag_brutto))}
+                      </span>
+                      <Badge variant="outline" className={status.badge}>
+                        {status.label}
+                      </Badge>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Notizen */}
+      {s.notizen && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Notizen</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="whitespace-pre-wrap text-sm text-muted-foreground">{s.notizen}</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
