@@ -421,8 +421,8 @@ export function Terminplaner({
                       className="pointer-events-none absolute left-0 right-0 z-30"
                       style={{ top: (jetztMin - TAG_START * 60) * PX_PRO_MIN }}
                     >
-                      <div className="h-0 border-t-2 border-red-500" />
-                      <div className="absolute -left-1 -top-[5px] h-2 w-2 rounded-full bg-red-500" />
+                      <div className="h-0 border-t-2 border-primary" />
+                      <div className="absolute -left-1 -top-[5px] h-2 w-2 rounded-full bg-primary" />
                     </div>
                   )}
                 </div>
