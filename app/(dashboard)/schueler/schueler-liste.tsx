@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Download, Plus, Search, Users } from "lucide-react";
+import { Download, Pencil, Plus, Search, Users } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -88,6 +88,23 @@ export function SchuelerListe({
           <Link href="/schueler/neu" title="Neuen Schüler anlegen" className={toolbarBtn}>
             <Plus className="h-4 w-4" />
           </Link>
+          {selectedId ? (
+            <Link
+              href={`/schueler/${selectedId}/bearbeiten`}
+              title="Ausgewählten Schüler bearbeiten"
+              className={toolbarBtn}
+            >
+              <Pencil className="h-4 w-4" />
+            </Link>
+          ) : (
+            <span
+              title="Erst links einen Schüler auswählen"
+              aria-disabled="true"
+              className={cn(toolbarBtn, "cursor-not-allowed opacity-40")}
+            >
+              <Pencil className="h-4 w-4" />
+            </span>
+          )}
           <button type="button" onClick={exportCsv} title="Als CSV exportieren" className={toolbarBtn}>
             <Download className="h-4 w-4" />
           </button>

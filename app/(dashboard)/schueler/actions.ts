@@ -52,6 +52,8 @@ export async function schuelerSpeichern(
     theorie_termin: leerZuNull(formData.get("theorie_termin")),
     pruefung_termin: leerZuNull(formData.get("pruefung_termin")),
     notizen: leerZuNull(formData.get("notizen")),
+    anmeldedatum:
+      leerZuNull(formData.get("anmeldedatum")) ?? new Date().toISOString().slice(0, 10),
     // Kundenakte / Verwaltung
     kostentraeger: leerZuNull(formData.get("kostentraeger")),
     filiale: leerZuNull(formData.get("filiale")),
@@ -62,6 +64,22 @@ export async function schuelerSpeichern(
     theorie_versuch: Number(formData.get("theorie_versuch") ?? 1) || 1,
     praxis_versuch: Number(formData.get("praxis_versuch") ?? 1) || 1,
     lernstatus: Math.min(100, Math.max(0, Number(formData.get("lernstatus") ?? 0) || 0)),
+    // Kundenakte v2
+    anrede: leerZuNull(formData.get("anrede")),
+    geburtsort: leerZuNull(formData.get("geburtsort")),
+    staatsangehoerigkeit: leerZuNull(formData.get("staatsangehoerigkeit")),
+    telefon_beruflich: leerZuNull(formData.get("telefon_beruflich")),
+    schluesselzahl: leerZuNull(formData.get("schluesselzahl")),
+    erteilungsart: leerZuNull(formData.get("erteilungsart")),
+    fuehrerscheinnummer: leerZuNull(formData.get("fuehrerscheinnummer")),
+    kurs: leerZuNull(formData.get("kurs")),
+    bf17: formData.get("bf17") === "on",
+    zahlungsart: leerZuNull(formData.get("zahlungsart")),
+    kostentraeger_email: leerZuNull(formData.get("kostentraeger_email")),
+    vorgangsnummer: leerZuNull(formData.get("vorgangsnummer")),
+    pruefort: leerZuNull(formData.get("pruefort")),
+    sehhilfe: formData.get("sehhilfe") === "on",
+    ausbildung_beendet: formData.get("ausbildung_beendet") === "on",
   };
 
   let schuelerId = id;

@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/shared/page-header";
 import { SchuelerForm } from "../../schueler-form";
 import type { Fahrschueler } from "@/lib/types";
 
@@ -19,13 +18,5 @@ export default async function SchuelerBearbeitenPage({ params }: { params: { id:
     notFound();
   }
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Schüler bearbeiten"
-        description={`${data.vorname} ${data.nachname}`}
-      />
-      <SchuelerForm schueler={data as Fahrschueler} />
-    </div>
-  );
+  return <SchuelerForm schueler={data as Fahrschueler} />;
 }

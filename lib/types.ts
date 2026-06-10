@@ -69,6 +69,22 @@ export type Fahrschueler = {
   theorie_versuch: number;
   praxis_versuch: number;
   lernstatus: number;
+  // Kundenakte v2 (Migration 0005)
+  anrede: string | null;
+  geburtsort: string | null;
+  staatsangehoerigkeit: string | null;
+  telefon_beruflich: string | null;
+  schluesselzahl: string | null;
+  erteilungsart: string | null;
+  fuehrerscheinnummer: string | null;
+  kurs: string | null;
+  bf17: boolean;
+  zahlungsart: string | null;
+  kostentraeger_email: string | null;
+  vorgangsnummer: string | null;
+  pruefort: string | null;
+  sehhilfe: boolean;
+  ausbildung_beendet: boolean;
   created_at: string;
 };
 
