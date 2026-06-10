@@ -37,7 +37,6 @@ export default async function DashboardLayout({
       />
       <div className="md:pl-64 print:!pl-0">
         <DesktopTopbar
-          fahrschuleName={fahrschule.name}
           vorname={fahrlehrer.vorname}
           nachname={fahrlehrer.nachname}
           rolle={fahrlehrer.rolle}
