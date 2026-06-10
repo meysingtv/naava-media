@@ -39,7 +39,7 @@ export function TheoriestundeDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button onClick={() => setOpen(true)}>
+      <Button variant="outline" onClick={() => setOpen(true)}>
         <Plus /> Neue Theoriestunde
       </Button>
       <DialogContent>

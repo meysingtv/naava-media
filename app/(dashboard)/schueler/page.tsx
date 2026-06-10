@@ -25,7 +25,7 @@ export default async function SchuelerPage() {
         title="Schüler"
         description={`${schueler.length} ${schueler.length === 1 ? "Schüler" : "Schüler"} insgesamt`}
       >
-        <Button asChild>
+        <Button asChild variant="outline">
           <Link href="/schueler/neu">
             <UserPlus /> Neuer Schüler
           </Link>

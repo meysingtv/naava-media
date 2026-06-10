@@ -29,7 +29,7 @@ export default async function RechnungenPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Rechnungen" description="Erstelle und verwalte Rechnungen.">
-        <Button asChild>
+        <Button asChild variant="outline">
           <Link href="/rechnungen/neu">
             <Plus /> Neue Rechnung
           </Link>
@@ -58,7 +58,7 @@ export default async function RechnungenPage() {
           title="Noch keine Rechnungen"
           description="Erstelle deine erste Rechnung mit Positionen und Mehrwertsteuer."
         >
-          <Button asChild>
+          <Button asChild variant="outline">
             <Link href="/rechnungen/neu">
               <Plus /> Neue Rechnung
             </Link>

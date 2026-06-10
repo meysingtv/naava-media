@@ -40,6 +40,7 @@ export interface Option {
 export interface FahrstundeInitial {
   datum?: string;
   uhrzeit?: string;
+  dauer_minuten?: number;
   fahrlehrer_id?: string;
   typ?: FahrstundeTyp;
 }
@@ -189,7 +190,7 @@ export function FahrstundeDialog({
                 type="number"
                 step="5"
                 min="15"
-                defaultValue={fahrstunde?.dauer_minuten ?? 45}
+                defaultValue={fahrstunde?.dauer_minuten ?? initial?.dauer_minuten ?? 45}
               />
             </div>
             <div className="space-y-2">

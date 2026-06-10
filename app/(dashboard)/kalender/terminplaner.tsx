@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ const TERMIN_FARBE: Record<FahrstundeTyp, string> = {
 const TAG_START = 7; // 07:00
 const TAG_ENDE = 21; // 21:00
 const PX_PRO_MIN = 1;
+const SNAP = 15; // Minuten-Raster beim Ziehen
 const GRID_HOEHE = (TAG_ENDE - TAG_START) * 60 * PX_PRO_MIN;
 const STUNDEN_LABEL = Array.from({ length: TAG_ENDE - TAG_START + 1 }, (_, i) => TAG_START + i);
 const STUNDEN_ZELLE = Array.from({ length: TAG_ENDE - TAG_START }, (_, i) => TAG_START + i);
@@ -54,8 +55,17 @@ function minuten(uhrzeit: string): number {
   const [h, m] = uhrzeit.split(":").map(Number);
   return (h || 0) * 60 + (m || 0);
 }
+function minToUhr(min: number): string {
+  return `${pad(Math.floor(min / 60))}:${pad(min % 60)}`;
+}
 function dauerVon(s: FahrstundeMitRelationen): number {
   return s.dauer_minuten ?? 45;
+}
+
+interface Auswahl {
+  datum: string;
+  a: number; // Start-Minute (gedrückt)
+  b: number; // aktuelle Minute (gezogen)
 }
 
 /**
@@ -129,6 +139,11 @@ export function Terminplaner({
   const [bearbeiten, setBearbeiten] = useState<Fahrstunde | undefined>();
   const [initial, setInitial] = useState<FahrstundeInitial | undefined>();
 
+  const [auswahl, setAuswahl] = useState<Auswahl | null>(null);
+  const auswahlRef = useRef<Auswahl | null>(null);
+  auswahlRef.current = auswahl;
+  const ziehtRef = useRef(false);
+
   const jetzt = new Date();
   const jetztMin = jetzt.getHours() * 60 + jetzt.getMinutes();
 
@@ -144,16 +159,51 @@ export function Terminplaner({
     return map;
   }, [stunden]);
 
-  function blättern(richtung: number) {
-    const schritt = SPALTEN[modus];
-    setAnker(iso(addDays(fromIso(anker), richtung * schritt)));
-  }
-
-  function neueStunde(datum: string, stunde: number) {
+  function oeffneDialog(init: FahrstundeInitial) {
     setBearbeiten(undefined);
-    setInitial({ datum, uhrzeit: `${pad(stunde)}:00` });
+    setInitial(init);
     setKey((k) => k + 1);
     setOpen(true);
+  }
+
+  // Drag-Auswahl im Raster -> Dialog mit Startzeit und (grober) Dauer.
+  useEffect(() => {
+    function onUp() {
+      if (!ziehtRef.current) return;
+      ziehtRef.current = false;
+      const sel = auswahlRef.current;
+      setAuswahl(null);
+      if (!sel) return;
+      const von = Math.min(sel.a, sel.b);
+      const bis = Math.max(sel.a, sel.b);
+      const dauer = bis - von;
+      oeffneDialog({
+        datum: sel.datum,
+        uhrzeit: minToUhr(von),
+        dauer_minuten: dauer >= SNAP ? dauer : 45,
+      });
+    }
+    window.addEventListener("mouseup", onUp);
+    return () => window.removeEventListener("mouseup", onUp);
+  }, []);
+
+  function minuteAusEvent(e: React.MouseEvent): number {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const roh = TAG_START * 60 + y / PX_PRO_MIN;
+    const gerundet = Math.round(roh / SNAP) * SNAP;
+    return Math.min(Math.max(gerundet, TAG_START * 60), TAG_ENDE * 60);
+  }
+  function startZiehen(datum: string, e: React.MouseEvent) {
+    e.preventDefault();
+    const m = minuteAusEvent(e);
+    ziehtRef.current = true;
+    setAuswahl({ datum, a: m, b: m });
+  }
+  function beimZiehen(datum: string, e: React.MouseEvent) {
+    if (!ziehtRef.current) return;
+    const m = minuteAusEvent(e);
+    setAuswahl((sel) => (sel && sel.datum === datum ? { ...sel, b: m } : sel));
   }
 
   function stundeBearbeiten(s: FahrstundeMitRelationen) {
@@ -163,11 +213,8 @@ export function Terminplaner({
     setOpen(true);
   }
 
-  function neueStundeButton() {
-    setBearbeiten(undefined);
-    setInitial({ datum: anker });
-    setKey((k) => k + 1);
-    setOpen(true);
+  function blättern(richtung: number) {
+    setAnker(iso(addDays(fromIso(anker), richtung * SPALTEN[modus])));
   }
 
   const label =
@@ -241,15 +288,15 @@ export function Terminplaner({
               </button>
             ))}
           </div>
-          <Button variant="outline" size="sm" onClick={neueStundeButton}>
+          <Button variant="outline" size="sm" onClick={() => oeffneDialog({ datum: anker })}>
             <Plus /> <span className="hidden sm:inline">Neue Fahrstunde</span>
           </Button>
         </div>
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Tipp: Auf eine freie Stelle tippen, um eine Fahrstunde anzulegen – oder einen Termin
-        antippen, um ihn zu bearbeiten.
+        Tipp: Im Raster mit gedrückter Maus ziehen, um Beginn und Dauer festzulegen – Feinheiten
+        passt du danach im Dialog an. Einen Termin antippen zum Bearbeiten.
       </p>
 
       {/* Zeitraster */}
@@ -278,6 +325,7 @@ export function Terminplaner({
             const tagesEvents = eventsProTag[tagIso] ?? [];
             const spuren = vergebeSpuren(tagesEvents);
             const wochentag = WOCHENTAGE_KURZ[(tag.getDay() + 6) % 7];
+            const sel = auswahl && auswahl.datum === tagIso ? auswahl : null;
 
             return (
               <div key={tagIso} className="flex min-w-[120px] flex-1 flex-col border-r last:border-r-0">
@@ -296,19 +344,44 @@ export function Terminplaner({
                   </span>
                 </div>
 
-                {/* Tages-Raster */}
-                <div className="relative" style={{ height: GRID_HOEHE }}>
+                {/* Tages-Raster (Ziehen zum Anlegen) */}
+                <div
+                  className="relative select-none"
+                  style={{ height: GRID_HOEHE }}
+                  onMouseDown={(e) => startZiehen(tagIso, e)}
+                  onMouseMove={(e) => beimZiehen(tagIso, e)}
+                >
+                  {/* Stunden-Linien */}
                   {STUNDEN_ZELLE.map((h) => (
-                    <button
+                    <div
                       key={h}
-                      type="button"
-                      onClick={() => neueStunde(tagIso, h)}
-                      className="absolute left-0 right-0 border-b border-dashed border-border/50 transition-colors hover:bg-accent/60"
+                      className="pointer-events-none absolute left-0 right-0 border-b border-dashed border-border/50"
                       style={{ top: (h - TAG_START) * 60 * PX_PRO_MIN, height: 60 * PX_PRO_MIN }}
-                      aria-label={`${pad(h)}:00 – neue Fahrstunde`}
                     />
                   ))}
 
+                  {/* Aktuelle Auswahl */}
+                  {sel &&
+                    (() => {
+                      const von = Math.min(sel.a, sel.b);
+                      const bis = Math.max(sel.a, sel.b);
+                      return (
+                        <div
+                          className="pointer-events-none absolute left-0.5 right-0.5 z-10 rounded-md border border-primary/50 bg-primary/15"
+                          style={{
+                            top: (von - TAG_START * 60) * PX_PRO_MIN,
+                            height: Math.max((bis - von) * PX_PRO_MIN, 2),
+                          }}
+                        >
+                          <span className="absolute left-1 top-0.5 text-[10px] font-semibold text-foreground/70">
+                            {minToUhr(von)}
+                            {bis > von ? `–${minToUhr(bis)}` : ""}
+                          </span>
+                        </div>
+                      );
+                    })()}
+
+                  {/* Termine */}
                   {tagesEvents.map((s) => {
                     const start = Math.max(minuten(s.uhrzeit), TAG_START * 60);
                     const top = (start - TAG_START * 60) * PX_PRO_MIN;
@@ -322,9 +395,10 @@ export function Terminplaner({
                       <button
                         key={s.id}
                         type="button"
+                        onMouseDown={(e) => e.stopPropagation()}
                         onClick={() => stundeBearbeiten(s)}
                         className={cn(
-                          "absolute overflow-hidden rounded-md px-1.5 py-1 text-left text-[11px] leading-tight text-white shadow-sm transition hover:z-10 hover:shadow-md",
+                          "absolute z-20 overflow-hidden rounded-md px-1.5 py-1 text-left text-[11px] leading-tight text-white shadow-sm transition hover:z-30 hover:shadow-md",
                           ausgefallen && "line-through",
                         )}
                         style={{
@@ -344,7 +418,7 @@ export function Terminplaner({
                   {/* Jetzt-Linie */}
                   {istHeute && jetztMin >= TAG_START * 60 && jetztMin <= TAG_ENDE * 60 && (
                     <div
-                      className="pointer-events-none absolute left-0 right-0 z-20"
+                      className="pointer-events-none absolute left-0 right-0 z-30"
                       style={{ top: (jetztMin - TAG_START * 60) * PX_PRO_MIN }}
                     >
                       <div className="h-0 border-t-2 border-red-500" />

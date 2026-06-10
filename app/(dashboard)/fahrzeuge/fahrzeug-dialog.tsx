@@ -44,7 +44,7 @@ export function FahrzeugDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button onClick={() => setOpen(true)}>
+      <Button variant="outline" onClick={() => setOpen(true)}>
         <Plus /> Neues Fahrzeug
       </Button>
       <DialogContent>
