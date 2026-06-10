@@ -1,17 +1,10 @@
-import Link from "next/link";
-import { Clock, GraduationCap } from "lucide-react";
-
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { SchuelerAvatar } from "@/components/shared/schueler-avatar";
-import { EmptyState } from "@/components/shared/empty-state";
 import { FAHRSTUNDE_TYPEN } from "@/lib/constants";
-import { cn, formatDatum, formatEuro, formatUhrzeit } from "@/lib/utils";
-import type { Aufgabe, Fahrschueler, FahrstundeMitRelationen, Rechnung } from "@/lib/types";
-import { AufgabenCard } from "./aufgaben-card";
+import { cn, formatDatum, formatEuro, formatUhrzeit, initialen } from "@/lib/utils";
+import type { Fahrschueler, FahrstundeMitRelationen, Rechnung } from "@/lib/types";
+import { AufgabenCard, type TempAufgabe } from "./aufgaben-card";
 import { MiniKalender } from "./mini-kalender";
 
 export const metadata = { title: "Dashboard · FahrschulApp" };
@@ -25,26 +18,51 @@ function begruessung(): string {
 function iso(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
+function inTagen(n: number): string {
+  return iso(new Date(Date.now() + n * 86400000));
+}
 function wochenBereich(): { start: string; ende: string } {
   const heute = new Date();
-  const diffZuMontag = (heute.getDay() + 6) % 7;
   const montag = new Date(heute);
-  montag.setDate(heute.getDate() - diffZuMontag);
+  montag.setDate(heute.getDate() - ((heute.getDay() + 6) % 7));
   const sonntag = new Date(montag);
   sonntag.setDate(montag.getDate() + 6);
   return { start: iso(montag), ende: iso(sonntag) };
 }
 
-type AufgabeMitKunde = Aufgabe & { fahrschueler: { vorname: string; nachname: string } | null };
+function Ring({ prozent }: { prozent: number }) {
+  const r = 40;
+  const C = 2 * Math.PI * r;
+  const off = C * (1 - Math.min(100, Math.max(0, prozent)) / 100);
+  return (
+    <div className="relative h-24 w-24 shrink-0">
+      <svg viewBox="0 0 96 96" className="h-24 w-24 -rotate-90">
+        <circle cx="48" cy="48" r={r} fill="none" strokeWidth="8" className="stroke-muted" />
+        <circle
+          cx="48"
+          cy="48"
+          r={r}
+          fill="none"
+          strokeWidth="8"
+          strokeLinecap="round"
+          className="stroke-primary"
+          strokeDasharray={C}
+          strokeDashoffset={off}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-xl font-bold">{prozent}%</span>
+        <span className="text-[10px] text-muted-foreground">Auslastung</span>
+      </div>
+    </div>
+  );
+}
 
-function MiniStat({ label, value, hint }: { label: string; value: React.ReactNode; hint?: string }) {
+function MiniStat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <div>
-        <p className="text-sm text-muted-foreground">{label}</p>
-        {hint && <p className="text-xs text-muted-foreground/70">{hint}</p>}
-      </div>
-      <p className="text-lg font-bold tracking-tight">{value}</p>
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-semibold">{value}</span>
     </div>
   );
 }
@@ -54,12 +72,11 @@ export default async function DashboardPage() {
   const kontext = await getKontext();
   const heute = iso(new Date());
   const { start: wochenStart, ende: wochenEnde } = wochenBereich();
+  const jetzt = new Date();
+  const monatStart = iso(new Date(jetzt.getFullYear(), jetzt.getMonth(), 1));
+  const monatEnde = iso(new Date(jetzt.getFullYear(), jetzt.getMonth() + 1, 0));
 
-  const heuteDate = new Date();
-  const monatStart = iso(new Date(heuteDate.getFullYear(), heuteDate.getMonth(), 1));
-  const monatEnde = iso(new Date(heuteDate.getFullYear(), heuteDate.getMonth() + 1, 0));
-
-  const [heuteRes, offeneRes, pruefungenRes, wocheRes, lehrerRes, schuelerRes, aufgabenRes, schuelerOptRes, monatRes] =
+  const [heuteRes, offeneRes, pruefungRes, wocheRes, lehrerRes, schuelerRes, monatRes, namenRes] =
     await Promise.all([
       supabase
         .from("fahrstunde")
@@ -70,154 +87,131 @@ export default async function DashboardPage() {
       supabase.from("rechnung").select("*").in("status", ["offen", "ueberfaellig"]).returns<Rechnung[]>(),
       supabase
         .from("fahrschueler")
-        .select("*")
+        .select("vorname, nachname, pruefung_termin")
         .gte("pruefung_termin", heute)
         .order("pruefung_termin", { ascending: true })
-        .limit(5)
-        .returns<Fahrschueler[]>(),
+        .limit(1)
+        .returns<Pick<Fahrschueler, "vorname" | "nachname" | "pruefung_termin">[]>(),
       supabase.from("fahrstunde").select("id", { count: "exact", head: true }).gte("datum", wochenStart).lte("datum", wochenEnde),
       supabase.from("fahrlehrer").select("id", { count: "exact", head: true }).eq("aktiv", true),
       supabase.from("fahrschueler").select("id", { count: "exact", head: true }),
-      supabase
-        .from("aufgabe")
-        .select("*, fahrschueler(vorname, nachname)")
-        .order("created_at", { ascending: false })
-        .returns<AufgabeMitKunde[]>(),
-      supabase.from("fahrschueler").select("id, vorname, nachname").order("nachname").returns<Pick<Fahrschueler, "id" | "vorname" | "nachname">[]>(),
       supabase.from("fahrstunde").select("datum").gte("datum", monatStart).lte("datum", monatEnde).returns<{ datum: string }[]>(),
+      supabase.from("fahrschueler").select("vorname, nachname").order("nachname").limit(6).returns<Pick<Fahrschueler, "vorname" | "nachname">[]>(),
     ]);
 
   const heutigeStunden = heuteRes.data ?? [];
-  const offenerBetrag = (offeneRes.data ?? []).reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
-  const pruefungen = pruefungenRes.data ?? [];
+  const offene = offeneRes.data ?? [];
+  const offenerBetrag = offene.reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
+  const naechstePruefung = pruefungRes.data?.[0];
   const wochenStunden = wocheRes.count ?? 0;
   const aktiveLehrer = lehrerRes.count ?? 0;
   const schuelerGesamt = schuelerRes.count ?? 0;
-  const aufgaben = aufgabenRes.data ?? [];
-  const schuelerOptions = (schuelerOptRes.data ?? []).map((s) => ({ id: s.id, label: `${s.vorname} ${s.nachname}` }));
   const monatsTage = Array.from(new Set((monatRes.data ?? []).map((r) => r.datum)));
+  const namen = (namenRes.data ?? []).map((s) => `${s.vorname} ${s.nachname}`);
 
-  const kapazitaet = Math.max(aktiveLehrer, 1) * 40;
-  const auslastung = Math.min(100, Math.round((wochenStunden / kapazitaet) * 100));
-  const vorname = kontext?.fahrlehrer?.vorname;
+  const auslastung = Math.min(100, Math.round((wochenStunden / (Math.max(aktiveLehrer, 1) * 40)) * 100));
+  const vorname = kontext?.fahrlehrer?.vorname ?? "";
+  const nachname = kontext?.fahrlehrer?.nachname ?? "";
 
-  const langesDatum = new Date().toLocaleDateString("de-DE", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  // Temporäre Aufgaben (echte Zuweisung folgt später)
+  const tempAufgaben: TempAufgabe[] = [
+    { titel: "Theorieprüfung beim TÜV anmelden", faellig: inTagen(2), kunde: namen[0] ?? null, prioritaet: "hoch" },
+    { titel: "Überfällige Rechnung nachfassen", faellig: inTagen(1), kunde: namen[1] ?? null, prioritaet: "hoch" },
+    { titel: "Sehtest-Nachweis anfordern", faellig: inTagen(3), kunde: namen[2] ?? null, prioritaet: "niedrig" },
+    { titel: "Fahrzeug zur Hauptuntersuchung anmelden", faellig: inTagen(5), kunde: null, prioritaet: "mittel" },
+    { titel: "Erste-Hilfe-Bescheinigung prüfen", faellig: inTagen(7), kunde: namen[3] ?? null, prioritaet: "niedrig" },
+    { titel: "Passbild für Führerscheinantrag einscannen", faellig: inTagen(4), kunde: namen[4] ?? null, prioritaet: "mittel" },
+    { titel: "Prüfungstermine für nächste Woche planen", faellig: inTagen(6), kunde: null, prioritaet: "mittel" },
+    { titel: "Lehrmaterial Klasse B nachbestellen", faellig: inTagen(10), kunde: null, prioritaet: "niedrig" },
+    { titel: "Kaffeemaschine entkalken", faellig: inTagen(8), kunde: null, prioritaet: "niedrig" },
+  ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          {vorname ? `${begruessung()}, ${vorname}` : "Dashboard"}
-        </h1>
-        <p className="text-sm capitalize text-muted-foreground">{langesDatum}</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dashboard</p>
+
+      {/* Obere Reihe */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Überblick */}
+        <Card>
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-base">Diese Woche</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="flex items-center gap-4">
+              <Ring prozent={auslastung} />
+              <div className="flex-1 space-y-2 text-sm">
+                <MiniStat label="Aktive Schüler" value={schuelerGesamt} />
+                <MiniStat label="Offene Rechnungen" value={formatEuro(offenerBetrag)} />
+                <MiniStat label="Fahrstunden heute" value={heutigeStunden.length} />
+              </div>
+            </div>
+            <p className="mt-3 border-t pt-2 text-xs text-muted-foreground">
+              {naechstePruefung
+                ? `Nächste Prüfung: ${naechstePruefung.vorname} ${naechstePruefung.nachname} am ${formatDatum(naechstePruefung.pruefung_termin)}`
+                : "Keine anstehenden Prüfungen."}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Meine Termine */}
+        <Card>
+          <CardHeader className="flex-row items-center justify-between p-4 pb-2">
+            <CardTitle className="text-base">Meine Termine</CardTitle>
+            <span className="text-xs text-muted-foreground">{formatDatum(heute)}</span>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            {heutigeStunden.length === 0 ? (
+              <p className="py-10 text-center text-sm text-muted-foreground">Heute keine Termine.</p>
+            ) : (
+              <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
+                {heutigeStunden.map((s) => {
+                  const typ = FAHRSTUNDE_TYPEN[s.typ];
+                  const ausgefallen = s.status === "ausgefallen";
+                  const name = s.fahrschueler
+                    ? `${s.fahrschueler.vorname} ${s.fahrschueler.nachname}`
+                    : typ.label;
+                  return (
+                    <div
+                      key={s.id}
+                      className={cn(
+                        "rounded-md px-3 py-2 text-white",
+                        ausgefallen ? "bg-slate-400 line-through" : typ.dot,
+                      )}
+                    >
+                      <p className="truncate text-sm font-semibold">{name}</p>
+                      <p className="truncate text-xs text-white/90">
+                        {typ.label} · {formatUhrzeit(s.uhrzeit)}
+                        {s.fahrzeug ? ` · ${s.fahrzeug.kennzeichen}` : ""}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Begrüßung */}
+        <Card>
+          <CardContent className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
+              {initialen(vorname, nachname)}
+            </div>
+            <p className="text-lg font-bold tracking-tight">
+              {begruessung()}, {vorname}!
+            </p>
+            <p className="text-sm text-muted-foreground">Schön, dass du da bist.</p>
+          </CardContent>
+        </Card>
       </div>
 
+      {/* Untere Reihe */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Hauptspalte */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* Heutige Fahrstunden */}
-          <Card>
-            <CardHeader className="flex-row items-center justify-between p-4 pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Clock className="h-4 w-4 text-muted-foreground" /> Heutige Fahrstunden
-              </CardTitle>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/kalender">Zum Terminplaner</Link>
-              </Button>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              {heutigeStunden.length === 0 ? (
-                <EmptyState icon={Clock} title="Keine Fahrstunden heute" description="Für heute sind noch keine Fahrstunden eingetragen." />
-              ) : (
-                <ul className="space-y-2">
-                  {heutigeStunden.map((s) => {
-                    const typ = FAHRSTUNDE_TYPEN[s.typ];
-                    return (
-                      <li key={s.id} className="flex items-center gap-3 rounded-md border bg-card px-3 py-2">
-                        <span className={cn("h-9 w-1 shrink-0 rounded-full", typ.dot)} />
-                        <div className="w-12 shrink-0 text-sm">
-                          <p className="font-semibold">{formatUhrzeit(s.uhrzeit)}</p>
-                          <p className="text-[11px] text-muted-foreground">{s.dauer_minuten}′</p>
-                        </div>
-                        <SchuelerAvatar
-                          vorname={s.fahrschueler?.vorname}
-                          nachname={s.fahrschueler?.nachname}
-                          farbe={s.fahrschueler?.avatar_farbe}
-                          className="h-8 w-8 text-xs"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">
-                            {s.fahrschueler ? `${s.fahrschueler.vorname} ${s.fahrschueler.nachname}` : "Ohne Schüler"}
-                          </p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {s.fahrlehrer ? `${s.fahrlehrer.vorname} ${s.fahrlehrer.nachname}` : "Kein Lehrer"}
-                            {s.fahrzeug ? ` · ${s.fahrzeug.kennzeichen}` : ""}
-                          </p>
-                        </div>
-                        <Badge variant="outline" className={typ.badge}>
-                          {typ.kurz}
-                        </Badge>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Aufgaben */}
-          <AufgabenCard aufgaben={aufgaben} schuelerOptions={schuelerOptions} />
+        <div className="lg:col-span-2">
+          <AufgabenCard aufgaben={tempAufgaben} />
         </div>
-
-        {/* Seitenspalte */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-base">Überblick</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 p-4 pt-0">
-              <MiniStat label="Fahrstunden heute" value={heutigeStunden.length} />
-              <MiniStat label="Aktive Schüler" value={schuelerGesamt} />
-              <MiniStat label="Offene Rechnungen" value={formatEuro(offenerBetrag)} hint={`${(offeneRes.data ?? []).length} Rechnung(en)`} />
-              <MiniStat label="Auslastung diese Woche" value={`${auslastung}%`} hint={`${wochenStunden} Stunden geplant`} />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="p-4 pb-2">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <GraduationCap className="h-4 w-4 text-muted-foreground" /> Nächste Prüfungen
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              {pruefungen.length === 0 ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">Keine Prüfungstermine.</p>
-              ) : (
-                <ul className="space-y-1">
-                  {pruefungen.map((s) => (
-                    <li key={s.id}>
-                      <Link href={`/schueler?id=${s.id}`} className="flex items-center gap-2.5 rounded-md p-2 transition-colors hover:bg-muted">
-                        <SchuelerAvatar vorname={s.vorname} nachname={s.nachname} farbe={s.avatar_farbe} className="h-8 w-8 text-xs" />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">{s.vorname} {s.nachname}</p>
-                          <p className="text-xs text-muted-foreground">Klasse {s.fuehrerscheinklassen?.join(", ") || "—"}</p>
-                        </div>
-                        <span className="shrink-0 text-sm font-medium text-primary">{formatDatum(s.pruefung_termin)}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-
-          <MiniKalender markierteTage={monatsTage} />
-        </div>
+        <MiniKalender markierteTage={monatsTage} />
       </div>
     </div>
   );
