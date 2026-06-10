@@ -240,7 +240,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
       </Card>
 
       {/* Kontakt · Finanzen · Lern-Apps */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4">
         <Card>
           <CardHeader className="p-4">
             <CardTitle className="text-base">Kontakt &amp; Person</CardTitle>
@@ -316,7 +316,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
       </div>
 
       {/* Ausbildung · Prüfung */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4">
         <Card>
           <CardHeader className="flex-row items-center justify-between p-4">
             <CardTitle className="text-base">Ausbildung (Klasse {primaerKlasse})</CardTitle>
@@ -368,7 +368,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
       </div>
 
       {/* Fahrstunden · Rechnungen */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4">
         <Card>
           <CardHeader className="p-4">
             <CardTitle className="text-base">Fahrstunden</CardTitle>
