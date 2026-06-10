@@ -63,17 +63,6 @@ export function DesktopTopbar({ collapsed, onToggle, vorname, nachname, rolle }:
         </button>
       )}
 
-      <button
-        type="button"
-        onClick={() => start(() => router.refresh())}
-        title="Daten aktualisieren"
-        aria-label="Daten aktualisieren"
-        disabled={pending}
-        className={iconBtn}
-      >
-        <RefreshCw className={cn("h-4 w-4", pending && "animate-spin")} />
-      </button>
-
       <span className="ml-1 text-sm font-semibold text-foreground">{aktuell?.label ?? "Übersicht"}</span>
 
       {schnell.length > 0 && (
@@ -97,6 +86,16 @@ export function DesktopTopbar({ collapsed, onToggle, vorname, nachname, rolle }:
 
       {/* Nutzer + Logout */}
       <div className="ml-auto flex shrink-0 items-center gap-2 pl-2">
+        <button
+          type="button"
+          onClick={() => start(() => router.refresh())}
+          title="Daten aktualisieren"
+          aria-label="Daten aktualisieren"
+          disabled={pending}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+        >
+          <RefreshCw className={cn("h-3.5 w-3.5", pending && "animate-spin")} />
+        </button>
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
             {initialen(vorname, nachname)}
