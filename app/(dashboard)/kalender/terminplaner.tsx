@@ -186,23 +186,39 @@ export function Terminplaner({
     <div className="space-y-4">
       {/* Steuerung */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" onClick={() => blättern(-1)} aria-label="Zurück">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={() => blättern(1)} aria-label="Weiter">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={() => blättern(-1)}
+              aria-label="Zurück"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => blättern(1)}
+              aria-label="Weiter"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+          <p className="text-sm font-semibold capitalize text-foreground">{label}</p>
           {anker !== heute && (
-            <Button variant="ghost" size="sm" onClick={() => setAnker(heute)}>
+            <button
+              type="button"
+              onClick={() => setAnker(heute)}
+              className="text-xs font-medium text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
+            >
               Heute
-            </Button>
+            </button>
           )}
-          <p className="ml-2 text-sm font-medium capitalize">{label}</p>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="inline-flex rounded-lg border bg-card p-0.5">
+          <div className="inline-flex rounded-md bg-muted p-0.5 text-[13px]">
             {(
               [
                 ["tag", "Tag"],
@@ -215,9 +231,9 @@ export function Terminplaner({
                 type="button"
                 onClick={() => setModus(v)}
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                  "rounded px-2.5 py-1 font-medium transition-colors",
                   modus === v
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -225,7 +241,7 @@ export function Terminplaner({
               </button>
             ))}
           </div>
-          <Button onClick={neueStundeButton}>
+          <Button variant="outline" size="sm" onClick={neueStundeButton}>
             <Plus /> <span className="hidden sm:inline">Neue Fahrstunde</span>
           </Button>
         </div>
