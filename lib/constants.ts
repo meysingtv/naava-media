@@ -116,6 +116,46 @@ export const RECHNUNG_STATUS: Record<RechnungStatus, { label: string; badge: str
 
 export const STEUERSAETZE = [19, 7, 0] as const;
 
+// ---------------------------------------------------------------------
+// Theorieunterricht
+// ---------------------------------------------------------------------
+// Themen-Vorschläge für eine Theoriestunde (Grundstoff 1–12 +
+// klassenspezifischer Zusatzstoff). Dienen nur als Auswahlhilfe.
+export const THEORIE_THEMEN = [
+  "Grundstoff 1",
+  "Grundstoff 2",
+  "Grundstoff 3",
+  "Grundstoff 4",
+  "Grundstoff 5",
+  "Grundstoff 6",
+  "Grundstoff 7",
+  "Grundstoff 8",
+  "Grundstoff 9",
+  "Grundstoff 10",
+  "Grundstoff 11",
+  "Grundstoff 12",
+  "Zusatzstoff Klasse B (1)",
+  "Zusatzstoff Klasse B (2)",
+  "Zusatzstoff Klasse A",
+] as const;
+
+// Pflicht-Theorieeinheiten (Doppelstunden): 12 Grundstoff + Zusatzstoff je Klasse.
+export const THEORIE_GRUNDSTOFF = 12;
+
+export const THEORIE_ZUSATZSTOFF_JE_KLASSE: Record<string, number> = {
+  B: 2,
+  B197: 2,
+  BE: 0,
+  A: 4,
+  A1: 4,
+  A2: 4,
+  AM: 2,
+};
+
+export function theoriePflichtFuer(klasse: string): number {
+  return THEORIE_GRUNDSTOFF + (THEORIE_ZUSATZSTOFF_JE_KLASSE[klasse] ?? 2);
+}
+
 // Farbpalette für Schüler-Avatare
 export const AVATAR_FARBEN = [
   "#2563EB",

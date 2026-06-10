@@ -21,7 +21,12 @@ import { Separator } from "@/components/ui/separator";
 import { SchuelerAvatar } from "@/components/shared/schueler-avatar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { LoeschenDialog } from "@/components/shared/loeschen-dialog";
-import { FAHRSTUNDE_TYPEN, RECHNUNG_STATUS, pflichtFahrtenFuer } from "@/lib/constants";
+import {
+  FAHRSTUNDE_TYPEN,
+  RECHNUNG_STATUS,
+  pflichtFahrtenFuer,
+  theoriePflichtFuer,
+} from "@/lib/constants";
 import { formatDatum, formatEuro, formatUhrzeit } from "@/lib/utils";
 import type { Fahrschueler, Fahrstunde, Rechnung } from "@/lib/types";
 import { schuelerLoeschen } from "../actions";
@@ -69,7 +74,7 @@ export default async function SchuelerDetailPage({ params }: { params: { id: str
   }
   const s = schueler as Fahrschueler;
 
-  const [fahrstundenRes, rechnungenRes] = await Promise.all([
+  const [fahrstundenRes, rechnungenRes, theorieRes] = await Promise.all([
     supabase
       .from("fahrstunde")
       .select("*, fahrlehrer(vorname, nachname), fahrzeug(kennzeichen)")
@@ -82,6 +87,11 @@ export default async function SchuelerDetailPage({ params }: { params: { id: str
       .select("*")
       .eq("schueler_id", s.id)
       .order("rechnungsdatum", { ascending: false }),
+    supabase
+      .from("theorie_teilnahme")
+      .select("id", { count: "exact", head: true })
+      .eq("schueler_id", s.id)
+      .eq("anwesend", true),
   ]);
 
   const fahrstunden = fahrstundenRes.data ?? [];
@@ -95,6 +105,8 @@ export default async function SchuelerDetailPage({ params }: { params: { id: str
 
   const primaerKlasse = s.fuehrerscheinklassen?.[0] ?? "B";
   const pflicht = pflichtFahrtenFuer(primaerKlasse);
+  const theorieBesucht = theorieRes.count ?? 0;
+  const theorieSoll = theoriePflichtFuer(primaerKlasse);
   const sonderfahrtenOk =
     ueberland >= pflicht.ueberland && autobahn >= pflicht.autobahn && nacht >= pflicht.nacht;
   const pruefungsreif = s.theorie_bestanden && sonderfahrtenOk;
@@ -213,6 +225,11 @@ export default async function SchuelerDetailPage({ params }: { params: { id: str
                   </Badge>
                 )}
               </div>
+              <FortschrittZeile
+                label="Theoriestunden besucht"
+                ist={theorieBesucht}
+                soll={theorieSoll}
+              />
               <FortschrittZeile label="Überlandfahrten" ist={ueberland} soll={pflicht.ueberland} />
               <FortschrittZeile label="Autobahnfahrten" ist={autobahn} soll={pflicht.autobahn} />
               <FortschrittZeile label="Nachtfahrten" ist={nacht} soll={pflicht.nacht} />

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { getKontext } from "@/lib/supabase/queries";
 import { Sidebar } from "@/components/shared/sidebar";
+import { DesktopTopbar } from "@/components/shared/desktop-topbar";
 import { MobileTopbar } from "@/components/shared/mobile-topbar";
 
 export default async function DashboardLayout({
@@ -35,6 +36,12 @@ export default async function DashboardLayout({
         rolle={fahrlehrer.rolle}
       />
       <div className="md:pl-64 print:!pl-0">
+        <DesktopTopbar
+          fahrschuleName={fahrschule.name}
+          vorname={fahrlehrer.vorname}
+          nachname={fahrlehrer.nachname}
+          rolle={fahrlehrer.rolle}
+        />
         <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 print:!p-0">
           {children}
         </main>

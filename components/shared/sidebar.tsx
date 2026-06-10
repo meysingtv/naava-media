@@ -34,27 +34,32 @@ export function Sidebar({ fahrschuleName, vorname, nachname, rolle }: SidebarPro
         <p className="text-xs text-muted-foreground">Fahrschule</p>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {items.map((item) => {
-          const aktiv =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                aktiv
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-              )}
-            >
-              <Icon className="h-[18px] w-[18px]" />
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 overflow-y-auto p-3">
+        <p className="px-3 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Menü
+        </p>
+        <div className="space-y-0.5">
+          {items.map((item) => {
+            const aktiv =
+              pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                  aktiv
+                    ? "bg-primary/10 font-semibold text-primary"
+                    : "font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                )}
+              >
+                <Icon className="h-[18px] w-[18px]" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
       <div className="border-t p-3">

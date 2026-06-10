@@ -25,6 +25,13 @@ import type { Fahrschueler, FahrstundeMitRelationen, Rechnung } from "@/lib/type
 
 export const metadata = { title: "Dashboard · FahrschulApp" };
 
+function begruessung(): string {
+  const stunde = new Date().getHours();
+  if (stunde < 11) return "Guten Morgen";
+  if (stunde < 18) return "Guten Tag";
+  return "Guten Abend";
+}
+
 function isoDatum(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
@@ -91,7 +98,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={vorname ? `Hallo, ${vorname} 👋` : "Dashboard"}
+        title={vorname ? `${begruessung()}, ${vorname}` : "Dashboard"}
         description="Dein Überblick für heute und diese Woche."
       />
 
