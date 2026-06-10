@@ -85,8 +85,8 @@ export const FAHRSTUNDE_TYPEN: Record<FahrstundeTyp, TypMeta> = {
   autobahn: {
     label: "Autobahnfahrt",
     kurz: "Autobahn",
-    badge: "bg-amber-100 text-amber-700 border-amber-200",
-    dot: "bg-amber-500",
+    badge: "bg-cyan-100 text-cyan-700 border-cyan-200",
+    dot: "bg-cyan-500",
   },
   nacht: {
     label: "Nachtfahrt",

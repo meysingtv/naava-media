@@ -64,7 +64,7 @@ npm run dev
 | Rollen            |   ✅   | Chef / Fahrlehrer / Büro (Navigation & Zugriff rollenabhängig)         |
 | Dashboard         |   ✅   | Heutige Fahrstunden, offene Rechnungen, Prüfungen, Auslastung          |
 | Schüler           |   ✅   | Liste + Suche/Filter, Anlegen/Bearbeiten, Detail mit Prüfungsreife     |
-| Kalender          |   ✅   | Wochen- **und** Tagesansicht (Fahrlehrer-Spalten), Slot-Klick, bearbeiten/verschieben, Status, Fahrzeug-Konflikt |
+| Terminplaner      |   ✅   | Zeitraster (Tag/3 Tage/Woche) wie in der App, Klick-zum-Anlegen, bearbeiten/verschieben, Status, Fahrzeug-Konflikt |
 | Theorie           |   ✅   | Theoriestunden planen, Anwesenheit abhaken, Theorie-Fortschritt je Schüler |
 | Rechnungen        |   ✅   | Erstellen (Positionen, MwSt.), Liste, **PDF-Download** + Druckansicht   |
 | Fahrlehrer        |   ✅   | Team-Liste, anlegen, **Einladung per E-Mail**, Rolle zuweisen, deaktivieren |

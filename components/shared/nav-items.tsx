@@ -21,7 +21,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, rollen: ["chef", "fahrlehrer", "buero"] },
   { href: "/schueler", label: "Schüler", icon: Users, rollen: ["chef", "fahrlehrer", "buero"] },
-  { href: "/kalender", label: "Kalender", icon: Calendar, rollen: ["chef", "fahrlehrer"] },
+  { href: "/kalender", label: "Terminplaner", icon: Calendar, rollen: ["chef", "fahrlehrer"] },
   { href: "/theorie", label: "Theorie", icon: BookOpen, rollen: ["chef", "fahrlehrer", "buero"] },
   { href: "/rechnungen", label: "Rechnungen", icon: FileText, rollen: ["chef", "buero"] },
   { href: "/fahrlehrer", label: "Fahrlehrer", icon: UserCog, rollen: ["chef"] },

@@ -157,7 +157,7 @@ export default async function DashboardPage() {
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Heutige Fahrstunden</CardTitle>
             <Button asChild variant="ghost" size="sm">
-              <Link href="/kalender">Zum Kalender</Link>
+              <Link href="/kalender">Zum Terminplaner</Link>
             </Button>
           </CardHeader>
           <CardContent>

@@ -15,8 +15,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primär: kräftiges Orange (an fahrschulcockpit angelehnt, AA-konform) */
-    --primary: 18 88% 40%;
+    /* Primär: Anthrazit/Schwarz – klare, professionelle Akzentfarbe */
+    --primary: 222 47% 11%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 216 24% 95%;
@@ -25,9 +25,9 @@
     --muted: 216 24% 95%;
     --muted-foreground: 215 16% 47%;
 
-    /* Akzent: dezenter warmer Ton für Hover-/Aktiv-Flächen */
-    --accent: 28 100% 95%;
-    --accent-foreground: 18 80% 33%;
+    /* Akzent: neutraler Grauton für Hover-Flächen */
+    --accent: 216 24% 94%;
+    --accent-foreground: 222 47% 11%;
 
     /* Status-Grün */
     --success: 142 71% 38%;
@@ -38,7 +38,7 @@
 
     --border: 216 20% 90%;
     --input: 216 20% 90%;
-    --ring: 18 88% 40%;
+    --ring: 222 47% 11%;
 
     --radius: 0.5rem;
   }
