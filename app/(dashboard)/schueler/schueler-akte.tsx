@@ -153,16 +153,17 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
   const alter = alterVon(s.geburtsdatum);
 
   return (
-    <div className="space-y-3">
+    <div>
       <Link
         href="/schueler"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground lg:hidden"
+        className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground lg:hidden"
       >
         <ChevronLeft className="h-4 w-4" /> Zurück zur Liste
       </Link>
 
-      {/* Kopf */}
-      <Card>
+      <div className="space-y-3">
+        {/* Kopf */}
+        <Card>
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-3">
             <SchuelerAvatar
@@ -466,6 +467,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }
