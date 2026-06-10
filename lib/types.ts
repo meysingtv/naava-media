@@ -184,6 +184,17 @@ export type TheorieTeilnahme = {
   anwesend: boolean;
 };
 
+export type Aufgabe = {
+  id: string;
+  fahrschule_id: string;
+  titel: string;
+  status: string; // offen | erledigt
+  prioritaet: string; // niedrig | mittel | hoch
+  faellig_am: string | null;
+  schueler_id: string | null;
+  created_at: string;
+};
+
 // ---------------------------------------------------------------------
 // Insert/Update lassen alle Felder optional, da viele Spalten DB-Defaults
 // haben (id, created_at, aktiv, status, …). Die NOT-NULL-Pflicht erzwingt
@@ -209,6 +220,7 @@ export type Database = {
       rechnung_position: { Row: TableRow<RechnungPosition>; Insert: TableInsert<RechnungPosition>; Update: TableUpdate<RechnungPosition>; Relationships: [] };
       theoriestunde: { Row: TableRow<Theoriestunde>; Insert: TableInsert<Theoriestunde>; Update: TableUpdate<Theoriestunde>; Relationships: [] };
       theorie_teilnahme: { Row: TableRow<TheorieTeilnahme>; Insert: TableInsert<TheorieTeilnahme>; Update: TableUpdate<TheorieTeilnahme>; Relationships: [] };
+      aufgabe: { Row: TableRow<Aufgabe>; Insert: TableInsert<Aufgabe>; Update: TableUpdate<Aufgabe>; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: {
