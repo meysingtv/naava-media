@@ -259,6 +259,21 @@ export function SchuelerForm({ schueler }: { schueler?: Fahrschueler }) {
               defaultValue={schueler?.praxis_versuch ?? 1}
             />
           </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="lernstatus">Theorie-Lernstatus (%)</Label>
+            <Input
+              id="lernstatus"
+              name="lernstatus"
+              type="number"
+              min="0"
+              max="100"
+              defaultValue={schueler?.lernstatus ?? 0}
+            />
+            <p className="text-xs text-muted-foreground">
+              Lernfortschritt aus der Theorie-App (z. B. Fahren Lernen). Aktuell manuell –
+              automatische Anbindung folgt.
+            </p>
+          </div>
           <label className="flex items-center gap-2 text-sm font-medium sm:col-span-2">
             <input
               type="checkbox"

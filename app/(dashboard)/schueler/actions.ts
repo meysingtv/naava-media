@@ -61,6 +61,7 @@ export async function schuelerSpeichern(
     intensivkurs: formData.get("intensivkurs") === "on",
     theorie_versuch: Number(formData.get("theorie_versuch") ?? 1) || 1,
     praxis_versuch: Number(formData.get("praxis_versuch") ?? 1) || 1,
+    lernstatus: Math.min(100, Math.max(0, Number(formData.get("lernstatus") ?? 0) || 0)),
   };
 
   let schuelerId = id;

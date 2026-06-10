@@ -62,7 +62,7 @@ export default async function SchuelerPage({
     <div className="space-y-6">
       <PageHeader title="Schüler" description={`${schueler.length} Schüler insgesamt`} />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
         {/* Liste (links) */}
         <div className={cn(selected && "hidden lg:block")}>
           <SchuelerListe

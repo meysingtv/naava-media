@@ -65,7 +65,7 @@ function FortschrittZeile({ label, ist, soll }: { label: string; ist: number; so
   const prozent = soll > 0 ? Math.min(100, Math.round((ist / soll) * 100)) : 100;
   const fertig = ist >= soll;
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium">{label}</span>
         <span className={fertig ? "font-semibold text-success" : "text-muted-foreground"}>
@@ -129,8 +129,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
   const primaerKlasse = s.fuehrerscheinklassen?.[0] ?? "B";
   const pflicht = pflichtFahrtenFuer(primaerKlasse);
   const theorieBesucht = theorieRes.count ?? 0;
-  const theorieSoll = theoriePflichtFuer(primaerKlasse);
-  const zusatzSoll = Math.max(theorieSoll - THEORIE_GRUNDSTOFF, 0);
+  const zusatzSoll = Math.max(theoriePflichtFuer(primaerKlasse) - THEORIE_GRUNDSTOFF, 0);
   const sonderfahrtenOk =
     ueberland >= pflicht.ueberland && autobahn >= pflicht.autobahn && nacht >= pflicht.nacht;
   const pruefungsreif = s.theorie_bestanden && sonderfahrtenOk;
@@ -154,7 +153,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
   const alter = alterVon(s.geburtsdatum);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <Link
         href="/schueler"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground lg:hidden"
@@ -164,7 +163,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
 
       {/* Kopf */}
       <Card>
-        <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between">
+        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-3">
             <SchuelerAvatar
               vorname={s.vorname}
@@ -239,214 +238,228 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
         </CardContent>
       </Card>
 
-      {/* Kontakt · Finanzen · Lern-Apps */}
-      <div className="grid grid-cols-1 gap-4">
-        <Card>
-          <CardHeader className="p-4">
-            <CardTitle className="text-base">Kontakt &amp; Person</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2.5 p-4 pt-0 text-sm">
-            {s.telefon && (
-              <p className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                {s.telefon}
-              </p>
-            )}
-            {s.email && (
-              <p className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="truncate">{s.email}</span>
-              </p>
-            )}
-            {(s.strasse || s.ort) && (
-              <p className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                <span>
-                  {s.strasse}
-                  {s.strasse && <br />}
-                  {[s.plz, s.ort].filter(Boolean).join(" ")}
-                </span>
-              </p>
-            )}
-            <Separator />
-            <Datenzeile label="Angemeldet">{formatDatum(s.anmeldedatum)}</Datenzeile>
-            <Datenzeile label="Kostenträger">{s.kostentraeger || "—"}</Datenzeile>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex-row items-center justify-between p-4">
-            <CardTitle className="text-base">Finanzen</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="space-y-2.5 p-4 pt-0">
-            <Datenzeile label="Zu zahlen">{formatEuro(gesamt)}</Datenzeile>
-            <Datenzeile label="Bezahlt">{formatEuro(bezahlt)}</Datenzeile>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Saldo</span>
-              <span className={cn("text-lg font-bold", saldo < 0 ? "text-destructive" : "text-success")}>
-                {formatEuro(saldo)}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex-row items-center justify-between p-4">
-            <CardTitle className="text-base">Lern-Apps</CardTitle>
-            <Smartphone className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="space-y-3 p-4 pt-0">
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium">Theorie-Lernstatus</span>
-                <span className="text-muted-foreground">{s.lernstatus ?? 0}%</span>
-              </div>
-              <Progress value={s.lernstatus ?? 0} />
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              <Badge variant="outline">drive.buzz</Badge>
-              <Badge variant="outline">abibaro</Badge>
-              <Badge variant="outline">ClassicPay</Badge>
-            </div>
-            <p className="text-xs text-muted-foreground">Ansicht – Anbindung folgt.</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Ausbildung · Prüfung */}
-      <div className="grid grid-cols-1 gap-4">
-        <Card>
-          <CardHeader className="flex-row items-center justify-between p-4">
-            <CardTitle className="text-base">Ausbildung (Klasse {primaerKlasse})</CardTitle>
-            <GraduationCap className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="space-y-3 p-4 pt-0">
-            <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-sm">
-              <span className="font-medium">Theorieprüfung</span>
-              {s.theorie_bestanden ? (
-                <Badge variant="success">Bestanden</Badge>
-              ) : (
-                <Badge variant="outline">Offen</Badge>
+      {/* Zwei Spalten nebeneinander */}
+      <div className="grid gap-3 xl:grid-cols-2">
+        {/* Linke Spalte */}
+        <div className="space-y-3">
+          <Card>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Kontakt &amp; Person
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2.5 p-4 pt-0 text-sm">
+              {s.telefon && (
+                <p className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  {s.telefon}
+                </p>
               )}
-            </div>
-            <FortschrittZeile label="Theorie – Grundstoff" ist={theorieBesucht} soll={THEORIE_GRUNDSTOFF} />
-            <FortschrittZeile label="Theorie – Zusatzstoff" ist={0} soll={zusatzSoll} />
-            <FortschrittZeile label="Überlandfahrten" ist={ueberland} soll={pflicht.ueberland} />
-            <FortschrittZeile label="Autobahnfahrten" ist={autobahn} soll={pflicht.autobahn} />
-            <FortschrittZeile label="Nachtfahrten" ist={nacht} soll={pflicht.nacht} />
-            <Separator />
-            <Datenzeile label="Übungsstunden (normal)">{normalfahrten}</Datenzeile>
-            <Datenzeile label="Fehlstunden">{fehlstunden}</Datenzeile>
-            <Datenzeile label="Abgeschlossen gesamt">{abgeschlossen.length}</Datenzeile>
-          </CardContent>
-        </Card>
+              {s.email && (
+                <p className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span className="truncate">{s.email}</span>
+                </p>
+              )}
+              {(s.strasse || s.ort) && (
+                <p className="flex items-start gap-2">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span>
+                    {s.strasse}
+                    {s.strasse && <br />}
+                    {[s.plz, s.ort].filter(Boolean).join(" ")}
+                  </span>
+                </p>
+              )}
+              <Separator />
+              <Datenzeile label="Angemeldet">{formatDatum(s.anmeldedatum)}</Datenzeile>
+              <Datenzeile label="Kostenträger">{s.kostentraeger || "—"}</Datenzeile>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="p-4">
-            <CardTitle className="text-base">Prüfung &amp; Verwaltung</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2.5 p-4 pt-0 text-sm">
-            <Datenzeile label="Theorieprüfung">
-              {s.theorie_termin ? formatDatum(s.theorie_termin) : "—"}
-              <span className="ml-1 text-muted-foreground">({s.theorie_versuch ?? 1}. Versuch)</span>
-            </Datenzeile>
-            <Datenzeile label="Praktische Prüfung">
-              {s.pruefung_termin ? formatDatum(s.pruefung_termin) : "—"}
-              <span className="ml-1 text-muted-foreground">({s.praxis_versuch ?? 1}. Versuch)</span>
-            </Datenzeile>
-            <Separator />
-            <Datenzeile label="Prüforganisation">{s.prueforganisation || "—"}</Datenzeile>
-            <Datenzeile label="Preisliste">{s.preisliste || "—"}</Datenzeile>
-            <Datenzeile label="Intensivkurs">
-              {s.intensivkurs ? <Badge variant="secondary">Ja</Badge> : "Nein"}
-            </Datenzeile>
-            <Datenzeile label="IBAN">{s.iban || "—"}</Datenzeile>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader className="flex-row items-center justify-between p-4 pb-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Ausbildung · Klasse {primaerKlasse}
+              </CardTitle>
+              <GraduationCap className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="space-y-2.5 p-4 pt-0">
+              <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-1.5 text-sm">
+                <span className="font-medium">Theorieprüfung</span>
+                {s.theorie_bestanden ? (
+                  <Badge variant="success">Bestanden</Badge>
+                ) : (
+                  <Badge variant="outline">Offen</Badge>
+                )}
+              </div>
+              <FortschrittZeile label="Theorie – Grundstoff" ist={theorieBesucht} soll={THEORIE_GRUNDSTOFF} />
+              <FortschrittZeile label="Theorie – Zusatzstoff" ist={0} soll={zusatzSoll} />
+              <FortschrittZeile label="Überlandfahrten" ist={ueberland} soll={pflicht.ueberland} />
+              <FortschrittZeile label="Autobahnfahrten" ist={autobahn} soll={pflicht.autobahn} />
+              <FortschrittZeile label="Nachtfahrten" ist={nacht} soll={pflicht.nacht} />
+              <Separator />
+              <Datenzeile label="Übungsstunden (normal)">{normalfahrten}</Datenzeile>
+              <Datenzeile label="Fehlstunden">{fehlstunden}</Datenzeile>
+              <Datenzeile label="Abgeschlossen gesamt">{abgeschlossen.length}</Datenzeile>
+            </CardContent>
+          </Card>
 
-      {/* Fahrstunden · Rechnungen */}
-      <div className="grid grid-cols-1 gap-4">
-        <Card>
-          <CardHeader className="p-4">
-            <CardTitle className="text-base">Fahrstunden</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {fahrstunden.length === 0 ? (
-              <EmptyState
-                icon={Clock}
-                title="Noch keine Fahrstunden"
-                description="Trage im Terminplaner Fahrstunden ein."
-              />
-            ) : (
-              <ul className="divide-y">
-                {fahrstunden.slice(0, 10).map((f) => {
-                  const typ = FAHRSTUNDE_TYPEN[f.typ];
-                  return (
-                    <li key={f.id} className="flex items-center gap-3 py-2.5 first:pt-0">
-                      <div className="w-16 shrink-0 text-sm">
-                        <p className="font-medium">{formatDatum(f.datum)}</p>
-                        <p className="text-xs text-muted-foreground">{formatUhrzeit(f.uhrzeit)}</p>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <Badge variant="outline" className={typ.badge}>
-                          {typ.kurz}
+          <Card>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Fahrstunden
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              {fahrstunden.length === 0 ? (
+                <EmptyState
+                  icon={Clock}
+                  title="Noch keine Fahrstunden"
+                  description="Trage im Terminplaner Fahrstunden ein."
+                />
+              ) : (
+                <ul className="divide-y">
+                  {fahrstunden.slice(0, 8).map((f) => {
+                    const typ = FAHRSTUNDE_TYPEN[f.typ];
+                    return (
+                      <li key={f.id} className="flex items-center gap-3 py-2 first:pt-0">
+                        <div className="w-16 shrink-0 text-sm">
+                          <p className="font-medium">{formatDatum(f.datum)}</p>
+                          <p className="text-xs text-muted-foreground">{formatUhrzeit(f.uhrzeit)}</p>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <Badge variant="outline" className={typ.badge}>
+                            {typ.kurz}
+                          </Badge>
+                          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                            {f.fahrlehrer ? `${f.fahrlehrer.vorname} ${f.fahrlehrer.nachname}` : "Kein Lehrer"}
+                            {f.fahrzeug ? ` · ${f.fahrzeug.kennzeichen}` : ""}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-xs text-muted-foreground">{f.dauer_minuten} Min</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Rechte Spalte */}
+        <div className="space-y-3">
+          <Card>
+            <CardHeader className="flex-row items-center justify-between p-4 pb-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Finanzen
+              </CardTitle>
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="space-y-2 p-4 pt-0">
+              <Datenzeile label="Zu zahlen">{formatEuro(gesamt)}</Datenzeile>
+              <Datenzeile label="Bezahlt">{formatEuro(bezahlt)}</Datenzeile>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Saldo</span>
+                <span className={cn("text-lg font-bold", saldo < 0 ? "text-destructive" : "text-success")}>
+                  {formatEuro(saldo)}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Prüfung &amp; Verwaltung
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 p-4 pt-0 text-sm">
+              <Datenzeile label="Theorieprüfung">
+                {s.theorie_termin ? formatDatum(s.theorie_termin) : "—"}
+                <span className="ml-1 text-muted-foreground">({s.theorie_versuch ?? 1}. Versuch)</span>
+              </Datenzeile>
+              <Datenzeile label="Praktische Prüfung">
+                {s.pruefung_termin ? formatDatum(s.pruefung_termin) : "—"}
+                <span className="ml-1 text-muted-foreground">({s.praxis_versuch ?? 1}. Versuch)</span>
+              </Datenzeile>
+              <Separator />
+              <Datenzeile label="Prüforganisation">{s.prueforganisation || "—"}</Datenzeile>
+              <Datenzeile label="Preisliste">{s.preisliste || "—"}</Datenzeile>
+              <Datenzeile label="Intensivkurs">
+                {s.intensivkurs ? <Badge variant="secondary">Ja</Badge> : "Nein"}
+              </Datenzeile>
+              <Datenzeile label="IBAN">{s.iban || "—"}</Datenzeile>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex-row items-center justify-between p-4 pb-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Lern-Apps
+              </CardTitle>
+              <Smartphone className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="space-y-2.5 p-4 pt-0">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Theorie-Lernstatus</span>
+                  <span className="text-muted-foreground">{s.lernstatus ?? 0}%</span>
+                </div>
+                <Progress value={s.lernstatus ?? 0} />
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <Badge variant="outline">Fahren Lernen</Badge>
+                <Badge variant="outline">drive.buzz</Badge>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Rechnungen
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              {rechnungen.length === 0 ? (
+                <EmptyState
+                  icon={Receipt}
+                  title="Noch keine Rechnungen"
+                  description="Für diesen Schüler gibt es noch keine Rechnungen."
+                />
+              ) : (
+                <ul className="divide-y">
+                  {rechnungen.map((r) => {
+                    const status = RECHNUNG_STATUS[r.status];
+                    return (
+                      <li key={r.id} className="flex items-center gap-3 py-2 first:pt-0">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{r.nummer}</p>
+                          <p className="text-xs text-muted-foreground">{formatDatum(r.rechnungsdatum)}</p>
+                        </div>
+                        <span className="text-sm font-medium">{formatEuro(Number(r.betrag_brutto))}</span>
+                        <Badge variant="outline" className={status.badge}>
+                          {status.label}
                         </Badge>
-                        <p className="mt-1 truncate text-xs text-muted-foreground">
-                          {f.fahrlehrer ? `${f.fahrlehrer.vorname} ${f.fahrlehrer.nachname}` : "Kein Lehrer"}
-                          {f.fahrzeug ? ` · ${f.fahrzeug.kennzeichen}` : ""}
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-xs text-muted-foreground">{f.dauer_minuten} Min</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="p-4">
-            <CardTitle className="text-base">Rechnungen</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {rechnungen.length === 0 ? (
-              <EmptyState
-                icon={Receipt}
-                title="Noch keine Rechnungen"
-                description="Für diesen Schüler gibt es noch keine Rechnungen."
-              />
-            ) : (
-              <ul className="divide-y">
-                {rechnungen.map((r) => {
-                  const status = RECHNUNG_STATUS[r.status];
-                  return (
-                    <li key={r.id} className="flex items-center gap-3 py-2.5 first:pt-0">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{r.nummer}</p>
-                        <p className="text-xs text-muted-foreground">{formatDatum(r.rechnungsdatum)}</p>
-                      </div>
-                      <span className="text-sm font-medium">{formatEuro(Number(r.betrag_brutto))}</span>
-                      <Badge variant="outline" className={status.badge}>
-                        {status.label}
-                      </Badge>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {s.notizen && (
         <Card>
-          <CardHeader className="p-4">
-            <CardTitle className="text-base">Notizen</CardTitle>
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Notizen
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <p className="whitespace-pre-wrap text-sm text-muted-foreground">{s.notizen}</p>
