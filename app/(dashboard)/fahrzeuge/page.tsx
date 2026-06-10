@@ -1,92 +1,86 @@
-import { Car, Power } from "lucide-react";
+import { Car } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
-import { EmptyState } from "@/components/shared/empty-state";
-import { LoeschenDialog } from "@/components/shared/loeschen-dialog";
-import { FahrzeugDialog } from "./fahrzeug-dialog";
-import { fahrzeugAktivSetzen, fahrzeugLoeschen } from "./actions";
-import type { Fahrzeug } from "@/lib/types";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn, initialen } from "@/lib/utils";
+import type { Fahrlehrer, Fahrzeug } from "@/lib/types";
+import { FahrzeugListe } from "./fahrzeug-liste";
+import { FahrzeugAkte } from "./fahrzeug-akte";
+import { FahrzeugForm } from "./fahrzeug-form";
 
 export const metadata = { title: "Fahrzeuge · FahrschulApp" };
 
-export default async function FahrzeugePage() {
-  const supabase = createClient();
-  const { data } = await supabase
-    .from("fahrzeug")
-    .select("*")
-    .order("aktiv", { ascending: false })
-    .order("kennzeichen", { ascending: true });
+export interface FahrlehrerOption {
+  id: string;
+  kuerzel: string;
+  name: string;
+}
 
-  const fahrzeuge = (data ?? []) as Fahrzeug[];
+export default async function FahrzeugePage({
+  searchParams,
+}: {
+  searchParams: { id?: string; edit?: string; neu?: string };
+}) {
+  const supabase = createClient();
+
+  const [fahrzeugRes, lehrerRes] = await Promise.all([
+    supabase.from("fahrzeug").select("*").order("name", { ascending: true }),
+    supabase
+      .from("fahrlehrer")
+      .select("id, vorname, nachname")
+      .eq("aktiv", true)
+      .order("nachname")
+      .returns<Pick<Fahrlehrer, "id" | "vorname" | "nachname">[]>(),
+  ]);
+
+  const fahrzeuge = (fahrzeugRes.data ?? []) as Fahrzeug[];
+
+  const fahrlehrerMap: Record<string, string> = {};
+  const options: FahrlehrerOption[] = (lehrerRes.data ?? []).map((f) => {
+    const kuerzel = initialen(f.vorname, f.nachname);
+    fahrlehrerMap[f.id] = kuerzel;
+    return { id: f.id, kuerzel, name: `${f.vorname} ${f.nachname}` };
+  });
+
+  const neu = searchParams.neu === "1";
+  const edit = searchParams.edit === "1";
+  const selectedId = searchParams.id;
+  const selected = selectedId ? fahrzeuge.find((f) => f.id === selectedId) : undefined;
+  const panelAktiv = neu || (selected && edit) || selected;
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Fahrzeuge" description="Die Flotte deiner Fahrschule.">
-        <FahrzeugDialog />
-      </PageHeader>
+      <PageHeader title="Fahrzeuge" description="Die Flotte deiner Fahrschule." />
 
-      {fahrzeuge.length === 0 ? (
-        <EmptyState
-          icon={Car}
-          title="Noch keine Fahrzeuge"
-          description="Lege Fahrzeuge an, um sie Fahrstunden zuzuordnen und Konflikte zu erkennen."
-        />
-      ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {fahrzeuge.map((f) => (
-            <Card key={f.id}>
-              <CardContent className="flex items-start gap-3 p-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <Car className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold">{f.kennzeichen}</p>
-                    {f.aktiv ? (
-                      <Badge variant="success" className="text-[11px]">
-                        Aktiv
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-[11px]">
-                        Inaktiv
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="truncate text-sm text-muted-foreground">
-                    {[f.marke, f.modell].filter(Boolean).join(" ") || "Keine Angabe"}
-                  </p>
-                  {f.klasse && (
-                    <Badge variant="outline" className="mt-2">
-                      Klasse {f.klasse}
-                    </Badge>
-                  )}
-                  <div className="mt-3 flex gap-2">
-                    <form action={fahrzeugAktivSetzen}>
-                      <input type="hidden" name="id" value={f.id} />
-                      <input type="hidden" name="aktiv" value={(!f.aktiv).toString()} />
-                      <Button type="submit" variant="outline" size="sm">
-                        <Power className="h-3.5 w-3.5" />
-                        {f.aktiv ? "Deaktivieren" : "Aktivieren"}
-                      </Button>
-                    </form>
-                    <LoeschenDialog
-                      action={fahrzeugLoeschen}
-                      id={f.id}
-                      titel="Fahrzeug löschen?"
-                      beschreibung={`Das Fahrzeug ${f.kennzeichen} wird dauerhaft entfernt.`}
-                      buttonLabel=""
-                    />
-                  </div>
-                </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+        {/* Liste */}
+        <div className={cn(panelAktiv && "hidden lg:block")}>
+          <FahrzeugListe
+            fahrzeuge={fahrzeuge}
+            selectedId={selectedId}
+            fahrlehrerMap={fahrlehrerMap}
+          />
+        </div>
+
+        {/* Detail / Bearbeiten / Neu */}
+        <div className={cn(!panelAktiv && "hidden lg:block")}>
+          {neu ? (
+            <FahrzeugForm options={options} />
+          ) : selected && edit ? (
+            <FahrzeugForm fahrzeug={selected} options={options} />
+          ) : selected ? (
+            <FahrzeugAkte fahrzeug={selected} fahrlehrerMap={fahrlehrerMap} />
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center gap-2 py-24 text-center text-muted-foreground">
+                <Car className="h-8 w-8" />
+                <p className="text-sm">Wähle links ein Fahrzeug oder lege ein neues an.</p>
               </CardContent>
             </Card>
-          ))}
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

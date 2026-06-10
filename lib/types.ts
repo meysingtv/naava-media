@@ -114,6 +114,17 @@ export type Fahrzeug = {
   modell: string | null;
   klasse: string | null;
   aktiv: boolean;
+  // Erweiterte Stammdaten (Migration 0007)
+  name: string | null;
+  nummer: number | null;
+  fahrzeug_id_nr: string | null;
+  getriebeart: string | null;
+  klassen: string[];
+  fahrlehrer_ids: string[];
+  anhaenger: boolean;
+  saison_von: string | null;
+  saison_bis: string | null;
+  hauptuntersuchung: string | null;
   created_at: string;
 };
 
