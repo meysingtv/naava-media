@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Menu } from "lucide-react";
 
-import { Logo } from "@/components/shared/logo";
 import { navItemsFuer } from "@/components/shared/nav-items";
 import {
   DropdownMenu,
@@ -33,7 +32,7 @@ export function MobileTopbar({ fahrschuleName, vorname, nachname, rolle }: Mobil
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card px-4 md:hidden print:hidden">
-      <Logo />
+      <span className="truncate text-base font-semibold text-foreground">{fahrschuleName}</span>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon" aria-label="Menü öffnen">
