@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { SchuelerAvatar } from "@/components/shared/schueler-avatar";
 import { EmptyState } from "@/components/shared/empty-state";
+import { toast } from "sonner";
 import { cn, formatEuro } from "@/lib/utils";
 import type { Fahrschueler } from "@/lib/types";
 
@@ -44,6 +45,16 @@ export function SchuelerListe({
     );
   }, [schueler, suche]);
 
+  function downloadCsv(dateiname: string, csv: string) {
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = dateiname;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function exportCsv() {
     const kopf = ["Kundennr.", "Name", "Klassen", "Kostenträger", "Fahrlehrer", "Filiale", "Saldo"];
     const zeilen = gefiltert.map((s) => [
@@ -58,13 +69,72 @@ export function SchuelerListe({
     const csv = [kopf, ...zeilen]
       .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";"))
       .join("\n");
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "schueler.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv("schueler.csv", csv);
+  }
+
+  function csvFuerSchueler() {
+    const s = schueler.find((x) => x.id === selectedId);
+    if (!s) return;
+    setCsvOpen(true);
+
+    const jn = (b: boolean) => (b ? "Ja" : "Nein");
+    const zeilen: [string, string | number | null][] = [
+      ["Kundennummer", s.kundennummer],
+      ["Anrede", s.anrede],
+      ["Vorname", s.vorname],
+      ["Name", s.nachname],
+      ["Geburtsdatum", s.geburtsdatum],
+      ["Geburtsort", s.geburtsort],
+      ["Staatsangehörigkeit", s.staatsangehoerigkeit],
+      ["Klassen", s.fuehrerscheinklassen?.join(" ") ?? ""],
+      ["Straße", s.strasse],
+      ["PLZ", s.plz],
+      ["Ort", s.ort],
+      ["Mobil", s.telefon],
+      ["Telefon privat", s.telefon_privat],
+      ["Telefon beruflich", s.telefon_beruflich],
+      ["E-Mail", s.email],
+      ["Filiale", s.filiale],
+      ["Prüfort", s.pruefort],
+      ["Prüforganisation", s.prueforganisation],
+      ["Anmeldedatum", s.anmeldedatum],
+      ["Erteilungsart", s.erteilungsart],
+      ["Schlüsselzahl", s.schluesselzahl],
+      ["Führerscheinnummer", s.fuehrerscheinnummer],
+      ["Bisherige Klasse", s.bisherige_klasse],
+      ["Ausgabedatum", s.ausgabedatum],
+      ["Kurs", s.kurs],
+      ["BF17", jn(s.bf17)],
+      ["Theorieprüfung", s.theorie_termin],
+      ["Theorie-Versuch", s.theorie_versuch],
+      ["Theorie bestanden", jn(s.theorie_bestanden)],
+      ["Praktische Prüfung", s.pruefung_termin],
+      ["Praxis-Versuch", s.praxis_versuch],
+      ["Ausbildung beendet", jn(s.ausbildung_beendet)],
+      ["Sehhilfe", jn(s.sehhilfe)],
+      ["Preisliste", s.preisliste],
+      ["Zahlungsart", s.zahlungsart],
+      ["IBAN", s.iban],
+      ["Kostenträger", s.kostentraeger],
+      ["E-Mail Kostenträger", s.kostentraeger_email],
+      ["Vorgangsnummer", s.vorgangsnummer],
+      ["Intensivkurs", jn(s.intensivkurs)],
+      ["Zweiter Preis", jn(s.zweiter_preis)],
+      ["Autom. Leistungspakete", jn(s.autom_leistungspakete)],
+      ["Lernstatus (%)", s.lernstatus],
+      ["Saldo (EUR)", (saldoMap[s.id] ?? 0).toFixed(2)],
+    ];
+    const csv = [["Feld", "Wert"], ...zeilen.map(([k, v]) => [k, v == null ? "" : String(v)])]
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";"))
+      .join("\n");
+    const datei = `${s.nachname}_${s.vorname}`.replace(/[^a-zA-Z0-9_-]/g, "") || "schueler";
+
+    // Kurz "wird generiert" zeigen, dann tatsächlich herunterladen.
+    window.setTimeout(() => {
+      downloadCsv(`${datei}.csv`, csv);
+      setCsvOpen(false);
+      toast.success("CSV-Datei erstellt");
+    }, 600);
   }
 
   if (schueler.length === 0) {
@@ -118,7 +188,7 @@ export function SchuelerListe({
           {selectedId ? (
             <button
               type="button"
-              onClick={() => setCsvOpen(true)}
+              onClick={csvFuerSchueler}
               title="CSV für ausgewählten Schüler"
               className={toolbarBtn}
             >
