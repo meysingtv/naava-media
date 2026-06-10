@@ -19,7 +19,6 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { toast } from "sonner";
 import { cn, formatEuro } from "@/lib/utils";
 import type { Fahrschueler } from "@/lib/types";
-import { schuelerLaden } from "./actions";
 
 /** Kleiner CSS-Tooltip, der das Label über dem Element zeigt (ohne JS/Lib). */
 function Tip({ label, children }: { label: string; children: React.ReactNode }) {
@@ -88,15 +87,10 @@ export function SchuelerListe({
     downloadCsv("schueler.csv", csv);
   }
 
-  async function csvFuerSchueler() {
-    if (!selectedId) return;
+  function csvFuerSchueler() {
+    const s = schueler.find((x) => x.id === selectedId);
+    if (!s) return;
     setCsvOpen(true);
-    const s = await schuelerLaden(selectedId);
-    if (!s) {
-      setCsvOpen(false);
-      toast.error("Schüler nicht gefunden");
-      return;
-    }
     const jn = (b: boolean) => (b ? "Ja" : "Nein");
     const zeilen: [string, string | number | null][] = [
       ["Kundennummer", s.kundennummer],
@@ -148,9 +142,11 @@ export function SchuelerListe({
       .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";"))
       .join("\n");
     const datei = `${s.nachname}_${s.vorname}`.replace(/[^a-zA-Z0-9_-]/g, "") || "schueler";
-    downloadCsv(`${datei}.csv`, csv);
-    setCsvOpen(false);
-    toast.success("CSV-Datei erstellt");
+    window.setTimeout(() => {
+      downloadCsv(`${datei}.csv`, csv);
+      setCsvOpen(false);
+      toast.success("CSV-Datei erstellt");
+    }, 500);
   }
 
   if (schueler.length === 0) {

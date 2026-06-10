@@ -7,8 +7,7 @@ import { LogOut } from "lucide-react";
 import { Logo } from "@/components/shared/logo";
 import { navItemsFuer } from "@/components/shared/nav-items";
 import { ROLLEN } from "@/lib/constants";
-import { initialen } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { cn, initialen } from "@/lib/utils";
 import { abmelden } from "@/app/auth/actions";
 import type { FahrlehrerRolle } from "@/lib/types";
 
@@ -25,44 +24,35 @@ export function Sidebar({ fahrschuleName, vorname, nachname, rolle }: SidebarPro
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r bg-card md:flex print:hidden">
-      <div className="flex h-16 items-center border-b px-5">
+      {/* Marke */}
+      <div className="flex h-12 items-center border-b px-5">
         <Logo />
       </div>
 
-      <div className="border-b px-5 py-3">
-        <p className="truncate text-sm font-semibold">{fahrschuleName}</p>
-        <p className="text-xs text-muted-foreground">Fahrschule</p>
-      </div>
-
-      <nav className="flex-1 overflow-y-auto p-3">
-        <p className="px-3 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Menü
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
+        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+          Navigation
         </p>
         <div className="space-y-0.5">
           {items.map((item) => {
-            const aktiv =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const aktiv = pathname === item.href || pathname.startsWith(`${item.href}/`);
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                draggable
-                onDragStart={(e) => {
-                  e.dataTransfer.effectAllowed = "copy";
-                  e.dataTransfer.setData(
-                    "application/x-nav",
-                    JSON.stringify({ href: item.href, label: item.label }),
-                  );
-                }}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                  "relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                   aktiv
-                    ? "font-semibold text-foreground"
-                    : "font-medium text-muted-foreground hover:text-foreground",
+                    ? "bg-muted font-semibold text-foreground"
+                    : "font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                 )}
               >
-                <Icon className="h-[18px] w-[18px]" />
+                {aktiv && (
+                  <span className="absolute inset-y-1.5 left-0 w-1 rounded-r-full bg-primary" />
+                )}
+                <Icon className={cn("h-[18px] w-[18px]", aktiv && "text-primary")} />
                 {item.label}
               </Link>
             );
@@ -70,8 +60,13 @@ export function Sidebar({ fahrschuleName, vorname, nachname, rolle }: SidebarPro
         </div>
       </nav>
 
+      {/* Fahrschule + Nutzer */}
       <div className="border-t p-3">
-        <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+        <div className="mb-2 rounded-md bg-muted/50 px-3 py-2">
+          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Fahrschule</p>
+          <p className="truncate text-sm font-semibold">{fahrschuleName}</p>
+        </div>
+        <div className="flex items-center gap-3 rounded-md px-2 py-1.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
             {initialen(vorname, nachname)}
           </div>

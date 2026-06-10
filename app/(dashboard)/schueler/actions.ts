@@ -6,7 +6,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
 import { zufallsAvatarFarbe } from "@/lib/constants";
-import type { Fahrschueler } from "@/lib/types";
 
 export interface SchuelerFormState {
   error?: string;
@@ -135,16 +134,4 @@ export async function schuelerLoeschen(formData: FormData): Promise<void> {
 
   revalidatePath("/schueler");
   redirect("/schueler");
-}
-
-/** Lädt einen einzelnen Schüler vollständig (z. B. für den CSV-Export). */
-export async function schuelerLaden(id: string): Promise<Fahrschueler | null> {
-  if (!id) return null;
-  const supabase = createClient();
-  const { data } = await supabase
-    .from("fahrschueler")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
-  return (data as Fahrschueler) ?? null;
 }
