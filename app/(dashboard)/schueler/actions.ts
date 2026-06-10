@@ -80,6 +80,11 @@ export async function schuelerSpeichern(
     pruefort: leerZuNull(formData.get("pruefort")),
     sehhilfe: formData.get("sehhilfe") === "on",
     ausbildung_beendet: formData.get("ausbildung_beendet") === "on",
+    telefon_privat: leerZuNull(formData.get("telefon_privat")),
+    bisherige_klasse: leerZuNull(formData.get("bisherige_klasse")),
+    ausgabedatum: leerZuNull(formData.get("ausgabedatum")),
+    zweiter_preis: formData.get("zweiter_preis") === "on",
+    autom_leistungspakete: formData.get("autom_leistungspakete") === "on",
   };
 
   let schuelerId = id;

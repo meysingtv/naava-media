@@ -3,9 +3,15 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Download, Pencil, Plus, Search, Users } from "lucide-react";
+import { Download, FileSpreadsheet, Loader2, Pencil, Plus, Search, Users } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { SchuelerAvatar } from "@/components/shared/schueler-avatar";
@@ -26,6 +32,7 @@ export function SchuelerListe({
 }) {
   const router = useRouter();
   const [suche, setSuche] = useState("");
+  const [csvOpen, setCsvOpen] = useState(false);
 
   const gefiltert = useMemo(() => {
     const q = suche.trim().toLowerCase();
@@ -105,9 +112,27 @@ export function SchuelerListe({
               <Pencil className="h-4 w-4" />
             </span>
           )}
-          <button type="button" onClick={exportCsv} title="Als CSV exportieren" className={toolbarBtn}>
+          <button type="button" onClick={exportCsv} title="Liste als CSV exportieren" className={toolbarBtn}>
             <Download className="h-4 w-4" />
           </button>
+          {selectedId ? (
+            <button
+              type="button"
+              onClick={() => setCsvOpen(true)}
+              title="CSV für ausgewählten Schüler"
+              className={toolbarBtn}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+            </button>
+          ) : (
+            <span
+              title="Erst links einen Schüler auswählen"
+              aria-disabled="true"
+              className={cn(toolbarBtn, "cursor-not-allowed opacity-40")}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+            </span>
+          )}
           <div className="relative ml-auto w-full sm:max-w-[240px]">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -208,6 +233,18 @@ export function SchuelerListe({
       <p className="mt-2 text-xs text-muted-foreground">
         {gefiltert.length} von {schueler.length} angezeigt
       </p>
+
+      <Dialog open={csvOpen} onOpenChange={setCsvOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>CSV-Export</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-3 py-6 text-center">
+            <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Das System generiert die CSV-Datei …</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

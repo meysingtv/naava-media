@@ -85,6 +85,11 @@ export type Fahrschueler = {
   pruefort: string | null;
   sehhilfe: boolean;
   ausbildung_beendet: boolean;
+  telefon_privat: string | null;
+  bisherige_klasse: string | null;
+  ausgabedatum: string | null;
+  zweiter_preis: boolean;
+  autom_leistungspakete: boolean;
   created_at: string;
 };
 
