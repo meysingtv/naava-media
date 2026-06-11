@@ -49,13 +49,13 @@
 
     --radius: 0.375rem;
 
-    /* Dunkle Sidebar (warmes Anthrazit mit Wein-Unterton) + Rubin-Akzent */
-    --sidebar: 340 18% 13%;
-    --sidebar-foreground: 30 22% 91%;
-    --sidebar-muted: 335 8% 60%;
-    --sidebar-accent: 348 80% 58%;
-    --sidebar-border: 338 14% 22%;
-    --sidebar-hover: 338 16% 19%;
+    /* Dunkle Sidebar: sauberes, warmes Fast-Schwarz + heller Rubin-Akzent */
+    --sidebar: 24 9% 11%;
+    --sidebar-foreground: 30 18% 93%;
+    --sidebar-muted: 28 7% 58%;
+    --sidebar-accent: 348 86% 62%;
+    --sidebar-border: 24 10% 20%;
+    --sidebar-hover: 24 9% 16%;
 
     /* --- Frühere Palette (Slate-Navy / kühles Weiß) ---------------------
     --background: 216 24% 97%;

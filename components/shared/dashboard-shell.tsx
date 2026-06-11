@@ -49,6 +49,8 @@ export function DashboardShell({
         onToggle={toggle}
         fahrschuleName={fahrschuleName}
         logoUrl={logoUrl}
+        vorname={vorname}
+        nachname={nachname}
         rolle={rolle}
       />
       <MobileTopbar
