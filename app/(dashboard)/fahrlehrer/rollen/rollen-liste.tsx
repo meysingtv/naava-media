@@ -2,14 +2,22 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Globe, Pencil, Plus, Shield, Smartphone, Trash2 } from "lucide-react";
+import { Globe, Pencil, Plus, Smartphone, Trash2 } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/shared/empty-state";
 import { cn } from "@/lib/utils";
-import type { Benutzerrolle } from "@/lib/types";
 import { rolleLoeschen } from "../rollen-actions";
+
+export interface RolleEintrag {
+  key: string;
+  id: string | null;
+  name: string;
+  beschreibung: string | null;
+  zugangsart: string | null;
+  web_zugang: boolean;
+  system: boolean;
+}
 
 function Tip({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -24,43 +32,24 @@ function Tip({ label, children }: { label: string; children: React.ReactNode }) 
 
 const toolbarBtn =
   "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground";
+const toolbarBtnAus = cn(toolbarBtn, "cursor-not-allowed opacity-40");
 
-export function RollenListe({ rollen, selectedId }: { rollen: Benutzerrolle[]; selectedId?: string }) {
+export function RollenListe({ eintraege, selectedKey }: { eintraege: RolleEintrag[]; selectedKey?: string }) {
   const router = useRouter();
-  const selected = selectedId ? rollen.find((r) => r.id === selectedId) : undefined;
-
-  if (rollen.length === 0) {
-    return (
-      <EmptyState
-        icon={Shield}
-        title="Noch keine Rollen"
-        description="Lege z. B. Büro oder Fahrlehrer mit eigenen Rechten an."
-      >
-        <Link
-          href="/fahrlehrer/rollen?neu=1"
-          className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-accent"
-        >
-          <Plus className="h-4 w-4" /> Neue Rolle
-        </Link>
-      </EmptyState>
-    );
-  }
+  const selected = selectedKey ? eintraege.find((e) => e.key === selectedKey) : undefined;
+  const bearbeitbar = Boolean(selected && !selected.system);
 
   return (
     <div>
       <Card>
         <div className="flex flex-wrap items-center gap-1 border-b p-2">
-          <Tip label={selected ? "Rolle bearbeiten" : "Erst Rolle auswählen"}>
-            {selected ? (
-              <Link
-                href={`/fahrlehrer/rollen?rolle=${selected.id}&edit=1`}
-                aria-label="Rolle bearbeiten"
-                className={toolbarBtn}
-              >
+          <Tip label={!selected ? "Erst Rolle auswählen" : selected.system ? "Standardrolle (nicht bearbeitbar)" : "Rolle bearbeiten"}>
+            {bearbeitbar ? (
+              <Link href={`/fahrlehrer/rollen?rolle=${selected!.key}&edit=1`} aria-label="Rolle bearbeiten" className={toolbarBtn}>
                 <Pencil className="h-4 w-4" />
               </Link>
             ) : (
-              <span aria-disabled="true" className={cn(toolbarBtn, "cursor-not-allowed opacity-40")}>
+              <span aria-disabled="true" className={toolbarBtnAus}>
                 <Pencil className="h-4 w-4" />
               </span>
             )}
@@ -70,21 +59,21 @@ export function RollenListe({ rollen, selectedId }: { rollen: Benutzerrolle[]; s
               <Plus className="h-4 w-4" />
             </Link>
           </Tip>
-          <Tip label={selected ? "Rolle löschen" : "Erst Rolle auswählen"}>
-            {selected ? (
+          <Tip label={!selected ? "Erst Rolle auswählen" : selected.system ? "Standardrolle (nicht löschbar)" : "Rolle löschen"}>
+            {bearbeitbar ? (
               <form action={rolleLoeschen}>
-                <input type="hidden" name="id" value={selected.id} />
+                <input type="hidden" name="id" value={selected!.id ?? ""} />
                 <button type="submit" aria-label="Rolle löschen" className={cn(toolbarBtn, "hover:text-destructive")}>
                   <Trash2 className="h-4 w-4" />
                 </button>
               </form>
             ) : (
-              <span aria-disabled="true" className={cn(toolbarBtn, "cursor-not-allowed opacity-40")}>
+              <span aria-disabled="true" className={toolbarBtnAus}>
                 <Trash2 className="h-4 w-4" />
               </span>
             )}
           </Tip>
-          <div className="ml-auto pr-2 text-xs text-muted-foreground">{rollen.length} Rollen</div>
+          <div className="ml-auto pr-2 text-xs text-muted-foreground">{eintraege.length} Rollen</div>
         </div>
 
         <div className="max-h-[calc(100vh-16rem)] overflow-auto">
@@ -98,27 +87,33 @@ export function RollenListe({ rollen, selectedId }: { rollen: Benutzerrolle[]; s
               </tr>
             </thead>
             <tbody className="divide-y">
-              {rollen.map((r) => {
-                const aktiv = r.id === selectedId;
+              {eintraege.map((e) => {
+                const aktiv = e.key === selectedKey;
                 return (
                   <tr
-                    key={r.id}
-                    onClick={() => router.push(`/fahrlehrer/rollen?rolle=${r.id}`)}
-                    className={cn(
-                      "cursor-pointer transition-colors",
-                      aktiv ? "bg-accent" : "hover:bg-muted/50",
-                    )}
+                    key={e.key}
+                    onClick={() => router.push(`/fahrlehrer/rollen?rolle=${e.key}`)}
+                    className={cn("cursor-pointer transition-colors", aktiv ? "bg-accent" : "hover:bg-muted/50")}
                   >
-                    <td className={cn("px-3 py-2", aktiv ? "font-semibold" : "font-medium")}>{r.name}</td>
+                    <td className={cn("px-3 py-2", aktiv ? "font-semibold" : "font-medium")}>
+                      <span className="flex items-center gap-2">
+                        {e.name}
+                        {e.system && (
+                          <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                            Standard
+                          </span>
+                        )}
+                      </span>
+                    </td>
                     <td className="hidden max-w-[16rem] truncate px-3 py-2 text-muted-foreground sm:table-cell">
-                      {r.beschreibung || "—"}
+                      {e.beschreibung || "—"}
                     </td>
                     <td className="px-3 py-2">
-                      {r.zugangsart ? <Badge variant="secondary">{r.zugangsart}</Badge> : <span className="text-muted-foreground">—</span>}
+                      {e.zugangsart ? <Badge variant="secondary">{e.zugangsart}</Badge> : <span className="text-muted-foreground">—</span>}
                     </td>
                     <td className="px-3 py-2">
                       <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                        {r.web_zugang ? (
+                        {e.web_zugang ? (
                           <>
                             <Globe className="h-3.5 w-3.5" /> Web + Mobile
                           </>

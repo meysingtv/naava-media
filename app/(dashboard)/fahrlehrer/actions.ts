@@ -25,6 +25,24 @@ function leerZuNull(v: FormDataEntryValue | null): string | null {
   return s === "" ? null : s;
 }
 
+const BUILTIN_ROLLEN: FahrlehrerRolle[] = ["chef", "fahrlehrer", "buero"];
+
+/**
+ * Wandelt die einheitliche Rollen-Auswahl (entweder ein Standard-Enum
+ * chef/fahrlehrer/buero oder die UUID einer eigenen Rolle) in die zu
+ * speichernden Felder `rolle` (für RLS/Navigation) und `benutzerrolle_id`.
+ */
+function rolleAufloesen(
+  wahl: string,
+  bestehendeRolle: FahrlehrerRolle | null,
+): { rolle: FahrlehrerRolle; benutzerrolle_id: string | null } {
+  if ((BUILTIN_ROLLEN as string[]).includes(wahl)) {
+    return { rolle: wahl as FahrlehrerRolle, benutzerrolle_id: null };
+  }
+  // Eigene Rolle: UUID merken, Basis-Zugriff vom bestehenden Wert übernehmen (sonst Büro).
+  return { rolle: bestehendeRolle ?? "buero", benutzerrolle_id: wahl };
+}
+
 /** Legt einen Benutzer an oder aktualisiert ihn (abhängig vom Feld `id`). */
 export async function benutzerSpeichern(
   _prev: BenutzerState,
@@ -48,6 +66,8 @@ export async function benutzerSpeichern(
     return { error: "Das Passwort muss mindestens 6 Zeichen lang sein." };
   }
 
+  const rolleWahl = String(formData.get("rolle_wahl") ?? "fahrlehrer");
+
   const supabase = createClient();
   let benutzerId = id;
 
@@ -55,19 +75,19 @@ export async function benutzerSpeichern(
     // Bestehenden Datensatz laden, um eigenes Konto / Rolle abzusichern.
     const { data: vorhanden } = await supabase
       .from("fahrlehrer")
-      .select("user_id, rolle")
+      .select("user_id, rolle, benutzerrolle_id")
       .eq("id", id)
-      .maybeSingle<{ user_id: string | null; rolle: FahrlehrerRolle }>();
+      .maybeSingle<{ user_id: string | null; rolle: FahrlehrerRolle; benutzerrolle_id: string | null }>();
 
-    // Eigene Rolle darf man nicht ändern – bestehender Wert bleibt erhalten.
+    // Eigene Rolle darf man nicht ändern – bestehende Werte bleiben erhalten.
     const selbst = Boolean(vorhanden?.user_id && vorhanden.user_id === kontext.userId);
-    const rolle = selbst
-      ? (vorhanden?.rolle ?? "chef")
-      : ((String(formData.get("rolle") ?? "fahrlehrer") as FahrlehrerRolle) || "fahrlehrer");
+    const { rolle, benutzerrolle_id } = selbst
+      ? { rolle: vorhanden?.rolle ?? "chef", benutzerrolle_id: vorhanden?.benutzerrolle_id ?? null }
+      : rolleAufloesen(rolleWahl, vorhanden?.rolle ?? null);
 
     const { error } = await supabase
       .from("fahrlehrer")
-      .update({ ...stammdaten(formData), rolle, email, fuehrerscheinklassen: klassen })
+      .update({ ...stammdaten(formData), rolle, benutzerrolle_id, email, fuehrerscheinklassen: klassen })
       .eq("id", id);
     if (error) return { error: error.message };
 
@@ -87,8 +107,7 @@ export async function benutzerSpeichern(
       if (pwError) return { error: `Passwort konnte nicht gesetzt werden: ${pwError.message}` };
     }
   } else {
-    const rolle =
-      (String(formData.get("rolle") ?? "fahrlehrer") as FahrlehrerRolle) || "fahrlehrer";
+    const { rolle, benutzerrolle_id } = rolleAufloesen(rolleWahl, null);
     let userId: string | null = null;
 
     // Login anlegen: entweder direkt mit Passwort oder per E-Mail-Einladung.
@@ -119,6 +138,7 @@ export async function benutzerSpeichern(
       .insert({
         ...stammdaten(formData),
         rolle,
+        benutzerrolle_id,
         email,
         fuehrerscheinklassen: klassen,
         fahrschule_id: kontext.fahrschule.id,
@@ -154,7 +174,6 @@ function stammdaten(formData: FormData) {
     geburtsdatum: leerZuNull(formData.get("geburtsdatum")),
     geburtsort: leerZuNull(formData.get("geburtsort")),
     notiz: leerZuNull(formData.get("notiz")),
-    benutzerrolle_id: leerZuNull(formData.get("benutzerrolle_id")),
   };
 }
 

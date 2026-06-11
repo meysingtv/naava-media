@@ -38,10 +38,12 @@ export function BenutzerListe({
   benutzer,
   selectedId,
   selfUserId,
+  rollenMap = {},
 }: {
   benutzer: Fahrlehrer[];
   selectedId?: string;
   selfUserId: string;
+  rollenMap?: Record<string, string>;
 }) {
   const router = useRouter();
   const [suche, setSuche] = useState("");
@@ -161,7 +163,9 @@ export function BenutzerListe({
                     <td className={cn("px-3 py-2", aktiv ? "font-semibold" : "font-medium")}>{b.nachname}</td>
                     <td className="hidden px-3 py-2 text-muted-foreground sm:table-cell">{b.vorname}</td>
                     <td className="px-3 py-2">
-                      <Badge variant="secondary">{ROLLEN[b.rolle]}</Badge>
+                      <Badge variant="secondary">
+                        {(b.benutzerrolle_id && rollenMap[b.benutzerrolle_id]) || ROLLEN[b.rolle]}
+                      </Badge>
                     </td>
                   </tr>
                 );

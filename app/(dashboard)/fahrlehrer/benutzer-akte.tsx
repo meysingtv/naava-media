@@ -18,8 +18,17 @@ function Datenzeile({ label, children }: { label: string; children: React.ReactN
   );
 }
 
-export function BenutzerAkte({ benutzer: b, selfUserId }: { benutzer: Fahrlehrer; selfUserId: string }) {
+export function BenutzerAkte({
+  benutzer: b,
+  selfUserId,
+  rollenMap = {},
+}: {
+  benutzer: Fahrlehrer;
+  selfUserId: string;
+  rollenMap?: Record<string, string>;
+}) {
   const kuerzel = b.kuerzel?.trim() || initialen(b.vorname, b.nachname);
+  const rolleName = (b.benutzerrolle_id && rollenMap[b.benutzerrolle_id]) || ROLLEN[b.rolle];
 
   return (
     <div className="space-y-3">
@@ -37,7 +46,7 @@ export function BenutzerAkte({ benutzer: b, selfUserId }: { benutzer: Fahrlehrer
                 {b.user_id === selfUserId && <Badge variant="outline">Du</Badge>}
                 {!b.aktiv && <Badge variant="secondary">Archiviert</Badge>}
               </div>
-              <p className="mt-0.5 text-sm text-muted-foreground">{ROLLEN[b.rolle]}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">{rolleName}</p>
             </div>
           </div>
           <Button asChild variant="outline" size="sm">

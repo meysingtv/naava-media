@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { Fahrlehrer } from "@/lib/types";
+import type { Benutzerrolle, Fahrlehrer } from "@/lib/types";
 import { BenutzerListe } from "./benutzer-liste";
 import { BenutzerAkte } from "./benutzer-akte";
 
@@ -25,13 +25,22 @@ export default async function BenutzerPage({
   }
 
   const supabase = createClient();
-  const { data } = await supabase
-    .from("fahrlehrer")
-    .select("*")
-    .order("nachname", { ascending: true })
-    .order("vorname", { ascending: true });
+  const [benutzerRes, rollenRes] = await Promise.all([
+    supabase
+      .from("fahrlehrer")
+      .select("*")
+      .order("nachname", { ascending: true })
+      .order("vorname", { ascending: true }),
+    supabase.from("benutzerrolle").select("id, name"),
+  ]);
 
-  const benutzer = (data ?? []) as Fahrlehrer[];
+  const benutzer = (benutzerRes.data ?? []) as Fahrlehrer[];
+
+  // Karte: eigene-Rollen-ID → Anzeigename (für die Rollen-Spalte).
+  const rollenMap: Record<string, string> = {};
+  for (const r of (rollenRes.data ?? []) as Pick<Benutzerrolle, "id" | "name">[]) {
+    rollenMap[r.id] = r.name;
+  }
 
   const selectedId = searchParams.id;
   const selected = selectedId ? benutzer.find((b) => b.id === selectedId) : undefined;
@@ -53,12 +62,12 @@ export default async function BenutzerPage({
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
         <div className={cn(selected && "hidden lg:block")}>
-          <BenutzerListe benutzer={benutzer} selectedId={selectedId} selfUserId={kontext.userId} />
+          <BenutzerListe benutzer={benutzer} selectedId={selectedId} selfUserId={kontext.userId} rollenMap={rollenMap} />
         </div>
 
         <div className={cn(!selected && "hidden lg:block")}>
           {selected ? (
-            <BenutzerAkte benutzer={selected} selfUserId={kontext.userId} />
+            <BenutzerAkte benutzer={selected} selfUserId={kontext.userId} rollenMap={rollenMap} />
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center gap-2 py-24 text-center text-muted-foreground">

@@ -56,6 +56,14 @@ export function BenutzerForm({
   const titel = benutzer ? `${benutzer.vorname} ${benutzer.nachname}` : "Neuer Benutzer";
   const abbrechenHref = benutzer ? `/fahrlehrer?id=${benutzer.id}` : "/fahrlehrer";
 
+  // Einheitliche Rolle: eigene Rolle (UUID) hat Vorrang, sonst Standard-Enum.
+  const rolleDefault = benutzer?.benutzerrolle_id ?? benutzer?.rolle ?? "fahrlehrer";
+  const aktuelleRolleName = benutzer?.benutzerrolle_id
+    ? rollen.find((r) => r.id === benutzer.benutzerrolle_id)?.name ?? "—"
+    : benutzer
+      ? ROLLEN[benutzer.rolle]
+      : "";
+
   const tabCls = (aktiv: boolean) =>
     cn(
       "border-b-2 pb-1.5 text-sm font-medium transition-colors",
@@ -110,13 +118,24 @@ export function BenutzerForm({
               <F label="Rolle" req>
                 {istSelbst ? (
                   <div className={cn(feld, "flex items-center gap-2 text-muted-foreground")}>
-                    <Lock className="h-3.5 w-3.5" /> {ROLLEN[benutzer!.rolle]}
+                    <Lock className="h-3.5 w-3.5" /> {aktuelleRolleName}
                   </div>
                 ) : (
-                  <select name="rolle" defaultValue={benutzer?.rolle ?? "fahrlehrer"} className={feld}>
-                    <option value="chef">Chef</option>
-                    <option value="fahrlehrer">Fahrlehrer</option>
-                    <option value="buero">Büro</option>
+                  <select name="rolle_wahl" defaultValue={rolleDefault} className={feld}>
+                    <optgroup label="Standard">
+                      <option value="chef">Chef</option>
+                      <option value="fahrlehrer">Fahrlehrer</option>
+                      <option value="buero">Büro</option>
+                    </optgroup>
+                    {rollen.length > 0 && (
+                      <optgroup label="Eigene Rollen">
+                        {rollen.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                 )}
               </F>
@@ -132,23 +151,6 @@ export function BenutzerForm({
               <F label="Geburtsort">
                 <input name="geburtsort" defaultValue={benutzer?.geburtsort ?? undefined} className={feld} />
               </F>
-              <div className="sm:col-span-2">
-                <F label="Rollen-Profil">
-                  <select name="benutzerrolle_id" defaultValue={benutzer?.benutzerrolle_id ?? ""} className={feld}>
-                    <option value="">— Keins —</option>
-                    {rollen.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name}
-                      </option>
-                    ))}
-                  </select>
-                  {rollen.length === 0 && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Noch keine Rollen angelegt — siehe Rollen verwalten.
-                    </p>
-                  )}
-                </F>
-              </div>
             </div>
             {istSelbst && (
               <p className="text-xs text-muted-foreground">Deine eigene Rolle kannst du nicht ändern.</p>

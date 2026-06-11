@@ -7,9 +7,10 @@ import { getKontext } from "@/lib/supabase/queries";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ROLLEN, ROLLEN_BESCHREIBUNG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { Benutzerrolle, Fahrlehrer } from "@/lib/types";
-import { RollenListe } from "./rollen-liste";
+import { RollenListe, type RolleEintrag } from "./rollen-liste";
 import { RolleEditor } from "./rolle-editor";
 import { RolleAkte } from "./rolle-akte";
 
@@ -33,22 +34,45 @@ export default async function RollenPage({
 
   const rollen = (data ?? []) as Benutzerrolle[];
 
+  // Standardrollen (fest, RLS-relevant) + eigene Rollen zu einer Liste vereinen.
+  const standard: RolleEintrag[] = [
+    { key: "chef", id: null, name: ROLLEN.chef, beschreibung: ROLLEN_BESCHREIBUNG.chef, zugangsart: "Verwaltung", web_zugang: true, system: true },
+    { key: "fahrlehrer", id: null, name: ROLLEN.fahrlehrer, beschreibung: ROLLEN_BESCHREIBUNG.fahrlehrer, zugangsart: "Fahrlehrer", web_zugang: true, system: true },
+    { key: "buero", id: null, name: ROLLEN.buero, beschreibung: ROLLEN_BESCHREIBUNG.buero, zugangsart: "Verwaltung", web_zugang: true, system: true },
+  ];
+  const eigene: RolleEintrag[] = rollen.map((r) => ({
+    key: r.id,
+    id: r.id,
+    name: r.name,
+    beschreibung: r.beschreibung,
+    zugangsart: r.zugangsart,
+    web_zugang: r.web_zugang,
+    system: false,
+  }));
+  const eintraege = [...standard, ...eigene];
+
   const neu = searchParams.neu === "1";
   const edit = searchParams.edit === "1";
-  const selectedId = searchParams.rolle;
-  const selected = selectedId ? rollen.find((r) => r.id === selectedId) : undefined;
-  const panel = neu || Boolean(selected);
+  const selectedKey = searchParams.rolle;
+  const selectedEintrag = selectedKey ? eintraege.find((e) => e.key === selectedKey) : undefined;
+  const selectedCustom =
+    selectedEintrag && !selectedEintrag.system ? rollen.find((r) => r.id === selectedEintrag.id) : undefined;
+
+  const editorModus = neu || Boolean(selectedCustom && edit);
+  const panel = neu || Boolean(selectedEintrag);
 
   // Mitarbeiter der ausgewählten Rolle (nur für die Lese-Ansicht laden).
   let mitglieder: Fahrlehrer[] = [];
-  if (selected && !edit) {
-    const { data: m } = await supabase
+  if (selectedEintrag && !editorModus) {
+    const { data: alle } = await supabase
       .from("fahrlehrer")
       .select("*")
-      .eq("benutzerrolle_id", selected.id)
       .order("nachname", { ascending: true })
       .order("vorname", { ascending: true });
-    mitglieder = (m ?? []) as Fahrlehrer[];
+    const list = (alle ?? []) as Fahrlehrer[];
+    mitglieder = selectedEintrag.system
+      ? list.filter((f) => f.rolle === selectedEintrag.key && !f.benutzerrolle_id)
+      : list.filter((f) => f.benutzerrolle_id === selectedEintrag.id);
   }
 
   return (
@@ -63,14 +87,14 @@ export default async function RollenPage({
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
         <div className={cn(panel && "hidden lg:block")}>
-          <RollenListe rollen={rollen} selectedId={selectedId} />
+          <RollenListe eintraege={eintraege} selectedKey={selectedKey} />
         </div>
 
         <div className={cn(!panel && "hidden lg:block")}>
-          {neu || (selected && edit) ? (
-            <RolleEditor key={selected?.id ?? "neu"} rolle={edit ? selected : undefined} />
-          ) : selected ? (
-            <RolleAkte rolle={selected} mitglieder={mitglieder} />
+          {editorModus ? (
+            <RolleEditor key={selectedCustom?.id ?? "neu"} rolle={selectedCustom} />
+          ) : selectedEintrag ? (
+            <RolleAkte mitglieder={mitglieder} />
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center gap-2 py-24 text-center text-muted-foreground">
