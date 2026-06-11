@@ -113,23 +113,22 @@ export function FahrstundePanel({
 
       {/* Status (nur Bearbeiten) */}
       {fahrstunde && (
-        <div className="flex flex-wrap items-center gap-2 border-b p-3">
-          <form action={fahrstundeStatusSetzen} onSubmit={onClose}>
+        <div className="flex items-center gap-2 border-b p-3">
+          <span className="shrink-0 text-xs font-medium text-muted-foreground">Status</span>
+          <form action={fahrstundeStatusSetzen} onSubmit={onClose} className="min-w-0 flex-1">
             <input type="hidden" name="id" value={fahrstunde.id} />
-            <input type="hidden" name="status" value="abgeschlossen" />
-            <Button type="submit" variant="success" size="sm">Abgeschlossen</Button>
+            <select
+              name="status"
+              defaultValue={fahrstunde.status}
+              onChange={(e) => e.currentTarget.form?.requestSubmit()}
+              className={cn(feld, "max-w-[200px]")}
+            >
+              <option value="geplant">Geplant</option>
+              <option value="abgeschlossen">Abgeschlossen</option>
+              <option value="ausgefallen">Ausgefallen</option>
+            </select>
           </form>
-          <form action={fahrstundeStatusSetzen} onSubmit={onClose}>
-            <input type="hidden" name="id" value={fahrstunde.id} />
-            <input type="hidden" name="status" value="ausgefallen" />
-            <Button type="submit" variant="outline" size="sm">Ausgefallen</Button>
-          </form>
-          <form action={fahrstundeStatusSetzen} onSubmit={onClose}>
-            <input type="hidden" name="id" value={fahrstunde.id} />
-            <input type="hidden" name="status" value="geplant" />
-            <Button type="submit" variant="outline" size="sm">Geplant</Button>
-          </form>
-          <form action={fahrstundeLoeschen} onSubmit={onClose} className="ml-auto">
+          <form action={fahrstundeLoeschen} onSubmit={onClose} className="shrink-0">
             <input type="hidden" name="id" value={fahrstunde.id} />
             <Button type="submit" variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
               <Trash2 className="h-3.5 w-3.5" /> Löschen
