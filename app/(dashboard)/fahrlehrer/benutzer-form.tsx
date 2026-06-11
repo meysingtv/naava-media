@@ -2,35 +2,68 @@
 
 import { useState } from "react";
 import { useFormState } from "react-dom";
-import { Check, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Eye,
+  EyeOff,
+  GraduationCap,
+  KeyRound,
+  Lock,
+  Mail,
+  StickyNote,
+  User,
+  X,
+} from "lucide-react";
 
 import { benutzerSpeichern, type BenutzerState } from "./actions";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { FormMessage } from "@/components/shared/form-message";
-import { FUEHRERSCHEINKLASSEN } from "@/lib/constants";
-import { cn } from "@/lib/utils";
-import type { Fahrlehrer } from "@/lib/types";
+import { FUEHRERSCHEINKLASSEN, ROLLEN, ROLLEN_BESCHREIBUNG } from "@/lib/constants";
+import { cn, initialen } from "@/lib/utils";
+import type { Fahrlehrer, FahrlehrerRolle } from "@/lib/types";
 
-const initial: BenutzerState = {};
+const initialState: BenutzerState = {};
 
 const feld =
-  "h-9 w-full rounded-md border border-input bg-background px-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "h-11 w-full rounded-lg border border-input bg-background px-3.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10";
 
-function Abschnitt({ title, children }: { title: string; children: React.ReactNode }) {
+const label = "mb-1.5 block text-sm font-medium text-foreground/80";
+
+/** Eine Sektion im neuen, ruhigeren Karten-Design. */
+function Sektion({
+  icon: Icon,
+  titel,
+  beschreibung,
+  children,
+}: {
+  icon: typeof User;
+  titel: string;
+  beschreibung?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="space-y-3">
-      <h3 className="border-b pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
-      {children}
+    <section className="rounded-2xl border bg-card shadow-sm">
+      <div className="flex items-center gap-3 border-b px-6 py-4">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Icon className="h-[18px] w-[18px]" />
+        </span>
+        <div>
+          <h2 className="text-base font-semibold leading-none tracking-tight">{titel}</h2>
+          {beschreibung && <p className="mt-1 text-sm text-muted-foreground">{beschreibung}</p>}
+        </div>
+      </div>
+      <div className="p-6">{children}</div>
     </section>
   );
 }
 
-function F({ label, children, req }: { label: string; children: React.ReactNode; req?: boolean }) {
+function F({ children, label: text, req }: { children: React.ReactNode; label: string; req?: boolean }) {
   return (
     <div className="min-w-0">
-      <label className="mb-1 block text-[13px] text-foreground/70">
-        {label}
+      <label className={label}>
+        {text}
         {req && <span className="text-destructive"> *</span>}
       </label>
       {children}
@@ -38,41 +71,53 @@ function F({ label, children, req }: { label: string; children: React.ReactNode;
   );
 }
 
-export function BenutzerForm({ benutzer }: { benutzer?: Fahrlehrer }) {
-  const [state, action] = useFormState(benutzerSpeichern, initial);
-  const [tab, setTab] = useState<"stamm" | "ausbildung">("stamm");
+export function BenutzerForm({
+  benutzer,
+  istSelbst = false,
+}: {
+  benutzer?: Fahrlehrer;
+  istSelbst?: boolean;
+}) {
+  const [state, action] = useFormState(benutzerSpeichern, initialState);
+  const [vorname, setVorname] = useState(benutzer?.vorname ?? "");
+  const [nachname, setNachname] = useState(benutzer?.nachname ?? "");
+  const [kuerzel, setKuerzel] = useState(benutzer?.kuerzel ?? "");
+  const [rolle, setRolle] = useState<FahrlehrerRolle>(benutzer?.rolle ?? "fahrlehrer");
   const [klassen, setKlassen] = useState<string[]>(benutzer?.fuehrerscheinklassen ?? []);
+  const [pwSichtbar, setPwSichtbar] = useState(false);
+  const [einladen, setEinladen] = useState(false);
 
-  const titel = benutzer ? `${benutzer.vorname} ${benutzer.nachname}` : "Neuer Benutzer";
+  const istBearbeiten = Boolean(benutzer);
+  const hatLogin = Boolean(benutzer?.user_id);
   const abbrechenHref = benutzer ? `/fahrlehrer?id=${benutzer.id}` : "/fahrlehrer";
+  const titel = istBearbeiten ? "Benutzer bearbeiten" : "Neuer Benutzer";
+  const avatar = kuerzel.trim() || initialen(vorname, nachname);
 
-  const tabCls = (aktiv: boolean) =>
-    cn(
-      "border-b-2 pb-1.5 text-sm font-medium transition-colors",
-      aktiv ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
-    );
+  function toggleKlasse(k: string) {
+    setKlassen((p) => (p.includes(k) ? p.filter((x) => x !== k) : [...p, k]));
+  }
 
   return (
-    <form action={action}>
+    <form action={action} className="pb-16">
       {benutzer && <input type="hidden" name="id" value={benutzer.id} />}
       {klassen.map((k) => (
         <input key={k} type="hidden" name="klassen" value={k} />
       ))}
 
-      <div className="rounded-md border bg-card">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-            <h1 className="text-sm font-bold tracking-tight">{titel}</h1>
-            <div className="flex items-center gap-5">
-              <button type="button" onClick={() => setTab("stamm")} className={tabCls(tab === "stamm")}>
-                Stammdaten
-              </button>
-              <button type="button" onClick={() => setTab("ausbildung")} className={tabCls(tab === "ausbildung")}>
-                Ausbildung
-              </button>
-            </div>
+      {/* Kopfleiste – Buttons oben rechts in der Ecke */}
+      <div className="sticky top-0 z-20 -mx-4 mb-6 border-b bg-background/80 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <a
+              href={abbrechenHref}
+              aria-label="Zurück"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </a>
+            <h1 className="truncate text-lg font-bold tracking-tight">{titel}</h1>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-2">
             <Button asChild variant="outline" size="sm" type="button">
               <a href={abbrechenHref}>
                 <X className="h-4 w-4" /> Abbrechen
@@ -83,103 +128,228 @@ export function BenutzerForm({ benutzer }: { benutzer?: Fahrlehrer }) {
             </SubmitButton>
           </div>
         </div>
+      </div>
 
-        {state.error && (
-          <div className="border-b px-4 py-2">
-            <FormMessage error={state.error} />
-          </div>
-        )}
+      <div className="mx-auto max-w-4xl space-y-6">
+        {state.error && <FormMessage error={state.error} />}
 
-        {/* Stammdaten */}
-        <div className={cn("space-y-6 p-4", tab !== "stamm" && "hidden")}>
-          <Abschnitt title="Person">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <F label="Kürzel">
-                <input name="kuerzel" defaultValue={benutzer?.kuerzel ?? undefined} placeholder="z. B. NW" className={feld} />
-              </F>
-              <F label="Rolle" req>
-                <select name="rolle" defaultValue={benutzer?.rolle ?? "fahrlehrer"} className={feld}>
-                  <option value="chef">Chef</option>
-                  <option value="fahrlehrer">Fahrlehrer</option>
-                  <option value="buero">Büro</option>
-                </select>
-              </F>
+        {/* Identität */}
+        <Sektion icon={User} titel="Persönliche Daten" beschreibung="Name, Kürzel und Rolle des Benutzers.">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+            <div className="flex flex-col items-center gap-2">
+              <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 text-2xl font-bold text-primary">
+                {avatar}
+              </span>
+              <span className="text-xs text-muted-foreground">Vorschau</span>
+            </div>
+            <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
               <F label="Vorname" req>
-                <input name="vorname" required defaultValue={benutzer?.vorname} className={feld} />
+                <input
+                  name="vorname"
+                  required
+                  value={vorname}
+                  onChange={(e) => setVorname(e.target.value)}
+                  className={feld}
+                />
               </F>
-              <F label="Name" req>
-                <input name="nachname" required defaultValue={benutzer?.nachname} className={feld} />
+              <F label="Nachname" req>
+                <input
+                  name="nachname"
+                  required
+                  value={nachname}
+                  onChange={(e) => setNachname(e.target.value)}
+                  className={feld}
+                />
               </F>
-              <F label="Geburtsdatum">
-                <input name="geburtsdatum" type="date" defaultValue={benutzer?.geburtsdatum ?? undefined} className={feld} />
+              <F label="Kürzel">
+                <input
+                  name="kuerzel"
+                  value={kuerzel}
+                  onChange={(e) => setKuerzel(e.target.value)}
+                  placeholder="z. B. NW"
+                  className={feld}
+                />
               </F>
-              <F label="Geburtsort">
-                <input name="geburtsort" defaultValue={benutzer?.geburtsort ?? undefined} className={feld} />
-              </F>
+              <div>
+                <label className={label}>
+                  Rolle <span className="text-destructive">*</span>
+                </label>
+                {istSelbst ? (
+                  <>
+                    {/* Eigene Rolle ist gesperrt – Wert wird serverseitig beibehalten. */}
+                    <div className="flex h-11 items-center gap-2 rounded-lg border border-dashed bg-muted/40 px-3.5 text-sm text-muted-foreground">
+                      <Lock className="h-4 w-4" />
+                      {ROLLEN[rolle]}
+                    </div>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      Deine eigene Rolle kannst du nicht ändern.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <select
+                      name="rolle"
+                      value={rolle}
+                      onChange={(e) => setRolle(e.target.value as FahrlehrerRolle)}
+                      className={feld}
+                    >
+                      {(Object.keys(ROLLEN) as FahrlehrerRolle[]).map((r) => (
+                        <option key={r} value={r}>
+                          {ROLLEN[r]}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1.5 text-xs text-muted-foreground">{ROLLEN_BESCHREIBUNG[rolle]}</p>
+                  </>
+                )}
+              </div>
             </div>
-          </Abschnitt>
+          </div>
+        </Sektion>
 
-          <Abschnitt title="Kontakt">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <F label="E-Mail">
-                  <input name="email" type="email" defaultValue={benutzer?.email ?? undefined} className={feld} />
-                </F>
-              </div>
-              <F label="Telefon mobil">
-                <input name="telefon" type="tel" defaultValue={benutzer?.telefon ?? undefined} className={feld} />
-              </F>
-              <F label="Telefon privat">
-                <input name="telefon_privat" type="tel" defaultValue={benutzer?.telefon_privat ?? undefined} className={feld} />
-              </F>
-              <div className="sm:col-span-2">
-                <F label="Straße &amp; Nr.">
-                  <input name="strasse" defaultValue={benutzer?.strasse ?? undefined} className={feld} />
-                </F>
-              </div>
-              <F label="PLZ">
-                <input name="plz" inputMode="numeric" defaultValue={benutzer?.plz ?? undefined} className={feld} />
-              </F>
-              <F label="Ort">
-                <input name="ort" defaultValue={benutzer?.ort ?? undefined} className={feld} />
+        {/* Kontakt & Adresse */}
+        <Sektion icon={Mail} titel="Kontakt & Adresse" beschreibung="Erreichbarkeit und Anschrift.">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <F label="E-Mail">
+                <input name="email" type="email" defaultValue={benutzer?.email ?? undefined} className={feld} />
               </F>
             </div>
-            {!benutzer && (
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="einladen" className="h-4 w-4 rounded border-input text-primary focus:ring-ring" />
-                Login-Zugang per E-Mail einladen (E-Mail erforderlich)
+            <F label="Telefon mobil">
+              <input name="telefon" type="tel" defaultValue={benutzer?.telefon ?? undefined} className={feld} />
+            </F>
+            <F label="Telefon privat">
+              <input
+                name="telefon_privat"
+                type="tel"
+                defaultValue={benutzer?.telefon_privat ?? undefined}
+                className={feld}
+              />
+            </F>
+            <div className="sm:col-span-2">
+              <F label="Straße & Nr.">
+                <input name="strasse" defaultValue={benutzer?.strasse ?? undefined} className={feld} />
+              </F>
+            </div>
+            <F label="PLZ">
+              <input name="plz" inputMode="numeric" defaultValue={benutzer?.plz ?? undefined} className={feld} />
+            </F>
+            <F label="Ort">
+              <input name="ort" defaultValue={benutzer?.ort ?? undefined} className={feld} />
+            </F>
+            <F label="Geburtsdatum">
+              <input
+                name="geburtsdatum"
+                type="date"
+                defaultValue={benutzer?.geburtsdatum ?? undefined}
+                className={feld}
+              />
+            </F>
+            <F label="Geburtsort">
+              <input name="geburtsort" defaultValue={benutzer?.geburtsort ?? undefined} className={feld} />
+            </F>
+          </div>
+        </Sektion>
+
+        {/* Login & Passwort */}
+        <Sektion
+          icon={KeyRound}
+          titel="Login & Passwort"
+          beschreibung={
+            istBearbeiten
+              ? "Vergib ein neues Passwort. Leer lassen, um das bestehende zu behalten."
+              : "Lege optional direkt ein Passwort fest, damit sich der Benutzer anmelden kann."
+          }
+        >
+          <div className="space-y-4">
+            <div className="max-w-md">
+              <F label={istBearbeiten ? "Neues Passwort" : "Passwort"}>
+                <div className="relative">
+                  <input
+                    name="passwort"
+                    type={pwSichtbar ? "text" : "password"}
+                    autoComplete="new-password"
+                    minLength={6}
+                    placeholder="Mind. 6 Zeichen"
+                    className={cn(feld, "pr-11")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setPwSichtbar((v) => !v)}
+                    aria-label={pwSichtbar ? "Passwort verbergen" : "Passwort anzeigen"}
+                    className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {pwSichtbar ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </F>
+            </div>
+
+            {istBearbeiten && !hatLogin && (
+              <p className="text-xs text-muted-foreground">
+                Dieser Benutzer hat noch keinen Login-Zugang. Vergib eine E-Mail und ein Passwort, um ihn zu
+                aktivieren.
+              </p>
+            )}
+
+            {!istBearbeiten && (
+              <label className="flex items-start gap-2.5 rounded-lg border bg-muted/30 p-3 text-sm">
+                <input
+                  type="checkbox"
+                  name="einladen"
+                  checked={einladen}
+                  onChange={(e) => setEinladen(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-input text-primary focus:ring-ring"
+                />
+                <span>
+                  <span className="font-medium">Stattdessen per E-Mail einladen</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Der Benutzer legt sein Passwort selbst fest (E-Mail erforderlich).
+                  </span>
+                </span>
               </label>
             )}
-            <F label="Notiz">
-              <textarea name="notiz" rows={3} defaultValue={benutzer?.notiz ?? undefined} className={cn(feld, "h-auto py-2")} />
-            </F>
-          </Abschnitt>
-        </div>
+          </div>
+        </Sektion>
 
-        {/* Ausbildung */}
-        <div className={cn("space-y-6 p-4", tab !== "ausbildung" && "hidden")}>
-          <Abschnitt title="Führerscheinklassen">
-            <p className="text-xs text-muted-foreground">Klassen, die dieser Benutzer als Fahrlehrer ausbildet.</p>
-            <div className="flex flex-wrap gap-1.5">
-              {FUEHRERSCHEINKLASSEN.map((k) => {
-                const aktiv = klassen.includes(k);
-                return (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => setKlassen((p) => (p.includes(k) ? p.filter((x) => x !== k) : [...p, k]))}
-                    className={cn(
-                      "rounded-md border px-2.5 py-1 text-sm font-medium transition-colors",
-                      aktiv ? "border-primary bg-primary text-primary-foreground" : "border-input bg-background hover:bg-accent",
-                    )}
-                  >
-                    {k}
-                  </button>
-                );
-              })}
-            </div>
-          </Abschnitt>
-        </div>
+        {/* Ausbildungsklassen */}
+        <Sektion
+          icon={GraduationCap}
+          titel="Ausbildungsklassen"
+          beschreibung="Klassen, die dieser Benutzer als Fahrlehrer ausbildet."
+        >
+          <div className="flex flex-wrap gap-2">
+            {FUEHRERSCHEINKLASSEN.map((k) => {
+              const aktiv = klassen.includes(k);
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => toggleKlasse(k)}
+                  className={cn(
+                    "rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
+                    aktiv
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-input bg-background hover:bg-accent",
+                  )}
+                >
+                  {k}
+                </button>
+              );
+            })}
+          </div>
+        </Sektion>
+
+        {/* Notiz */}
+        <Sektion icon={StickyNote} titel="Notiz" beschreibung="Interne Anmerkungen zu diesem Benutzer.">
+          <textarea
+            name="notiz"
+            rows={4}
+            defaultValue={benutzer?.notiz ?? undefined}
+            placeholder="Notiz …"
+            className={cn(feld, "h-auto py-2.5")}
+          />
+        </Sektion>
       </div>
     </form>
   );

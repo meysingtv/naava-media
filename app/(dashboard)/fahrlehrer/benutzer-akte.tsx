@@ -41,7 +41,7 @@ export function BenutzerAkte({ benutzer: b, selfUserId }: { benutzer: Fahrlehrer
             </div>
           </div>
           <Button asChild variant="outline" size="sm">
-            <Link href={`/fahrlehrer?id=${b.id}&edit=1`}>
+            <Link href={`/fahrlehrer/${b.id}/bearbeiten`}>
               <Pencil className="h-4 w-4" /> Bearbeiten
             </Link>
           </Button>

@@ -61,6 +61,28 @@ export const ROLLEN_BESCHREIBUNG: Record<FahrlehrerRolle, string> = {
   buero: "Rechnungen und Schüler (keine Löhne)",
 };
 
+// ---------------------------------------------------------------------
+// Rollen-Berechtigungen (für die Rollenverwaltung)
+// ---------------------------------------------------------------------
+// Navigationsbereiche, für die je Rolle "ansehen"/"bearbeiten" gesetzt
+// werden kann. Schlüssel entsprechen den Sidebar-Bereichen der App.
+export interface SidebarBereich {
+  key: string;
+  label: string;
+  beschreibung: string;
+}
+
+export const SIDEBAR_BEREICHE: SidebarBereich[] = [
+  { key: "dashboard", label: "Dashboard", beschreibung: "Übersicht & Kennzahlen" },
+  { key: "schueler", label: "Schüler", beschreibung: "Schülerverwaltung & Akten" },
+  { key: "kalender", label: "Terminplaner", beschreibung: "Fahrstunden & Termine" },
+  { key: "theorie", label: "Theorie", beschreibung: "Theorieunterricht" },
+  { key: "rechnungen", label: "Rechnungen", beschreibung: "Rechnungen & Zahlungen" },
+  { key: "fahrlehrer", label: "Benutzer", beschreibung: "Team & Rollen" },
+  { key: "fahrzeuge", label: "Fahrzeuge", beschreibung: "Fahrzeugflotte" },
+  { key: "einstellungen", label: "Einstellungen", beschreibung: "Fahrschul-Einstellungen" },
+];
+
 // Fahrstunden-Typen inkl. Farbkodierung für den Kalender
 export interface TypMeta {
   label: string;

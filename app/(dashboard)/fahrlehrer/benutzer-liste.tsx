@@ -68,7 +68,7 @@ export function BenutzerListe({
         description="Lege Benutzer an und weise ihnen Rollen zu (Chef, Fahrlehrer, Büro)."
       >
         <Link
-          href="/fahrlehrer?neu=1"
+          href="/fahrlehrer/neu"
           className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-accent"
         >
           <Plus className="h-4 w-4" /> Neuer Benutzer
@@ -82,13 +82,13 @@ export function BenutzerListe({
       <Card>
         <div className="flex flex-wrap items-center gap-1 border-b p-2">
           <Tip label="Neuer Benutzer">
-            <Link href="/fahrlehrer?neu=1" aria-label="Neuer Benutzer" className={toolbarBtn}>
+            <Link href="/fahrlehrer/neu" aria-label="Neuer Benutzer" className={toolbarBtn}>
               <Plus className="h-4 w-4" />
             </Link>
           </Tip>
           <Tip label={selectedId ? "Bearbeiten" : "Erst Benutzer auswählen"}>
             {selectedId ? (
-              <Link href={`/fahrlehrer?id=${selectedId}&edit=1`} aria-label="Bearbeiten" className={toolbarBtn}>
+              <Link href={`/fahrlehrer/${selectedId}/bearbeiten`} aria-label="Bearbeiten" className={toolbarBtn}>
                 <Pencil className="h-4 w-4" />
               </Link>
             ) : (

@@ -43,52 +43,88 @@ export async function benutzerSpeichern(
 
   const klassen = formData.getAll("klassen").map(String);
   const email = leerZuNull(formData.get("email"));
-
-  const datensatz = {
-    vorname,
-    nachname,
-    kuerzel: leerZuNull(formData.get("kuerzel")),
-    rolle: (String(formData.get("rolle") ?? "fahrlehrer") as FahrlehrerRolle) || "fahrlehrer",
-    email,
-    telefon: leerZuNull(formData.get("telefon")),
-    telefon_privat: leerZuNull(formData.get("telefon_privat")),
-    strasse: leerZuNull(formData.get("strasse")),
-    plz: leerZuNull(formData.get("plz")),
-    ort: leerZuNull(formData.get("ort")),
-    geburtsdatum: leerZuNull(formData.get("geburtsdatum")),
-    geburtsort: leerZuNull(formData.get("geburtsort")),
-    notiz: leerZuNull(formData.get("notiz")),
-    fuehrerscheinklassen: klassen,
-  };
+  const passwort = String(formData.get("passwort") ?? "");
+  if (passwort && passwort.length < 6) {
+    return { error: "Das Passwort muss mindestens 6 Zeichen lang sein." };
+  }
 
   const supabase = createClient();
   let benutzerId = id;
 
   if (id) {
-    const { error } = await supabase.from("fahrlehrer").update(datensatz).eq("id", id);
+    // Bestehenden Datensatz laden, um eigenes Konto / Rolle abzusichern.
+    const { data: vorhanden } = await supabase
+      .from("fahrlehrer")
+      .select("user_id, rolle")
+      .eq("id", id)
+      .maybeSingle<{ user_id: string | null; rolle: FahrlehrerRolle }>();
+
+    // Eigene Rolle darf man nicht ändern – bestehender Wert bleibt erhalten.
+    const selbst = Boolean(vorhanden?.user_id && vorhanden.user_id === kontext.userId);
+    const rolle = selbst
+      ? (vorhanden?.rolle ?? "chef")
+      : ((String(formData.get("rolle") ?? "fahrlehrer") as FahrlehrerRolle) || "fahrlehrer");
+
+    const { error } = await supabase
+      .from("fahrlehrer")
+      .update({ ...stammdaten(formData), rolle, email, fuehrerscheinklassen: klassen })
+      .eq("id", id);
     if (error) return { error: error.message };
-  } else {
-    // Optional: Login-Zugang per E-Mail einladen (benötigt Service-Role-Key).
-    let userId: string | null = null;
-    if (formData.get("einladen") === "on") {
-      if (!email) return { error: "Für eine Einladung wird eine E-Mail-Adresse benötigt." };
-      const admin = createAdminClient();
-      if (!admin) {
+
+    // Optional: Passwort setzen (benötigt Service-Role-Key + verknüpftes Login).
+    if (passwort) {
+      if (!vorhanden?.user_id) {
         return {
           error:
-            "E-Mail-Einladung ist nicht eingerichtet (SUPABASE_SERVICE_ROLE_KEY fehlt, siehe README).",
+            "Für dieses Konto gibt es noch keinen Login. Lege den Benutzer mit E-Mail + Passwort neu an oder lade ihn ein.",
         };
       }
-      const { data, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-        redirectTo: `${basisUrl()}/auth/callback?weiter=/auth/passwort-zuruecksetzen`,
+      const admin = createAdminClient();
+      if (!admin) return { error: PW_HINWEIS };
+      const { error: pwError } = await admin.auth.admin.updateUserById(vorhanden.user_id, {
+        password: passwort,
       });
-      if (inviteError) return { error: `Einladung fehlgeschlagen: ${inviteError.message}` };
-      userId = data.user?.id ?? null;
+      if (pwError) return { error: `Passwort konnte nicht gesetzt werden: ${pwError.message}` };
+    }
+  } else {
+    const rolle =
+      (String(formData.get("rolle") ?? "fahrlehrer") as FahrlehrerRolle) || "fahrlehrer";
+    let userId: string | null = null;
+
+    // Login anlegen: entweder direkt mit Passwort oder per E-Mail-Einladung.
+    if (passwort || formData.get("einladen") === "on") {
+      if (!email) return { error: "Für einen Login wird eine E-Mail-Adresse benötigt." };
+      const admin = createAdminClient();
+      if (!admin) return { error: PW_HINWEIS };
+
+      if (passwort) {
+        const { data, error: createError } = await admin.auth.admin.createUser({
+          email,
+          password: passwort,
+          email_confirm: true,
+        });
+        if (createError) return { error: `Login konnte nicht angelegt werden: ${createError.message}` };
+        userId = data.user?.id ?? null;
+      } else {
+        const { data, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
+          redirectTo: `${basisUrl()}/auth/callback?weiter=/auth/passwort-zuruecksetzen`,
+        });
+        if (inviteError) return { error: `Einladung fehlgeschlagen: ${inviteError.message}` };
+        userId = data.user?.id ?? null;
+      }
     }
 
     const { data, error } = await supabase
       .from("fahrlehrer")
-      .insert({ ...datensatz, fahrschule_id: kontext.fahrschule.id, user_id: userId, aktiv: true })
+      .insert({
+        ...stammdaten(formData),
+        rolle,
+        email,
+        fuehrerscheinklassen: klassen,
+        fahrschule_id: kontext.fahrschule.id,
+        user_id: userId,
+        aktiv: true,
+      })
       .select("id")
       .single();
     if (error || !data) {
@@ -99,6 +135,26 @@ export async function benutzerSpeichern(
 
   revalidatePath("/fahrlehrer");
   redirect(`/fahrlehrer?id=${benutzerId}`);
+}
+
+const PW_HINWEIS =
+  "Login-Verwaltung ist nicht eingerichtet (SUPABASE_SERVICE_ROLE_KEY fehlt, siehe README).";
+
+/** Gemeinsame Stammdaten-Felder für Insert/Update (ohne Rolle/E-Mail/Klassen). */
+function stammdaten(formData: FormData) {
+  return {
+    vorname: String(formData.get("vorname") ?? "").trim(),
+    nachname: String(formData.get("nachname") ?? "").trim(),
+    kuerzel: leerZuNull(formData.get("kuerzel")),
+    telefon: leerZuNull(formData.get("telefon")),
+    telefon_privat: leerZuNull(formData.get("telefon_privat")),
+    strasse: leerZuNull(formData.get("strasse")),
+    plz: leerZuNull(formData.get("plz")),
+    ort: leerZuNull(formData.get("ort")),
+    geburtsdatum: leerZuNull(formData.get("geburtsdatum")),
+    geburtsort: leerZuNull(formData.get("geburtsort")),
+    notiz: leerZuNull(formData.get("notiz")),
+  };
 }
 
 export async function fahrlehrerAktivSetzen(formData: FormData): Promise<void> {

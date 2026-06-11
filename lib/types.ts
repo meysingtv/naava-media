@@ -204,6 +204,23 @@ export type Aufgabe = {
   created_at: string;
 };
 
+export type RolleRecht = { ansehen?: boolean; bearbeiten?: boolean };
+export type RolleRechte = {
+  allgemein?: Record<string, boolean>;
+  sidebar?: Record<string, RolleRecht>;
+};
+
+export type Benutzerrolle = {
+  id: string;
+  fahrschule_id: string;
+  name: string;
+  beschreibung: string | null;
+  zugangsart: string | null;
+  web_zugang: boolean;
+  rechte: RolleRechte;
+  created_at: string;
+};
+
 // ---------------------------------------------------------------------
 // Insert/Update lassen alle Felder optional, da viele Spalten DB-Defaults
 // haben (id, created_at, aktiv, status, …). Die NOT-NULL-Pflicht erzwingt
@@ -230,6 +247,7 @@ export type Database = {
       theoriestunde: { Row: TableRow<Theoriestunde>; Insert: TableInsert<Theoriestunde>; Update: TableUpdate<Theoriestunde>; Relationships: [] };
       theorie_teilnahme: { Row: TableRow<TheorieTeilnahme>; Insert: TableInsert<TheorieTeilnahme>; Update: TableUpdate<TheorieTeilnahme>; Relationships: [] };
       aufgabe: { Row: TableRow<Aufgabe>; Insert: TableInsert<Aufgabe>; Update: TableUpdate<Aufgabe>; Relationships: [] };
+      benutzerrolle: { Row: TableRow<Benutzerrolle>; Insert: TableInsert<Benutzerrolle>; Update: TableUpdate<Benutzerrolle>; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: {
