@@ -11,8 +11,7 @@ import {
   navTopFuer,
   type NavItem,
 } from "@/components/shared/nav-items";
-import { ROLLEN } from "@/lib/constants";
-import { cn, initialen } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { FahrlehrerRolle } from "@/lib/types";
 
 interface SidebarProps {
@@ -20,8 +19,6 @@ interface SidebarProps {
   onToggle: () => void;
   fahrschuleName: string;
   logoUrl: string | null;
-  vorname: string;
-  nachname: string;
   rolle: FahrlehrerRolle;
 }
 
@@ -36,35 +33,19 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
     <Link
       href={item.href}
       className={cn(
-        "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+        "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
         aktiv
-          ? "bg-white/15 font-semibold text-white"
-          : "font-medium text-sidebar-muted hover:bg-white/10 hover:text-white",
+          ? "bg-primary/10 font-medium text-primary"
+          : "font-medium text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
-      {aktiv && (
-        <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-white" />
-      )}
-      <Icon
-        className={cn(
-          "h-[18px] w-[18px] transition-colors",
-          aktiv ? "text-white" : "text-sidebar-muted group-hover:text-white",
-        )}
-      />
+      <Icon className="h-[18px] w-[18px]" />
       {item.label}
     </Link>
   );
 }
 
-export function Sidebar({
-  collapsed,
-  onToggle,
-  fahrschuleName,
-  logoUrl,
-  vorname,
-  nachname,
-  rolle,
-}: SidebarProps) {
+export function Sidebar({ collapsed, onToggle, fahrschuleName, logoUrl, rolle }: SidebarProps) {
   const pathname = usePathname();
   const top = navTopFuer(rolle);
   const gruppen = navGruppenFuer(rolle);
@@ -82,33 +63,33 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-white/5 bg-sidebar text-sidebar-foreground shadow-xl transition-transform duration-200 ease-out md:flex print:hidden",
+        "fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r bg-card transition-transform duration-200 ease-out md:flex print:hidden",
         collapsed && "-translate-x-full",
       )}
     >
-      {/* Kopf: nur Logo (falls vorhanden) + Einklappen */}
-      <div className="flex h-12 items-center border-b border-white/10 px-3">
-        {logoUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoUrl} alt={fahrschuleName} className="mr-auto h-7 max-w-[150px] object-contain" />
-        )}
+      <div className="flex h-12 items-center gap-2 border-b px-3">
         <button
           type="button"
           onClick={onToggle}
           title="Navigation einklappen"
           aria-label="Navigation einklappen"
-          className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <ChevronsLeft className="h-5 w-5" />
         </button>
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt={fahrschuleName} className="h-7 max-w-[150px] object-contain" />
+        ) : (
+          <span className="truncate text-sm font-semibold text-foreground">{fahrschuleName}</span>
+        )}
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/45">
+        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
           Navigation
         </p>
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {top.map((item) => (
             <NavLink key={item.href} item={item} pathname={pathname} />
           ))}
@@ -122,14 +103,14 @@ export function Sidebar({
                 <button
                   type="button"
                   onClick={() => toggleGruppe(g.label)}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-muted transition-colors hover:bg-white/10 hover:text-white"
+                  className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   <Icon className="h-[18px] w-[18px]" />
                   <span className="flex-1 text-left">{g.label}</span>
                   <ChevronDown className={cn("h-4 w-4 transition-transform", offen && "rotate-180")} />
                 </button>
                 {offen && (
-                  <div className="mt-1 space-y-1 border-l border-white/10 pl-3">
+                  <div className="mt-0.5 space-y-0.5 border-l border-border pl-3">
                     {g.items.map((i) => (
                       <NavLink key={i.href} item={i} pathname={pathname} />
                     ))}
@@ -146,21 +127,6 @@ export function Sidebar({
           )}
         </div>
       </nav>
-
-      {/* Profil-Fuß (sitzt im dunklen Bereich des Verlaufs) */}
-      <div className="border-t border-white/10 p-3">
-        <div className="flex items-center gap-2.5 rounded-lg bg-white/5 px-2.5 py-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-semibold text-white ring-1 ring-inset ring-white/20">
-            {initialen(vorname, nachname)}
-          </span>
-          <div className="min-w-0 leading-tight">
-            <p className="truncate text-[13px] font-medium text-white">
-              {vorname} {nachname}
-            </p>
-            <p className="truncate text-xs text-white/60">{ROLLEN[rolle]}</p>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 }

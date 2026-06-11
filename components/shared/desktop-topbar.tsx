@@ -56,7 +56,7 @@ export function DesktopTopbar({ collapsed, onToggle, vorname, nachname, rolle }:
   const schnell = recent.filter((p) => p.href !== aktuell?.href).slice(0, 4);
 
   return (
-    <header className="sticky top-0 z-20 hidden h-12 items-center gap-1.5 border-b border-border bg-card/80 px-3 backdrop-blur md:flex print:hidden">
+    <header className="sticky top-0 z-20 hidden h-12 items-center gap-1.5 border-b bg-card px-3 md:flex print:hidden">
       {collapsed && (
         <button type="button" onClick={onToggle} title="Navigation einblenden" aria-label="Navigation einblenden" className={iconBtn}>
           <ChevronsRight className="h-5 w-5" />
