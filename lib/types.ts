@@ -46,6 +46,8 @@ export type Fahrlehrer = {
   geburtsdatum: string | null;
   geburtsort: string | null;
   notiz: string | null;
+  // Eigene Rolle / Rollen-Profil (Migration 0012)
+  benutzerrolle_id: string | null;
   created_at: string;
 };
 

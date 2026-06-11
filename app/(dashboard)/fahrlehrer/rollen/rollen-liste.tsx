@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Globe, Plus, Shield, Smartphone, Trash2 } from "lucide-react";
+import { Globe, Pencil, Plus, Shield, Smartphone, Trash2 } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +50,21 @@ export function RollenListe({ rollen, selectedId }: { rollen: Benutzerrolle[]; s
     <div>
       <Card>
         <div className="flex flex-wrap items-center gap-1 border-b p-2">
+          <Tip label={selected ? "Rolle bearbeiten" : "Erst Rolle auswählen"}>
+            {selected ? (
+              <Link
+                href={`/fahrlehrer/rollen?rolle=${selected.id}&edit=1`}
+                aria-label="Rolle bearbeiten"
+                className={toolbarBtn}
+              >
+                <Pencil className="h-4 w-4" />
+              </Link>
+            ) : (
+              <span aria-disabled="true" className={cn(toolbarBtn, "cursor-not-allowed opacity-40")}>
+                <Pencil className="h-4 w-4" />
+              </span>
+            )}
+          </Tip>
           <Tip label="Neue Rolle">
             <Link href="/fahrlehrer/rollen?neu=1" aria-label="Neue Rolle" className={toolbarBtn}>
               <Plus className="h-4 w-4" />

@@ -8,16 +8,17 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { Benutzerrolle } from "@/lib/types";
+import type { Benutzerrolle, Fahrlehrer } from "@/lib/types";
 import { RollenListe } from "./rollen-liste";
 import { RolleEditor } from "./rolle-editor";
+import { RolleAkte } from "./rolle-akte";
 
 export const metadata = { title: "Rollen & Berechtigungen · FahrschulApp" };
 
 export default async function RollenPage({
   searchParams,
 }: {
-  searchParams: { rolle?: string; neu?: string };
+  searchParams: { rolle?: string; neu?: string; edit?: string };
 }) {
   const kontext = await getKontext();
   if (kontext?.fahrlehrer?.rolle !== "chef") {
@@ -33,9 +34,22 @@ export default async function RollenPage({
   const rollen = (data ?? []) as Benutzerrolle[];
 
   const neu = searchParams.neu === "1";
+  const edit = searchParams.edit === "1";
   const selectedId = searchParams.rolle;
   const selected = selectedId ? rollen.find((r) => r.id === selectedId) : undefined;
   const panel = neu || Boolean(selected);
+
+  // Mitarbeiter der ausgewählten Rolle (nur für die Lese-Ansicht laden).
+  let mitglieder: Fahrlehrer[] = [];
+  if (selected && !edit) {
+    const { data: m } = await supabase
+      .from("fahrlehrer")
+      .select("*")
+      .eq("benutzerrolle_id", selected.id)
+      .order("nachname", { ascending: true })
+      .order("vorname", { ascending: true });
+    mitglieder = (m ?? []) as Fahrlehrer[];
+  }
 
   return (
     <div className="space-y-6">
@@ -53,8 +67,10 @@ export default async function RollenPage({
         </div>
 
         <div className={cn(!panel && "hidden lg:block")}>
-          {panel ? (
-            <RolleEditor key={selected?.id ?? "neu"} rolle={selected} />
+          {neu || (selected && edit) ? (
+            <RolleEditor key={selected?.id ?? "neu"} rolle={edit ? selected : undefined} />
+          ) : selected ? (
+            <RolleAkte rolle={selected} mitglieder={mitglieder} />
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center gap-2 py-24 text-center text-muted-foreground">

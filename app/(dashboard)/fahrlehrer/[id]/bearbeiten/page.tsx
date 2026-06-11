@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
 import { BenutzerForm } from "../../benutzer-form";
-import type { Fahrlehrer } from "@/lib/types";
+import type { Benutzerrolle, Fahrlehrer } from "@/lib/types";
 
 export const metadata = { title: "Benutzer bearbeiten · FahrschulApp" };
 
@@ -14,18 +14,18 @@ export default async function BenutzerBearbeitenPage({ params }: { params: { id:
   }
 
   const supabase = createClient();
-  const { data } = await supabase
-    .from("fahrlehrer")
-    .select("*")
-    .eq("id", params.id)
-    .maybeSingle();
+  const [benutzerRes, rollenRes] = await Promise.all([
+    supabase.from("fahrlehrer").select("*").eq("id", params.id).maybeSingle(),
+    supabase.from("benutzerrolle").select("*").order("name"),
+  ]);
 
-  if (!data) {
+  if (!benutzerRes.data) {
     notFound();
   }
 
-  const benutzer = data as Fahrlehrer;
+  const benutzer = benutzerRes.data as Fahrlehrer;
+  const rollen = (rollenRes.data ?? []) as Benutzerrolle[];
   const istSelbst = Boolean(benutzer.user_id && benutzer.user_id === kontext.userId);
 
-  return <BenutzerForm benutzer={benutzer} istSelbst={istSelbst} />;
+  return <BenutzerForm benutzer={benutzer} istSelbst={istSelbst} rollen={rollen} />;
 }

@@ -154,6 +154,7 @@ function stammdaten(formData: FormData) {
     geburtsdatum: leerZuNull(formData.get("geburtsdatum")),
     geburtsort: leerZuNull(formData.get("geburtsort")),
     notiz: leerZuNull(formData.get("notiz")),
+    benutzerrolle_id: leerZuNull(formData.get("benutzerrolle_id")),
   };
 }
 

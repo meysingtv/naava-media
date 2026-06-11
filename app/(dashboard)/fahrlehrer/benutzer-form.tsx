@@ -10,7 +10,7 @@ import { SubmitButton } from "@/components/shared/submit-button";
 import { FormMessage } from "@/components/shared/form-message";
 import { FUEHRERSCHEINKLASSEN, ROLLEN } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import type { Fahrlehrer } from "@/lib/types";
+import type { Benutzerrolle, Fahrlehrer } from "@/lib/types";
 
 const initial: BenutzerState = {};
 
@@ -41,9 +41,11 @@ function F({ label, children, req }: { label: string; children: React.ReactNode;
 export function BenutzerForm({
   benutzer,
   istSelbst = false,
+  rollen = [],
 }: {
   benutzer?: Fahrlehrer;
   istSelbst?: boolean;
+  rollen?: Benutzerrolle[];
 }) {
   const [state, action] = useFormState(benutzerSpeichern, initial);
   const [tab, setTab] = useState<"stamm" | "ausbildung">("stamm");
@@ -130,6 +132,23 @@ export function BenutzerForm({
               <F label="Geburtsort">
                 <input name="geburtsort" defaultValue={benutzer?.geburtsort ?? undefined} className={feld} />
               </F>
+              <div className="sm:col-span-2">
+                <F label="Rollen-Profil">
+                  <select name="benutzerrolle_id" defaultValue={benutzer?.benutzerrolle_id ?? ""} className={feld}>
+                    <option value="">— Keins —</option>
+                    {rollen.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                  {rollen.length === 0 && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Noch keine Rollen angelegt — siehe Rollen verwalten.
+                    </p>
+                  )}
+                </F>
+              </div>
             </div>
             {istSelbst && (
               <p className="text-xs text-muted-foreground">Deine eigene Rolle kannst du nicht ändern.</p>
