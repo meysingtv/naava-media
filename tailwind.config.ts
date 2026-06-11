@@ -60,8 +60,6 @@ const config: Config = {
           foreground: "hsl(var(--sidebar-foreground))",
           muted: "hsl(var(--sidebar-muted))",
           accent: "hsl(var(--sidebar-accent))",
-          border: "hsl(var(--sidebar-border))",
-          hover: "hsl(var(--sidebar-hover))",
         },
       },
       borderRadius: {
