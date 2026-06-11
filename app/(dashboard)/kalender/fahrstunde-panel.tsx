@@ -212,8 +212,8 @@ export function FahrstundePanel({
           </F>
         </div>
 
-        {/* Footer – immer ganz unten */}
-        <div className="flex flex-wrap items-center justify-end gap-2 border-t bg-card p-3">
+        {/* Footer – immer ganz unten, alle in einer Reihe */}
+        <div className="flex items-center justify-end gap-1.5 border-t bg-card p-3">
           <Button type="button" variant="outline" size="sm" onClick={onClose}>
             <X className="h-4 w-4" /> Abbrechen
           </Button>
@@ -221,8 +221,13 @@ export function FahrstundePanel({
             <Check className="h-4 w-4" /> Speichern
           </SubmitButton>
           {!istBearbeiten && (
-            <SubmitButton size="sm" variant="success" onClick={() => (modusNeu.current = true)}>
-              <Plus className="h-4 w-4" /> Speichern + Neu
+            <SubmitButton
+              size="sm"
+              variant="success"
+              title="Speichern und neuen Termin anlegen"
+              onClick={() => (modusNeu.current = true)}
+            >
+              <Plus className="h-4 w-4" /> Neu
             </SubmitButton>
           )}
         </div>
