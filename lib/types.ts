@@ -7,7 +7,7 @@
 // korrekt zu typisieren.
 
 export type FahrlehrerRolle = "chef" | "fahrlehrer" | "buero";
-export type FahrstundeTyp = "normal" | "autobahn" | "nacht" | "ueberland" | "pruefung";
+export type FahrstundeTyp = "normal" | "autobahn" | "nacht" | "ueberland" | "pruefung" | "theorie" | "sonstiges";
 export type FahrstundeStatus = "geplant" | "abgeschlossen" | "ausgefallen";
 export type RechnungStatus = "offen" | "bezahlt" | "ueberfaellig";
 

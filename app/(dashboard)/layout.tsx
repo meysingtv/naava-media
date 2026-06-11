@@ -22,6 +22,7 @@ export default async function DashboardLayout({
   return (
     <DashboardShell
       fahrschuleName={fahrschule.name}
+      logoUrl={fahrschule.logo_url}
       vorname={fahrlehrer.vorname}
       nachname={fahrlehrer.nachname}
       rolle={fahrlehrer.rolle}

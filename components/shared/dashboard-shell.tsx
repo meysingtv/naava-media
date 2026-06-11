@@ -10,6 +10,7 @@ import type { FahrlehrerRolle } from "@/lib/types";
 
 interface DashboardShellProps {
   fahrschuleName: string;
+  logoUrl: string | null;
   vorname: string;
   nachname: string;
   rolle: FahrlehrerRolle;
@@ -18,6 +19,7 @@ interface DashboardShellProps {
 
 export function DashboardShell({
   fahrschuleName,
+  logoUrl,
   vorname,
   nachname,
   rolle,
@@ -46,6 +48,7 @@ export function DashboardShell({
         collapsed={collapsed}
         onToggle={toggle}
         fahrschuleName={fahrschuleName}
+        logoUrl={logoUrl}
         rolle={rolle}
       />
       <MobileTopbar

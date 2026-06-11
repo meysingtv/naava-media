@@ -79,7 +79,7 @@ export function FahrstundePanel({
 
   useEffect(() => {
     if (!state.ok) return;
-    toast.success(istBearbeiten ? "Fahrstunde aktualisiert" : "Fahrstunde eingetragen");
+    toast.success(istBearbeiten ? "Termin aktualisiert" : "Termin eingetragen");
     router.refresh();
     if (modusNeu.current) {
       modusNeu.current = false;
@@ -92,11 +92,12 @@ export function FahrstundePanel({
   }, [state]);
 
   return (
-    <div className="flex max-h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-lg border bg-card">
+    <div className="flex flex-col overflow-hidden rounded-lg border bg-card lg:h-[calc(100vh-7rem)]">
+      {/* Kopf */}
       <div className="flex items-start justify-between gap-3 border-b p-4">
         <div>
           <h2 className="text-base font-bold tracking-tight">
-            {istBearbeiten ? "Fahrstunde bearbeiten" : "Neue Fahrstunde"}
+            {istBearbeiten ? "Termin bearbeiten" : "Neuer Termin"}
           </h2>
           <p className="text-xs text-muted-foreground">Plane einen Termin für deinen Betrieb.</p>
         </div>
@@ -110,8 +111,36 @@ export function FahrstundePanel({
         </button>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto p-4">
-        <form action={action} className="space-y-4">
+      {/* Status (nur Bearbeiten) */}
+      {fahrstunde && (
+        <div className="flex flex-wrap items-center gap-2 border-b p-3">
+          <form action={fahrstundeStatusSetzen} onSubmit={onClose}>
+            <input type="hidden" name="id" value={fahrstunde.id} />
+            <input type="hidden" name="status" value="abgeschlossen" />
+            <Button type="submit" variant="success" size="sm">Abgeschlossen</Button>
+          </form>
+          <form action={fahrstundeStatusSetzen} onSubmit={onClose}>
+            <input type="hidden" name="id" value={fahrstunde.id} />
+            <input type="hidden" name="status" value="ausgefallen" />
+            <Button type="submit" variant="outline" size="sm">Ausgefallen</Button>
+          </form>
+          <form action={fahrstundeStatusSetzen} onSubmit={onClose}>
+            <input type="hidden" name="id" value={fahrstunde.id} />
+            <input type="hidden" name="status" value="geplant" />
+            <Button type="submit" variant="outline" size="sm">Geplant</Button>
+          </form>
+          <form action={fahrstundeLoeschen} onSubmit={onClose} className="ml-auto">
+            <input type="hidden" name="id" value={fahrstunde.id} />
+            <Button type="submit" variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
+              <Trash2 className="h-3.5 w-3.5" /> Löschen
+            </Button>
+          </form>
+        </div>
+      )}
+
+      {/* Formular mit fest angedocktem Footer */}
+      <form action={action} className="flex min-h-0 flex-1 flex-col">
+        <div className="flex-1 space-y-4 overflow-y-auto p-4">
           <FormMessage error={state.error} />
           {fahrstunde && <input type="hidden" name="id" value={fahrstunde.id} />}
 
@@ -146,9 +175,7 @@ export function FahrstundePanel({
               <select name="fahrlehrer_id" value={lehrerId} onChange={(e) => setLehrerId(e.target.value)} className={feld}>
                 <option value="">Kein Lehrer</option>
                 {options.fahrlehrer.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.label}
-                  </option>
+                  <option key={f.id} value={f.id}>{f.label}</option>
                 ))}
               </select>
             </F>
@@ -159,9 +186,7 @@ export function FahrstundePanel({
               <select name="schueler_id" value={schuelerId} onChange={(e) => setSchuelerId(e.target.value)} className={feld}>
                 <option value="">Ohne Schüler</option>
                 {options.schueler.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.label}
-                  </option>
+                  <option key={s.id} value={s.id}>{s.label}</option>
                 ))}
               </select>
             </F>
@@ -169,62 +194,39 @@ export function FahrstundePanel({
               <select name="fahrzeug_id" value={fahrzeugId} onChange={(e) => setFahrzeugId(e.target.value)} className={feld}>
                 <option value="">Kein Fahrzeug</option>
                 {options.fahrzeuge.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.label}
-                  </option>
+                  <option key={f.id} value={f.id}>{f.label}</option>
                 ))}
               </select>
             </F>
           </div>
 
-          <F label="Notiz">
-            <textarea name="notiz" rows={3} value={notiz} onChange={(e) => setNotiz(e.target.value)} className={cn(feld, "h-auto py-2")} />
+          <F label="Notiz / Titel">
+            <textarea
+              name="notiz"
+              rows={3}
+              value={notiz}
+              onChange={(e) => setNotiz(e.target.value)}
+              placeholder={typ === "sonstiges" ? "z. B. Fahrzeug waschen" : "Notiz …"}
+              className={cn(feld, "h-auto py-2")}
+            />
           </F>
+        </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2 border-t pt-3">
-            <Button type="button" variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" /> Abbrechen
-            </Button>
-            <SubmitButton size="sm" variant="outline" onClick={() => (modusNeu.current = false)}>
-              <Check className="h-4 w-4" /> Speichern
+        {/* Footer – immer ganz unten */}
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t bg-card p-3">
+          <Button type="button" variant="outline" size="sm" onClick={onClose}>
+            <X className="h-4 w-4" /> Abbrechen
+          </Button>
+          <SubmitButton size="sm" onClick={() => (modusNeu.current = false)}>
+            <Check className="h-4 w-4" /> Speichern
+          </SubmitButton>
+          {!istBearbeiten && (
+            <SubmitButton size="sm" variant="success" onClick={() => (modusNeu.current = true)}>
+              <Plus className="h-4 w-4" /> Speichern + Neu
             </SubmitButton>
-            {!istBearbeiten && (
-              <SubmitButton size="sm" onClick={() => (modusNeu.current = true)}>
-                <Plus className="h-4 w-4" /> Speichern + Neu
-              </SubmitButton>
-            )}
-          </div>
-        </form>
-
-        {fahrstunde && (
-          <div className="space-y-2 border-t pt-3">
-            <p className="text-xs font-medium text-muted-foreground">Status &amp; Aktionen</p>
-            <div className="flex flex-wrap gap-2">
-              <form action={fahrstundeStatusSetzen} onSubmit={onClose}>
-                <input type="hidden" name="id" value={fahrstunde.id} />
-                <input type="hidden" name="status" value="abgeschlossen" />
-                <Button type="submit" variant="success" size="sm">Abgeschlossen</Button>
-              </form>
-              <form action={fahrstundeStatusSetzen} onSubmit={onClose}>
-                <input type="hidden" name="id" value={fahrstunde.id} />
-                <input type="hidden" name="status" value="ausgefallen" />
-                <Button type="submit" variant="outline" size="sm">Ausgefallen</Button>
-              </form>
-              <form action={fahrstundeStatusSetzen} onSubmit={onClose}>
-                <input type="hidden" name="id" value={fahrstunde.id} />
-                <input type="hidden" name="status" value="geplant" />
-                <Button type="submit" variant="outline" size="sm">Geplant</Button>
-              </form>
-              <form action={fahrstundeLoeschen} onSubmit={onClose} className="ml-auto">
-                <input type="hidden" name="id" value={fahrstunde.id} />
-                <Button type="submit" variant="outline" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
-                  <Trash2 className="h-3.5 w-3.5" /> Löschen
-                </Button>
-              </form>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </form>
     </div>
   );
 }

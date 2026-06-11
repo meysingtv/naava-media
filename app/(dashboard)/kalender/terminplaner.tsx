@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn, formatUhrzeit } from "@/lib/utils";
+import { FAHRSTUNDE_TYPEN } from "@/lib/constants";
 import type { Fahrstunde, FahrstundeMitRelationen, FahrstundeTyp } from "@/lib/types";
 import { FahrstundePanel, type FahrstundeInitial, type Option } from "./fahrstunde-panel";
 
@@ -19,6 +20,8 @@ const TERMIN_FARBE: Record<FahrstundeTyp, string> = {
   autobahn: "#0891B2",
   nacht: "#4F46E5",
   pruefung: "#DC2626",
+  theorie: "#0D9488",
+  sonstiges: "#64748B",
 };
 
 const TAG_START = 7; // 07:00
@@ -133,6 +136,8 @@ export function Terminplaner({
 }) {
   const [modus, setModus] = useState<Modus>("woche");
   const [anker, setAnker] = useState<string>(heute);
+  const [filterLehrer, setFilterLehrer] = useState("");
+  const [filterFahrzeug, setFilterFahrzeug] = useState("");
 
   const [open, setOpen] = useState(false);
   const [key, setKey] = useState(0);
@@ -153,11 +158,21 @@ export function Terminplaner({
     return Array.from({ length: anzahl }, (_, i) => addDays(start, i));
   }, [modus, anker]);
 
+  const sichtbar = useMemo(
+    () =>
+      stunden.filter(
+        (s) =>
+          (!filterLehrer || (s.fahrlehrer_id ?? "") === filterLehrer) &&
+          (!filterFahrzeug || (s.fahrzeug_id ?? "") === filterFahrzeug),
+      ),
+    [stunden, filterLehrer, filterFahrzeug],
+  );
+
   const eventsProTag = useMemo(() => {
     const map: Record<string, FahrstundeMitRelationen[]> = {};
-    for (const s of stunden) (map[s.datum] ??= []).push(s);
+    for (const s of sichtbar) (map[s.datum] ??= []).push(s);
     return map;
-  }, [stunden]);
+  }, [sichtbar]);
 
   function oeffneDialog(init: FahrstundeInitial) {
     setBearbeiten(undefined);
@@ -289,14 +304,51 @@ export function Terminplaner({
             ))}
           </div>
           <Button variant="outline" size="sm" onClick={() => oeffneDialog({ datum: anker })}>
-            <Plus /> <span className="hidden sm:inline">Neue Fahrstunde</span>
+            <Plus /> <span className="hidden sm:inline">Neuer Termin</span>
           </Button>
         </div>
       </div>
 
+      {/* Filter */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-muted-foreground">Filter:</span>
+        <select
+          value={filterLehrer}
+          onChange={(e) => setFilterLehrer(e.target.value)}
+          className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <option value="">Alle Fahrlehrer</option>
+          {options.fahrlehrer.map((f) => (
+            <option key={f.id} value={f.id}>{f.label}</option>
+          ))}
+        </select>
+        <select
+          value={filterFahrzeug}
+          onChange={(e) => setFilterFahrzeug(e.target.value)}
+          className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <option value="">Alle Fahrzeuge</option>
+          {options.fahrzeuge.map((f) => (
+            <option key={f.id} value={f.id}>{f.label}</option>
+          ))}
+        </select>
+        {(filterLehrer || filterFahrzeug) && (
+          <button
+            type="button"
+            onClick={() => {
+              setFilterLehrer("");
+              setFilterFahrzeug("");
+            }}
+            className="text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
+          >
+            Zurücksetzen
+          </button>
+        )}
+      </div>
+
       <p className="text-xs text-muted-foreground">
-        Tipp: Im Raster mit gedrückter Maus ziehen, um Beginn und Dauer festzulegen – Feinheiten
-        passt du danach im Dialog an. Einen Termin antippen zum Bearbeiten.
+        Tipp: Im Raster mit gedrückter Maus ziehen, um Beginn und Dauer festzulegen – im Panel
+        rechts passt du danach alles an. Einen Termin antippen zum Bearbeiten.
       </p>
 
       {/* Zeitraster + Termin-Panel */}
@@ -391,7 +443,7 @@ export function Terminplaner({
                     const ausgefallen = s.status === "ausgefallen";
                     const name = s.fahrschueler
                       ? `${s.fahrschueler.vorname} ${s.fahrschueler.nachname}`
-                      : "Ohne Schüler";
+                      : s.notiz?.trim() || FAHRSTUNDE_TYPEN[s.typ].kurz;
                     return (
                       <button
                         key={s.id}

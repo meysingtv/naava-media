@@ -100,6 +100,18 @@ export const FAHRSTUNDE_TYPEN: Record<FahrstundeTyp, TypMeta> = {
     badge: "bg-red-100 text-red-700 border-red-200",
     dot: "bg-red-500",
   },
+  theorie: {
+    label: "Theoriestunde",
+    kurz: "Theorie",
+    badge: "bg-teal-100 text-teal-700 border-teal-200",
+    dot: "bg-teal-500",
+  },
+  sonstiges: {
+    label: "Sonstiges",
+    kurz: "Sonstiges",
+    badge: "bg-slate-100 text-slate-700 border-slate-200",
+    dot: "bg-slate-500",
+  },
 };
 
 export const FAHRSTUNDE_STATUS: Record<FahrstundeStatus, { label: string; badge: string }> = {

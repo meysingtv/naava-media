@@ -38,6 +38,7 @@ export async function fahrschuleAktualisieren(
       strasse: leerZuNull(formData.get("strasse")),
       plz: leerZuNull(formData.get("plz")),
       ort: leerZuNull(formData.get("ort")),
+      logo_url: leerZuNull(formData.get("logo_url")),
       telefon: leerZuNull(formData.get("telefon")),
       email: leerZuNull(formData.get("email")),
       website: leerZuNull(formData.get("website")),

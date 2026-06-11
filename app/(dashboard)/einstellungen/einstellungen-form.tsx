@@ -40,6 +40,18 @@ export function EinstellungenForm({ fahrschule }: { fahrschule: Fahrschule }) {
             <Label htmlFor="ort">Ort</Label>
             <Input id="ort" name="ort" defaultValue={fahrschule.ort ?? undefined} />
           </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="logo_url">Logo-URL</Label>
+            <Input
+              id="logo_url"
+              name="logo_url"
+              placeholder="https://… (Adresse deines Logo-Bildes)"
+              defaultValue={fahrschule.logo_url ?? undefined}
+            />
+            <p className="text-xs text-muted-foreground">
+              Wird oben in der Navigationsleiste angezeigt. Leer lassen, um den Namen zu zeigen.
+            </p>
+          </div>
         </CardContent>
       </Card>
 

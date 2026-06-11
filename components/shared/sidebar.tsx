@@ -12,10 +12,11 @@ interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
   fahrschuleName: string;
+  logoUrl: string | null;
   rolle: FahrlehrerRolle;
 }
 
-export function Sidebar({ collapsed, onToggle, fahrschuleName, rolle }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle, fahrschuleName, logoUrl, rolle }: SidebarProps) {
   const pathname = usePathname();
   const items = navItemsFuer(rolle);
 
@@ -37,7 +38,12 @@ export function Sidebar({ collapsed, onToggle, fahrschuleName, rolle }: SidebarP
         >
           <ChevronsLeft className="h-5 w-5" />
         </button>
-        <span className="truncate text-sm font-semibold text-foreground">{fahrschuleName}</span>
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt={fahrschuleName} className="h-7 max-w-[150px] object-contain" />
+        ) : (
+          <span className="truncate text-sm font-semibold text-foreground">{fahrschuleName}</span>
+        )}
       </div>
 
       {/* Navigation */}
