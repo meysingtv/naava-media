@@ -170,9 +170,9 @@ export function FahrstundePanel({
                 </select>
               </div>
             </F>
-            <F label="Fahrlehrer">
+            <F label="Fahrlehrer / Verwaltung">
               <select name="fahrlehrer_id" value={lehrerId} onChange={(e) => setLehrerId(e.target.value)} className={feld}>
-                <option value="">Kein Lehrer</option>
+                <option value="">Niemand zugewiesen</option>
                 {options.fahrlehrer.map((f) => (
                   <option key={f.id} value={f.id}>{f.label}</option>
                 ))}

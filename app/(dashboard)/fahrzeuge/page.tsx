@@ -28,17 +28,17 @@ export default async function FahrzeugePage({
     supabase.from("fahrzeug").select("*").order("name", { ascending: true }),
     supabase
       .from("fahrlehrer")
-      .select("id, vorname, nachname")
+      .select("id, vorname, nachname, kuerzel")
       .eq("aktiv", true)
       .order("nachname")
-      .returns<Pick<Fahrlehrer, "id" | "vorname" | "nachname">[]>(),
+      .returns<Pick<Fahrlehrer, "id" | "vorname" | "nachname" | "kuerzel">[]>(),
   ]);
 
   const fahrzeuge = (fahrzeugRes.data ?? []) as Fahrzeug[];
 
   const fahrlehrerMap: Record<string, string> = {};
   const options: FahrlehrerOption[] = (lehrerRes.data ?? []).map((f) => {
-    const kuerzel = initialen(f.vorname, f.nachname);
+    const kuerzel = f.kuerzel?.trim() || initialen(f.vorname, f.nachname);
     fahrlehrerMap[f.id] = kuerzel;
     return { id: f.id, kuerzel, name: `${f.vorname} ${f.nachname}` };
   });

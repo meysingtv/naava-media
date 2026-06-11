@@ -1,10 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronsLeft } from "lucide-react";
+import { ChevronDown, ChevronsLeft } from "lucide-react";
 
-import { navItemsFuer } from "@/components/shared/nav-items";
+import {
+  navEinstellungenFuer,
+  navGruppenFuer,
+  navTopFuer,
+  type NavItem,
+} from "@/components/shared/nav-items";
 import { cn } from "@/lib/utils";
 import type { FahrlehrerRolle } from "@/lib/types";
 
@@ -16,9 +22,43 @@ interface SidebarProps {
   rolle: FahrlehrerRolle;
 }
 
+function istAktiv(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
+  const aktiv = istAktiv(pathname, item.href);
+  const Icon = item.icon;
+  return (
+    <Link
+      href={item.href}
+      className={cn(
+        "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+        aktiv
+          ? "bg-primary/10 font-medium text-primary"
+          : "font-medium text-muted-foreground hover:bg-muted hover:text-foreground",
+      )}
+    >
+      <Icon className="h-[18px] w-[18px]" />
+      {item.label}
+    </Link>
+  );
+}
+
 export function Sidebar({ collapsed, onToggle, fahrschuleName, logoUrl, rolle }: SidebarProps) {
   const pathname = usePathname();
-  const items = navItemsFuer(rolle);
+  const top = navTopFuer(rolle);
+  const gruppen = navGruppenFuer(rolle);
+  const einstellungen = navEinstellungenFuer(rolle);
+  const [manuell, setManuell] = useState<Set<string>>(new Set());
+
+  const toggleGruppe = (label: string) =>
+    setManuell((prev) => {
+      const n = new Set(prev);
+      if (n.has(label)) n.delete(label);
+      else n.add(label);
+      return n;
+    });
 
   return (
     <aside
@@ -27,7 +67,6 @@ export function Sidebar({ collapsed, onToggle, fahrschuleName, logoUrl, rolle }:
         collapsed && "-translate-x-full",
       )}
     >
-      {/* Marke + Einklappen */}
       <div className="flex h-12 items-center gap-2 border-b px-3">
         <button
           type="button"
@@ -46,31 +85,46 @@ export function Sidebar({ collapsed, onToggle, fahrschuleName, logoUrl, rolle }:
         )}
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
           Navigation
         </p>
         <div className="space-y-0.5">
-          {items.map((item) => {
-            const aktiv = pathname === item.href || pathname.startsWith(`${item.href}/`);
-            const Icon = item.icon;
+          {top.map((item) => (
+            <NavLink key={item.href} item={item} pathname={pathname} />
+          ))}
+
+          {gruppen.map((g) => {
+            const Icon = g.icon;
+            const kindAktiv = g.items.some((i) => istAktiv(pathname, i.href));
+            const offen = manuell.has(g.label) || kindAktiv;
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                  aktiv
-                    ? "bg-primary/10 font-medium text-primary"
-                    : "font-medium text-muted-foreground hover:bg-muted hover:text-foreground",
+              <div key={g.label} className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => toggleGruppe(g.label)}
+                  className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <Icon className="h-[18px] w-[18px]" />
+                  <span className="flex-1 text-left">{g.label}</span>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", offen && "rotate-180")} />
+                </button>
+                {offen && (
+                  <div className="mt-0.5 space-y-0.5 border-l border-border pl-3">
+                    {g.items.map((i) => (
+                      <NavLink key={i.href} item={i} pathname={pathname} />
+                    ))}
+                  </div>
                 )}
-              >
-                <Icon className="h-[18px] w-[18px]" />
-                {item.label}
-              </Link>
+              </div>
             );
           })}
+
+          {einstellungen && (
+            <div className="pt-1">
+              <NavLink item={einstellungen} pathname={pathname} />
+            </div>
+          )}
         </div>
       </nav>
     </aside>

@@ -317,7 +317,7 @@ export function Terminplaner({
           onChange={(e) => setFilterLehrer(e.target.value)}
           className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <option value="">Alle Fahrlehrer</option>
+          <option value="">Alle Mitarbeiter</option>
           {options.fahrlehrer.map((f) => (
             <option key={f.id} value={f.id}>{f.label}</option>
           ))}

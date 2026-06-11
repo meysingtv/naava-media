@@ -1,23 +1,23 @@
 import { redirect } from "next/navigation";
-import { Mail, Phone, Power, UserCog } from "lucide-react";
+import { UserCog } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
-import { EmptyState } from "@/components/shared/empty-state";
-import { LoeschenDialog } from "@/components/shared/loeschen-dialog";
-import { initialen } from "@/lib/utils";
-import { EinladenDialog } from "./einladen-dialog";
-import { RolleSelect } from "./rolle-select";
-import { fahrlehrerAktivSetzen, fahrlehrerLoeschen } from "./actions";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import type { Fahrlehrer } from "@/lib/types";
+import { BenutzerListe } from "./benutzer-liste";
+import { BenutzerAkte } from "./benutzer-akte";
+import { BenutzerForm } from "./benutzer-form";
 
-export const metadata = { title: "Fahrlehrer · FahrschulApp" };
+export const metadata = { title: "Benutzer · FahrschulApp" };
 
-export default async function FahrlehrerPage() {
+export default async function BenutzerPage({
+  searchParams,
+}: {
+  searchParams: { id?: string; edit?: string; neu?: string };
+}) {
   const kontext = await getKontext();
   if (kontext?.fahrlehrer?.rolle !== "chef") {
     redirect("/dashboard");
@@ -27,105 +27,43 @@ export default async function FahrlehrerPage() {
   const { data } = await supabase
     .from("fahrlehrer")
     .select("*")
-    .order("aktiv", { ascending: false })
-    .order("nachname", { ascending: true });
+    .order("nachname", { ascending: true })
+    .order("vorname", { ascending: true });
 
-  const team = (data ?? []) as Fahrlehrer[];
+  const benutzer = (data ?? []) as Fahrlehrer[];
+
+  const neu = searchParams.neu === "1";
+  const edit = searchParams.edit === "1";
+  const selectedId = searchParams.id;
+  const selected = selectedId ? benutzer.find((b) => b.id === selectedId) : undefined;
+  const panelAktiv = neu || (selected && edit) || selected;
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Fahrlehrer" description="Verwalte dein Team und die Rollen.">
-        <EinladenDialog />
-      </PageHeader>
+      <PageHeader title="Benutzer" description="Dein Team und die Rollen." />
 
-      {team.length === 0 ? (
-        <EmptyState
-          icon={UserCog}
-          title="Noch kein Team"
-          description="Füge Fahrlehrer und Bürokräfte hinzu und weise ihnen Rollen zu."
-        />
-      ) : (
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          {team.map((m) => {
-            const istIchSelbst = m.user_id === kontext.userId;
-            return (
-              <Card key={m.id} className={m.aktiv ? "" : "opacity-70"}>
-                <CardContent className="flex items-start gap-3 p-4">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                    {initialen(m.vorname, m.nachname)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold">
-                        {m.vorname} {m.nachname}
-                      </p>
-                      {istIchSelbst && (
-                        <Badge variant="outline" className="text-[11px]">
-                          Du
-                        </Badge>
-                      )}
-                      {!m.aktiv && (
-                        <Badge variant="secondary" className="text-[11px]">
-                          Deaktiviert
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
-                      {m.email && (
-                        <p className="flex items-center gap-1.5">
-                          <Mail className="h-3 w-3" />
-                          {m.email}
-                        </p>
-                      )}
-                      {m.telefon && (
-                        <p className="flex items-center gap-1.5">
-                          <Phone className="h-3 w-3" />
-                          {m.telefon}
-                        </p>
-                      )}
-                    </div>
-                    {m.fuehrerscheinklassen?.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {m.fuehrerscheinklassen.map((k) => (
-                          <Badge key={k} variant="secondary" className="px-1.5 py-0 text-[11px]">
-                            {k}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      {istIchSelbst ? (
-                        <Badge variant="default">Chef</Badge>
-                      ) : (
-                        <RolleSelect id={m.id} rolle={m.rolle} />
-                      )}
-                      {!istIchSelbst && (
-                        <>
-                          <form action={fahrlehrerAktivSetzen}>
-                            <input type="hidden" name="id" value={m.id} />
-                            <input type="hidden" name="aktiv" value={(!m.aktiv).toString()} />
-                            <Button type="submit" variant="outline" size="sm">
-                              <Power className="h-3.5 w-3.5" />
-                              {m.aktiv ? "Deaktivieren" : "Aktivieren"}
-                            </Button>
-                          </form>
-                          <LoeschenDialog
-                            action={fahrlehrerLoeschen}
-                            id={m.id}
-                            titel="Mitarbeiter entfernen?"
-                            beschreibung={`${m.vorname} ${m.nachname} wird aus dem Team entfernt.`}
-                            buttonLabel=""
-                          />
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+        <div className={cn(panelAktiv && "hidden lg:block")}>
+          <BenutzerListe benutzer={benutzer} selectedId={selectedId} selfUserId={kontext.userId} />
         </div>
-      )}
+
+        <div className={cn(!panelAktiv && "hidden lg:block")}>
+          {neu ? (
+            <BenutzerForm />
+          ) : selected && edit ? (
+            <BenutzerForm benutzer={selected} />
+          ) : selected ? (
+            <BenutzerAkte benutzer={selected} selfUserId={kontext.userId} />
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center gap-2 py-24 text-center text-muted-foreground">
+                <UserCog className="h-8 w-8" />
+                <p className="text-sm">Wähle links einen Benutzer oder lege einen neuen an.</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

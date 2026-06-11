@@ -37,6 +37,15 @@ export type Fahrlehrer = {
   fuehrerscheinklassen: string[];
   rolle: FahrlehrerRolle;
   aktiv: boolean;
+  // Erweiterte Stammdaten (Migration 0010)
+  kuerzel: string | null;
+  telefon_privat: string | null;
+  strasse: string | null;
+  plz: string | null;
+  ort: string | null;
+  geburtsdatum: string | null;
+  geburtsort: string | null;
+  notiz: string | null;
   created_at: string;
 };
 
