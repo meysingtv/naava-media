@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn, formatUhrzeit } from "@/lib/utils";
 import type { Fahrstunde, FahrstundeMitRelationen, FahrstundeTyp } from "@/lib/types";
-import { FahrstundeDialog, type FahrstundeInitial, type Option } from "./fahrstunde-dialog";
+import { FahrstundePanel, type FahrstundeInitial, type Option } from "./fahrstunde-panel";
 
 type Modus = "tag" | "drei" | "woche";
 
@@ -299,8 +299,9 @@ export function Terminplaner({
         passt du danach im Dialog an. Einen Termin antippen zum Bearbeiten.
       </p>
 
-      {/* Zeitraster */}
-      <div className="overflow-x-auto rounded-lg border bg-card">
+      {/* Zeitraster + Termin-Panel */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+        <div className="min-w-0 overflow-x-auto rounded-lg border bg-card lg:flex-1">
         <div className="flex">
           {/* Zeit-Spalte */}
           <div className="w-14 shrink-0 border-r">
@@ -430,16 +431,19 @@ export function Terminplaner({
             );
           })}
         </div>
+        </div>
+        {open && (
+          <div className="lg:sticky lg:top-16 lg:w-[380px] lg:shrink-0">
+            <FahrstundePanel
+              key={key}
+              options={options}
+              fahrstunde={bearbeiten}
+              initial={initial}
+              onClose={() => setOpen(false)}
+            />
+          </div>
+        )}
       </div>
-
-      <FahrstundeDialog
-        key={key}
-        open={open}
-        onOpenChange={setOpen}
-        options={options}
-        fahrstunde={bearbeiten}
-        initial={initial}
-      />
     </div>
   );
 }
