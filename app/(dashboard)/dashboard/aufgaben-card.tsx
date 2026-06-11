@@ -12,9 +12,9 @@ export interface TempAufgabe {
 }
 
 const PRIO: Record<string, { label: string; dot: string }> = {
-  niedrig: { label: "Niedrig", dot: "bg-slate-400" },
-  mittel: { label: "Mittel", dot: "bg-amber-500" },
-  hoch: { label: "Hoch", dot: "bg-red-500" },
+  niedrig: { label: "Niedrig", dot: "bg-slate-300" },
+  mittel: { label: "Mittel", dot: "bg-slate-500" },
+  hoch: { label: "Hoch", dot: "bg-slate-800" },
 };
 
 export function AufgabenCard({ aufgaben }: { aufgaben: TempAufgabe[] }) {

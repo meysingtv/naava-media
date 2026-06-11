@@ -25,10 +25,6 @@ interface SidebarProps {
   rolle: FahrlehrerRolle;
 }
 
-// Roter Verlauf, der nach rechts ins Grau/Schwarz ausläuft.
-const SIDEBAR_VERLAUF =
-  "linear-gradient(103deg, hsl(350 74% 45%) 0%, hsl(347 48% 27%) 42%, hsl(234 9% 11%) 84%)";
-
 function istAktiv(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -85,9 +81,8 @@ export function Sidebar({
 
   return (
     <aside
-      style={{ background: SIDEBAR_VERLAUF }}
       className={cn(
-        "fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-white/5 text-sidebar-foreground shadow-xl transition-transform duration-200 ease-out md:flex print:hidden",
+        "fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-white/5 bg-sidebar text-sidebar-foreground shadow-xl transition-transform duration-200 ease-out md:flex print:hidden",
         collapsed && "-translate-x-full",
       )}
     >
