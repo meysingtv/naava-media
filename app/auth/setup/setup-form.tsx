@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { SubmitButton } from "@/components/shared/submit-button";
 import { FormMessage } from "@/components/shared/form-message";
+import { LogoUpload } from "@/components/shared/logo-upload";
 
 const initial: FormState = {};
 
@@ -21,6 +22,11 @@ export function SetupForm({ defaultEmail }: { defaultEmail?: string }) {
       <div className="space-y-2">
         <Label htmlFor="name">Name der Fahrschule *</Label>
         <Input id="name" name="name" required placeholder="z. B. Fahrschule Müller" />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Firmenlogo (optional)</Label>
+        <LogoUpload />
       </div>
 
       <div className="grid grid-cols-2 gap-3">

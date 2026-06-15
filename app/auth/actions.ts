@@ -148,7 +148,7 @@ export async function fahrschuleEinrichten(_prev: FormState, formData: FormData)
     redirect("/auth/login");
   }
 
-  const { error } = await supabase.rpc("setup_fahrschule", {
+  const { data: fahrschuleId, error } = await supabase.rpc("setup_fahrschule", {
     p_name: name,
     p_vorname: vorname,
     p_nachname: nachname,
@@ -161,6 +161,12 @@ export async function fahrschuleEinrichten(_prev: FormState, formData: FormData)
 
   if (error) {
     return { error: error.message };
+  }
+
+  // Optionales Firmenlogo (Data-URL) nachträglich speichern.
+  const logo = String(formData.get("logo_url") ?? "").trim();
+  if (logo && fahrschuleId) {
+    await supabase.from("fahrschule").update({ logo_url: logo }).eq("id", fahrschuleId as string);
   }
 
   revalidatePath("/", "layout");

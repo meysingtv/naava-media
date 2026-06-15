@@ -1,119 +1,147 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { ChevronsRight, LogOut, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { Bell, ChevronDown, LogOut, Settings } from "lucide-react";
 
-import { NAV_ITEMS } from "@/components/shared/nav-items";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { GlobalSearch } from "@/components/shared/global-search";
 import { ROLLEN } from "@/lib/constants";
-import { cn, initialen } from "@/lib/utils";
+import { initialen } from "@/lib/utils";
 import { abmelden } from "@/app/auth/actions";
 import type { FahrlehrerRolle } from "@/lib/types";
 
-const RECENT_KEY = "naava-recent";
-
-const iconBtn =
-  "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50";
-
 interface DesktopTopbarProps {
-  collapsed: boolean;
-  onToggle: () => void;
+  fahrschuleName: string;
+  ort: string | null;
+  logoUrl: string | null;
   vorname: string;
   nachname: string;
   rolle: FahrlehrerRolle;
+  email: string | null;
 }
 
-export function DesktopTopbar({ collapsed, onToggle, vorname, nachname, rolle }: DesktopTopbarProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [pending, start] = useTransition();
-  const [recent, setRecent] = useState<{ href: string; label: string }[]>([]);
-
-  const aktuell = NAV_ITEMS.find((i) => pathname === i.href || pathname.startsWith(`${i.href}/`));
-
-  // „Zuletzt besucht" pflegen (liest/schreibt bei jeder Navigation).
-  useEffect(() => {
-    if (!aktuell) return;
-    let vorhanden: { href: string; label: string }[] = [];
-    try {
-      const r = localStorage.getItem(RECENT_KEY);
-      if (r) vorhanden = JSON.parse(r);
-    } catch {
-      /* ignorieren */
-    }
-    const next = [
-      { href: aktuell.href, label: aktuell.label },
-      ...vorhanden.filter((p) => p.href !== aktuell.href),
-    ].slice(0, 6);
-    try {
-      localStorage.setItem(RECENT_KEY, JSON.stringify(next));
-    } catch {
-      /* ignorieren */
-    }
-    setRecent(next);
-  }, [aktuell]);
-
-  const schnell = recent.filter((p) => p.href !== aktuell?.href).slice(0, 4);
+export function DesktopTopbar({
+  fahrschuleName,
+  ort,
+  logoUrl,
+  vorname,
+  nachname,
+  rolle,
+  email,
+}: DesktopTopbarProps) {
+  const istChef = rolle === "chef";
 
   return (
-    <header className="sticky top-0 z-20 hidden h-12 items-center gap-1.5 border-b bg-card px-3 md:flex print:hidden">
-      {collapsed && (
-        <button type="button" onClick={onToggle} title="Navigation einblenden" aria-label="Navigation einblenden" className={iconBtn}>
-          <ChevronsRight className="h-5 w-5" />
-        </button>
-      )}
+    <header className="sticky top-0 z-30 hidden h-16 items-center gap-4 border-b bg-card px-4 md:flex print:hidden">
+      {/* Links: Logo + Fahrschulname + Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger className="flex shrink-0 items-center gap-2.5 rounded-lg px-1.5 py-1 outline-none ring-offset-background transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
+          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-primary/10">
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt={fahrschuleName} className="h-full w-full object-contain" />
+            ) : (
+              <span className="text-sm font-bold text-primary">{initialen(fahrschuleName, "")}</span>
+            )}
+          </span>
+          <span className="hidden text-left leading-tight sm:block">
+            <span className="block max-w-[180px] truncate text-sm font-semibold text-foreground">
+              {fahrschuleName}
+            </span>
+            {ort && <span className="block text-xs text-muted-foreground">{ort}</span>}
+          </span>
+          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuLabel>
+            <p className="font-semibold">{fahrschuleName}</p>
+            {ort && <p className="text-xs font-normal text-muted-foreground">{ort}</p>}
+          </DropdownMenuLabel>
+          {istChef && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/einstellungen" className="cursor-pointer">
+                  <Settings className="h-4 w-4" /> Einstellungen
+                </Link>
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-      <span className="ml-1 border-b-2 border-primary pb-0.5 text-sm font-semibold text-primary">
-        {aktuell?.label ?? "Übersicht"}
-      </span>
-
-      {schnell.length > 0 && (
-        <>
-          <div className="mx-1.5 h-5 w-px shrink-0 bg-border" />
-          <span className="hidden shrink-0 text-xs text-muted-foreground xl:inline">Zuletzt:</span>
-          <div className="flex min-w-0 items-center gap-1 overflow-x-auto">
-            {schnell.map((p) => (
-              <button
-                key={p.href}
-                type="button"
-                onClick={() => router.push(p.href)}
-                className="whitespace-nowrap rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Nutzer + Logout */}
-      <div className="ml-auto flex shrink-0 items-center gap-2 pl-2">
-        <button
-          type="button"
-          onClick={() => start(() => router.refresh())}
-          title="Daten aktualisieren"
-          aria-label="Daten aktualisieren"
-          disabled={pending}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-        >
-          <RefreshCw className={cn("h-3.5 w-3.5", pending && "animate-spin")} />
-        </button>
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-            {initialen(vorname, nachname)}
-          </div>
-          <div className="leading-tight">
-            <p className="text-sm font-medium text-foreground">
-              {vorname} {nachname}
-            </p>
-            <p className="text-xs text-muted-foreground">{ROLLEN[rolle]}</p>
-          </div>
+      {/* Mitte: KI-Suche */}
+      <div className="flex flex-1 justify-center">
+        <div className="w-full max-w-xl">
+          <GlobalSearch />
         </div>
-        <form action={abmelden}>
-          <button type="submit" title="Abmelden" aria-label="Abmelden" className={iconBtn}>
-            <LogOut className="h-4 w-4" />
-          </button>
-        </form>
+      </div>
+
+      {/* Rechts: Glocke + Profil */}
+      <div className="flex shrink-0 items-center gap-1">
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label="Benachrichtigungen"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground outline-none ring-offset-background transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Bell className="h-5 w-5" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuLabel>Benachrichtigungen</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <p className="px-2 py-6 text-center text-sm text-muted-foreground">
+              Keine neuen Benachrichtigungen.
+            </p>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 outline-none ring-offset-background transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+              {initialen(vorname, nachname)}
+            </span>
+            <span className="hidden text-left leading-tight sm:block">
+              <span className="block text-sm font-medium text-foreground">
+                {vorname} {nachname}
+              </span>
+              <span className="block text-xs text-muted-foreground">{ROLLEN[rolle]}</span>
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>
+              <p className="font-semibold">
+                {vorname} {nachname}
+              </p>
+              <p className="truncate text-xs font-normal text-muted-foreground">{email ?? ROLLEN[rolle]}</p>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {istChef && (
+              <DropdownMenuItem asChild>
+                <Link href="/einstellungen" className="cursor-pointer">
+                  <Settings className="h-4 w-4" /> Einstellungen
+                </Link>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <form action={abmelden}>
+              <button
+                type="submit"
+                className="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-destructive outline-none transition-colors hover:bg-accent"
+              >
+                <LogOut className="h-4 w-4" />
+                Abmelden
+              </button>
+            </form>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
