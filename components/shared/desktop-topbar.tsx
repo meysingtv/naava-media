@@ -89,7 +89,7 @@ export function DesktopTopbar({
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label="Benachrichtigungen"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground outline-none ring-offset-background transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="mr-2 flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground outline-none ring-offset-background transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Bell className="h-5 w-5" />
           </DropdownMenuTrigger>
@@ -104,7 +104,7 @@ export function DesktopTopbar({
 
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 outline-none ring-offset-background transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-xs font-semibold text-primary">
               {initialen(vorname, nachname)}
             </span>
             <span className="hidden text-left leading-tight sm:block">

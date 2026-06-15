@@ -54,7 +54,7 @@ export function Sidebar({ rolle }: { rolle: FahrlehrerRolle }) {
     });
 
   return (
-    <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 flex-col overflow-y-auto px-3 py-4 md:flex print:hidden">
+    <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-60 shrink-0 flex-col overflow-y-auto px-3 pb-4 pt-7 md:flex print:hidden">
       <nav className="space-y-1">
         {top.map((item) => (
           <NavLink key={item.href} item={item} pathname={pathname} />
