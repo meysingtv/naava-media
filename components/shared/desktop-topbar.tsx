@@ -42,13 +42,13 @@ export function DesktopTopbar({
     <header className="sticky top-0 z-30 hidden h-16 items-center gap-4 border-b bg-card px-4 md:flex print:hidden">
       {/* Links: Logo + Fahrschulname + Dropdown */}
       <DropdownMenu>
-        <DropdownMenuTrigger className="flex shrink-0 items-center gap-2.5 rounded-lg px-1.5 py-1 outline-none ring-offset-background transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
-          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-primary/10">
+        <DropdownMenuTrigger className="flex shrink-0 items-center gap-2.5 rounded-lg py-1 pr-1 outline-none ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt={fahrschuleName} className="h-full w-full object-contain" />
+              <img src={logoUrl} alt={fahrschuleName} className="h-full w-full rounded-full object-cover" />
             ) : (
-              <span className="text-sm font-bold text-primary">{initialen(fahrschuleName, "")}</span>
+              <span className="text-base font-bold text-primary">{initialen(fahrschuleName, "")}</span>
             )}
           </span>
           <span className="hidden text-left leading-tight sm:block">

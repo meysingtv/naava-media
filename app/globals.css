@@ -16,7 +16,7 @@
     --popover-foreground: 222 47% 11%;
 
     /* Primär: Markenakzent */
-    --primary: 245 68% 56%;
+    --primary: 162 68% 39%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 216 24% 95%;
@@ -38,7 +38,7 @@
 
     --border: 216 20% 90%;
     --input: 216 20% 90%;
-    --ring: 245 68% 56%;
+    --ring: 162 68% 39%;
 
     --radius: 0.375rem;
   }
