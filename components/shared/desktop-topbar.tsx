@@ -39,7 +39,7 @@ export function DesktopTopbar({
   const istChef = rolle === "chef";
 
   return (
-    <header className="sticky top-0 z-30 hidden h-16 items-center gap-4 border-b bg-card px-4 md:flex print:hidden">
+    <header className="sticky top-0 z-30 hidden h-16 items-center gap-4 border-b bg-card pl-6 pr-4 md:flex print:hidden">
       {/* Links: Logo + Fahrschulname + Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger className="flex shrink-0 items-center gap-2.5 rounded-lg py-1 pr-1 outline-none ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring">
