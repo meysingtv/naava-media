@@ -15,9 +15,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primär: Markenakzent (#63B08C, hell) – dunkle Schrift für Lesbarkeit */
-    --primary: 152 34% 57%;
-    --primary-foreground: 150 55% 13%;
+    /* Primär: Markenakzent */
+    --primary: 270 60% 52%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 216 24% 95%;
     --secondary-foreground: 222 47% 11%;
@@ -38,7 +38,7 @@
 
     --border: 216 20% 90%;
     --input: 216 20% 90%;
-    --ring: 152 34% 57%;
+    --ring: 270 60% 52%;
 
     --radius: 0.375rem;
   }
