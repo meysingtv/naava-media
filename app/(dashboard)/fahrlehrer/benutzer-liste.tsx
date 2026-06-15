@@ -84,7 +84,11 @@ export function BenutzerListe({
       <Card>
         <div className="flex flex-wrap items-center gap-1 border-b p-2">
           <Tip label="Neuer Benutzer">
-            <Link href="/fahrlehrer/neu" aria-label="Neuer Benutzer" className={toolbarBtn}>
+            <Link
+              href="/fahrlehrer/neu"
+              aria-label="Neuer Benutzer"
+              className={cn(toolbarBtn, "text-primary hover:bg-primary/10 hover:text-primary")}
+            >
               <Plus className="h-4 w-4" />
             </Link>
           </Tip>
@@ -163,7 +167,10 @@ export function BenutzerListe({
                     <td className={cn("px-3 py-2", aktiv ? "font-semibold" : "font-medium")}>{b.nachname}</td>
                     <td className="hidden px-3 py-2 text-muted-foreground sm:table-cell">{b.vorname}</td>
                     <td className="px-3 py-2">
-                      <Badge variant="secondary">
+                      <Badge
+                        variant="secondary"
+                        className={cn(!b.benutzerrolle_id && "bg-primary/10 text-primary hover:bg-primary/10")}
+                      >
                         {(b.benutzerrolle_id && rollenMap[b.benutzerrolle_id]) || ROLLEN[b.rolle]}
                       </Badge>
                     </td>

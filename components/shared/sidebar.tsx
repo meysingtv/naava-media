@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, ChevronsLeft } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 import {
   navEinstellungenFuer,
@@ -20,6 +20,29 @@ interface SidebarProps {
   fahrschuleName: string;
   logoUrl: string | null;
   rolle: FahrlehrerRolle;
+}
+
+/** Lenkrad-Icon (SVG) – Marke oben links, dreht sich beim Klick. */
+function LenkradIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      style={style}
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="9.5" />
+      <circle cx="12" cy="12" r="2.6" />
+      <path d="M9.4 12H2.6" />
+      <path d="M21.4 12H14.6" />
+      <path d="M12 14.6V21.4" />
+    </svg>
+  );
 }
 
 function istAktiv(pathname: string, href: string): boolean {
@@ -51,6 +74,7 @@ export function Sidebar({ collapsed, onToggle, fahrschuleName, logoUrl, rolle }:
   const gruppen = navGruppenFuer(rolle);
   const einstellungen = navEinstellungenFuer(rolle);
   const [manuell, setManuell] = useState<Set<string>>(new Set());
+  const [drehung, setDrehung] = useState(0);
 
   const toggleGruppe = (label: string) =>
     setManuell((prev) => {
@@ -59,6 +83,11 @@ export function Sidebar({ collapsed, onToggle, fahrschuleName, logoUrl, rolle }:
       else n.add(label);
       return n;
     });
+
+  const handleLenkrad = () => {
+    setDrehung((d) => d + 360);
+    onToggle();
+  };
 
   return (
     <aside
@@ -70,12 +99,18 @@ export function Sidebar({ collapsed, onToggle, fahrschuleName, logoUrl, rolle }:
       <div className="flex h-12 items-center gap-2 border-b px-3">
         <button
           type="button"
-          onClick={onToggle}
-          title="Navigation einklappen"
-          aria-label="Navigation einklappen"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          onClick={handleLenkrad}
+          title="Navigation ein-/ausklappen"
+          aria-label="Navigation ein-/ausklappen"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-primary transition-colors hover:bg-primary/10"
         >
-          <ChevronsLeft className="h-5 w-5" />
+          <LenkradIcon
+            className="h-6 w-6"
+            style={{
+              transform: `rotate(${drehung}deg)`,
+              transition: "transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)",
+            }}
+          />
         </button>
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

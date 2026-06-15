@@ -63,7 +63,9 @@ export function DesktopTopbar({ collapsed, onToggle, vorname, nachname, rolle }:
         </button>
       )}
 
-      <span className="ml-1 text-sm font-semibold text-foreground">{aktuell?.label ?? "Übersicht"}</span>
+      <span className="ml-1 border-b-2 border-primary pb-0.5 text-sm font-semibold text-primary">
+        {aktuell?.label ?? "Übersicht"}
+      </span>
 
       {schnell.length > 0 && (
         <>
