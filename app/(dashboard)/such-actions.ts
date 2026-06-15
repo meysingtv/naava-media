@@ -28,12 +28,14 @@ export interface SuchErgebnis {
 // ---------------------------------------------------------------------------
 
 /**
- * Bereinigt die Suchanfrage, um fehlerhafte `or`-Filter zu vermeiden.
- * Erlaubt: Buchstaben (inkl. Umlaute), Ziffern und Leerzeichen.
+ * Bereinigt die Suchanfrage, um PostgREST-`or`-Filter-Injection zu vermeiden.
+ * Erlaubt-Liste: Buchstaben (inkl. Umlaute/Unicode), Ziffern, Leerzeichen und
+ * Bindestrich. Alle Sonderzeichen (% , . : ( ) " usw.) werden entfernt.
  */
 function bereinigeQuery(q: string): string {
-  // % und , würden den Supabase-or-Filter brechen – entfernen
-  return q.replace(/[%,]/g, "").trim();
+  // Erlaubt: a–z, A–Z, 0–9, deutsche Umlaute/ß, Leerzeichen, Bindestrich.
+  // Entfernt alle PostgREST-Sonderzeichen (% , . : ( ) " usw.).
+  return q.replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, "").trim();
 }
 
 // ---------------------------------------------------------------------------

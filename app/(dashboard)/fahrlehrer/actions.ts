@@ -178,6 +178,9 @@ function stammdaten(formData: FormData) {
 }
 
 export async function fahrlehrerAktivSetzen(formData: FormData): Promise<void> {
+  const kontext = await getKontext();
+  if (kontext?.fahrlehrer?.rolle !== "chef") return;
+
   const id = String(formData.get("id") ?? "");
   const aktiv = formData.get("aktiv") === "true";
   if (!id) return;
@@ -188,6 +191,9 @@ export async function fahrlehrerAktivSetzen(formData: FormData): Promise<void> {
 }
 
 export async function fahrlehrerLoeschen(formData: FormData): Promise<void> {
+  const kontext = await getKontext();
+  if (kontext?.fahrlehrer?.rolle !== "chef") return;
+
   const id = String(formData.get("id") ?? "");
   if (!id) return;
 
