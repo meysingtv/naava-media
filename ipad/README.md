@@ -1,8 +1,10 @@
 # FahrschulApp – iPad-App
 
-Eigenständige iPad-App (Expo/React Native), **getrennt** von der Handy-App
-(`../mobile`). Gleiche Supabase-Datenbank/Anmeldung, aber **Website-Layout**:
-feste Sidebar links + Inhalt rechts (statt unterer Tableiste).
+Eigenständige iPad-App (Expo), **getrennt** von der Handy-App (`../mobile`).
+
+Diese App ist **1:1 die Website** – sie zeigt die echte Web-App (gleicher Code,
+gleiches Design, alle Tabs, alle Funktionen) in einer nativen App-Hülle
+(WebView). So ist sie garantiert identisch zur Website.
 
 ## Einrichten
 
@@ -11,25 +13,39 @@ cd ipad
 npm install
 ```
 
-`.env` anlegen (gleiche Werte wie bei der Handy-App / Website):
+Falls `npm install` über die WebView-Version meckert:
+
+```bash
+npx expo install react-native-webview
+```
+
+### Welche Website wird geladen?
+
+Standard ist `http://192.168.178.78:3000` (dein Mac im LAN). Zum Ändern in
+`ipad/.env`:
 
 ```
-EXPO_PUBLIC_SUPABASE_URL=...
-EXPO_PUBLIC_SUPABASE_ANON_KEY=...
+EXPO_PUBLIC_SITE_URL=http://192.168.178.78:3000
 ```
+
+(Später, wenn die Website online/deployt ist, hier einfach die `https://…`-Domain
+eintragen.)
 
 ## Starten
 
-```bash
-npm run ios     # iPad-Simulator
-# oder
-npm start       # QR-Code, dann auf einem echten iPad in Expo Go öffnen
-```
+1. **Website muss laufen & erreichbar sein.** Im Hauptordner:
+   ```bash
+   npm run dev:netz
+   ```
+   (bindet an 0.0.0.0, damit das iPad im selben WLAN sie unter der IP erreicht)
+2. iPad-App starten:
+   ```bash
+   cd ipad
+   npx expo start
+   ```
+   Dann `shift` + `i` drücken und ein **iPad** auswählen.
 
-## Stand
+## Hinweis
 
-- ✅ Sidebar-Navigation im Website-Stil (Dashboard, Schüler, Terminplaner,
-  Theorie, Rechnungen, Benutzer, Fahrzeuge, Einstellungen) + Abmelden.
-- ✅ Login, Dashboard, Schüler, Terminplaner, Benutzer (Team), Fahrzeuge
-  laufen (aus der bestehenden App übernommen).
-- 🚧 Theorie & Rechnungen sind Platzhalter – kommen als Nächstes.
+Lokal über `http://` funktioniert das Laden in **Expo Go**. Für einen echten
+App-Store-Build sollte die Website über **HTTPS** laufen (Domain eintragen).

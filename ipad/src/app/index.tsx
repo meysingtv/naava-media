@@ -1,9 +1,7 @@
-import { Redirect } from "expo-router";
+import { WebApp } from "@/components/web-app";
 
-import { useAuth } from "@/lib/auth";
-
+// Die iPad-App ist 1:1 die Website (gleicher Code, gleiches Design, alle
+// Tabs/Funktionen) – angezeigt in einer nativen App-Hülle.
 export default function Index() {
-  const { session, loading } = useAuth();
-  if (loading) return null;
-  return <Redirect href={session ? "/(tabs)/heute" : "/login"} />;
+  return <WebApp />;
 }
