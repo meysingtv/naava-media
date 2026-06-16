@@ -26,7 +26,7 @@ export function MiniKalender({ markierteTage }: { markierteTage: string[] }) {
   ];
 
   return (
-    <Card>
+    <Card className="shrink-0 shadow-sm">
       <CardHeader className="p-4 pb-2">
         <CardTitle className="text-base capitalize">{monatLabel}</CardTitle>
       </CardHeader>

@@ -32,23 +32,17 @@ function wochenBereich(): { start: string; ende: string } {
   return { start: iso(montag), ende: iso(sonntag) };
 }
 
-/** Zentrierte KPI-Kachel: Icon, große Zahl, Label – alles mittig. */
-function StatKachel({
-  icon: Icon,
-  wert,
-  label,
-}: {
-  icon: typeof Users;
-  wert: React.ReactNode;
-  label: string;
-}) {
+/** Kompakte KPI-Kachel: Icon links, Zahl + Label rechts. */
+function KPI({ icon: Icon, wert, label }: { icon: typeof Users; wert: React.ReactNode; label: string }) {
   return (
-    <Card className="flex flex-col items-center justify-center gap-2 px-4 py-6 text-center">
-      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+    <Card className="flex items-center gap-3 p-4 shadow-sm">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <Icon className="h-5 w-5" />
       </span>
-      <span className="text-2xl font-bold tracking-tight">{wert}</span>
-      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
+      <div className="min-w-0">
+        <p className="truncate text-xl font-bold leading-tight">{wert}</p>
+        <p className="truncate text-xs text-muted-foreground">{label}</p>
+      </div>
     </Card>
   );
 }
@@ -113,51 +107,43 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      {/* Begrüßung – zentriert */}
-      <Card>
-        <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
+    <div className="flex flex-col gap-4 lg:h-[calc(100vh-7rem)]">
+      {/* Reihe 1: Begrüßung + KPIs (feste Höhe) */}
+      <div className="grid shrink-0 grid-cols-2 gap-4 lg:grid-cols-6">
+        <Card className="col-span-2 flex items-center gap-3 p-4 shadow-sm">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-base font-bold text-primary">
             {initialen(vorname, nachname)}
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm leading-tight text-muted-foreground">{begruessung()},</p>
+            <p className="truncate text-lg font-bold leading-tight">{vorname}!</p>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              {begruessung()}, {vorname}!
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {naechstePruefung
-                ? `Nächste Prüfung: ${naechstePruefung.vorname} ${naechstePruefung.nachname} am ${formatDatum(naechstePruefung.pruefung_termin)}`
-                : "Schön, dass du da bist. Keine anstehenden Prüfungen."}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* KPI-Kacheln – Inhalt mittig */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatKachel icon={Users} wert={schuelerGesamt} label="Aktive Schüler" />
-        <StatKachel icon={Receipt} wert={formatEuro(offenerBetrag)} label="Offene Rechnungen" />
-        <StatKachel icon={Car} wert={heutigeStunden.length} label="Fahrstunden heute" />
-        <StatKachel icon={Gauge} wert={`${auslastung}%`} label="Auslastung" />
+        </Card>
+        <KPI icon={Users} wert={schuelerGesamt} label="Aktive Schüler" />
+        <KPI icon={Receipt} wert={formatEuro(offenerBetrag)} label="Offene Rechnungen" />
+        <KPI icon={Car} wert={heutigeStunden.length} label="Fahrstunden heute" />
+        <KPI icon={Gauge} wert={`${auslastung}%`} label="Auslastung" />
       </div>
 
-      {/* Inhalt: Aufgaben links, Termine + Kalender rechts */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      {/* Reihe 2: füllt die Resthöhe – Panels scrollen intern */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="min-h-0 lg:col-span-2">
           <AufgabenCard aufgaben={tempAufgaben} />
         </div>
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader className="flex-row items-center justify-between p-4 pb-2">
+        <div className="flex min-h-0 flex-col gap-4">
+          <Card className="flex min-h-0 flex-1 flex-col shadow-sm">
+            <CardHeader className="shrink-0 flex-row items-center justify-between p-4 pb-2">
               <CardTitle className="text-base">Meine Termine</CardTitle>
               <span className="text-xs text-muted-foreground">{formatDatum(heute)}</span>
             </CardHeader>
-            <CardContent className="p-4 pt-0">
+            <CardContent className="min-h-0 flex-1 overflow-y-auto p-4 pt-0">
               {heutigeStunden.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">Heute keine Termine.</p>
+                <p className="flex h-full items-center justify-center py-6 text-center text-sm text-muted-foreground">
+                  Heute keine Termine.
+                </p>
               ) : (
-                <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
+                <div className="space-y-2">
                   {heutigeStunden.map((s) => {
                     const typ = FAHRSTUNDE_TYPEN[s.typ];
                     const ausgefallen = s.status === "ausgefallen";
