@@ -56,7 +56,7 @@ export default async function DashboardPage() {
   const monatStart = iso(new Date(jetzt.getFullYear(), jetzt.getMonth(), 1));
   const monatEnde = iso(new Date(jetzt.getFullYear(), jetzt.getMonth() + 1, 0));
 
-  const [heuteRes, offeneRes, pruefungRes, wocheRes, lehrerRes, schuelerRes, monatRes, namenRes] =
+  const [heuteRes, offeneRes, wocheRes, lehrerRes, schuelerRes, monatRes, namenRes] =
     await Promise.all([
       supabase
         .from("fahrstunde")
@@ -65,13 +65,6 @@ export default async function DashboardPage() {
         .order("uhrzeit", { ascending: true })
         .returns<FahrstundeMitRelationen[]>(),
       supabase.from("rechnung").select("*").in("status", ["offen", "ueberfaellig"]).returns<Rechnung[]>(),
-      supabase
-        .from("fahrschueler")
-        .select("vorname, nachname, pruefung_termin")
-        .gte("pruefung_termin", heute)
-        .order("pruefung_termin", { ascending: true })
-        .limit(1)
-        .returns<Pick<Fahrschueler, "vorname" | "nachname" | "pruefung_termin">[]>(),
       supabase.from("fahrstunde").select("id", { count: "exact", head: true }).gte("datum", wochenStart).lte("datum", wochenEnde),
       supabase.from("fahrlehrer").select("id", { count: "exact", head: true }).eq("aktiv", true),
       supabase.from("fahrschueler").select("id", { count: "exact", head: true }),
@@ -82,7 +75,6 @@ export default async function DashboardPage() {
   const heutigeStunden = heuteRes.data ?? [];
   const offene = offeneRes.data ?? [];
   const offenerBetrag = offene.reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
-  const naechstePruefung = pruefungRes.data?.[0];
   const wochenStunden = wocheRes.count ?? 0;
   const aktiveLehrer = lehrerRes.count ?? 0;
   const schuelerGesamt = schuelerRes.count ?? 0;
@@ -107,7 +99,7 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-4 lg:h-[calc(100vh-7rem)]">
+    <div className="flex flex-col gap-4 lg:h-[calc(100vh_-_7rem)]">
       {/* Reihe 1: Begrüßung + KPIs (feste Höhe) */}
       <div className="grid shrink-0 grid-cols-2 gap-4 lg:grid-cols-6">
         <Card className="col-span-2 flex items-center gap-3 p-4 shadow-sm">
