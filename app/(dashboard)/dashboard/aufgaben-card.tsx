@@ -19,15 +19,15 @@ const PRIO: Record<string, { label: string; dot: string }> = {
 
 export function AufgabenCard({ aufgaben }: { aufgaben: TempAufgabe[] }) {
   return (
-    <Card className="flex h-full flex-col shadow-sm">
-      <CardHeader className="shrink-0 flex-row items-center justify-between p-4 pb-3">
+    <Card>
+      <CardHeader className="flex-row items-center justify-between p-4 pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <ListChecks className="h-4 w-4 text-muted-foreground" /> Aufgaben
         </CardTitle>
         <span className="text-xs text-muted-foreground">Zuweisung folgt</span>
       </CardHeader>
-      <CardContent className="min-h-0 flex-1 p-0">
-        <div className="h-full overflow-y-auto">
+      <CardContent className="p-0">
+        <div className="h-72 overflow-y-auto">
           <table className="w-full text-sm">
             <thead className="sticky top-0 z-10 border-b bg-muted/60 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
               <tr>
