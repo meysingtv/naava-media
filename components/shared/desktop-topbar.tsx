@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, ChevronDown, LogOut, Settings } from "lucide-react";
+import { Bell, Check, ChevronDown, LogOut, Settings } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -15,7 +15,8 @@ import { GlobalSearch } from "@/components/shared/global-search";
 import { ROLLEN } from "@/lib/constants";
 import { initialen } from "@/lib/utils";
 import { abmelden } from "@/app/auth/actions";
-import type { FahrlehrerRolle } from "@/lib/types";
+import { fahrschuleWechseln } from "@/app/(dashboard)/fahrschul-actions";
+import type { FahrlehrerRolle, FahrschulMitgliedschaft } from "@/lib/types";
 
 interface DesktopTopbarProps {
   fahrschuleName: string;
@@ -25,6 +26,8 @@ interface DesktopTopbarProps {
   nachname: string;
   rolle: FahrlehrerRolle;
   email: string | null;
+  fahrschulen: FahrschulMitgliedschaft[];
+  aktiveFahrschuleId: string | null;
 }
 
 export function DesktopTopbar({
@@ -35,8 +38,11 @@ export function DesktopTopbar({
   nachname,
   rolle,
   email,
+  fahrschulen,
+  aktiveFahrschuleId,
 }: DesktopTopbarProps) {
   const istChef = rolle === "chef";
+  const mehrereFahrschulen = fahrschulen.length > 1;
 
   return (
     <header className="sticky top-0 z-30 hidden h-16 items-center gap-4 border-b bg-card pl-6 pr-4 md:flex print:hidden">
@@ -59,11 +65,31 @@ export function DesktopTopbar({
           </span>
           <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56">
+        <DropdownMenuContent align="start" className="w-64">
           <DropdownMenuLabel>
             <p className="font-semibold">{fahrschuleName}</p>
             {ort && <p className="text-xs font-normal text-muted-foreground">{ort}</p>}
           </DropdownMenuLabel>
+
+          {mehrereFahrschulen && (
+            <>
+              <DropdownMenuSeparator />
+              <p className="px-2 py-1 text-xs font-medium text-muted-foreground">Fahrschule wechseln</p>
+              {fahrschulen.map((f) => (
+                <form key={f.id} action={fahrschuleWechseln}>
+                  <input type="hidden" name="id" value={f.id} />
+                  <button
+                    type="submit"
+                    className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent"
+                  >
+                    <span className="truncate">{f.name}</span>
+                    {f.id === aktiveFahrschuleId && <Check className="h-4 w-4 shrink-0 text-primary" />}
+                  </button>
+                </form>
+              ))}
+            </>
+          )}
+
           {istChef && (
             <>
               <DropdownMenuSeparator />

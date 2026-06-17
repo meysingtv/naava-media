@@ -28,6 +28,8 @@ export default async function DashboardLayout({
       nachname={fahrlehrer.nachname}
       rolle={fahrlehrer.rolle}
       email={kontext.email}
+      fahrschulen={kontext.fahrschulen}
+      aktiveFahrschuleId={fahrschule.id}
     >
       {children}
     </DashboardShell>

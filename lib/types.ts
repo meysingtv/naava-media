@@ -268,6 +268,17 @@ export type Database = {
         };
         Returns: string;
       };
+      set_aktive_fahrschule: { Args: { p_id: string }; Returns: undefined };
+      meine_fahrschulen: {
+        Args: Record<string, never>;
+        Returns: {
+          id: string;
+          name: string;
+          ort: string | null;
+          logo_url: string | null;
+          rolle: FahrlehrerRolle;
+        }[];
+      };
     };
     Enums: {
       fahrlehrer_rolle: FahrlehrerRolle;
@@ -277,6 +288,15 @@ export type Database = {
     };
     CompositeTypes: Record<string, never>;
   };
+};
+
+// Eine Fahrschule, zu der der angemeldete Nutzer gehört (für den Umschalter).
+export type FahrschulMitgliedschaft = {
+  id: string;
+  name: string;
+  ort: string | null;
+  logo_url: string | null;
+  rolle: FahrlehrerRolle;
 };
 
 // ---------------------------------------------------------------------

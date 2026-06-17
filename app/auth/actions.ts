@@ -169,6 +169,21 @@ export async function fahrschuleEinrichten(_prev: FormState, formData: FormData)
     await supabase.from("fahrschule").update({ logo_url: logo }).eq("id", fahrschuleId as string);
   }
 
+  // Optional: zweite Fahrschule (z. B. für Filialketten). Die erste bleibt aktiv.
+  const name2 = String(formData.get("name2") ?? "").trim();
+  if (name2) {
+    const { error: error2 } = await supabase.rpc("setup_fahrschule", {
+      p_name: name2,
+      p_vorname: vorname,
+      p_nachname: nachname,
+      p_ort: String(formData.get("ort2") ?? "").trim() || null,
+      p_email: String(formData.get("email") ?? "").trim() || null,
+    });
+    if (error2) {
+      return { error: `Zweite Fahrschule konnte nicht angelegt werden: ${error2.message}` };
+    }
+  }
+
   revalidatePath("/", "layout");
   redirect("/dashboard");
 }

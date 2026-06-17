@@ -3,7 +3,7 @@
 import { Sidebar } from "@/components/shared/sidebar";
 import { DesktopTopbar } from "@/components/shared/desktop-topbar";
 import { MobileTopbar } from "@/components/shared/mobile-topbar";
-import type { FahrlehrerRolle } from "@/lib/types";
+import type { FahrlehrerRolle, FahrschulMitgliedschaft } from "@/lib/types";
 
 interface DashboardShellProps {
   fahrschuleName: string;
@@ -13,6 +13,8 @@ interface DashboardShellProps {
   nachname: string;
   rolle: FahrlehrerRolle;
   email: string | null;
+  fahrschulen: FahrschulMitgliedschaft[];
+  aktiveFahrschuleId: string | null;
   children: React.ReactNode;
 }
 
@@ -24,6 +26,8 @@ export function DashboardShell({
   nachname,
   rolle,
   email,
+  fahrschulen,
+  aktiveFahrschuleId,
   children,
 }: DashboardShellProps) {
   return (
@@ -42,6 +46,8 @@ export function DashboardShell({
         nachname={nachname}
         rolle={rolle}
         email={email}
+        fahrschulen={fahrschulen}
+        aktiveFahrschuleId={aktiveFahrschuleId}
       />
 
       <div className="flex">
