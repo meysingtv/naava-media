@@ -1,7 +1,7 @@
 import type { FahrlehrerRolle, FahrstundeStatus, FahrstundeTyp } from "./types";
 
 export const ROLLEN: Record<FahrlehrerRolle, string> = {
-  chef: "Chef",
+  chef: "Geschäftsführer",
   fahrlehrer: "Fahrlehrer",
   buero: "Büro",
 };

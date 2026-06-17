@@ -25,7 +25,7 @@ export async function fahrschuleAktualisieren(
     return { error: "Keine Fahrschule gefunden." };
   }
   if (kontext.fahrlehrer?.rolle !== "chef") {
-    return { error: "Nur der Chef darf die Einstellungen ändern." };
+    return { error: "Nur der Geschäftsführer darf die Einstellungen ändern." };
   }
 
   const name = String(formData.get("name") ?? "").trim();

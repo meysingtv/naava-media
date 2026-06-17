@@ -67,7 +67,7 @@ export function BenutzerListe({
       <EmptyState
         icon={UserCog}
         title="Noch kein Team"
-        description="Lege Benutzer an und weise ihnen Rollen zu (Chef, Fahrlehrer, Büro)."
+        description="Lege Benutzer an und weise ihnen Rollen zu (Geschäftsführer, Fahrlehrer, Büro)."
       >
         <Link
           href="/fahrlehrer/neu"

@@ -50,7 +50,7 @@ export function pflichtFahrtenFuer(klasse: string): PflichtFahrten {
 
 // Rollen
 export const ROLLEN: Record<FahrlehrerRolle, string> = {
-  chef: "Chef",
+  chef: "Geschäftsführer",
   fahrlehrer: "Fahrlehrer",
   buero: "Büro",
 };

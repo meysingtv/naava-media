@@ -96,7 +96,7 @@ export function SetupForm({ defaultEmail }: { defaultEmail?: string }) {
             <Input id="ort2" name="ort2" placeholder="Musterstadt" />
           </div>
           <p className="text-xs text-muted-foreground">
-            Du wirst Chef beider Fahrschulen und kannst oben links jederzeit zwischen ihnen wechseln.
+            Du wirst Geschäftsführer beider Fahrschulen und kannst oben links jederzeit zwischen ihnen wechseln.
           </p>
         </div>
       )}

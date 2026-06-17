@@ -123,7 +123,7 @@ export function BenutzerForm({
                 ) : (
                   <select name="rolle_wahl" defaultValue={rolleDefault} className={feld}>
                     <optgroup label="Standard">
-                      <option value="chef">Chef</option>
+                      <option value="chef">Geschäftsführer</option>
                       <option value="fahrlehrer">Fahrlehrer</option>
                       <option value="buero">Büro</option>
                     </optgroup>

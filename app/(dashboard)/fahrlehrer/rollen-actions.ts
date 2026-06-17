@@ -21,7 +21,7 @@ export async function rolleSpeichern(_prev: RolleState, formData: FormData): Pro
   const kontext = await getKontext();
   if (!kontext?.fahrschule) return { error: "Keine Fahrschule gefunden." };
   if (kontext.fahrlehrer?.rolle !== "chef") {
-    return { error: "Nur der Chef darf Rollen verwalten." };
+    return { error: "Nur der Geschäftsführer darf Rollen verwalten." };
   }
 
   const id = leerZuNull(formData.get("id"));

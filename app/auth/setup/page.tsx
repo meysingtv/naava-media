@@ -22,8 +22,8 @@ export default async function SetupPage() {
       <CardHeader>
         <CardTitle className="text-xl">Fahrschule einrichten</CardTitle>
         <CardDescription>
-          Nur noch ein Schritt: Lege deinen Betrieb an. Du bist damit automatisch als Chef
-          eingetragen.
+          Nur noch ein Schritt: Lege deinen Betrieb an. Du bist damit automatisch als
+          Geschäftsführer eingetragen.
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -51,7 +51,7 @@ export async function benutzerSpeichern(
   const kontext = await getKontext();
   if (!kontext?.fahrschule) return { error: "Keine Fahrschule gefunden." };
   if (kontext.fahrlehrer?.rolle !== "chef") {
-    return { error: "Nur der Chef darf Benutzer verwalten." };
+    return { error: "Nur der Geschäftsführer darf Benutzer verwalten." };
   }
 
   const id = leerZuNull(formData.get("id"));
