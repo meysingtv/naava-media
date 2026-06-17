@@ -8,6 +8,7 @@ import { ChevronDown } from "lucide-react";
 import {
   navEinstellungenFuer,
   navGruppenFuer,
+  navHilfeFuer,
   navTopFuer,
   type NavItem,
 } from "@/components/shared/nav-items";
@@ -43,6 +44,7 @@ export function Sidebar({ rolle }: { rolle: FahrlehrerRolle }) {
   const top = navTopFuer(rolle);
   const gruppen = navGruppenFuer(rolle);
   const einstellungen = navEinstellungenFuer(rolle);
+  const hilfe = navHilfeFuer(rolle);
   const [manuell, setManuell] = useState<Set<string>>(new Set());
 
   const toggleGruppe = (label: string) =>
@@ -92,6 +94,7 @@ export function Sidebar({ rolle }: { rolle: FahrlehrerRolle }) {
         })}
 
         {einstellungen && <NavLink item={einstellungen} pathname={pathname} />}
+        {hilfe && <NavLink item={hilfe} pathname={pathname} />}
       </nav>
     </aside>
   );
