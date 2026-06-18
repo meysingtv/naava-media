@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<!--
+  Design-Entwurf / Demo-Website für Pflegedienst MaFa GmbH
+  Eine einzelne, in sich geschlossene HTML-Datei (CSS + JS inline).
+  Bilder: kostenlose Stock-Fotos von Pexels (keine Attribution nötig).
+  Hinweis: Impressum & Datenschutz müssen vor dem Live-Gang ergänzt werden.
+-->
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pflegedienst MaFa GmbH · Ambulante Pflege in Mönchengladbach</title>
+  <meta name="description" content="Pflegedienst MaFa GmbH – liebevolle und professionelle ambulante Pflege in Mönchengladbach. Grundpflege, Behandlungspflege, Betreuung & Pflegeberatung. Alle Pflegekassen." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --green:#1c8a6c; --green-d:#13654f; --green-l:#eaf6f1;
+      --warm:#f0a04b;
+      --ink:#15302a; --body:#4d5f5a; --muted:#7a8a85;
+      --bg:#ffffff; --soft:#f3faf7; --line:#e3ede9;
+      --shadow:0 18px 45px -22px rgba(19,101,79,.45);
+      --shadow-sm:0 8px 24px -14px rgba(19,101,79,.4);
+      --radius:18px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{
+      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      color:var(--body);background:var(--bg);line-height:1.65;
+      -webkit-font-smoothing:antialiased;overflow-x:hidden;
+    }
+    h1,h2,h3,h4{font-family:'Poppins',sans-serif;color:var(--ink);line-height:1.15;font-weight:700}
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .wrap{width:min(1160px,92%);margin-inline:auto}
+    section{padding:92px 0}
+    .eyebrow{
+      display:inline-flex;align-items:center;gap:8px;
+      font-family:'Poppins',sans-serif;font-weight:600;font-size:.8rem;
+      letter-spacing:.08em;text-transform:uppercase;color:var(--green);
+      background:var(--green-l);padding:7px 15px;border-radius:999px;margin-bottom:18px;
+    }
+    .section-head{max-width:640px;margin-bottom:54px}
+    .section-head.center{margin-inline:auto;text-align:center}
+    .section-head h2{font-size:clamp(1.8rem,3.6vw,2.6rem);margin-bottom:14px}
+    .section-head p{font-size:1.06rem}
+
+    /* buttons */
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:9px;
+      font-family:'Poppins',sans-serif;font-weight:600;font-size:.98rem;
+      padding:14px 26px;border-radius:999px;cursor:pointer;border:2px solid transparent;
+      transition:.25s ease;white-space:nowrap;
+    }
+    .btn-primary{background:var(--green);color:#fff;box-shadow:var(--shadow-sm)}
+    .btn-primary:hover{background:var(--green-d);transform:translateY(-2px)}
+    .btn-outline{background:#fff;color:var(--green-d);border-color:#cfe6dd}
+    .btn-outline:hover{border-color:var(--green);background:var(--green-l)}
+    .btn-light{background:#fff;color:var(--green-d)}
+    .btn-light:hover{transform:translateY(-2px);box-shadow:0 14px 30px -16px rgba(0,0,0,.5)}
+    .btn-ghost{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.5)}
+    .btn-ghost:hover{background:rgba(255,255,255,.24)}
+
+    /* header */
+    header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+    .nav{display:flex;align-items:center;justify-content:space-between;height:74px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand .mark{
+      width:44px;height:44px;border-radius:13px;display:grid;place-items:center;color:#fff;
+      background:linear-gradient(135deg,var(--green),var(--green-d));box-shadow:var(--shadow-sm);flex:none;
+    }
+    .brand .name{font-family:'Poppins',sans-serif;font-weight:700;color:var(--ink);font-size:1.18rem;line-height:1.1}
+    .brand .name span{display:block;font-size:.72rem;font-weight:500;color:var(--muted);letter-spacing:.05em}
+    .nav-links{display:flex;align-items:center;gap:32px}
+    .nav-links a.link{font-weight:500;color:var(--ink);font-size:.97rem;transition:color .2s}
+    .nav-links a.link:hover{color:var(--green)}
+    .nav-cta{display:flex;align-items:center;gap:14px}
+    .nav-phone{display:flex;align-items:center;gap:8px;font-family:'Poppins',sans-serif;font-weight:600;color:var(--green-d)}
+    .burger{display:none;background:none;border:0;cursor:pointer;color:var(--ink);padding:6px}
+
+    /* hero */
+    .hero{padding:74px 0 84px;background:
+      radial-gradient(900px 500px at 85% -10%,var(--green-l),transparent 60%),
+      linear-gradient(180deg,#fff, var(--soft));overflow:hidden}
+    .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+    .hero h1{font-size:clamp(2.2rem,4.8vw,3.5rem);font-weight:800;margin-bottom:20px}
+    .hero h1 em{color:var(--green);font-style:normal}
+    .hero p.lead{font-size:1.16rem;max-width:520px;margin-bottom:30px}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+    .hero-trust{display:flex;flex-wrap:wrap;align-items:center;gap:22px;font-size:.92rem;color:var(--body)}
+    .hero-trust .stars{color:#f5a623;letter-spacing:2px;font-size:1.05rem}
+    .hero-trust b{color:var(--ink)}
+    .hero-trust .sep{width:1px;height:26px;background:var(--line)}
+    .hero-media{position:relative;border-radius:26px;overflow:hidden;min-height:460px;
+      background:linear-gradient(135deg,var(--green),var(--green-d));box-shadow:var(--shadow)}
+    .hero-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .hero-card{
+      position:absolute;left:20px;bottom:20px;z-index:2;background:#fff;border-radius:16px;
+      padding:16px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;max-width:84%;
+    }
+    .hero-card .ic{width:46px;height:46px;border-radius:12px;background:var(--green-l);color:var(--green-d);display:grid;place-items:center;flex:none}
+    .hero-card b{font-family:'Poppins',sans-serif;color:var(--ink);font-size:1.02rem}
+    .hero-card small{color:var(--muted)}
+
+    /* trust strip */
+    .strip{background:var(--green-d);color:#fff}
+    .strip .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:30px 0}
+    .strip .item{text-align:center}
+    .strip .item b{display:block;font-family:'Poppins',sans-serif;font-size:1.7rem;font-weight:700}
+    .strip .item span{font-size:.9rem;color:#bfe4d8}
+
+    /* services */
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+    .card{
+      background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:30px 28px;
+      transition:.3s ease;
+    }
+    .card:hover{transform:translateY(-6px);box-shadow:var(--shadow);border-color:transparent}
+    .card .ic{width:56px;height:56px;border-radius:15px;background:var(--green-l);color:var(--green-d);display:grid;place-items:center;margin-bottom:20px}
+    .card:hover .ic{background:var(--green);color:#fff}
+    .card h3{font-size:1.18rem;margin-bottom:10px}
+    .card p{font-size:.97rem}
+
+    /* about */
+    .about{background:var(--soft)}
+    .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+    .about-media{position:relative;border-radius:24px;overflow:hidden;min-height:430px;
+      background:linear-gradient(135deg,var(--green),var(--green-d));box-shadow:var(--shadow)}
+    .about-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .checklist{list-style:none;display:grid;gap:14px;margin-top:26px}
+    .checklist li{display:flex;align-items:flex-start;gap:12px;font-size:1rem;color:var(--ink);font-weight:500}
+    .checklist .tick{flex:none;width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;margin-top:2px}
+
+    /* steps */
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;counter-reset:s}
+    .step{position:relative;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:34px 28px;text-align:center}
+    .step .num{counter-increment:s;position:absolute;top:-20px;left:50%;transform:translateX(-50%);
+      width:46px;height:46px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;
+      font-family:'Poppins',sans-serif;font-weight:700;box-shadow:var(--shadow-sm)}
+    .step .num::after{content:counter(s)}
+    .step .ic{margin:14px auto 16px;width:56px;height:56px;border-radius:15px;background:var(--green-l);color:var(--green-d);display:grid;place-items:center}
+    .step h3{font-size:1.12rem;margin-bottom:8px}
+    .step p{font-size:.95rem}
+
+    /* reviews */
+    .reviews{background:var(--soft)}
+    .rev-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:16px;margin-bottom:46px;text-align:center}
+    .rev-score{display:flex;align-items:center;gap:18px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 28px;box-shadow:var(--shadow-sm)}
+    .rev-score .big{font-family:'Poppins',sans-serif;font-size:2.6rem;font-weight:800;color:var(--ink);line-height:1}
+    .rev-score .stars{color:#f5a623;letter-spacing:2px;font-size:1.15rem}
+    .rev-score small{color:var(--muted)}
+    .rev-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:920px;margin-inline:auto}
+    .rev{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow-sm)}
+    .rev .stars{color:#f5a623;letter-spacing:2px;margin-bottom:12px}
+    .rev p{font-size:1.04rem;color:var(--ink);font-style:italic;margin-bottom:18px}
+    .rev .who{display:flex;align-items:center;gap:12px}
+    .rev .av{width:42px;height:42px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-family:'Poppins',sans-serif;font-weight:700}
+    .rev .who b{display:block;color:var(--ink)}
+    .rev .who small{color:var(--muted)}
+
+    /* career */
+    .career{position:relative;overflow:hidden;color:#fff;
+      background:linear-gradient(135deg,var(--green-d),#0d4a39)}
+    .career img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.18}
+    .career::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,rgba(13,74,57,.9),rgba(13,74,57,.55))}
+    .career .wrap{position:relative;z-index:2}
+    .career-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:50px;align-items:center}
+    .career .eyebrow{background:rgba(255,255,255,.15);color:#fff}
+    .career h2{color:#fff;font-size:clamp(1.8rem,3.6vw,2.6rem);margin-bottom:16px}
+    .career p{color:#d6efe6;font-size:1.08rem;margin-bottom:24px;max-width:520px}
+    .perks{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:13px}
+    .perks li{display:flex;align-items:center;gap:10px;color:#eafaf4;font-weight:500}
+    .perks .tick{flex:none;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center}
+    .career-cta{display:flex;flex-direction:column;gap:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:22px;padding:34px}
+    .career-cta h3{color:#fff;font-size:1.3rem}
+    .career-cta p{color:#d6efe6;font-size:.98rem;margin-bottom:6px}
+
+    /* contact */
+    .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+    .info-list{list-style:none;display:grid;gap:22px;margin:28px 0 30px}
+    .info-list li{display:flex;gap:16px;align-items:flex-start}
+    .info-list .ic{flex:none;width:48px;height:48px;border-radius:13px;background:var(--green-l);color:var(--green-d);display:grid;place-items:center}
+    .info-list b{display:block;color:var(--ink);font-family:'Poppins',sans-serif}
+    .info-list span{font-size:.97rem}
+    .info-list a{color:var(--green-d);font-weight:600}
+    .map{border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow-sm);margin-top:8px}
+    .map iframe{width:100%;height:230px;border:0;display:block;filter:grayscale(.1)}
+    .form{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:34px;box-shadow:var(--shadow-sm)}
+    .form h3{font-size:1.3rem;margin-bottom:6px}
+    .form p.sub{font-size:.95rem;margin-bottom:22px}
+    .field{margin-bottom:16px}
+    .field label{display:block;font-size:.9rem;font-weight:600;color:var(--ink);margin-bottom:6px;font-family:'Poppins',sans-serif}
+    .field input,.field textarea{
+      width:100%;padding:13px 15px;border:1.5px solid var(--line);border-radius:12px;font:inherit;color:var(--ink);
+      background:var(--soft);transition:.2s;
+    }
+    .field input:focus,.field textarea:focus{outline:none;border-color:var(--green);background:#fff;box-shadow:0 0 0 4px var(--green-l)}
+    .field textarea{resize:vertical;min-height:110px}
+    .form .btn{width:100%}
+    .form-note{font-size:.82rem;color:var(--muted);text-align:center;margin-top:12px}
+
+    /* footer */
+    footer{background:#102a23;color:#bcd6cc;padding:64px 0 26px}
+    .foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1.2fr;gap:36px;margin-bottom:42px}
+    footer .brand .name{color:#fff}
+    footer .brand .name span{color:#7fb3a3}
+    footer p.blurb{margin-top:18px;font-size:.95rem;max-width:300px}
+    footer h4{color:#fff;font-size:1rem;margin-bottom:18px;font-family:'Poppins',sans-serif}
+    footer ul{list-style:none;display:grid;gap:11px}
+    footer ul a{font-size:.94rem;transition:color .2s}
+    footer ul a:hover{color:#fff}
+    .foot-bottom{border-top:1px solid rgba(255,255,255,.12);padding-top:24px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font-size:.85rem;color:#7fb3a3}
+    .foot-bottom a{color:#7fb3a3}
+    .foot-bottom a:hover{color:#fff}
+
+    /* mobile call bar */
+    .callbar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:60;padding:11px 14px;
+      background:#fff;border-top:1px solid var(--line);box-shadow:0 -10px 30px -18px rgba(0,0,0,.4)}
+    .callbar .btn{width:100%}
+
+    /* reveal */
+    .js .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
+    .js .reveal.in{opacity:1;transform:none}
+
+    /* responsive */
+    @media(max-width:960px){
+      .hero-grid,.about-grid,.career-grid,.contact-grid{grid-template-columns:1fr;gap:40px}
+      .cards,.steps{grid-template-columns:1fr 1fr}
+      .strip .wrap{grid-template-columns:1fr 1fr;gap:26px}
+      .foot-grid{grid-template-columns:1fr 1fr}
+      .hero-media,.about-media{min-height:340px}
+    }
+    @media(max-width:760px){
+      section{padding:64px 0}
+      .nav-links{position:absolute;top:74px;left:0;right:0;background:#fff;flex-direction:column;align-items:stretch;
+        gap:0;padding:10px 6%;border-bottom:1px solid var(--line);box-shadow:var(--shadow-sm);display:none}
+      .nav-links.open{display:flex}
+      .nav-links a.link{padding:13px 4px;border-bottom:1px solid var(--line)}
+      .nav-links .nav-phone{padding:14px 4px}
+      .burger{display:block}
+      .nav-cta .btn{display:none}
+      .cards,.steps,.rev-grid,.perks{grid-template-columns:1fr}
+      .step .num{top:-18px}
+      .callbar{display:block}
+      body{padding-bottom:70px}
+      .hero{padding:48px 0 60px}
+    }
+    @media(max-width:460px){
+      .strip .wrap{grid-template-columns:1fr 1fr}
+      .foot-grid{grid-template-columns:1fr}
+      .hero-trust{gap:14px}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header>
+  <div class="wrap nav">
+    <a href="#top" class="brand">
+      <span class="mark" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg>
+      </span>
+      <span class="name">MaFa Pflegedienst<span>GmbH · Mönchengladbach</span></span>
+    </a>
+    <nav class="nav-links" id="menu">
+      <a class="link" href="#leistungen">Leistungen</a>
+      <a class="link" href="#ueber-uns">Über uns</a>
+      <a class="link" href="#ablauf">Ablauf</a>
+      <a class="link" href="#karriere">Karriere</a>
+      <a class="link" href="#kontakt">Kontakt</a>
+      <a class="nav-phone" href="tel:02161277500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>
+        02161 277500
+      </a>
+    </nav>
+    <div class="nav-cta">
+      <a href="#kontakt" class="btn btn-primary">Pflegeberatung</a>
+      <button class="burger" id="burger" aria-label="Menü öffnen">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<a id="top"></a>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="reveal">
+      <span class="eyebrow">Ambulanter Pflegedienst · Mönchengladbach</span>
+      <h1>Mit <em>Herz</em> und Fachkompetenz an Ihrer Seite</h1>
+      <p class="lead">Wir pflegen und betreuen Sie liebevoll in Ihrem vertrauten Zuhause – professionell, zuverlässig und mit allen Pflegekassen abrechenbar.</p>
+      <div class="hero-actions">
+        <a href="#kontakt" class="btn btn-primary">Kostenlose Pflegeberatung</a>
+        <a href="tel:02161277500" class="btn btn-outline">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>
+          02161 277500
+        </a>
+      </div>
+      <div class="hero-trust">
+        <div><span class="stars">★★★★★</span><br><b>4,5 / 5</b> · 73 Google-Bewertungen</div>
+        <div class="sep"></div>
+        <div>✓ Alle Pflegekassen<br>✓ Examiniertes Fachpersonal</div>
+      </div>
+    </div>
+    <div class="hero-media reveal">
+      <img src="https://images.pexels.com/photos/9893524/pexels-photo-9893524.jpeg?auto=compress&cs=tinysrgb&w=1100" alt="Pflegekraft hält die Hand eines älteren Menschen" loading="lazy" onerror="this.style.display='none'">
+      <div class="hero-card">
+        <span class="ic" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg>
+        </span>
+        <div><b>Pflege mit Herz</b><br><small>Feste Bezugspflegekräfte für Sie da</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRUST STRIP ============ -->
+<div class="strip">
+  <div class="wrap">
+    <div class="item"><b>4,5★</b><span>Google-Bewertung</span></div>
+    <div class="item"><b>73</b><span>zufriedene Rezensionen</span></div>
+    <div class="item"><b>Alle</b><span>Pflege- & Krankenkassen</span></div>
+    <div class="item"><b>MG</b><span>& Umgebung</span></div>
+  </div>
+</div>
+
+<!-- ============ LEISTUNGEN ============ -->
+<section id="leistungen">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <span class="eyebrow">Unsere Leistungen</span>
+      <h2>Alles aus einer Hand – für ein Leben zu Hause</h2>
+      <p>Von der Grundpflege bis zur Beratung: Wir stellen Ihre individuelle Versorgung sicher, damit Sie würdevoll und selbstbestimmt in Ihrem Zuhause leben können.</p>
+    </div>
+    <div class="cards">
+      <div class="card reveal">
+        <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16.3c0 2-1.6 3.7-3.5 3.7S0 18.3 0 16.3C0 14 3.5 9 3.5 9S7 14 7 16.3Z" transform="translate(8.5 0)"/><circle cx="12" cy="6" r="3"/><path d="M9 21v-4a3 3 0 0 1 6 0v4"/></svg></span>
+        <h3>Grundpflege</h3>
+        <p>Körperpflege, An- und Auskleiden, Mobilisation sowie liebevolle Unterstützung bei allen täglichen Bedürfnissen.</p>
+      </div>
+      <div class="card reveal">
+        <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+        <h3>Behandlungspflege</h3>
+        <p>Medikamentengabe, Wundversorgung, Injektionen und Verbände – fachgerecht nach ärztlicher Verordnung.</p>
+      </div>
+      <div class="card reveal">
+        <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></span>
+        <h3>Verhinderungs- & Kurzzeitpflege</h3>
+        <p>Wir übernehmen, wenn pflegende Angehörige eine Auszeit, Urlaub oder Entlastung im Alltag brauchen.</p>
+      </div>
+      <div class="card reveal">
+        <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        <h3>Betreuung & Entlastung</h3>
+        <p>Gesellschaft, gemeinsame Spaziergänge und Betreuungsleistungen nach §45b – für mehr Lebensfreude.</p>
+      </div>
+      <div class="card reveal">
+        <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+        <h3>Hauswirtschaft</h3>
+        <p>Unterstützung im Haushalt, Einkäufe, Mahlzeiten und Begleitung zu Arzt- und Behördenterminen.</p>
+      </div>
+      <div class="card reveal">
+        <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+        <h3>Pflegeberatung</h3>
+        <p>Kostenlose Beratung nach §37.3 und Hilfe bei Anträgen, Pflegegrad und Leistungen Ihrer Pflegekasse.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ÜBER UNS ============ -->
+<section id="ueber-uns" class="about">
+  <div class="wrap about-grid">
+    <div class="about-media reveal">
+      <img src="https://images.pexels.com/photos/6129494/pexels-photo-6129494.jpeg?auto=compress&cs=tinysrgb&w=1100" alt="Lächelndes Pflegeteam" loading="lazy" onerror="this.style.display='none'">
+    </div>
+    <div class="reveal">
+      <span class="eyebrow">Über Pflegedienst MaFa</span>
+      <h2 style="font-size:clamp(1.8rem,3.6vw,2.6rem);margin-bottom:14px">Ihre Familie liegt uns am Herzen</h2>
+      <p>Seit Jahren stehen wir den Menschen in Mönchengladbach mit professioneller und herzlicher Pflege zur Seite. Unser Team aus examinierten Pflegefachkräften kümmert sich um Ihre Liebsten, als wären es die eigenen – einfühlsam, zuverlässig und auf Augenhöhe.</p>
+      <ul class="checklist">
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Examiniertes, festes Fachpersonal</li>
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Feste Bezugspflegekräfte statt wechselnder Gesichter</li>
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Abrechnung mit allen Pflege- und Krankenkassen</li>
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Schnelle, unbürokratische Hilfe & Erreichbarkeit</li>
+        <li><span class="tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>4,5 Sterne aus 73 Bewertungen</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ABLAUF ============ -->
+<section id="ablauf">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <span class="eyebrow">So einfach geht's</span>
+      <h2>In 3 Schritten zu Ihrer Pflege</h2>
+      <p>Wir nehmen Ihnen den bürokratischen Aufwand ab und begleiten Sie von der ersten Frage bis zur fertigen Versorgung.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <span class="num"></span>
+        <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg></span>
+        <h3>Kontakt aufnehmen</h3>
+        <p>Rufen Sie uns an oder schreiben Sie uns. Wir hören zu und nehmen uns Zeit für Ihre Situation.</p>
+      </div>
+      <div class="step reveal">
+        <span class="num"></span>
+        <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+        <h3>Kostenlose Beratung</h3>
+        <p>Wir besuchen Sie zu Hause und klären in Ruhe alle Fragen zu Leistungen, Pflegegrad und Kosten.</p>
+      </div>
+      <div class="step reveal">
+        <span class="num"></span>
+        <span class="ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+        <h3>Individueller Pflegeplan</h3>
+        <p>Wir erstellen einen Plan, der genau zu Ihnen passt – und beginnen schnell und zuverlässig.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BEWERTUNGEN ============ -->
+<section id="bewertungen" class="reviews">
+  <div class="wrap">
+    <div class="section-head center reveal" style="margin-bottom:34px">
+      <span class="eyebrow">Das sagen unsere Patienten</span>
+      <h2>Vertrauen, das man spürt</h2>
+    </div>
+    <div class="rev-top reveal">
+      <div class="rev-score">
+        <div class="big">4,5</div>
+        <div>
+          <div class="stars">★★★★★</div>
+          <small>Durchschnitt aus <b>73</b> Google-Bewertungen</small>
+        </div>
+      </div>
+    </div>
+    <div class="rev-grid">
+      <div class="rev reveal">
+        <div class="stars">★★★★★</div>
+        <p>„Sehr nettes und kompetentes Team. MaFa einfach Top!“</p>
+        <div class="who">
+          <span class="av">K</span>
+          <div><b>Zufriedene Kundin</b><small>Bewertung · Gelbe Seiten</small></div>
+        </div>
+      </div>
+      <div class="rev reveal">
+        <div class="stars">★★★★★</div>
+        <p>„Die Pflegekraft war gerade bei uns. Die Beratung war top und informativ.“</p>
+        <div class="who">
+          <span class="av">I</span>
+          <div><b>Ilona S.</b><small>Bewertung · Google</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ KARRIERE ============ -->
+<section id="karriere" class="career">
+  <img class="bg" src="https://images.pexels.com/photos/8538867/pexels-photo-8538867.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="" loading="lazy" onerror="this.style.display='none'">
+  <div class="wrap career-grid">
+    <div class="reveal">
+      <span class="eyebrow">Karriere bei MaFa</span>
+      <h2>Werde Teil unseres Teams</h2>
+      <p>Du bist Pflegefachkraft oder Pflegehelfer:in mit Herz? Bei MaFa erwartet dich ein familiäres Team, das zusammenhält – und ein Arbeitgeber, der deine Arbeit wirklich wertschätzt.</p>
+      <ul class="perks">
+        <li><span class="tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Übertarifliche Bezahlung</li>
+        <li><span class="tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Verlässliche Dienstpläne</li>
+        <li><span class="tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Unbefristeter Vertrag</li>
+        <li><span class="tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Dienstwagen möglich</li>
+        <li><span class="tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Fort- & Weiterbildungen</li>
+        <li><span class="tick"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Familiäres Team</li>
+      </ul>
+    </div>
+    <div class="career-cta reveal">
+      <h3>Jetzt bewerben</h3>
+      <p>Schick uns einfach deine Bewerbung – ganz unkompliziert, auch per Telefon.</p>
+      <a href="mailto:bewerbung@pflegedienst-mafa.de" class="btn btn-light">Bewerbung senden</a>
+      <a href="tel:02161277500" class="btn btn-ghost">02161 277500</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ KONTAKT ============ -->
+<section id="kontakt">
+  <div class="wrap contact-grid">
+    <div class="reveal">
+      <span class="eyebrow">Kontakt & Beratung</span>
+      <h2 style="font-size:clamp(1.8rem,3.6vw,2.6rem);margin-bottom:14px">Wir sind für Sie da</h2>
+      <p>Sie haben Fragen zur Pflege oder möchten eine kostenlose Beratung? Rufen Sie uns an oder schreiben Sie uns – wir melden uns schnellstmöglich bei Ihnen.</p>
+      <ul class="info-list">
+        <li>
+          <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+          <div><b>Adresse</b><span>Waldnieler Str. 247<br>41068 Mönchengladbach</span></div>
+        </li>
+        <li>
+          <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg></span>
+          <div><b>Telefon</b><span><a href="tel:02161277500">02161 277500</a></span></div>
+        </li>
+        <li>
+          <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></span>
+          <div><b>E-Mail</b><span><a href="mailto:info@pflegedienst-mafa.de">info@pflegedienst-mafa.de</a></span></div>
+        </li>
+        <li>
+          <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+          <div><b>Bürozeiten</b><span>Mo – Fr: 08:00 – 16:30 Uhr<br>Pflege: täglich, auch am Wochenende</span></div>
+        </li>
+      </ul>
+      <div class="map">
+        <iframe title="Standort Pflegedienst MaFa" loading="lazy" src="https://www.google.com/maps?q=Waldnieler+Str.+247,+41068+M%C3%B6nchengladbach&output=embed"></iframe>
+      </div>
+    </div>
+    <div class="form reveal">
+      <h3>Beratung anfragen</h3>
+      <p class="sub">Wir rufen Sie gerne zurück – unverbindlich und kostenlos.</p>
+      <form onsubmit="event.preventDefault(); this.reset(); document.getElementById('formok').style.display='block';">
+        <div class="field">
+          <label for="n">Name</label>
+          <input id="n" type="text" placeholder="Ihr Name" required>
+        </div>
+        <div class="field">
+          <label for="t">Telefon</label>
+          <input id="t" type="tel" placeholder="Ihre Telefonnummer" required>
+        </div>
+        <div class="field">
+          <label for="e">E-Mail</label>
+          <input id="e" type="email" placeholder="Ihre E-Mail (optional)">
+        </div>
+        <div class="field">
+          <label for="m">Ihre Nachricht</label>
+          <textarea id="m" placeholder="Wie können wir Ihnen helfen?"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Nachricht senden</button>
+        <p class="form-note" id="formok" style="display:none;color:var(--green-d);font-weight:600">✓ Vielen Dank! Wir melden uns schnellstmöglich bei Ihnen.</p>
+        <p class="form-note">Ihre Daten werden vertraulich behandelt und nicht weitergegeben.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="brand">
+          <span class="mark" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg>
+          </span>
+          <span class="name">MaFa Pflegedienst<span>GmbH · Mönchengladbach</span></span>
+        </div>
+        <p class="blurb">Ihr ambulanter Pflegedienst in Mönchengladbach – mit Herz, Kompetenz und Zeit für die Menschen, die uns anvertraut werden.</p>
+      </div>
+      <div>
+        <h4>Leistungen</h4>
+        <ul>
+          <li><a href="#leistungen">Grundpflege</a></li>
+          <li><a href="#leistungen">Behandlungspflege</a></li>
+          <li><a href="#leistungen">Betreuung</a></li>
+          <li><a href="#leistungen">Pflegeberatung</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Schnellzugriff</h4>
+        <ul>
+          <li><a href="#ueber-uns">Über uns</a></li>
+          <li><a href="#ablauf">Ablauf</a></li>
+          <li><a href="#karriere">Karriere</a></li>
+          <li><a href="#kontakt">Kontakt</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Kontakt</h4>
+        <ul>
+          <li>Waldnieler Str. 247</li>
+          <li>41068 Mönchengladbach</li>
+          <li><a href="tel:02161277500">02161 277500</a></li>
+          <li><a href="mailto:info@pflegedienst-mafa.de">info@pflegedienst-mafa.de</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© <span id="year"></span> Pflegedienst MaFa GmbH · Alle Rechte vorbehalten.</span>
+      <span><a href="#">Impressum</a> &nbsp;·&nbsp; <a href="#">Datenschutz</a></span>
+    </div>
+  </div>
+</footer>
+
+<!-- ============ MOBILE CALL BAR ============ -->
+<div class="callbar">
+  <a href="tel:02161277500" class="btn btn-primary">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>
+    Jetzt anrufen · 02161 277500
+  </a>
+</div>
+
+<script>
+  // aktiviert reveal-Animationen nur, wenn JS läuft (ohne JS bleibt alles sichtbar)
+  document.documentElement.classList.add('js');
+
+  // Jahr im Footer
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // mobiles Menü
+  var burger = document.getElementById('burger');
+  var menu = document.getElementById('menu');
+  burger.addEventListener('click', function(){ menu.classList.toggle('open'); });
+  menu.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){ menu.classList.remove('open'); });
+  });
+
+  // Scroll-Reveal
+  if ('IntersectionObserver' in window) {
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting){ e.target.classList.add('in'); obs.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(function(el){ obs.observe(el); });
+  } else {
+    document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); });
+  }
+</script>
+</body>
+</html>
