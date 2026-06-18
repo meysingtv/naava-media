@@ -20,6 +20,9 @@
 .DS_Store
 *.pem
 
+# generierte Demo-Archive (Quellordner bleibt versioniert)
+/demos/*.zip
+
 # debug
 npm-debug.log*
 yarn-debug.log*
