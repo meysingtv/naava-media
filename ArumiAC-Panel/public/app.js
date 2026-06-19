@@ -149,9 +149,9 @@ window.addEventListener("scroll", () => nav.classList.toggle("scrolled", window.
 $("#burger").onclick = () => $(".nav-links").classList.toggle("open");
 $$(".nav-links a").forEach((a) => (a.onclick = () => $(".nav-links").classList.remove("open")));
 
-function setTheme(t) { document.documentElement.dataset.theme = t; localStorage.setItem("arumi_theme", t); }
-$("#btnTheme").onclick = () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
-setTheme(localStorage.getItem("arumi_theme") || "dark");
+// Nur dunkel — kein heller Modus mehr
+document.documentElement.dataset.theme = "dark";
+try { localStorage.removeItem("arumi_theme"); } catch {}
 
 $("#year").textContent = new Date().getFullYear();
 
