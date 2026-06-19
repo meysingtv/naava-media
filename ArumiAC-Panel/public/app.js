@@ -151,7 +151,7 @@ $$(".nav-links a").forEach((a) => (a.onclick = () => $(".nav-links").classList.r
 
 function setTheme(t) { document.documentElement.dataset.theme = t; localStorage.setItem("arumi_theme", t); }
 $("#btnTheme").onclick = () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
-setTheme(localStorage.getItem("arumi_theme") || "light");
+setTheme(localStorage.getItem("arumi_theme") || "dark");
 
 $("#year").textContent = new Date().getFullYear();
 

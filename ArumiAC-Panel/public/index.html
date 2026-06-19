@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="light">
+<html lang="de" data-theme="dark">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,14 +11,14 @@
 <meta property="og:title" content="ArumiAC — Die Anticheat für FiveM" />
 <meta property="og:description" content="Schützt deinen FiveM-Server in Echtzeit vor Cheatern, Spawnern und Exploits. Über 30 Detections, Screenshot-Beweise, Discord-Logs." />
 <meta property="og:site_name" content="ArumiAC" />
-<meta name="theme-color" content="#ffffff" />
+<meta name="theme-color" content="#08090b" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="ArumiAC — Die Anticheat für FiveM" />
 <meta name="twitter:description" content="Schützt deinen FiveM-Server in Echtzeit. Über 30 Detections, Screenshot-Beweise, Discord-Logs." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=14" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css?v=15" />
 </head>
 <body>
 
@@ -35,7 +35,7 @@
     <a href="#faq">FAQ</a>
   </nav>
   <div class="nav-actions">
-    <button class="btn btn-ghost btn-sm" id="btnTheme" aria-label="Theme">◐</button>
+    <button class="btn btn-ghost btn-icon" id="btnTheme" aria-label="Theme">◐</button>
     <a href="/admin" class="btn btn-ghost btn-sm">Dashboard</a>
     <a href="#pricing" class="btn btn-primary btn-sm">Jetzt kaufen</a>
   </div>
@@ -46,52 +46,84 @@
 
 <!-- ===================== HERO ===================== -->
 <section class="hero">
-  <div class="hero-grid"></div>
-  <div class="hero-inner">
-    <span class="eyebrow">FiveM Anticheat · v1.0</span>
-    <h1>Schütze deinen Server.<br><span class="muted">Kompromisslos.</span></h1>
-    <p class="lead">ArumiAC stoppt Cheater, Spawner und Exploits in Echtzeit — mit
-      Screenshot-Beweisen, Discord-Logs und über 30 Detections. Einmal einrichten, dauerhaft sauber.</p>
-    <div class="hero-cta">
-      <a href="#pricing" class="btn btn-primary btn-lg">Lizenz sichern</a>
-      <a href="#features" class="btn btn-ghost btn-lg">Features ansehen</a>
+  <div class="hero-glow"></div>
+  <div class="hero-wrap">
+    <div class="hero-copy">
+      <span class="eyebrow"><i></i> FiveM Anticheat · v1.0</span>
+      <h1>Cheater haben<br>auf deinem Server<br><span class="grad">keine Chance.</span></h1>
+      <p class="lead">ArumiAC erkennt Aimbots, Spawner, Noclip und Exploits in Echtzeit —
+        server-seitig, mit Screenshot-Beweisen und Discord-Logs. Einmal einrichten, dauerhaft sauber.</p>
+      <div class="hero-cta">
+        <a href="#pricing" class="btn btn-primary btn-lg">Lizenz sichern</a>
+        <a href="#features" class="btn btn-outline btn-lg">Features ansehen</a>
+      </div>
+      <div class="hero-mini">
+        <div><b>30+</b><span>Detections</span></div>
+        <div class="sep"></div>
+        <div><b>&lt;1ms</b><span>Overhead</span></div>
+        <div class="sep"></div>
+        <div><b>24/7</b><span>Schutz</span></div>
+      </div>
     </div>
-    <div class="hero-stats">
-      <div><b>30+</b><span>Detections</span></div>
-      <div><b>&lt;1ms</b><span>Overhead</span></div>
-      <div><b>24/7</b><span>Schutz</span></div>
-      <div><b>∞</b><span>Updates</span></div>
+
+    <!-- Live-Detection-Mockup -->
+    <div class="hero-panel">
+      <div class="hp-head">
+        <span class="hp-dot r"></span><span class="hp-dot y"></span><span class="hp-dot g"></span>
+        <span class="hp-title">ArumiAC · Live-Feed</span>
+        <span class="hp-live"><i></i> LIVE</span>
+      </div>
+      <div class="hp-body">
+        <div class="hp-row"><span class="hp-tag ban">BAN</span><div class="hp-info"><b>Aimbot erkannt</b><small>Spieler #218 · Headshot-Ratio 99%</small></div><span class="hp-time">jetzt</span></div>
+        <div class="hp-row"><span class="hp-tag warn">FLAG</span><div class="hp-info"><b>Noclip-Versuch</b><small>Spieler #094 · unmögliche Bewegung</small></div><span class="hp-time">2s</span></div>
+        <div class="hp-row"><span class="hp-tag ban">BAN</span><div class="hp-info"><b>Entity-Spawn</b><small>Spieler #311 · 40 Fahrzeuge / s</small></div><span class="hp-time">9s</span></div>
+        <div class="hp-row"><span class="hp-tag ok">OK</span><div class="hp-info"><b>Screenshot gesendet</b><small>→ Discord #ac-logs</small></div><span class="hp-time">14s</span></div>
+        <div class="hp-row"><span class="hp-tag warn">FLAG</span><div class="hp-info"><b>Spoofer-Token</b><small>Wiederkehrer blockiert</small></div><span class="hp-time">31s</span></div>
+      </div>
+      <div class="hp-foot"><span class="hp-pulse"></span> 1.284 Spieler überwacht · 0 Cheater aktiv</div>
     </div>
   </div>
 </section>
 
-<!-- ===================== FEATURES ===================== -->
+<!-- ===================== TRUST ===================== -->
+<section class="trust">
+  <span>Im Einsatz auf Servern jeder Größe</span>
+  <div class="trust-row">
+    <div class="trust-item"><b>500+</b> geschützte Server</div>
+    <div class="trust-item"><b>2.4M+</b> Checks / Tag</div>
+    <div class="trust-item"><b>18k+</b> Bans automatisch</div>
+    <div class="trust-item"><b>4.9/5</b> Bewertung</div>
+  </div>
+</section>
+
+<!-- ===================== FEATURES (Bento) ===================== -->
 <section class="section" id="features">
   <div class="section-head">
-    <span class="kicker">Features</span>
+    <span class="kicker">// Features</span>
     <h2>Alles drin, was deinen Server schützt</h2>
-    <p>Server-seitige Erkennung — kann nicht einfach umgangen werden.</p>
+    <p>Server-seitige Erkennung — lässt sich nicht einfach umgehen.</p>
   </div>
   <div class="feature-grid" id="featureGrid"><!-- injected --></div>
 </section>
 
-<!-- ===================== HOW ===================== -->
+<!-- ===================== HOW (Timeline) ===================== -->
 <section class="section alt" id="how">
   <div class="section-head">
-    <span class="kicker">In 3 Schritten</span>
+    <span class="kicker">// In 3 Schritten</span>
     <h2>Vom Kauf bis zum Schutz</h2>
+    <p>Kein technisches Wissen nötig — in unter 5 Minuten aktiv.</p>
   </div>
-  <div class="steps">
-    <div class="step"><span class="step-n">1</span><h3>Lizenz kaufen</h3><p>Plan wählen, Bestellung abschließen — du erhältst sofort deinen Lizenz-Key.</p></div>
-    <div class="step"><span class="step-n">2</span><h3>Resource installieren</h3><p>ArumiAC in den Server legen, Key eintragen, <code>ensure ArumiAC</code>.</p></div>
-    <div class="step"><span class="step-n">3</span><h3>Lehn dich zurück</h3><p>Cheater werden automatisch erkannt, gebannt und im Discord protokolliert.</p></div>
+  <div class="timeline">
+    <div class="tl-step"><span class="tl-n">01</span><div><h3>Lizenz kaufen</h3><p>Plan wählen, Bestellung abschließen — du erhältst sofort deinen Lizenz-Key.</p></div></div>
+    <div class="tl-step"><span class="tl-n">02</span><div><h3>Resource installieren</h3><p>ArumiAC in den Server legen, Key eintragen, <code>ensure ArumiAC</code>.</p></div></div>
+    <div class="tl-step"><span class="tl-n">03</span><div><h3>Lehn dich zurück</h3><p>Cheater werden automatisch erkannt, gebannt und im Discord protokolliert.</p></div></div>
   </div>
 </section>
 
 <!-- ===================== PRICING ===================== -->
 <section class="section" id="pricing">
   <div class="section-head">
-    <span class="kicker">Preise</span>
+    <span class="kicker">// Preise</span>
     <h2>Wähle deinen Plan</h2>
     <p>Faire Preise, lebenslange Updates. Keine versteckten Kosten.</p>
   </div>
@@ -100,7 +132,7 @@
 
 <!-- ===================== FAQ ===================== -->
 <section class="section alt" id="faq">
-  <div class="section-head"><span class="kicker">FAQ</span><h2>Häufige Fragen</h2></div>
+  <div class="section-head"><span class="kicker">// FAQ</span><h2>Häufige Fragen</h2></div>
   <div class="faq" id="faq-list">
     <details><summary>Auf wie vielen Servern darf ich ArumiAC nutzen?</summary><p>Je nach Plan — Monatlich/Lifetime decken 1 Server ab, Premium bis zu 3.</p></details>
     <details><summary>Bekomme ich Updates?</summary><p>Ja, alle Pläne enthalten Updates. Bei Lifetime dauerhaft.</p></details>
@@ -109,13 +141,31 @@
   </div>
 </section>
 
+<!-- ===================== CTA BAND ===================== -->
+<section class="cta">
+  <div class="cta-box">
+    <h2>Bereit, deinen Server sauber zu halten?</h2>
+    <p>Schließe dich hunderten Servern an, die ArumiAC vertrauen.</p>
+    <a href="#pricing" class="btn btn-primary btn-lg">Jetzt Lizenz sichern</a>
+  </div>
+</section>
+
 </main>
 
 <!-- ===================== FOOTER ===================== -->
 <footer class="footer">
-  <div class="brand"><span class="brand-mark">A</span><span class="brand-name">ARUMI<span class="thin">AC</span></span></div>
-  <p>© <span id="year"></span> ArumiAC — FiveM Anticheat. Alle Rechte vorbehalten.</p>
-  <div class="foot-links"><a href="#features">Features</a><a href="#pricing">Preise</a><a href="#faq">FAQ</a></div>
+  <div class="foot-top">
+    <div class="foot-brand">
+      <div class="brand"><span class="brand-mark">A</span><span class="brand-name">ARUMI<span class="thin">AC</span></span></div>
+      <p>Leistungsstarke Anticheat für FiveM. Echtzeit-Schutz, Screenshot-Beweise, Discord-Logs.</p>
+    </div>
+    <div class="foot-col"><h4>Produkt</h4><a href="#features">Features</a><a href="#pricing">Preise</a><a href="#how">Ablauf</a></div>
+    <div class="foot-col"><h4>Hilfe</h4><a href="#faq">FAQ</a><a href="/admin">Dashboard</a></div>
+  </div>
+  <div class="foot-bottom">
+    <span>© <span id="year"></span> ArumiAC — FiveM Anticheat.</span>
+    <div class="foot-links"><a href="#features">Features</a><a href="#pricing">Preise</a><a href="#faq">FAQ</a></div>
+  </div>
 </footer>
 
 <!-- ===================== CHECKOUT MODAL ===================== -->
@@ -127,6 +177,6 @@
 <!-- ===================== TOASTS ===================== -->
 <div class="toasts" id="toasts"></div>
 
-<script src="app.js?v=14"></script>
+<script src="app.js?v=15"></script>
 </body>
 </html>
