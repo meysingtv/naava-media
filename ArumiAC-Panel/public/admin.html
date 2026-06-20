@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ArumiAC — Admin</title>
+<meta name="robots" content="noindex" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css?v=13" />
+<link rel="stylesheet" href="admin.css?v=13" />
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="a-login">
+  <div class="a-login-card" id="loginCard">
+    <div class="brand"><span class="brand-mark">A</span>
+      <span class="brand-name">ARUMI<span class="thin">AC</span></span></div>
+    <h1>Login</h1>
+    <p class="a-sub">Melde dich mit deinem Discord-Account an.</p>
+    <a class="btn btn-discord btn-block" href="/admin/auth/discord">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.25.5c1.7.4 2.9 1 4.1 1.8a13.4 13.4 0 0 0-11.3-.2c1.2-.8 2.5-1.45 4.05-1.85L11.6 3a19.8 19.8 0 0 0-4.9 1.4C3 8.6 2.4 12.7 2.7 16.7a19.9 19.9 0 0 0 6 3l.8-1.3c-.66-.25-1.27-.55-1.85-.9.16-.12.3-.24.45-.36a14.2 14.2 0 0 0 12 0l.45.36c-.58.35-1.2.65-1.85.9l.8 1.3a19.8 19.8 0 0 0 6-3c.4-4.7-.55-8.8-3.45-12.3zM9.7 14.5c-1.15 0-2.1-1.05-2.1-2.35S8.53 9.8 9.7 9.8s2.12 1.06 2.1 2.35c0 1.3-.94 2.35-2.1 2.35zm5.6 0c-1.15 0-2.1-1.05-2.1-2.35s.94-2.35 2.1-2.35 2.12 1.06 2.1 2.35c0 1.3-.93 2.35-2.1 2.35z"/></svg>
+      <span>Login mit Discord</span>
+    </a>
+    <p class="a-hint" id="loginHint"></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="a-app hidden">
+  <header class="a-topbar">
+    <div class="brand"><span class="brand-mark">A</span>
+      <div class="brand-text"><span class="brand-name">ARUMI<span class="thin">AC</span></span>
+      <span class="brand-sub">Panel</span></div></div>
+    <nav class="a-nav">
+      <a class="a-nav-item active" data-view="dashboard">Dashboard</a>
+      <a class="a-nav-item owner-only" data-view="owner">Owner <b class="a-badge" id="bServers">0</b></a>
+      <a class="a-nav-item owner-only" data-view="kunden">User <b class="a-badge" id="bUsers">0</b></a>
+      <a class="a-nav-item owner-only" data-view="orders">Bestellungen <b class="a-badge" id="bOrders">0</b></a>
+    </nav>
+    <div class="a-user">
+      <button class="btn btn-ghost btn-sm" id="btnRefresh">↻</button>
+      <a class="btn btn-ghost btn-sm" href="/">Shop</a>
+      <span class="a-uname" id="userName"></span>
+      <button class="btn btn-ghost btn-sm" id="btnLogout">Abmelden</button>
+    </div>
+  </header>
+
+  <main class="a-main">
+    <div class="a-subhead"><h2 id="viewTitle">Dashboard</h2></div>
+    <section class="a-content" id="content"></section>
+  </main>
+</div>
+
+<div class="modal-root hidden" id="modalRoot">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal" id="modalBox"></div>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script src="admin.js?v=13"></script>
+</body>
+</html>
