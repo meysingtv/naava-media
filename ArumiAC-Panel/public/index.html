@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de" data-theme="warm">
+<html lang="de" data-theme="ivory">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,14 +11,14 @@
 <meta property="og:title" content="ArumiAC — Die Anticheat für FiveM" />
 <meta property="og:description" content="Schützt deinen FiveM-Server in Echtzeit vor Cheatern, Spawnern und Exploits. Über 30 Detections, Screenshot-Beweise, Discord-Logs." />
 <meta property="og:site_name" content="ArumiAC" />
-<meta name="theme-color" content="#0a0908" />
+<meta name="theme-color" content="#0b0b0a" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="ArumiAC — Die Anticheat für FiveM" />
 <meta name="twitter:description" content="Schützt deinen FiveM-Server in Echtzeit. Über 30 Detections, Screenshot-Beweise, Discord-Logs." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=17" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css?v=18" />
 </head>
 <body>
 
@@ -42,116 +42,96 @@
   <button class="nav-burger" id="burger" aria-label="Menü">☰</button>
 </header>
 
+<div class="frame">
 <main id="top">
 
 <!-- ===================== HERO ===================== -->
 <section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-inner">
-    <span class="eyebrow"><i></i> FiveM Anticheat · v1.0</span>
-    <h1>Schluss mit Cheatern.<br><span class="grad">Endgültig.</span></h1>
+  <div class="hero-main">
+    <span class="tag"><i></i> FiveM Anticheat — v1.0</span>
+    <h1>Cheater raus.<br>Server sauber.<br><span class="ghost">Für immer.</span></h1>
     <p class="lead">ArumiAC erkennt Aimbots, Spawner, Noclip und Exploits in Echtzeit —
-      server-seitig, mit Screenshot-Beweisen und Discord-Logs. Einmal einrichten, dauerhaft sauber.</p>
+      server-seitig, mit Screenshot-Beweisen und Discord-Logs.</p>
     <div class="hero-cta">
-      <a href="#pricing" class="btn btn-primary btn-lg">Lizenz sichern</a>
+      <a href="#pricing" class="btn btn-primary btn-lg">Lizenz sichern →</a>
       <a href="#modules" class="btn btn-outline btn-lg">Module ansehen</a>
     </div>
   </div>
-
-  <!-- großes Dashboard-Board (volle Breite) -->
-  <div class="board">
-    <div class="board-head">
-      <span class="hp-dot r"></span><span class="hp-dot y"></span><span class="hp-dot g"></span>
-      <span class="board-title">ArumiAC · Live-Feed</span>
-      <span class="board-live"><i></i> LIVE</span>
-    </div>
-    <div class="board-grid">
-      <div class="board-feed">
-        <div class="hp-row"><span class="hp-tag ban">BAN</span><div class="hp-info"><b>Aimbot erkannt</b><small>Spieler #218 · Headshot-Ratio 99%</small></div><span class="hp-time">jetzt</span></div>
-        <div class="hp-row"><span class="hp-tag warn">FLAG</span><div class="hp-info"><b>Noclip-Versuch</b><small>Spieler #094 · unmögliche Bewegung</small></div><span class="hp-time">2s</span></div>
-        <div class="hp-row"><span class="hp-tag ban">BAN</span><div class="hp-info"><b>Entity-Spawn</b><small>Spieler #311 · 40 Fahrzeuge / s</small></div><span class="hp-time">9s</span></div>
-        <div class="hp-row"><span class="hp-tag ok">OK</span><div class="hp-info"><b>Screenshot gesendet</b><small>→ Discord #ac-logs</small></div><span class="hp-time">14s</span></div>
-        <div class="hp-row"><span class="hp-tag warn">FLAG</span><div class="hp-info"><b>Spoofer-Token</b><small>Wiederkehrer blockiert</small></div><span class="hp-time">31s</span></div>
-      </div>
-      <div class="board-side">
-        <div class="stat-card"><span class="sc-label">Spieler überwacht</span><b class="sc-num">1.284</b></div>
-        <div class="stat-card"><span class="sc-label">Cheater aktiv</span><b class="sc-num accent">0</b></div>
-        <div class="stat-card"><span class="sc-label">Bans heute</span><b class="sc-num">37</b></div>
-        <div class="stat-card"><span class="sc-label">Uptime</span><b class="sc-num">99.9%</b></div>
-      </div>
-    </div>
-  </div>
+  <aside class="hero-meta">
+    <div class="meta-row"><span>Status</span><b class="online">● Online</b></div>
+    <div class="meta-row"><span>Detections</span><b>30+</b></div>
+    <div class="meta-row"><span>Overhead</span><b>&lt; 1 ms</b></div>
+    <div class="meta-row"><span>Schutz</span><b>24 / 7</b></div>
+    <div class="meta-row"><span>Server</span><b>500+</b></div>
+    <div class="meta-row"><span>Bewertung</span><b>4.9 / 5</b></div>
+  </aside>
 </section>
 
-<!-- ===================== TRUST ===================== -->
-<section class="trust">
-  <span>Im Einsatz auf Servern jeder Größe</span>
-  <div class="trust-row">
-    <div class="trust-item"><b>500+</b> geschützte Server</div>
-    <div class="trust-item"><b>2.4M+</b> Checks / Tag</div>
-    <div class="trust-item"><b>18k+</b> Bans automatisch</div>
-    <div class="trust-item"><b>4.9/5</b> Bewertung</div>
+<!-- ===================== TICKER ===================== -->
+<div class="ticker">
+  <div class="ticker-track">
+    <span>Aimbot</span><span>Noclip</span><span>Spawner</span><span>Godmode</span><span>Speedhack</span><span>Spoofer</span><span>Crasher</span><span>Freecam</span><span>Explosion</span><span>Magneto</span>
+    <span>Aimbot</span><span>Noclip</span><span>Spawner</span><span>Godmode</span><span>Speedhack</span><span>Spoofer</span><span>Crasher</span><span>Freecam</span><span>Explosion</span><span>Magneto</span>
   </div>
-</section>
+</div>
 
 <!-- ===================== MODULE ===================== -->
-<section class="section" id="modules">
-  <div class="section-head">
-    <span class="kicker">// Module</span>
+<section class="block" id="modules">
+  <header class="block-head">
+    <span class="num">01 — Module</span>
     <h2>Über 30 Schutz-Module</h2>
-    <p>Jedes Modul deckt einen eigenen Angriffsvektor ab — einzeln in der Config schaltbar.</p>
-  </div>
-  <div class="chips">
-    <span class="chip">Aimbot</span><span class="chip">Silent Aim</span><span class="chip">No-Recoil</span>
-    <span class="chip">Noclip</span><span class="chip">Fly Hack</span><span class="chip">Teleport</span>
-    <span class="chip">Speedhack</span><span class="chip">Godmode</span><span class="chip">Freecam</span>
-    <span class="chip">Entity Spawn</span><span class="chip">Vehicle Spawn</span><span class="chip">Ped Spawn</span>
-    <span class="chip">Explosion</span><span class="chip">Fire Spam</span><span class="chip">Weapon Give</span>
-    <span class="chip">Spoofed Bullets</span><span class="chip">Anti Spoofer</span><span class="chip">HWID Ban</span>
-    <span class="chip">Crasher</span><span class="chip">Magneto</span><span class="chip">NUI Devtools</span>
-    <span class="chip">Resource Inject</span><span class="chip">Event Spam</span><span class="chip">Blacklist</span>
-    <span class="chip">Screenshot</span><span class="chip">Clip-Beweise</span><span class="chip">Discord-Logs</span>
-    <span class="chip">Heartbeat</span><span class="chip">Anti Bypass</span><span class="chip">+ mehr</span>
+    <p>Jedes Modul deckt einen Angriffsvektor ab — einzeln in der Config schaltbar.</p>
+  </header>
+  <div class="mod-grid">
+    <span class="mod">Aimbot</span><span class="mod">Silent Aim</span><span class="mod">No-Recoil</span><span class="mod">Noclip</span>
+    <span class="mod">Fly Hack</span><span class="mod">Teleport</span><span class="mod">Speedhack</span><span class="mod">Godmode</span>
+    <span class="mod">Freecam</span><span class="mod">Entity Spawn</span><span class="mod">Vehicle Spawn</span><span class="mod">Ped Spawn</span>
+    <span class="mod">Explosion</span><span class="mod">Fire Spam</span><span class="mod">Weapon Give</span><span class="mod">Spoofed Bullets</span>
+    <span class="mod">Anti Spoofer</span><span class="mod">HWID Ban</span><span class="mod">Crasher</span><span class="mod">Magneto</span>
+    <span class="mod">NUI Devtools</span><span class="mod">Event Spam</span><span class="mod">Heartbeat</span><span class="mod">Anti Bypass</span>
   </div>
 </section>
 
-<!-- ===================== FEATURES (Bento) ===================== -->
-<section class="section alt" id="features">
-  <div class="section-head">
-    <span class="kicker">// Features</span>
+<!-- ===================== FEATURES ===================== -->
+<section class="block" id="features">
+  <header class="block-head">
+    <span class="num">02 — Features</span>
     <h2>Alles drin, was deinen Server schützt</h2>
     <p>Server-seitige Erkennung — lässt sich nicht einfach umgehen.</p>
-  </div>
+  </header>
   <div class="feature-grid" id="featureGrid"><!-- injected --></div>
 </section>
 
-<!-- ===================== HOW (Timeline) ===================== -->
-<section class="section" id="how">
-  <div class="section-head">
-    <span class="kicker">// In 3 Schritten</span>
+<!-- ===================== HOW ===================== -->
+<section class="block" id="how">
+  <header class="block-head">
+    <span class="num">03 — Ablauf</span>
     <h2>Vom Kauf bis zum Schutz</h2>
     <p>Kein technisches Wissen nötig — in unter 5 Minuten aktiv.</p>
-  </div>
-  <div class="timeline">
-    <div class="tl-step"><span class="tl-n">01</span><div><h3>Lizenz kaufen</h3><p>Plan wählen, Bestellung abschließen — du erhältst sofort deinen Lizenz-Key.</p></div></div>
-    <div class="tl-step"><span class="tl-n">02</span><div><h3>Resource installieren</h3><p>ArumiAC in den Server legen, Key eintragen, <code>ensure ArumiAC</code>.</p></div></div>
-    <div class="tl-step"><span class="tl-n">03</span><div><h3>Lehn dich zurück</h3><p>Cheater werden automatisch erkannt, gebannt und im Discord protokolliert.</p></div></div>
+  </header>
+  <div class="steps">
+    <div class="step"><span class="step-n">01</span><h3>Lizenz kaufen</h3><p>Plan wählen, Bestellung abschließen — du erhältst sofort deinen Lizenz-Key.</p></div>
+    <div class="step"><span class="step-n">02</span><h3>Resource installieren</h3><p>ArumiAC in den Server legen, Key eintragen, <code>ensure ArumiAC</code>.</p></div>
+    <div class="step"><span class="step-n">03</span><h3>Lehn dich zurück</h3><p>Cheater werden automatisch erkannt, gebannt und im Discord protokolliert.</p></div>
   </div>
 </section>
 
 <!-- ===================== PRICING ===================== -->
-<section class="section alt" id="pricing">
-  <div class="section-head">
-    <span class="kicker">// Preise</span>
+<section class="block" id="pricing">
+  <header class="block-head">
+    <span class="num">04 — Preise</span>
     <h2>Wähle deinen Plan</h2>
     <p>Faire Preise, lebenslange Updates. Keine versteckten Kosten.</p>
-  </div>
+  </header>
   <div class="price-grid" id="priceGrid"><!-- injected --></div>
 </section>
 
 <!-- ===================== FAQ ===================== -->
-<section class="section" id="faq">
-  <div class="section-head"><span class="kicker">// FAQ</span><h2>Häufige Fragen</h2></div>
+<section class="block" id="faq">
+  <header class="block-head">
+    <span class="num">05 — FAQ</span>
+    <h2>Häufige Fragen</h2>
+  </header>
   <div class="faq" id="faq-list">
     <details><summary>Auf wie vielen Servern darf ich ArumiAC nutzen?</summary><p>Je nach Plan — Monatlich/Lifetime decken 1 Server ab, Premium bis zu 3.</p></details>
     <details><summary>Bekomme ich Updates?</summary><p>Ja, alle Pläne enthalten Updates. Bei Lifetime dauerhaft.</p></details>
@@ -160,16 +140,15 @@
   </div>
 </section>
 
-<!-- ===================== CTA BAND ===================== -->
+<!-- ===================== CTA ===================== -->
 <section class="cta">
-  <div class="cta-box">
-    <h2>Bereit, deinen Server sauber zu halten?</h2>
-    <p>Schließe dich hunderten Servern an, die ArumiAC vertrauen.</p>
-    <a href="#pricing" class="btn btn-primary btn-lg">Jetzt Lizenz sichern</a>
-  </div>
+  <h2>Bereit, deinen Server sauber zu halten?</h2>
+  <p>Schließe dich hunderten Servern an, die ArumiAC vertrauen.</p>
+  <a href="#pricing" class="btn btn-primary btn-lg">Jetzt Lizenz sichern →</a>
 </section>
 
 </main>
+</div>
 
 <!-- ===================== FOOTER ===================== -->
 <footer class="footer">
@@ -196,6 +175,6 @@
 <!-- ===================== TOASTS ===================== -->
 <div class="toasts" id="toasts"></div>
 
-<script src="app.js?v=17"></script>
+<script src="app.js?v=18"></script>
 </body>
 </html>
