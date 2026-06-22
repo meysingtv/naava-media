@@ -13,8 +13,7 @@
     "expo-status-bar": "*",
     "react": "*",
     "react-native": "*",
-    "react-native-maps": "*",
-    "@react-native-async-storage/async-storage": "*"
+    "react-native-webview": "*"
   },
   "private": true
 }
