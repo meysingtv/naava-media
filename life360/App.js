@@ -1,24 +1,32 @@
-// Circle – Family Locator (Life360-Style) – ZERO-Dependency Version
-// Läuft in Expo Go / Snack OHNE Zusatzpakete (nur react + react-native).
-// Karte = echtes Kartenbild (OpenStreetMap-Static), Familie als Pins,
-// Login/Registrierung, Mitglieder-Liste.
-import React, { useEffect, useState } from 'react';
+// Circle – Family Locator (Life360-Style) – große Version
+// Echte Karte: react-native-maps (auf iPhone = Apple Maps), echter Standort: expo-location.
+// Tabs: Karte / Familie / Orte / Profil. Mitglieder-Details, Zonen, Einstellungen, SOS.
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView,
-  ScrollView, Alert, Image, Platform, StatusBar,
+  ScrollView, Alert, Platform, StatusBar, Switch, Modal,
 } from 'react-native';
+import MapView, { Marker, Circle, PROVIDER_DEFAULT } from 'react-native-maps';
+import * as Location from 'expo-location';
 
 const BRAND = '#6C5CE7';
-const MAP_URL = 'https://staticmap.openstreetmap.de/staticmap.php?center=51.1805,6.4428&zoom=14&size=512x900&maptype=mapnik';
+const DEFAULT_CENTER = { latitude: 51.1805, longitude: 6.4428 };
+const INVITE = 'FAM-7K2Q';
 
 const MEMBERS = [
-  { id: 'm1', name: 'Mama', emoji: '👩', color: '#E84393', battery: 82, status: 'Zuhause',  top: '28%', left: '60%' },
-  { id: 'm2', name: 'Papa', emoji: '👨', color: '#0984E3', battery: 47, status: 'Unterwegs', top: '50%', left: '26%' },
-  { id: 'm3', name: 'Lena', emoji: '🧒', color: '#00B894', battery: 64, status: 'Schule',    top: '20%', left: '36%' },
-  { id: 'm4', name: 'Opa',  emoji: '👴', color: '#E17055', battery: 91, status: 'Im Park',   top: '44%', left: '72%' },
+  { id: 'm1', name: 'Mama', emoji: '👩', color: '#E84393', battery: 82, status: 'Zuhause',      speed: 0,  seen: 2,  dx:  0.0006, dy:  0.0004 },
+  { id: 'm2', name: 'Papa', emoji: '👨', color: '#0984E3', battery: 47, status: 'Fährt Auto',   speed: 48, seen: 1,  dx: -0.0024, dy:  0.0019 },
+  { id: 'm3', name: 'Lena', emoji: '🧒', color: '#00B894', battery: 64, status: 'In der Schule', speed: 0,  seen: 6,  dx:  0.0026, dy: -0.0017 },
+  { id: 'm4', name: 'Opa',  emoji: '👴', color: '#E17055', battery: 91, status: 'Spaziergang',   speed: 4,  seen: 12, dx: -0.0019, dy: -0.0024 },
 ];
 
-/* ----------------------------- Login / Register ----------------------------- */
+const PLACES = [
+  { id: 'p1', name: 'Zuhause', emoji: '🏠', color: '#6C5CE7', dx:  0.0006, dy:  0.0004, radius: 150, who: ['Mama'] },
+  { id: 'p2', name: 'Schule',  emoji: '🏫', color: '#00B894', dx:  0.0026, dy: -0.0017, radius: 170, who: ['Lena'] },
+  { id: 'p3', name: 'Arbeit',  emoji: '🏢', color: '#0984E3', dx: -0.0024, dy:  0.0019, radius: 160, who: [] },
+];
+
+/* ================================ Login ================================ */
 function AuthScreen({ onAuth }) {
   const [mode, setMode] = useState('login');
   const [name, setName] = useState('');
@@ -40,11 +48,11 @@ function AuthScreen({ onAuth }) {
       </View>
       <View style={styles.authCard}>
         <View style={styles.tabs}>
-          <TouchableOpacity style={[styles.tab, mode === 'login' && styles.tabActive]} onPress={() => setMode('login')}>
-            <Text style={[styles.tabTxt, mode === 'login' && styles.tabTxtActive]}>Anmelden</Text>
+          <TouchableOpacity style={[styles.segm, mode === 'login' && styles.segmA]} onPress={() => setMode('login')}>
+            <Text style={[styles.segmTxt, mode === 'login' && styles.segmTxtA]}>Anmelden</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.tab, mode === 'register' && styles.tabActive]} onPress={() => setMode('register')}>
-            <Text style={[styles.tabTxt, mode === 'register' && styles.tabTxtActive]}>Registrieren</Text>
+          <TouchableOpacity style={[styles.segm, mode === 'register' && styles.segmA]} onPress={() => setMode('register')}>
+            <Text style={[styles.segmTxt, mode === 'register' && styles.segmTxtA]}>Registrieren</Text>
           </TouchableOpacity>
         </View>
         {mode === 'register' && (
@@ -64,93 +72,175 @@ function AuthScreen({ onAuth }) {
   );
 }
 
-/* ---------------------------------- Karte ---------------------------------- */
-function MapScreen({ user, onLogout }) {
-  const [jitter, setJitter] = useState({});
-  const [mapOk, setMapOk] = useState(true);
+/* ============================== Karten-Tab ============================== */
+function MapTab({ user, me, perm, coordsFor, placeCoord, onSelect }) {
+  const mapRef = useRef(null);
+  const centered = useRef(false);
+  const [mapType, setMapType] = useState('standard');
 
   useEffect(() => {
-    const id = setInterval(() => {
-      const j = {};
-      MEMBERS.forEach((m) => { j[m.id] = { x: (Math.random() - 0.5) * 16, y: (Math.random() - 0.5) * 16 }; });
-      setJitter(j);
-    }, 3000);
-    return () => clearInterval(id);
-  }, []);
+    if (me && !centered.current && mapRef.current) {
+      centered.current = true;
+      mapRef.current.animateToRegion({ ...me, latitudeDelta: 0.014, longitudeDelta: 0.014 }, 800);
+    }
+  }, [me]);
 
-  const openProfile = () => Alert.alert(user?.name || 'Profil', user?.email || '', [
-    { text: 'Abmelden', style: 'destructive', onPress: onLogout },
-    { text: 'Schließen', style: 'cancel' },
-  ]);
+  const focus = (c) => mapRef.current?.animateToRegion({ ...c, latitudeDelta: 0.008, longitudeDelta: 0.008 }, 600);
+  const base = me || DEFAULT_CENTER;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#dfe7ee' }}>
-      {/* Kartenbild */}
-      {mapOk
-        ? <Image source={{ uri: MAP_URL }} style={StyleSheet.absoluteFill} resizeMode="cover" onError={() => setMapOk(false)} />
-        : <View style={[StyleSheet.absoluteFill, styles.mapFallback]}><Text style={{ color: '#9bb0c4', fontWeight: '700' }}>🗺️ Karte</Text></View>}
+    <View style={{ flex: 1 }}>
+      <MapView
+        ref={mapRef}
+        provider={PROVIDER_DEFAULT}
+        style={{ flex: 1 }}
+        mapType={mapType}
+        showsUserLocation={perm === 'granted'}
+        showsMyLocationButton={false}
+        initialRegion={{ ...base, latitudeDelta: 0.05, longitudeDelta: 0.05 }}
+      >
+        {PLACES.map((p) => {
+          const c = placeCoord(p);
+          return (
+            <React.Fragment key={p.id}>
+              <Circle center={c} radius={p.radius} strokeColor={p.color + '99'} fillColor={p.color + '22'} strokeWidth={2} />
+              <Marker coordinate={c} tracksViewChanges={false}>
+                <View style={styles.placeDot}><Text style={{ fontSize: 14 }}>{p.emoji}</Text></View>
+              </Marker>
+            </React.Fragment>
+          );
+        })}
+        {MEMBERS.map((m) => (
+          <Marker key={m.id} coordinate={coordsFor(m)} tracksViewChanges={false} onPress={() => onSelect(m)} anchor={{ x: 0.5, y: 1 }}>
+            <View style={{ alignItems: 'center' }}>
+              <View style={[styles.markerAv, { borderColor: m.color }]}><Text style={{ fontSize: 20 }}>{m.emoji}</Text></View>
+              <View style={[styles.markerTip, { backgroundColor: m.color }]} />
+            </View>
+          </Marker>
+        ))}
+      </MapView>
 
-      {/* Du-Pin (Mitte) */}
-      <View style={[styles.pin, { top: '40%', left: '48%' }]}>
-        <View style={styles.meDot} />
-        <View style={styles.pinLabel}><Text style={styles.pinLabelTxt}>{user?.name || 'Du'}</Text></View>
-      </View>
-
-      {/* Familien-Pins */}
-      {MEMBERS.map((m) => (
-        <View key={m.id} style={[styles.pin, { top: m.top, left: m.left,
-          transform: [{ translateX: jitter[m.id]?.x || 0 }, { translateY: jitter[m.id]?.y || 0 }] }]}>
-          <View style={[styles.pinAvatar, { borderColor: m.color }]}><Text style={{ fontSize: 20 }}>{m.emoji}</Text></View>
-          <View style={[styles.pinTip, { backgroundColor: m.color }]} />
-          <View style={styles.pinLabel}><Text style={styles.pinLabelTxt}>{m.name}</Text></View>
-        </View>
-      ))}
-
-      {/* obere Leiste */}
-      <SafeAreaView style={styles.topBar} pointerEvents="box-none">
-        <View style={styles.topInner}>
-          <View style={styles.circlePill}><Text style={styles.circlePillTxt}>👨‍👩‍👧 Familie</Text></View>
-          <TouchableOpacity style={styles.profileBtn} onPress={openProfile}>
-            <Text style={{ color: '#fff', fontWeight: '800' }}>{(user?.name || 'D')[0].toUpperCase()}</Text>
-          </TouchableOpacity>
-        </View>
+      {/* Mitglieder-Chips oben */}
+      <SafeAreaView style={styles.chipsBar} pointerEvents="box-none">
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 14, gap: 8 }}>
+          {MEMBERS.map((m) => (
+            <TouchableOpacity key={m.id} style={styles.chip} onPress={() => focus(coordsFor(m))}>
+              <Text style={{ fontSize: 16 }}>{m.emoji}</Text>
+              <Text style={styles.chipTxt}>{m.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </SafeAreaView>
 
-      {/* SOS */}
+      {/* FABs */}
       <View style={styles.fabCol}>
-        <TouchableOpacity style={[styles.fab, { backgroundColor: '#E74C3C' }]}
-          onPress={() => Alert.alert('SOS gesendet', 'Deine Familie wurde benachrichtigt. (Demo)')}>
+        <TouchableOpacity style={styles.fab} onPress={() => setMapType(mapType === 'standard' ? 'satellite' : 'standard')}>
+          <Text style={{ fontSize: 18 }}>{mapType === 'standard' ? '🛰️' : '🗺️'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.fab, { marginTop: 12 }]} onPress={() => me && focus(me)}>
+          <Text style={{ fontSize: 20 }}>🎯</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.fab, { marginTop: 12, backgroundColor: '#E74C3C' }]}
+          onPress={() => Alert.alert('SOS gesendet', 'Deine Familie wurde benachrichtigt und sieht deinen Standort. (Demo)')}>
           <Text style={{ color: '#fff', fontWeight: '800' }}>SOS</Text>
         </TouchableOpacity>
       </View>
+    </View>
+  );
+}
 
-      {/* untere Liste */}
-      <View style={styles.sheet}>
-        <View style={styles.handle} />
-        <Text style={styles.sheetTitle}>Familie · {MEMBERS.length + 1} Mitglieder</Text>
-        <ScrollView style={{ maxHeight: 250 }} showsVerticalScrollIndicator={false}>
-          <View style={styles.row}>
-            <View style={[styles.rowAvatar, { backgroundColor: BRAND }]}>
-              <Text style={{ color: '#fff', fontWeight: '700' }}>{(user?.name || 'Du')[0].toUpperCase()}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.rowName}>{user?.name || 'Du'} · Du</Text>
-              <Text style={styles.rowSub}>📍 Standort aktiv</Text>
-            </View>
-            <Battery v={100} />
+/* ============================== Familie-Tab ============================== */
+function MembersTab({ onSelect }) {
+  return (
+    <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 30 }}>
+      <Text style={styles.h1}>Familie</Text>
+      <Text style={styles.pSub}>{MEMBERS.length + 1} Mitglieder im Kreis</Text>
+      {MEMBERS.map((m) => (
+        <TouchableOpacity key={m.id} style={styles.card} onPress={() => onSelect(m)} activeOpacity={0.7}>
+          <View style={[styles.cardAv, { backgroundColor: m.color }]}><Text style={{ fontSize: 24 }}>{m.emoji}</Text></View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.cardName}>{m.name}</Text>
+            <Text style={styles.cardSub}>{m.status} · vor {m.seen} Min.</Text>
+            {m.speed > 0 && <Text style={[styles.cardSub, { color: '#0984E3' }]}>🚗 {m.speed} km/h</Text>}
           </View>
-          {MEMBERS.map((m) => (
-            <View key={m.id} style={styles.row}>
-              <View style={[styles.rowAvatar, { backgroundColor: m.color }]}><Text style={{ fontSize: 20 }}>{m.emoji}</Text></View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.rowName}>{m.name}</Text>
-                <Text style={styles.rowSub}>{m.status} · vor {Math.floor(Math.random() * 9) + 1} Min.</Text>
-              </View>
-              <Battery v={m.battery} />
-            </View>
-          ))}
-        </ScrollView>
+          <Battery v={m.battery} />
+        </TouchableOpacity>
+      ))}
+      <TouchableOpacity style={styles.ghostBtn} onPress={() => Alert.alert('Mitglied einladen', 'Teile deinen Einladungs-Code: ' + INVITE)}>
+        <Text style={styles.ghostBtnTxt}>＋ Mitglied einladen</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+}
+
+/* =============================== Orte-Tab =============================== */
+function PlacesTab() {
+  return (
+    <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 30 }}>
+      <Text style={styles.h1}>Orte</Text>
+      <Text style={styles.pSub}>Du wirst benachrichtigt, wenn jemand ankommt oder geht.</Text>
+      {PLACES.map((p) => (
+        <View key={p.id} style={styles.card}>
+          <View style={[styles.cardAv, { backgroundColor: p.color }]}><Text style={{ fontSize: 22 }}>{p.emoji}</Text></View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.cardName}>{p.name}</Text>
+            <Text style={styles.cardSub}>{p.who.length ? 'Hier: ' + p.who.join(', ') : 'Niemand da'}</Text>
+          </View>
+          <Text style={{ color: '#bbb', fontSize: 20 }}>›</Text>
+        </View>
+      ))}
+      <TouchableOpacity style={styles.ghostBtn} onPress={() => Alert.alert('Ort hinzufügen', 'Tippe auf der Karte einen Ort an, um eine Zone zu erstellen. (Demo)')}>
+        <Text style={styles.ghostBtnTxt}>＋ Ort hinzufügen</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+}
+
+/* ============================== Profil-Tab ============================== */
+function ProfileTab({ user, perm, onLogout }) {
+  const [share, setShare] = useState(true);
+  const [drive, setDrive] = useState(true);
+  const [notif, setNotif] = useState(true);
+  return (
+    <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 30 }}>
+      <Text style={styles.h1}>Profil</Text>
+      <View style={[styles.card, { paddingVertical: 18 }]}>
+        <View style={[styles.cardAv, { backgroundColor: BRAND }]}><Text style={{ color: '#fff', fontWeight: '800', fontSize: 22 }}>{(user?.name || 'D')[0].toUpperCase()}</Text></View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardName}>{user?.name || 'Du'}</Text>
+          <Text style={styles.cardSub}>{user?.email || ''}</Text>
+          <Text style={[styles.cardSub, { color: perm === 'granted' ? '#00B894' : '#E74C3C' }]}>
+            {perm === 'granted' ? '📍 Standort aktiv' : '⚠️ Standort aus'}
+          </Text>
+        </View>
       </View>
+
+      <View style={styles.inviteBox}>
+        <Text style={{ color: '#fff', fontWeight: '700', marginBottom: 4 }}>Dein Einladungs-Code</Text>
+        <Text style={styles.inviteCode}>{INVITE}</Text>
+        <TouchableOpacity onPress={() => Alert.alert('Teilen', 'Code ' + INVITE + ' geteilt. (Demo)')}>
+          <Text style={{ color: '#fff', textDecorationLine: 'underline', marginTop: 6 }}>Code teilen</Text>
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.section}>Einstellungen</Text>
+      <Toggle label="Meinen Standort teilen" v={share} set={setShare} />
+      <Toggle label="Fahrberichte" v={drive} set={setDrive} />
+      <Toggle label="Benachrichtigungen" v={notif} set={setNotif} />
+
+      <TouchableOpacity style={styles.logoutBtn} onPress={onLogout}>
+        <Text style={styles.logoutTxt}>Abmelden</Text>
+      </TouchableOpacity>
+      <Text style={{ textAlign: 'center', color: '#bbb', marginTop: 14, fontSize: 12 }}>Circle Demo · v1.0</Text>
+    </ScrollView>
+  );
+}
+
+function Toggle({ label, v, set }) {
+  return (
+    <View style={styles.toggleRow}>
+      <Text style={styles.toggleLabel}>{label}</Text>
+      <Switch value={v} onValueChange={set} trackColor={{ true: BRAND }} thumbColor="#fff" />
     </View>
   );
 }
@@ -158,61 +248,191 @@ function MapScreen({ user, onLogout }) {
 function Battery({ v }) {
   const color = v > 50 ? '#00B894' : v > 20 ? '#F39C12' : '#E74C3C';
   return (
-    <View style={{ alignItems: 'flex-end', width: 52 }}>
+    <View style={{ alignItems: 'flex-end', width: 54 }}>
       <Text style={{ color, fontWeight: '800', fontSize: 13 }}>{v}%</Text>
       <View style={styles.batt}><View style={{ width: v + '%', height: '100%', backgroundColor: color, borderRadius: 3 }} /></View>
     </View>
   );
 }
 
-/* ----------------------------------- App ----------------------------------- */
-export default function App() {
-  const [user, setUser] = useState(null);
-  return user ? <MapScreen user={user} onLogout={() => setUser(null)} /> : <AuthScreen onAuth={setUser} />;
+/* =========================== Mitglied-Detail =========================== */
+function MemberModal({ member, onClose }) {
+  if (!member) return null;
+  return (
+    <Modal transparent animationType="slide" visible={!!member} onRequestClose={onClose}>
+      <TouchableOpacity style={styles.modalBg} activeOpacity={1} onPress={onClose}>
+        <View style={styles.modalCard}>
+          <View style={styles.handle} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={[styles.cardAv, { backgroundColor: member.color, width: 56, height: 56, borderRadius: 28 }]}>
+              <Text style={{ fontSize: 28 }}>{member.emoji}</Text>
+            </View>
+            <View style={{ flex: 1, marginLeft: 14 }}>
+              <Text style={{ fontSize: 20, fontWeight: '800', color: '#222' }}>{member.name}</Text>
+              <Text style={{ color: '#888' }}>{member.status} · vor {member.seen} Min.</Text>
+            </View>
+            <Battery v={member.battery} />
+          </View>
+          <View style={styles.statsRow}>
+            <Stat label="Akku" value={member.battery + '%'} />
+            <Stat label="Tempo" value={member.speed + ' km/h'} />
+            <Stat label="Status" value={member.speed > 0 ? 'Bewegt' : 'Steht'} />
+          </View>
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+            <TouchableOpacity style={[styles.modalBtn, { backgroundColor: BRAND }]} onPress={() => Alert.alert('Route', 'Navigation zu ' + member.name + ' gestartet. (Demo)')}>
+              <Text style={styles.modalBtnTxt}>🧭 Route</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#00B894' }]} onPress={() => Alert.alert('Check-in', member.name + ' wurde um einen Check-in gebeten. (Demo)')}>
+              <Text style={styles.modalBtnTxt}>✅ Check-in</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+}
+function Stat({ label, value }) {
+  return (
+    <View style={styles.stat}>
+      <Text style={{ fontWeight: '800', color: '#222', fontSize: 16 }}>{value}</Text>
+      <Text style={{ color: '#999', fontSize: 12, marginTop: 2 }}>{label}</Text>
+    </View>
+  );
 }
 
-/* ---------------------------------- Styles --------------------------------- */
+/* ================================ Shell ================================ */
+function Home({ user, onLogout }) {
+  const [tab, setTab] = useState('map');
+  const [me, setMe] = useState(null);
+  const [perm, setPerm] = useState(null);
+  const [jitter, setJitter] = useState({});
+  const [sel, setSel] = useState(null);
+
+  useEffect(() => {
+    let sub;
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        setPerm(status);
+        if (status === 'granted') {
+          const loc = await Location.getCurrentPositionAsync({});
+          setMe({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+          sub = await Location.watchPositionAsync(
+            { accuracy: Location.Accuracy.Balanced, distanceInterval: 8 },
+            (l) => setMe({ latitude: l.coords.latitude, longitude: l.coords.longitude }));
+        }
+      } catch (e) {}
+    })();
+    return () => { if (sub) sub.remove(); };
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const j = {};
+      MEMBERS.forEach((m) => { j[m.id] = { x: (Math.random() - 0.5) * 0.0008, y: (Math.random() - 0.5) * 0.0008 }; });
+      setJitter(j);
+    }, 3000);
+    return () => clearInterval(id);
+  }, []);
+
+  const base = me || DEFAULT_CENTER;
+  const coordsFor = (m) => ({ latitude: base.latitude + m.dx + (jitter[m.id]?.x || 0), longitude: base.longitude + m.dy + (jitter[m.id]?.y || 0) });
+  const placeCoord = (p) => ({ latitude: base.latitude + p.dx, longitude: base.longitude + p.dy });
+
+  const TABS = [
+    { id: 'map', label: 'Karte', icon: '🗺️' },
+    { id: 'members', label: 'Familie', icon: '👨‍👩‍👧' },
+    { id: 'places', label: 'Orte', icon: '📍' },
+    { id: 'profile', label: 'Profil', icon: '👤' },
+  ];
+
+  return (
+    <View style={{ flex: 1, backgroundColor: '#f4f5fa' }}>
+      <StatusBar barStyle="dark-content" />
+      <View style={{ flex: 1 }}>
+        {tab === 'map' && <MapTab user={user} me={me} perm={perm} coordsFor={coordsFor} placeCoord={placeCoord} onSelect={setSel} />}
+        {tab === 'members' && <SafeAreaView style={{ flex: 1 }}><MembersTab onSelect={setSel} /></SafeAreaView>}
+        {tab === 'places' && <SafeAreaView style={{ flex: 1 }}><PlacesTab /></SafeAreaView>}
+        {tab === 'profile' && <SafeAreaView style={{ flex: 1 }}><ProfileTab user={user} perm={perm} onLogout={onLogout} /></SafeAreaView>}
+      </View>
+
+      <View style={styles.tabBar}>
+        {TABS.map((t) => (
+          <TouchableOpacity key={t.id} style={styles.tabItem} onPress={() => setTab(t.id)}>
+            <Text style={{ fontSize: 22, opacity: tab === t.id ? 1 : 0.4 }}>{t.icon}</Text>
+            <Text style={[styles.tabLabel, { color: tab === t.id ? BRAND : '#9aa' }]}>{t.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <MemberModal member={sel} onClose={() => setSel(null)} />
+    </View>
+  );
+}
+
+export default function App() {
+  const [user, setUser] = useState(null);
+  return user ? <Home user={user} onLogout={() => setUser(null)} /> : <AuthScreen onAuth={setUser} />;
+}
+
+/* ================================ Styles ================================ */
 const styles = StyleSheet.create({
   authWrap: { flex: 1, backgroundColor: BRAND },
   authHeader: { alignItems: 'center', paddingTop: 50, paddingBottom: 28 },
   logoCircle: { width: 88, height: 88, borderRadius: 44, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)' },
-  authTitle: { color: '#fff', fontSize: 34, fontWeight: '800', letterSpacing: 0.5 },
+  authTitle: { color: '#fff', fontSize: 34, fontWeight: '800' },
   authSub: { color: 'rgba(255,255,255,0.85)', fontSize: 15, marginTop: 6, textAlign: 'center', paddingHorizontal: 34 },
   authCard: { flex: 1, backgroundColor: '#fff', borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 24, paddingTop: 22 },
   tabs: { flexDirection: 'row', backgroundColor: '#f1f1f6', borderRadius: 14, padding: 4, marginBottom: 20 },
-  tab: { flex: 1, paddingVertical: 11, alignItems: 'center', borderRadius: 11 },
-  tabActive: { backgroundColor: '#fff', elevation: 2 },
-  tabTxt: { color: '#888', fontWeight: '700' },
-  tabTxtActive: { color: BRAND },
+  segm: { flex: 1, paddingVertical: 11, alignItems: 'center', borderRadius: 11 },
+  segmA: { backgroundColor: '#fff', elevation: 2 },
+  segmTxt: { color: '#888', fontWeight: '700' },
+  segmTxtA: { color: BRAND },
   input: { backgroundColor: '#f6f6fa', borderRadius: 13, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, marginBottom: 13, color: '#222', borderWidth: 1, borderColor: '#ececf2' },
   primaryBtn: { backgroundColor: BRAND, borderRadius: 13, paddingVertical: 16, alignItems: 'center', marginTop: 6 },
   primaryBtnTxt: { color: '#fff', fontWeight: '800', fontSize: 16 },
   hint: { textAlign: 'center', color: '#aaa', marginTop: 14, fontSize: 13 },
 
-  mapFallback: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#dfe7ee' },
+  markerAv: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', borderWidth: 3, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 5 },
+  markerTip: { width: 9, height: 9, borderRadius: 5, marginTop: -2 },
+  placeDot: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff', elevation: 3 },
 
-  pin: { position: 'absolute', alignItems: 'center', marginLeft: -22, marginTop: -22 },
-  pinAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', borderWidth: 3, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 5 },
-  pinTip: { width: 9, height: 9, borderRadius: 5, marginTop: -2 },
-  meDot: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#2d6cff', borderWidth: 3, borderColor: '#fff', shadowColor: '#2d6cff', shadowOpacity: 0.5, shadowRadius: 8, shadowOffset: { width: 0, height: 0 }, elevation: 6 },
-  pinLabel: { backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, marginTop: 4, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 3, elevation: 2 },
-  pinLabelTxt: { fontSize: 11, fontWeight: '700', color: '#333' },
+  chipsBar: { position: 'absolute', top: 0, left: 0, right: 0, paddingTop: Platform.OS === 'android' ? 36 : 4 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, elevation: 3, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 5, shadowOffset: { width: 0, height: 2 } },
+  chipTxt: { fontWeight: '700', color: '#333', fontSize: 13 },
 
-  topBar: { position: 'absolute', top: 0, left: 0, right: 0 },
-  topInner: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 38 : 6 },
-  circlePill: { backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 30, elevation: 3, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } },
-  circlePillTxt: { fontWeight: '800', color: '#333' },
-  profileBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: BRAND, alignItems: 'center', justifyContent: 'center', elevation: 4 },
+  fabCol: { position: 'absolute', right: 16, bottom: 24 },
+  fab: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 4 },
 
-  fabCol: { position: 'absolute', right: 16, bottom: 320 },
-  fab: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 4 },
+  page: { flex: 1, paddingHorizontal: 18, paddingTop: 10 },
+  h1: { fontSize: 28, fontWeight: '800', color: '#1a1a2e', marginTop: 6 },
+  pSub: { color: '#888', marginBottom: 16, marginTop: 2 },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 18, padding: 14, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  cardAv: { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  cardName: { fontWeight: '800', color: '#222', fontSize: 16 },
+  cardSub: { color: '#999', fontSize: 13, marginTop: 2 },
+  ghostBtn: { borderWidth: 2, borderColor: BRAND, borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
+  ghostBtnTxt: { color: BRAND, fontWeight: '800' },
 
-  sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 26, elevation: 12, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: -4 } },
-  handle: { width: 42, height: 5, borderRadius: 3, backgroundColor: '#ddd', alignSelf: 'center', marginBottom: 12 },
-  sheetTitle: { fontWeight: '800', fontSize: 16, color: '#222', marginBottom: 8 },
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f2f2f5' },
-  rowAvatar: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', marginRight: 13 },
-  rowName: { fontWeight: '700', color: '#222', fontSize: 15.5 },
-  rowSub: { color: '#999', fontSize: 13, marginTop: 2 },
+  inviteBox: { backgroundColor: BRAND, borderRadius: 18, padding: 18, marginBottom: 18 },
+  inviteCode: { color: '#fff', fontSize: 26, fontWeight: '800', letterSpacing: 2 },
+  section: { fontWeight: '800', color: '#444', marginBottom: 8, marginTop: 6, fontSize: 16 },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 10 },
+  toggleLabel: { color: '#333', fontWeight: '600', fontSize: 15 },
+  logoutBtn: { backgroundColor: '#fff', borderRadius: 14, paddingVertical: 15, alignItems: 'center', marginTop: 14, borderWidth: 1, borderColor: '#ffd5d5' },
+  logoutTxt: { color: '#E74C3C', fontWeight: '800' },
+
   batt: { width: 46, height: 6, borderRadius: 3, backgroundColor: '#eee', marginTop: 4, overflow: 'hidden' },
+
+  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 22, paddingBottom: 34 },
+  handle: { width: 42, height: 5, borderRadius: 3, backgroundColor: '#ddd', alignSelf: 'center', marginBottom: 16 },
+  statsRow: { flexDirection: 'row', gap: 10 },
+  stat: { flex: 1, backgroundColor: '#f6f6fa', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
+  modalBtn: { flex: 1, borderRadius: 13, paddingVertical: 14, alignItems: 'center' },
+  modalBtnTxt: { color: '#fff', fontWeight: '800' },
+
+  tabBar: { flexDirection: 'row', backgroundColor: '#fff', paddingTop: 8, paddingBottom: Platform.OS === 'ios' ? 28 : 12, borderTopWidth: 1, borderTopColor: '#eee' },
+  tabItem: { flex: 1, alignItems: 'center' },
+  tabLabel: { fontSize: 11, fontWeight: '700', marginTop: 3 },
 });

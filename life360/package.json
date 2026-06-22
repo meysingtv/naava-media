@@ -9,9 +9,11 @@
   },
   "dependencies": {
     "expo": "*",
+    "expo-location": "*",
     "expo-status-bar": "*",
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-maps": "*"
   },
   "private": true
 }
