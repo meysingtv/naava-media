@@ -1,12 +1,12 @@
-// Circle – Family Locator (Life360-Style) – große Version
-// Echte Karte: react-native-maps (auf iPhone = Apple Maps), echter Standort: expo-location.
-// Tabs: Karte / Familie / Orte / Profil. Mitglieder-Details, Zonen, Einstellungen, SOS.
+// Circle – Family Locator (Life360-Style) · Mac/Xcode-Simulator-Version
+// Echte Apple-Karte (react-native-maps) + echtes GPS (expo-location).
+// Flüssig bewegende Familie + Routen-Spur, 4 Tabs, Mitglieder-Details, Zonen, Einstellungen.
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView,
   ScrollView, Alert, Platform, StatusBar, Switch, Modal,
 } from 'react-native';
-import MapView, { Marker, Circle, PROVIDER_DEFAULT } from 'react-native-maps';
+import MapView, { Marker, Circle, Polyline, PROVIDER_DEFAULT } from 'react-native-maps';
 import * as Location from 'expo-location';
 
 const BRAND = '#6C5CE7';
@@ -14,17 +14,24 @@ const DEFAULT_CENTER = { latitude: 51.1805, longitude: 6.4428 };
 const INVITE = 'FAM-7K2Q';
 
 const MEMBERS = [
-  { id: 'm1', name: 'Mama', emoji: '👩', color: '#E84393', battery: 82, status: 'Zuhause',      speed: 0,  seen: 2,  dx:  0.0006, dy:  0.0004 },
-  { id: 'm2', name: 'Papa', emoji: '👨', color: '#0984E3', battery: 47, status: 'Fährt Auto',   speed: 48, seen: 1,  dx: -0.0024, dy:  0.0019 },
-  { id: 'm3', name: 'Lena', emoji: '🧒', color: '#00B894', battery: 64, status: 'In der Schule', speed: 0,  seen: 6,  dx:  0.0026, dy: -0.0017 },
-  { id: 'm4', name: 'Opa',  emoji: '👴', color: '#E17055', battery: 91, status: 'Spaziergang',   speed: 4,  seen: 12, dx: -0.0019, dy: -0.0024 },
+  { id: 'm1', name: 'Mama', emoji: '👩', color: '#E84393', battery: 82, status: 'Zuhause',       speed: 0,  seen: 2,  dx:  0.0006, dy:  0.0004 },
+  { id: 'm2', name: 'Papa', emoji: '👨', color: '#0984E3', battery: 47, status: 'Fährt Auto',    speed: 48, seen: 1,  dx: -0.0030, dy:  0.0022 },
+  { id: 'm3', name: 'Lena', emoji: '🧒', color: '#00B894', battery: 64, status: 'In der Schule',  speed: 0,  seen: 6,  dx:  0.0026, dy: -0.0017 },
+  { id: 'm4', name: 'Opa',  emoji: '👴', color: '#E17055', battery: 91, status: 'Spaziergang',    speed: 4,  seen: 12, dx: -0.0019, dy: -0.0024 },
+  { id: 'm5', name: 'Emma', emoji: '👧', color: '#9B59B6', battery: 73, status: 'Bei Freundin',   speed: 0,  seen: 9,  dx:  0.0014, dy: -0.0026 },
 ];
 
 const PLACES = [
   { id: 'p1', name: 'Zuhause', emoji: '🏠', color: '#6C5CE7', dx:  0.0006, dy:  0.0004, radius: 150, who: ['Mama'] },
   { id: 'p2', name: 'Schule',  emoji: '🏫', color: '#00B894', dx:  0.0026, dy: -0.0017, radius: 170, who: ['Lena'] },
-  { id: 'p3', name: 'Arbeit',  emoji: '🏢', color: '#0984E3', dx: -0.0024, dy:  0.0019, radius: 160, who: [] },
+  { id: 'p3', name: 'Arbeit',  emoji: '🏢', color: '#0984E3', dx: -0.0030, dy:  0.0022, radius: 160, who: [] },
 ];
+
+function initPositions(center) {
+  const o = {};
+  MEMBERS.forEach((m) => { o[m.id] = { latitude: center.latitude + m.dx, longitude: center.longitude + m.dy, heading: Math.random() * Math.PI * 2 }; });
+  return o;
+}
 
 /* ================================ Login ================================ */
 function AuthScreen({ onAuth }) {
@@ -73,7 +80,7 @@ function AuthScreen({ onAuth }) {
 }
 
 /* ============================== Karten-Tab ============================== */
-function MapTab({ user, me, perm, coordsFor, placeCoord, onSelect }) {
+function MapTab({ me, perm, positions, trail, center, onSelect }) {
   const mapRef = useRef(null);
   const centered = useRef(false);
   const [mapType, setMapType] = useState('standard');
@@ -85,8 +92,9 @@ function MapTab({ user, me, perm, coordsFor, placeCoord, onSelect }) {
     }
   }, [me]);
 
-  const focus = (c) => mapRef.current?.animateToRegion({ ...c, latitudeDelta: 0.008, longitudeDelta: 0.008 }, 600);
-  const base = me || DEFAULT_CENTER;
+  const focus = (c) => c && mapRef.current?.animateToRegion({ ...c, latitudeDelta: 0.008, longitudeDelta: 0.008 }, 600);
+  const coord = (m) => positions[m.id];
+  const placeCoord = (p) => ({ latitude: center.latitude + p.dx, longitude: center.longitude + p.dy });
 
   return (
     <View style={{ flex: 1 }}>
@@ -97,8 +105,9 @@ function MapTab({ user, me, perm, coordsFor, placeCoord, onSelect }) {
         mapType={mapType}
         showsUserLocation={perm === 'granted'}
         showsMyLocationButton={false}
-        initialRegion={{ ...base, latitudeDelta: 0.05, longitudeDelta: 0.05 }}
+        initialRegion={{ ...(me || DEFAULT_CENTER), latitudeDelta: 0.05, longitudeDelta: 0.05 }}
       >
+        {trail.length > 1 && <Polyline coordinates={trail} strokeColor="#0984E3" strokeWidth={4} lineCap="round" />}
         {PLACES.map((p) => {
           const c = placeCoord(p);
           return (
@@ -110,8 +119,8 @@ function MapTab({ user, me, perm, coordsFor, placeCoord, onSelect }) {
             </React.Fragment>
           );
         })}
-        {MEMBERS.map((m) => (
-          <Marker key={m.id} coordinate={coordsFor(m)} tracksViewChanges={false} onPress={() => onSelect(m)} anchor={{ x: 0.5, y: 1 }}>
+        {MEMBERS.map((m) => coord(m) && (
+          <Marker key={m.id} coordinate={coord(m)} tracksViewChanges={false} onPress={() => onSelect(m)} anchor={{ x: 0.5, y: 1 }}>
             <View style={{ alignItems: 'center' }}>
               <View style={[styles.markerAv, { borderColor: m.color }]}><Text style={{ fontSize: 20 }}>{m.emoji}</Text></View>
               <View style={[styles.markerTip, { backgroundColor: m.color }]} />
@@ -120,11 +129,10 @@ function MapTab({ user, me, perm, coordsFor, placeCoord, onSelect }) {
         ))}
       </MapView>
 
-      {/* Mitglieder-Chips oben */}
       <SafeAreaView style={styles.chipsBar} pointerEvents="box-none">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 14, gap: 8 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 14 }}>
           {MEMBERS.map((m) => (
-            <TouchableOpacity key={m.id} style={styles.chip} onPress={() => focus(coordsFor(m))}>
+            <TouchableOpacity key={m.id} style={styles.chip} onPress={() => focus(coord(m))}>
               <Text style={{ fontSize: 16 }}>{m.emoji}</Text>
               <Text style={styles.chipTxt}>{m.name}</Text>
             </TouchableOpacity>
@@ -132,12 +140,11 @@ function MapTab({ user, me, perm, coordsFor, placeCoord, onSelect }) {
         </ScrollView>
       </SafeAreaView>
 
-      {/* FABs */}
       <View style={styles.fabCol}>
         <TouchableOpacity style={styles.fab} onPress={() => setMapType(mapType === 'standard' ? 'satellite' : 'standard')}>
           <Text style={{ fontSize: 18 }}>{mapType === 'standard' ? '🛰️' : '🗺️'}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.fab, { marginTop: 12 }]} onPress={() => me && focus(me)}>
+        <TouchableOpacity style={[styles.fab, { marginTop: 12 }]} onPress={() => focus(me)}>
           <Text style={{ fontSize: 20 }}>🎯</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.fab, { marginTop: 12, backgroundColor: '#E74C3C' }]}
@@ -278,8 +285,8 @@ function MemberModal({ member, onClose }) {
             <Stat label="Tempo" value={member.speed + ' km/h'} />
             <Stat label="Status" value={member.speed > 0 ? 'Bewegt' : 'Steht'} />
           </View>
-          <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-            <TouchableOpacity style={[styles.modalBtn, { backgroundColor: BRAND }]} onPress={() => Alert.alert('Route', 'Navigation zu ' + member.name + ' gestartet. (Demo)')}>
+          <View style={{ flexDirection: 'row', marginTop: 16 }}>
+            <TouchableOpacity style={[styles.modalBtn, { backgroundColor: BRAND, marginRight: 10 }]} onPress={() => Alert.alert('Route', 'Navigation zu ' + member.name + ' gestartet. (Demo)')}>
               <Text style={styles.modalBtnTxt}>🧭 Route</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#00B894' }]} onPress={() => Alert.alert('Check-in', member.name + ' wurde um einen Check-in gebeten. (Demo)')}>
@@ -305,8 +312,13 @@ function Home({ user, onLogout }) {
   const [tab, setTab] = useState('map');
   const [me, setMe] = useState(null);
   const [perm, setPerm] = useState(null);
-  const [jitter, setJitter] = useState({});
+  const [center, setCenter] = useState(DEFAULT_CENTER);
+  const [positions, setPositions] = useState(() => initPositions(DEFAULT_CENTER));
+  const [trail, setTrail] = useState([]);
   const [sel, setSel] = useState(null);
+  const posRef = useRef(positions);
+  const rebased = useRef(false);
+  posRef.current = positions;
 
   useEffect(() => {
     let sub;
@@ -316,7 +328,14 @@ function Home({ user, onLogout }) {
         setPerm(status);
         if (status === 'granted') {
           const loc = await Location.getCurrentPositionAsync({});
-          setMe({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+          const p = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
+          setMe(p);
+          if (!rebased.current) {
+            rebased.current = true;
+            setCenter(p);
+            setPositions(initPositions(p));
+            setTrail([]);
+          }
           sub = await Location.watchPositionAsync(
             { accuracy: Location.Accuracy.Balanced, distanceInterval: 8 },
             (l) => setMe({ latitude: l.coords.latitude, longitude: l.coords.longitude }));
@@ -326,18 +345,26 @@ function Home({ user, onLogout }) {
     return () => { if (sub) sub.remove(); };
   }, []);
 
+  // flüssige Bewegung der Familie + Routen-Spur von Papa
   useEffect(() => {
     const id = setInterval(() => {
-      const j = {};
-      MEMBERS.forEach((m) => { j[m.id] = { x: (Math.random() - 0.5) * 0.0008, y: (Math.random() - 0.5) * 0.0008 }; });
-      setJitter(j);
-    }, 3000);
+      const prev = posRef.current;
+      const next = {};
+      let drive = null;
+      MEMBERS.forEach((m) => {
+        const cur = prev[m.id];
+        if (!cur) return;
+        const step = m.speed > 20 ? 0.00016 : m.speed > 0 ? 0.00004 : 0.000012;
+        const heading = cur.heading + (Math.random() - 0.5) * 0.6;
+        const np = { latitude: cur.latitude + Math.cos(heading) * step, longitude: cur.longitude + Math.sin(heading) * step, heading };
+        next[m.id] = np;
+        if (m.id === 'm2') drive = np;
+      });
+      setPositions(next);
+      if (drive) setTrail((t) => [...t, { latitude: drive.latitude, longitude: drive.longitude }].slice(-30));
+    }, 1500);
     return () => clearInterval(id);
   }, []);
-
-  const base = me || DEFAULT_CENTER;
-  const coordsFor = (m) => ({ latitude: base.latitude + m.dx + (jitter[m.id]?.x || 0), longitude: base.longitude + m.dy + (jitter[m.id]?.y || 0) });
-  const placeCoord = (p) => ({ latitude: base.latitude + p.dx, longitude: base.longitude + p.dy });
 
   const TABS = [
     { id: 'map', label: 'Karte', icon: '🗺️' },
@@ -350,7 +377,7 @@ function Home({ user, onLogout }) {
     <View style={{ flex: 1, backgroundColor: '#f4f5fa' }}>
       <StatusBar barStyle="dark-content" />
       <View style={{ flex: 1 }}>
-        {tab === 'map' && <MapTab user={user} me={me} perm={perm} coordsFor={coordsFor} placeCoord={placeCoord} onSelect={setSel} />}
+        {tab === 'map' && <MapTab me={me} perm={perm} positions={positions} trail={trail} center={center} onSelect={setSel} />}
         {tab === 'members' && <SafeAreaView style={{ flex: 1 }}><MembersTab onSelect={setSel} /></SafeAreaView>}
         {tab === 'places' && <SafeAreaView style={{ flex: 1 }}><PlacesTab /></SafeAreaView>}
         {tab === 'profile' && <SafeAreaView style={{ flex: 1 }}><ProfileTab user={user} perm={perm} onLogout={onLogout} /></SafeAreaView>}
@@ -385,7 +412,7 @@ const styles = StyleSheet.create({
   authCard: { flex: 1, backgroundColor: '#fff', borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 24, paddingTop: 22 },
   tabs: { flexDirection: 'row', backgroundColor: '#f1f1f6', borderRadius: 14, padding: 4, marginBottom: 20 },
   segm: { flex: 1, paddingVertical: 11, alignItems: 'center', borderRadius: 11 },
-  segmA: { backgroundColor: '#fff', elevation: 2 },
+  segmA: { backgroundColor: '#fff' },
   segmTxt: { color: '#888', fontWeight: '700' },
   segmTxtA: { color: BRAND },
   input: { backgroundColor: '#f6f6fa', borderRadius: 13, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, marginBottom: 13, color: '#222', borderWidth: 1, borderColor: '#ececf2' },
@@ -393,21 +420,21 @@ const styles = StyleSheet.create({
   primaryBtnTxt: { color: '#fff', fontWeight: '800', fontSize: 16 },
   hint: { textAlign: 'center', color: '#aaa', marginTop: 14, fontSize: 13 },
 
-  markerAv: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', borderWidth: 3, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 5 },
+  markerAv: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', borderWidth: 3, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
   markerTip: { width: 9, height: 9, borderRadius: 5, marginTop: -2 },
-  placeDot: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff', elevation: 3 },
+  placeDot: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
 
   chipsBar: { position: 'absolute', top: 0, left: 0, right: 0, paddingTop: Platform.OS === 'android' ? 36 : 4 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, elevation: 3, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 5, shadowOffset: { width: 0, height: 2 } },
-  chipTxt: { fontWeight: '700', color: '#333', fontSize: 13 },
+  chip: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, marginRight: 8, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 5, shadowOffset: { width: 0, height: 2 } },
+  chipTxt: { fontWeight: '700', color: '#333', fontSize: 13, marginLeft: 6 },
 
   fabCol: { position: 'absolute', right: 16, bottom: 24 },
-  fab: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 4 },
+  fab: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 6, shadowOffset: { width: 0, height: 3 } },
 
   page: { flex: 1, paddingHorizontal: 18, paddingTop: 10 },
   h1: { fontSize: 28, fontWeight: '800', color: '#1a1a2e', marginTop: 6 },
   pSub: { color: '#888', marginBottom: 16, marginTop: 2 },
-  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 18, padding: 14, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 18, padding: 14, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
   cardAv: { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
   cardName: { fontWeight: '800', color: '#222', fontSize: 16 },
   cardSub: { color: '#999', fontSize: 13, marginTop: 2 },
@@ -427,8 +454,8 @@ const styles = StyleSheet.create({
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 22, paddingBottom: 34 },
   handle: { width: 42, height: 5, borderRadius: 3, backgroundColor: '#ddd', alignSelf: 'center', marginBottom: 16 },
-  statsRow: { flexDirection: 'row', gap: 10 },
-  stat: { flex: 1, backgroundColor: '#f6f6fa', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
+  statsRow: { flexDirection: 'row' },
+  stat: { flex: 1, backgroundColor: '#f6f6fa', borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginHorizontal: 4 },
   modalBtn: { flex: 1, borderRadius: 13, paddingVertical: 14, alignItems: 'center' },
   modalBtnTxt: { color: '#fff', fontWeight: '800' },
 

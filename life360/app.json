@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Circle",
+    "slug": "circle",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.circle.familylocator",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Circle nutzt deinen Standort, um ihn mit deiner Familie zu teilen."
+      }
+    },
+    "android": {
+      "package": "com.circle.familylocator",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        { "locationWhenInUsePermission": "Circle nutzt deinen Standort, um ihn mit deiner Familie zu teilen." }
+      ]
+    ]
+  }
+}
