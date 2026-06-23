@@ -4,45 +4,45 @@ Expo-App mit **echter Apple-Karte** (`react-native-maps`) und **echtem GPS**
 (`expo-location`). Vier Tabs (Karte / Familie / Orte / Profil), flüssig
 bewegende Familie, Routen-Spur, Mitglieder-Details, Zonen, Einstellungen.
 
+Projekt ist auf **Expo SDK 54** ausgelegt.
+
 ## 🍎 Auf dem MacBook im iOS-Simulator starten
 
-Voraussetzung: **Xcode** (aus dem App Store) + **Node.js** installiert.
+Voraussetzung: **Xcode** (App Store) + **Node.js**. Wichtig: in einem
+**neuen, leeren Ordner** arbeiten (nicht im bestehenden naava-media).
 
 ```bash
-# 1. Repo holen (falls noch nicht da)
-git clone https://github.com/meysingtv/naava-media.git
-cd naava-media/life360
-
-# 2. Pakete installieren
+cd ~/Desktop
+git clone https://github.com/meysingtv/naava-media.git circle-app
+cd circle-app
+git checkout claude/busy-franklin-j35abf
+cd life360
 npm install
-
-# 3. Versionen passend zum Expo-SDK ausrichten (wichtig!)
-npx expo install react-native-maps expo-location
-
-# 4. Starten
+npx expo install --fix
 npx expo start
-# Im Terminal "i" drücken  →  iOS-Simulator öffnet sich und lädt die App
 ```
 
-> Standort im Simulator setzen: im Simulator-Menü **Features → Location →
-> Apple** (oder „Custom…"), dann zeigt die Karte deinen „Standort".
+Dann im laufenden Expo-Terminal die Taste **i** drücken → iOS-Simulator öffnet sich.
 
-### Voll-nativer Build (optional, mit Xcode)
+> Standort im Simulator setzen: Simulator-Menü **Features → Location → Apple**.
+
+## Falls `npm install` meckert (Peer-Konflikte)
 ```bash
-npx expo run:ios
+npm install --legacy-peer-deps
+npx expo install --fix
+npx expo start
 ```
-Baut die App mit Xcode und startet sie im Simulator (dauert beim ersten Mal länger).
 
-## Wenn `npm install` zickt
-Frisches Projekt erzeugen und nur `App.js` ersetzen:
+## Bulletproof-Variante (frisches Projekt, nur App.js übernehmen)
 ```bash
+cd ~/Desktop
 npx create-expo-app@latest circle --template blank
 cd circle
 npx expo install react-native-maps expo-location
-# App.js aus diesem Ordner nach circle/App.js kopieren
-npx expo start   # dann "i"
+# App.js aus life360/ in dieses Projekt kopieren, dann:
+npx expo start
 ```
 
 ## Hinweis
-Login & Familie sind **Demo** (auf einem Gerät). Für echtes Standort-Teilen
-zwischen mehreren Geräten braucht es ein Backend (z. B. Supabase Realtime).
+Login & Familie sind **Demo**. Für echtes Standort-Teilen zwischen mehreren
+Geräten braucht es ein Backend (z. B. Supabase Realtime).
