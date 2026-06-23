@@ -1,6 +1,6 @@
 {
   "name": "circle",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "main": "index.js",
   "scripts": {
     "start": "expo start",
@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "expo": "~54.0.0",
+    "expo-haptics": "~15.0.0",
+    "expo-linear-gradient": "~15.0.0",
     "expo-location": "~19.0.4",
     "react": "19.1.0",
     "react-native": "0.81.4",
