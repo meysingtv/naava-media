@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView,
-  StatusBar, Platform, Animated, Dimensions,
+  StatusBar, Platform, Animated, Dimensions, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -65,16 +65,28 @@ const SONGS = [
   ['Blinding Lights', 'The Weeknd', 2019], ['As It Was', 'Harry Styles', 2022], ['Flowers', 'Miley Cyrus', 2023],
 ];
 
+const IMG = {
+  cup: require('./assets/icons/cup.png'),
+  wink: require('./assets/icons/wink.png'),
+  flame: require('./assets/icons/flame.png'),
+  storm: require('./assets/icons/storm.png'),
+  heart: require('./assets/icons/heart.png'),
+  note: require('./assets/icons/note.png'),
+  plus18: require('./assets/icons/plus18.png'),
+  bomb: require('./assets/icons/bomb.png'),
+  tornado: require('./assets/icons/tornado.png'),
+};
+
 const CATS = [
-  { id: 'pre',    name: 'Pre-Party',            emoji: '🥤', type: 'cards',  data: PRE },
-  { id: 'never',  name: 'Ich hab noch nie',      emoji: '🙈', type: 'never',  data: NEVER },
-  { id: 'tod',    name: 'Wahrheit / Pflicht',    emoji: '🔥', type: 'tod' },
-  { id: 'either', name: 'Entweder / Oder',       emoji: '🤔', type: 'either', data: EITHER },
-  { id: 'likely', name: 'Most Likely',           emoji: '👀', type: 'likely', data: LIKELY },
-  { id: 'song',   name: 'Song-Quiz',             emoji: '🎵', type: 'song',   data: SONGS },
-  { id: 'nsfw',   name: 'NSFW',                  emoji: '🔞', type: 'cards',  data: NSFW, premium: true, age: true },
-  { id: 'bomb',   name: 'Die Bombe',             emoji: '💣', type: 'bomb' },
-  { id: 'mixed',  name: 'Gemischt',              emoji: '🌀', type: 'mixed',  big: true, sub: 'Mische alle Kategorien und starte ein großes Spiel.' },
+  { id: 'pre',    name: 'Pre-Party',            img: IMG.cup,     type: 'cards',  data: PRE },
+  { id: 'never',  name: 'Ich hab noch nie',      img: IMG.wink,    type: 'never',  data: NEVER },
+  { id: 'tod',    name: 'Wahrheit / Pflicht',    img: IMG.flame,   type: 'tod' },
+  { id: 'either', name: 'Entweder / Oder',       img: IMG.storm,   type: 'either', data: EITHER },
+  { id: 'likely', name: 'Most Likely',           img: IMG.heart,   type: 'likely', data: LIKELY },
+  { id: 'song',   name: 'Song-Quiz',             img: IMG.note,    type: 'song',   data: SONGS },
+  { id: 'nsfw',   name: 'NSFW',                  img: IMG.plus18,  type: 'cards',  data: NSFW, premium: true, age: true },
+  { id: 'bomb',   name: 'Die Bombe',             img: IMG.bomb,    type: 'bomb' },
+  { id: 'mixed',  name: 'Gemischt',              img: IMG.tornado, type: 'mixed',  big: true, sub: 'Mische alle Kategorien und starte ein großes Spiel.' },
 ];
 const CAT_BOMB_WORDS = ['Automarken', 'Länder', 'Tiere', 'Süßigkeiten', 'Serien', 'Cocktails', 'Filme', 'Rapper'];
 
@@ -92,10 +104,10 @@ function draw(cat) {
 
 /* ------------------------------- Onboarding ------------------------------- */
 const SLIDES = [
-  { emoji: '🍻', title: 'Willkommen bei PROST', text: 'Das ultimative Trinkspiel für jede Runde.' },
-  { emoji: '🎴', title: 'Hunderte Karten', text: 'Von harmlos bis wild – für jede Stimmung.' },
-  { emoji: '🎮', title: 'Viele Spielmodi', text: 'Wahrheit oder Pflicht, Ich hab noch nie, Song-Quiz & mehr.' },
-  { emoji: '🎉', title: 'Bereit?', text: 'Schnapp dir deine Crew und leg los!' },
+  { img: 'cup', title: 'Willkommen bei PROST', text: 'Das ultimative Trinkspiel für jede Runde.' },
+  { img: 'flame', title: 'Hunderte Karten', text: 'Von harmlos bis wild – für jede Stimmung.' },
+  { img: 'note', title: 'Viele Spielmodi', text: 'Wahrheit oder Pflicht, Ich hab noch nie, Song-Quiz & mehr.' },
+  { img: 'tornado', title: 'Bereit?', text: 'Schnapp dir deine Crew und leg los!' },
 ];
 function Onboarding({ onDone }) {
   const ref = useRef(null);
@@ -109,7 +121,7 @@ function Onboarding({ onDone }) {
           onMomentumScrollEnd={(e) => setI(Math.round(e.nativeEvent.contentOffset.x / W))}>
           {SLIDES.map((sl, k) => (
             <View key={k} style={{ width: W, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 34 }}>
-              <View style={o.emojiWrap}><Text style={{ fontSize: 96 }}>{sl.emoji}</Text></View>
+              <View style={o.emojiWrap}><Image source={IMG[sl.img]} style={{ width: 116, height: 116 }} resizeMode="contain" /></View>
               <Text style={o.title}>{sl.title}</Text>
               <Text style={o.text}>{sl.text}</Text>
             </View>
@@ -184,7 +196,7 @@ function Home({ onPick, onPremium }) {
                 {c.premium && <View style={h.star}><Ionicons name="star" size={13} color="#7A5B00" /></View>}
                 {c.age && <View style={h.age}><Text style={h.ageTxt}>17+</Text></View>}
               </View>
-              <Text style={h.emoji}>{c.emoji}</Text>
+              <Image source={c.img} style={h.icon} resizeMode="contain" />
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -216,7 +228,7 @@ function Game({ cat, setCat, onHome, onPremium }) {
               <TouchableOpacity key={c.id} style={g.switchItem} activeOpacity={0.8}
                 onPress={() => { tap(); c.premium ? onPremium() : setCat(c); }}>
                 <View style={[g.switchEmoji, on && g.switchEmojiOn]}>
-                  <Text style={{ fontSize: 26, opacity: on ? 1 : 0.85 }}>{c.emoji}</Text>
+                  <Image source={c.img} style={{ width: 34, height: 34, opacity: on ? 1 : 0.9 }} resizeMode="contain" />
                   {c.premium && <View style={g.lock}><Ionicons name="lock-closed" size={10} color="#fff" /></View>}
                 </View>
                 <Text style={[g.switchTxt, { opacity: on ? 1 : 0.6 }]} numberOfLines={1}>{c.name.split(' ')[0]}</Text>
@@ -278,12 +290,12 @@ function Bomb() {
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       {state === 'idle' && <>
-        <Text style={{ fontSize: 84 }}>💣</Text>
+        <Image source={IMG.bomb} style={{ width: 110, height: 110 }} resizeMode="contain" />
         <Text style={g.bombInfo}>Handy reihum weitergeben und Begriffe nennen. Wer die Bombe hält, wenn sie hochgeht, trinkt.</Text>
         <TouchableOpacity style={g.weiter} onPress={start}><Text style={g.weiterTxt}>Bombe zünden</Text></TouchableOpacity>
       </>}
       {state === 'run' && <>
-        <Animated.Text style={{ fontSize: 96, transform: [{ scale }] }}>💣</Animated.Text>
+        <Animated.Image source={IMG.bomb} style={{ width: 125, height: 125, transform: [{ scale }] }} resizeMode="contain" />
         <Text style={g.bombCat}>{cat}</Text>
         <Text style={g.bombInfo}>Abwechselnd nennen und schnell weitergeben!</Text>
       </>}
@@ -353,7 +365,7 @@ const h = StyleSheet.create({
   star: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#FFD34E', alignItems: 'center', justifyContent: 'center' },
   age: { backgroundColor: '#F0453A', borderRadius: 12, paddingHorizontal: 9, paddingVertical: 3 },
   ageTxt: { color: '#fff', fontWeight: '800', fontSize: 12 },
-  emoji: { fontSize: 46, marginLeft: 8 },
+  icon: { width: 56, height: 56, marginLeft: 8 },
 });
 
 const g = StyleSheet.create({
