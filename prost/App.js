@@ -1,372 +1,261 @@
-// PROST – Trinkspiel · v2 (Expo SDK 54, React Native)
-// Cleanes, modernes Design (dunkel & ruhig, ein Akzent pro Screen, große Typo).
-// 7 Modi inkl. Song-Quiz. Spieler-Setup, Intensität, Statistik, Haptik.
+// PROST – Trinkspiel · v3 (Expo SDK 54) – blaues Karten-Design
+// Onboarding (animiert), Spiele-Liste, weiße Spielkarte, Premium-Screen.
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView,
-  ScrollView, StatusBar, Platform, Modal, KeyboardAvoidingView, Animated,
+  View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView,
+  StatusBar, Platform, Animated, Dimensions,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
-const T = {
-  bg: '#0E0E12', surface: '#17171D', surface2: '#20202A', border: 'rgba(255,255,255,0.08)',
-  text: '#F5F5F7', dim: '#9A9AA6', dim2: '#63636F', brand: '#FF6A5A',
-};
+const { width: W } = Dimensions.get('window');
+const BG = ['#4C9BF2', '#2A46B4'];
+const BLUE = '#2E7DF1';
 const tap = (s = 'Light') => { try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle[s]); } catch (e) {} };
-const AVATARS = ['🦊', '🐼', '🐙', '🦉', '🐧', '🐳', '🦁', '🐨', '🦖', '🐝', '🦄', '🐢'];
 const rnd = (a) => a[Math.floor(Math.random() * a.length)];
 
-const INTENSITY = [
-  { lvl: 0, label: 'Harmlos', emoji: '😇' },
-  { lvl: 1, label: 'Frech', emoji: '😏' },
-  { lvl: 2, label: 'Spicy', emoji: '🌶️' },
-  { lvl: 3, label: 'Extrem', emoji: '🔞' },
-];
-
-const MODES = [
-  { id: 'tod',    name: 'Wahrheit oder Pflicht', short: 'Der Klassiker',        icon: 'flame',         color: '#FF6A5A', featured: true },
-  { id: 'never',  name: 'Ich hab noch nie',      short: 'Wer schon, trinkt',    icon: 'remove-circle', color: '#3FB8A0' },
-  { id: 'likely', name: 'Most Likely To',        short: 'Wer würde am ehesten…', icon: 'people',        color: '#E0A63C' },
-  { id: 'either', name: 'Entweder / Oder',       short: 'Entscheide dich',      icon: 'git-compare',   color: '#6C8AE4' },
-  { id: 'cats',   name: 'Kategorien',            short: 'Reihum aufzählen',     icon: 'list',          color: '#C77DBB' },
-  { id: 'song',   name: 'Song-Quiz',             short: 'Welches Jahr?',        icon: 'musical-notes', color: '#8E7CC3' },
-  { id: 'bomb',   name: 'Die Bombe',             short: 'Nicht bei 0 halten',   icon: 'alarm',         color: '#E4694E' },
-];
-
-/* --------------------------------- Inhalte --------------------------------- */
-const TRUTHS = [
-  { l: 0, t: 'Was war dein peinlichster Moment in der Schule?' },
-  { l: 0, t: 'Was ist deine seltsamste Angewohnheit?' },
-  { l: 0, t: 'Welchen Promi findest du heimlich total nervig?' },
-  { l: 0, t: 'Was ist das Kindischste, das du immer noch machst?' },
-  { l: 1, t: 'Wen hier findest du am lustigsten – und wen am nervigsten?' },
-  { l: 1, t: 'Was ist die größte Lüge, die du deinen Eltern erzählt hast?' },
-  { l: 1, t: 'Was war dein peinlichster Chat-Verlauf?' },
-  { l: 1, t: 'Was ist dein größter Ick bei anderen?' },
-  { l: 2, t: 'Wen in der Runde würdest du daten, wenn du müsstest?' },
-  { l: 2, t: 'Was war dein peinlichstes Date?' },
-  { l: 2, t: 'Auf wen aus deinem Freundeskreis standest du mal heimlich?' },
-  { l: 3, t: 'Wen in dieser Runde findest du am attraktivsten?' },
-  { l: 3, t: 'Was war das Verrückteste, das du je aus Verknalltheit getan hast?' },
-  { l: 3, t: 'Erzähl von deinem peinlichsten Ex.' },
-];
-const DARES = [
-  { l: 0, t: '{p}, mach 10 Liegestütze.' },
-  { l: 0, t: '{p}, sprich bis zu deiner nächsten Runde nur im Flüsterton.' },
-  { l: 0, t: '{p}, mach dein bestes Tier-Geräusch.' },
-  { l: 0, t: '{p}, imitiere {o} für 30 Sekunden.' },
-  { l: 1, t: '{p}, sag jedem in der Runde ein ehrliches Kompliment.' },
-  { l: 1, t: '{p}, tanze 20 Sekunden ohne Musik.' },
-  { l: 1, t: '{p}, rede eine Runde lang nur in Reimen.' },
-  { l: 1, t: '{p}, lass {o} deine letzte gesendete Nachricht vorlesen.' },
-  { l: 2, t: '{p}, mach {o} ein ernst gemeintes Kompliment über dein Aussehen.' },
-  { l: 2, t: '{p}, zeig der Gruppe deine letzten 3 Suchanfragen.' },
-  { l: 2, t: '{p}, ruf die 3. Person in deiner Anrufliste an und sing „Happy Birthday".' },
-  { l: 3, t: '{p}, lass {o} eine Minute durch dein geöffnetes Handy scrollen.' },
-  { l: 3, t: '{p}, lies deine letzte DM laut vor.' },
-  { l: 3, t: '{p}, tausche für 2 Runden ein Kleidungsstück mit {o}.' },
+/* ---------------------------------- Inhalte ---------------------------------- */
+const PRE = [
+  'Zeig das letzte Foto in deiner Galerie.', 'Mach 5 Kniebeugen.',
+  'Erzähl deinen peinlichsten Moment.', 'Gib der Person rechts ein Kompliment.',
+  'Wer zuletzt gelacht hat, trinkt.', 'Alle mit Handy in der Hand trinken.',
+  'Mach dein bestes Tier-Geräusch.', 'Alle, die heute schon geflucht haben, trinken.',
 ];
 const NEVER = [
-  { l: 0, t: '…einen Wecker verschlafen und was Wichtiges verpasst.' },
-  { l: 0, t: '…mich in der Öffentlichkeit lang gemacht.' },
-  { l: 0, t: '…heimlich Essen von jemandem geklaut.' },
-  { l: 1, t: '…eine Nachricht an die komplett falsche Person geschickt.' },
-  { l: 1, t: '…so getan, als hätte ich einen Anruf, um zu entkommen.' },
-  { l: 1, t: '…jemanden auf Social Media gestalkt.' },
-  { l: 2, t: '…auf einer Party jemanden geküsst, den ich kaum kannte.' },
-  { l: 2, t: '…jemandem eine peinliche Sprachnachricht geschickt.' },
-  { l: 3, t: '…jemanden in diesem Raum attraktiv gefunden.' },
-  { l: 3, t: '…meinem Ex hinterhergestalkt.' },
-  { l: 3, t: '…auf einem Date geflunkert.' },
+  'einen Wecker verschlafen und was Wichtiges verpasst.', 'mich in der Öffentlichkeit lang gemacht.',
+  'heimlich Essen von jemandem geklaut.', 'eine Nachricht an die falsche Person geschickt.',
+  'so getan, als hätte ich einen Anruf, um zu entkommen.', 'jemanden auf Social Media gestalkt.',
+  'in einem Call-Center gearbeitet.', 'mein Passwort vergessen und es nie wiederbekommen.',
+];
+const NSFW = [
+  'Auf wen in der Runde standest du mal heimlich?', 'Was war dein peinlichstes Date?',
+  'Zeig deine letzten 3 Suchanfragen.', 'Lies deine letzte DM laut vor.',
+  'Wen hier würdest du daten, wenn du müsstest?', 'Was ist dein größtes Beziehungs-Geheimnis?',
+  'Erzähl von deinem peinlichsten Ex.', 'Lass jemanden 1 Minute durch dein Handy scrollen.',
+];
+const TRUTHS = [
+  'Was war dein peinlichster Moment in der Schule?', 'Was ist deine seltsamste Angewohnheit?',
+  'Wen hier findest du am lustigsten – und wen am nervigsten?', 'Was war die größte Lüge gegenüber deinen Eltern?',
+  'Was ist dein größter Ick bei anderen?', 'Was war dein peinlichster Chat-Verlauf?',
+];
+const DARES = [
+  'Mach 10 Liegestütze.', 'Sprich bis zur nächsten Runde nur im Flüsterton.',
+  'Imitiere die Person links von dir für 30 Sekunden.', 'Sag jedem ein ehrliches Kompliment.',
+  'Tanze 20 Sekunden ohne Musik.', 'Rede eine Runde lang nur in Reimen.',
+  'Lass die Person neben dir deine letzte Nachricht vorlesen.', 'Mach dein bestes Model-Posing.',
 ];
 const LIKELY = [
-  { l: 0, t: 'zu spät zur eigenen Hochzeit kommen?' },
-  { l: 0, t: 'berühmt werden?' },
-  { l: 0, t: 'den ganzen Kühlschrank leer essen?' },
-  { l: 1, t: 'aus Versehen dem Ex schreiben?' },
-  { l: 1, t: 'als Erste:r betrunken sein?' },
-  { l: 1, t: 'das Handy in der Toilette fallen lassen?' },
-  { l: 2, t: 'auf einer Party mit einer fremden Person knutschen?' },
-  { l: 2, t: 'zwei Personen gleichzeitig daten?' },
-  { l: 3, t: 'in dieser Runde heimlich verknallt sein?' },
-  { l: 3, t: 'ein peinliches Foto an die falsche Person schicken?' },
+  'zu spät zur eigenen Hochzeit kommen?', 'berühmt werden?', 'den ganzen Kühlschrank leer essen?',
+  'aus Versehen dem Ex schreiben?', 'als Erste:r betrunken sein?', 'das Handy in der Toilette fallen lassen?',
+  'auf einer Party mit einer fremden Person knutschen?', 'zwei Personen gleichzeitig daten?',
 ];
 const EITHER = [
-  { l: 0, a: 'Nie wieder Pizza', b: 'nie wieder Pommes' },
-  { l: 0, a: 'Fliegen können', b: 'unsichtbar sein' },
-  { l: 0, a: 'Immer 10 Min zu früh', b: 'immer 10 Min zu spät' },
-  { l: 1, a: 'Handy 1 Woche weg', b: '1 Monat kein Süßes' },
-  { l: 1, a: 'Gedanken lesen können', b: 'in die Zukunft sehen' },
-  { l: 1, a: 'Peinliches Video geht viral', b: 'alle lesen deine DMs' },
-  { l: 2, a: 'Mit dem Ex nochmal ausgehen', b: 'für immer Single' },
-  { l: 2, a: 'Deinen Crush blamieren', b: 'dich selbst blamieren' },
-  { l: 3, a: 'Suchverlauf wird öffentlich', b: 'letzte 10 Nachrichten werden vorgelesen' },
-  { l: 3, a: 'Mit jedem hier mal daten', b: 'nie wieder daten' },
+  ['Nie wieder Pizza', 'nie wieder Pommes'], ['Fliegen können', 'unsichtbar sein'],
+  ['Immer 10 Min zu früh', 'immer 10 Min zu spät'], ['Handy 1 Woche weg', '1 Monat kein Süßes'],
+  ['Gedanken lesen können', 'in die Zukunft sehen'], ['Peinliches Video geht viral', 'alle lesen deine DMs'],
+  ['Mit dem Ex nochmal ausgehen', 'für immer Single'], ['Deinen Crush blamieren', 'dich selbst blamieren'],
 ];
-const CATS = ['Automarken', 'Länder', 'Fußballvereine', 'Tiere', 'Süßigkeiten', 'Serien', 'Städte in Deutschland', 'Cocktails', 'YouTuber', 'Pizzabeläge', 'Filme', 'Rapper'];
 const SONGS = [
-  { t: 'Bohemian Rhapsody', a: 'Queen', y: 1975 }, { t: 'Dancing Queen', a: 'ABBA', y: 1976 },
-  { t: 'Billie Jean', a: 'Michael Jackson', y: 1983 }, { t: '99 Luftballons', a: 'Nena', y: 1983 },
-  { t: 'Take On Me', a: 'a-ha', y: 1985 }, { t: 'Smells Like Teen Spirit', a: 'Nirvana', y: 1991 },
-  { t: "Gangsta's Paradise", a: 'Coolio', y: 1995 }, { t: '…Baby One More Time', a: 'Britney Spears', y: 1998 },
-  { t: 'I Want It That Way', a: 'Backstreet Boys', y: 1999 }, { t: 'Lose Yourself', a: 'Eminem', y: 2002 },
-  { t: 'In Da Club', a: '50 Cent', y: 2003 }, { t: 'Hey Ya!', a: 'Outkast', y: 2003 },
-  { t: 'Umbrella', a: 'Rihanna', y: 2007 }, { t: 'Haus am See', a: 'Peter Fox', y: 2008 },
-  { t: 'I Gotta Feeling', a: 'Black Eyed Peas', y: 2009 }, { t: 'Rolling in the Deep', a: 'Adele', y: 2010 },
-  { t: 'Somebody That I Used to Know', a: 'Gotye', y: 2011 }, { t: 'Gangnam Style', a: 'PSY', y: 2012 },
-  { t: 'Easy', a: 'Cro', y: 2012 }, { t: 'Get Lucky', a: 'Daft Punk', y: 2013 },
-  { t: 'Wake Me Up', a: 'Avicii', y: 2013 }, { t: 'Uptown Funk', a: 'Mark Ronson', y: 2014 },
-  { t: 'Chöre', a: 'Mark Forster', y: 2016 }, { t: 'Shape of You', a: 'Ed Sheeran', y: 2017 },
-  { t: 'Despacito', a: 'Luis Fonsi', y: 2017 }, { t: 'Someone You Loved', a: 'Lewis Capaldi', y: 2018 },
-  { t: 'Old Town Road', a: 'Lil Nas X', y: 2019 }, { t: 'Roller', a: 'Apache 207', y: 2019 },
-  { t: 'Blinding Lights', a: 'The Weeknd', y: 2019 }, { t: 'Levitating', a: 'Dua Lipa', y: 2020 },
-  { t: 'As It Was', a: 'Harry Styles', y: 2022 }, { t: 'Flowers', a: 'Miley Cyrus', y: 2023 },
+  ['Bohemian Rhapsody', 'Queen', 1975], ['Billie Jean', 'Michael Jackson', 1983], ['99 Luftballons', 'Nena', 1983],
+  ['Smells Like Teen Spirit', 'Nirvana', 1991], ["Gangsta's Paradise", 'Coolio', 1995], ['…Baby One More Time', 'Britney Spears', 1998],
+  ['Lose Yourself', 'Eminem', 2002], ['Umbrella', 'Rihanna', 2007], ['Haus am See', 'Peter Fox', 2008],
+  ['Rolling in the Deep', 'Adele', 2010], ['Gangnam Style', 'PSY', 2012], ['Get Lucky', 'Daft Punk', 2013],
+  ['Uptown Funk', 'Mark Ronson', 2014], ['Shape of You', 'Ed Sheeran', 2017], ['Roller', 'Apache 207', 2019],
+  ['Blinding Lights', 'The Weeknd', 2019], ['As It Was', 'Harry Styles', 2022], ['Flowers', 'Miley Cyrus', 2023],
 ];
 
-const pool = (arr, lvl) => arr.filter((c) => c.l <= lvl);
-const fill = (t, players, idx) => {
-  const p = players[idx]?.name || 'Du';
-  const others = players.filter((_, i) => i !== idx);
-  const o = others.length ? rnd(others).name : p;
-  return t.replace(/{p}/g, p).replace(/{o}/g, o);
-};
+const CATS = [
+  { id: 'pre',    name: 'Pre-Party',            emoji: '🥤', type: 'cards',  data: PRE },
+  { id: 'never',  name: 'Ich hab noch nie',      emoji: '🙈', type: 'never',  data: NEVER },
+  { id: 'tod',    name: 'Wahrheit / Pflicht',    emoji: '🔥', type: 'tod' },
+  { id: 'either', name: 'Entweder / Oder',       emoji: '🤔', type: 'either', data: EITHER },
+  { id: 'likely', name: 'Most Likely',           emoji: '👀', type: 'likely', data: LIKELY },
+  { id: 'song',   name: 'Song-Quiz',             emoji: '🎵', type: 'song',   data: SONGS },
+  { id: 'nsfw',   name: 'NSFW',                  emoji: '🔞', type: 'cards',  data: NSFW, premium: true, age: true },
+  { id: 'bomb',   name: 'Die Bombe',             emoji: '💣', type: 'bomb' },
+  { id: 'mixed',  name: 'Gemischt',              emoji: '🌀', type: 'mixed',  big: true, sub: 'Mische alle Kategorien und starte ein großes Spiel.' },
+];
+const CAT_BOMB_WORDS = ['Automarken', 'Länder', 'Tiere', 'Süßigkeiten', 'Serien', 'Cocktails', 'Filme', 'Rapper'];
 
-/* ------------------------------ UI-Bausteine ------------------------------ */
-function Btn({ label, icon, onPress, variant = 'light', color = T.brand, style }) {
-  const map = {
-    light: { bg: T.text, fg: '#141414' },
-    accent: { bg: color, fg: '#141414' },
-    ghost: { bg: 'transparent', fg: T.text, border: T.border },
-    danger: { bg: 'rgba(228,105,78,0.14)', fg: '#FF9077' },
-  };
-  const v = map[variant];
+/* Karte für eine Kategorie ziehen -> {kicker, kColor, text, song} */
+function draw(cat) {
+  const t = cat.type;
+  if (t === 'never') return { kicker: 'Ich hab noch nie', text: rnd(NEVER) };
+  if (t === 'likely') return { kicker: 'Wer würde am ehesten', text: rnd(LIKELY) };
+  if (t === 'either') { const [a, b] = rnd(EITHER); return { kicker: 'Entweder … oder', text: a + '\n\noder\n\n' + b + '?' }; }
+  if (t === 'song') { const [ti, ar, y] = rnd(SONGS); return { kicker: 'Song-Quiz', text: ti + '\n' + ar, song: y }; }
+  if (t === 'tod') { const truth = Math.random() < 0.5; return truth ? { kicker: 'Wahrheit', kColor: BLUE, text: rnd(TRUTHS) } : { kicker: 'Pflicht', kColor: '#F0603A', text: rnd(DARES) }; }
+  if (t === 'mixed') { const pick = rnd(CATS.filter((c) => c.type !== 'mixed' && c.type !== 'bomb')); return draw(pick); }
+  return { kicker: cat.name, text: rnd(cat.data || PRE) };
+}
+
+/* ------------------------------- Onboarding ------------------------------- */
+const SLIDES = [
+  { emoji: '🍻', title: 'Willkommen bei PROST', text: 'Das ultimative Trinkspiel für jede Runde.' },
+  { emoji: '🎴', title: 'Hunderte Karten', text: 'Von harmlos bis wild – für jede Stimmung.' },
+  { emoji: '🎮', title: 'Viele Spielmodi', text: 'Wahrheit oder Pflicht, Ich hab noch nie, Song-Quiz & mehr.' },
+  { emoji: '🎉', title: 'Bereit?', text: 'Schnapp dir deine Crew und leg los!' },
+];
+function Onboarding({ onDone }) {
+  const ref = useRef(null);
+  const [i, setI] = useState(0);
+  const go = () => { tap(); if (i < SLIDES.length - 1) { ref.current?.scrollTo({ x: (i + 1) * W, animated: true }); setI(i + 1); } else onDone(); };
   return (
-    <TouchableOpacity activeOpacity={0.8} onPress={() => { tap(); onPress && onPress(); }}
-      style={[s.btn, { backgroundColor: v.bg, borderWidth: v.border ? 1 : 0, borderColor: v.border }, style]}>
-      {icon && <Ionicons name={icon} size={18} color={v.fg} style={{ marginRight: 8 }} />}
-      <Text style={[s.btnTxt, { color: v.fg }]}>{label}</Text>
-    </TouchableOpacity>
+    <LinearGradient colors={BG} style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar barStyle="light-content" />
+        <ScrollView ref={ref} horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={(e) => setI(Math.round(e.nativeEvent.contentOffset.x / W))}>
+          {SLIDES.map((sl, k) => (
+            <View key={k} style={{ width: W, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 34 }}>
+              <View style={o.emojiWrap}><Text style={{ fontSize: 96 }}>{sl.emoji}</Text></View>
+              <Text style={o.title}>{sl.title}</Text>
+              <Text style={o.text}>{sl.text}</Text>
+            </View>
+          ))}
+        </ScrollView>
+        <View style={o.foot}>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {SLIDES.map((_, k) => <View key={k} style={[o.dot, k === i && o.dotOn]} />)}
+          </View>
+          <TouchableOpacity style={o.next} onPress={go} activeOpacity={0.85}>
+            <Ionicons name={i < SLIDES.length - 1 ? 'chevron-forward' : 'checkmark'} size={26} color={BLUE} />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
-const chip = (bg) => ({ width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: bg });
 
-/* --------------------------------- Setup --------------------------------- */
-function Setup({ players, setPlayers, intensity, setIntensity, onStart }) {
-  const [name, setName] = useState('');
-  const add = () => {
-    if (!name.trim()) return; tap();
-    setPlayers((p) => [...p, { id: 'p' + Date.now(), name: name.trim(), av: AVATARS[p.length % AVATARS.length] }]);
-    setName('');
-  };
+/* -------------------------------- Paywall -------------------------------- */
+function Paywall({ onClose }) {
+  const feats = [
+    ['sparkles', 'Alle Kategorien freischalten'], ['flame', 'NSFW & 18+ Karten'],
+    ['refresh', 'Neue Karten jeden Monat'], ['create', 'Eigene Karten erstellen'],
+    ['ban', 'Keine Werbung mehr'], ['close-circle', 'Jederzeit kündbar'],
+  ];
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 40 }}>
-          <Text style={s.brandMark}>prost.</Text>
-          <Text style={s.h1}>Wer ist dabei?</Text>
-
-          <View style={s.inputRow}>
-            <TextInput style={s.input} placeholder="Name eingeben" placeholderTextColor={T.dim2}
-              value={name} onChangeText={setName} onSubmitEditing={add} returnKeyType="done" />
-            <TouchableOpacity onPress={add} style={s.addBtn}><Ionicons name="add" size={24} color="#141414" /></TouchableOpacity>
-          </View>
-
-          <View style={{ marginTop: 16 }}>
-            {players.map((p) => (
-              <View key={p.id} style={s.playerRow}>
-                <View style={s.playerAv}><Text style={{ fontSize: 20 }}>{p.av}</Text></View>
-                <Text style={s.playerName}>{p.name}</Text>
-                <TouchableOpacity onPress={() => { tap(); setPlayers((ps) => ps.filter((x) => x.id !== p.id)); }} hitSlop={10}>
-                  <Ionicons name="close" size={20} color={T.dim} />
-                </TouchableOpacity>
+    <LinearGradient colors={BG} style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar barStyle="light-content" />
+        <TouchableOpacity style={p.close} onPress={() => { tap(); onClose(); }}><Ionicons name="close" size={24} color="#fff" /></TouchableOpacity>
+        <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 6 }}>
+          <View style={p.badge}><Text style={p.badgeTop}>Besonderes Angebot</Text><Text style={p.badgeBig}>80% Rabatt</Text><Text style={p.badgeTop}>Erste Woche</Text></View>
+          <Text style={p.title}>PROST Premium</Text>
+          <View style={p.card}>
+            {feats.map(([ic, t], k) => (
+              <View key={k} style={p.featRow}>
+                <View style={p.featIc}><Ionicons name={ic} size={18} color="#fff" /></View>
+                <Text style={p.featTxt}>{t}</Text>
               </View>
             ))}
-            {players.length === 0 && <Text style={{ color: T.dim2, marginTop: 4 }}>Mindestens 2 Spieler hinzufügen</Text>}
           </View>
-
-          <Text style={s.label}>Intensität</Text>
-          <View style={s.intGrid}>
-            {INTENSITY.map((it) => {
-              const on = intensity === it.lvl;
-              return (
-                <TouchableOpacity key={it.lvl} activeOpacity={0.8} onPress={() => { tap(); setIntensity(it.lvl); }}
-                  style={[s.intCard, on && { borderColor: T.brand, backgroundColor: T.surface2 }]}>
-                  <Text style={{ fontSize: 22 }}>{it.emoji}</Text>
-                  <Text style={[s.intLabel, on && { color: T.text }]}>{it.label}</Text>
-                  {on && <View style={s.intDot} />}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          <Btn label="Los geht’s" icon="arrow-forward" variant="accent"
-            onPress={() => players.length >= 2 && onStart()}
-            style={{ marginTop: 26, opacity: players.length < 2 ? 0.4 : 1 }} />
-          <Text style={s.fine}>Ab 18 · Bitte verantwortungsvoll trinken</Text>
+          <Text style={p.price}>Erste Woche für <Text style={{ color: '#FFD34E' }}>1,99 €</Text> <Text style={p.strike}>9,99 €</Text></Text>
+          <Text style={p.priceSub}>Danach 9,99 € / Woche · jederzeit kündbar</Text>
+          <TouchableOpacity style={p.cta} activeOpacity={0.9} onPress={() => { tap('Medium'); onClose(); }}><Text style={p.ctaTxt}>Jetzt starten</Text></TouchableOpacity>
+          <Text style={p.restore}>Einkäufe wiederherstellen</Text>
+          <Text style={p.legal}>Nutzungsbedingungen · Datenschutz</Text>
         </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
-/* ---------------------------------- Home ---------------------------------- */
-function Home({ players, intensity, drinks, onPick, onEdit }) {
-  const [stats, setStats] = useState(false);
-  const it = INTENSITY[intensity];
-  const hero = MODES.find((m) => m.featured);
-  const rest = MODES.filter((m) => !m.featured);
+/* ------------------------------- Spiele-Liste ------------------------------- */
+function Home({ onPick, onPremium }) {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ padding: 22, paddingBottom: 30 }}>
-        <View style={s.homeTop}>
-          <View>
-            <Text style={s.brandMark}>prost.</Text>
-            <View style={s.metaRow}>
-              <View style={s.metaPill}><Ionicons name="people" size={13} color={T.dim} /><Text style={s.metaTxt}>{players.length}</Text></View>
-              <View style={s.metaPill}><Text style={{ fontSize: 12 }}>{it.emoji}</Text><Text style={s.metaTxt}>{it.label}</Text></View>
-            </View>
-          </View>
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <TouchableOpacity style={s.roundBtn} onPress={() => { tap(); setStats(true); }}><Ionicons name="trophy-outline" size={19} color={T.text} /></TouchableOpacity>
-            <TouchableOpacity style={s.roundBtn} onPress={() => { tap(); onEdit(); }}><Ionicons name="settings-outline" size={19} color={T.text} /></TouchableOpacity>
-          </View>
+    <LinearGradient colors={BG} style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar barStyle="light-content" />
+        <View style={h.top}>
+          <TouchableOpacity style={h.topBtn} onPress={onPremium}><Ionicons name="settings-outline" size={22} color="#fff" /></TouchableOpacity>
+          <Text style={h.logo}>PROST</Text>
+          <TouchableOpacity style={h.topBtn} onPress={onPremium}><Ionicons name="star" size={20} color="#FFD34E" /></TouchableOpacity>
         </View>
-
-        <TouchableOpacity activeOpacity={0.9} style={[s.hero, { backgroundColor: hero.color }]} onPress={() => { tap('Medium'); onPick(hero.id); }}>
-          <View style={s.heroIcon}><Ionicons name={hero.icon} size={22} color="#141414" /></View>
-          <Text style={s.heroTitle}>{hero.name}</Text>
-          <View style={s.heroFoot}><Text style={s.heroShort}>{hero.short}</Text><Ionicons name="arrow-forward" size={20} color="#141414" /></View>
-        </TouchableOpacity>
-
-        <Text style={s.label}>Alle Spiele</Text>
-        <View style={s.grid}>
-          {rest.map((m) => (
-            <TouchableOpacity key={m.id} activeOpacity={0.8} style={s.mCard} onPress={() => { tap('Medium'); onPick(m.id); }}>
-              <View style={chip(m.color + '22')}><Ionicons name={m.icon} size={22} color={m.color} /></View>
-              <Text style={s.mName}>{m.name}</Text>
-              <Text style={s.mShort}>{m.short}</Text>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 6, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
+          {CATS.map((c) => (
+            <TouchableOpacity key={c.id} activeOpacity={0.85} style={[h.row, c.big && h.rowBig]} onPress={() => { tap('Medium'); onPick(c); }}>
+              <View style={{ flex: 1 }}>
+                <Text style={h.rowName}>{c.name}</Text>
+                {c.big && <Text style={h.rowSub}>{c.sub}</Text>}
+              </View>
+              <View style={h.badges}>
+                {c.premium && <View style={h.star}><Ionicons name="star" size={13} color="#7A5B00" /></View>}
+                {c.age && <View style={h.age}><Text style={h.ageTxt}>17+</Text></View>}
+              </View>
+              <Text style={h.emoji}>{c.emoji}</Text>
             </TouchableOpacity>
           ))}
-        </View>
-      </ScrollView>
-      <StatsModal visible={stats} onClose={() => setStats(false)} players={players} drinks={drinks} />
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
-function StatsModal({ visible, onClose, players, drinks }) {
-  const ranked = [...players].sort((a, b) => (drinks[b.id] || 0) - (drinks[a.id] || 0));
+/* --------------------------------- Spiel --------------------------------- */
+function Game({ cat, setCat, onHome, onPremium }) {
   return (
-    <Modal transparent animationType="slide" visible={visible} onRequestClose={onClose}>
-      <TouchableOpacity style={s.sheetBg} activeOpacity={1} onPress={onClose}>
-        <View style={s.sheet} onStartShouldSetResponder={() => true}>
-          <View style={s.grab} />
-          <Text style={s.sheetTitle}>Verlierer des Abends</Text>
-          {ranked.map((p, i) => (
-            <View key={p.id} style={s.rankRow}>
-              <Text style={{ width: 28, fontSize: 15, color: T.dim }}>{i === 0 ? '👑' : i + 1}</Text>
-              <Text style={{ fontSize: 20, marginRight: 10 }}>{p.av}</Text>
-              <Text style={{ color: T.text, fontWeight: '600', fontSize: 16, flex: 1 }}>{p.name}</Text>
-              <Text style={{ color: T.brand, fontWeight: '800', fontSize: 16 }}>{drinks[p.id] || 0}</Text>
-            </View>
-          ))}
+    <LinearGradient colors={BG} style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar barStyle="light-content" />
+        <View style={h.top}>
+          <TouchableOpacity style={h.topBtn} onPress={() => { tap(); onHome(); }}><Ionicons name="home" size={20} color="#fff" /></TouchableOpacity>
+          <Text style={h.logo}>{cat.name}</Text>
+          <View style={{ width: 42, height: 42 }} />
         </View>
+
+        <View style={{ flex: 1 }}>
+          {cat.type === 'bomb' ? <Bomb /> : <CardGame cat={cat} />}
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={g.switch}>
+          {CATS.filter((c) => c.type !== 'mixed').map((c) => {
+            const on = c.id === cat.id;
+            return (
+              <TouchableOpacity key={c.id} style={g.switchItem} activeOpacity={0.8}
+                onPress={() => { tap(); c.premium ? onPremium() : setCat(c); }}>
+                <View style={[g.switchEmoji, on && g.switchEmojiOn]}>
+                  <Text style={{ fontSize: 26, opacity: on ? 1 : 0.85 }}>{c.emoji}</Text>
+                  {c.premium && <View style={g.lock}><Ionicons name="lock-closed" size={10} color="#fff" /></View>}
+                </View>
+                <Text style={[g.switchTxt, { opacity: on ? 1 : 0.6 }]} numberOfLines={1}>{c.name.split(' ')[0]}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
+  );
+}
+
+function CardGame({ cat }) {
+  const [c, setC] = useState(() => draw(cat));
+  const [reveal, setReveal] = useState(false);
+  const [votes] = useState(() => ({ up: 10 + Math.floor(Math.random() * 90), down: 10 + Math.floor(Math.random() * 200) }));
+  useEffect(() => { setC(draw(cat)); setReveal(false); }, [cat.id]);
+  const next = () => { tap(); setReveal(false); setC(draw(cat)); };
+  return (
+    <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 8 }}>
+      <View style={{ flex: 1, justifyContent: 'center' }}>
+        <View style={g.deck2} /><View style={g.deck1} />
+        <View style={g.card}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            {!!c.kicker && <Text style={[g.kicker, c.kColor && { color: c.kColor }]}>{c.kicker}</Text>}
+            <Text style={g.cardText}>{c.text}</Text>
+            {c.song != null && (reveal
+              ? <Text style={g.year}>{c.song}</Text>
+              : <TouchableOpacity onPress={() => { tap(); setReveal(true); }} style={g.revealBtn}><Text style={g.revealTxt}>Jahr zeigen</Text></TouchableOpacity>)}
+          </View>
+          <View style={g.voteRow}>
+            <View style={g.vote}><Ionicons name="thumbs-up" size={16} color="#9AA3B2" /><Text style={g.voteTxt}>{votes.up}</Text></View>
+            <View style={g.vote}><Ionicons name="thumbs-down" size={16} color="#9AA3B2" /><Text style={g.voteTxt}>{votes.down}</Text></View>
+          </View>
+        </View>
+      </View>
+      <TouchableOpacity style={g.weiter} activeOpacity={0.85} onPress={next}>
+        <Text style={g.weiterTxt}>Weiter</Text><Ionicons name="arrow-forward" size={20} color="#fff" />
       </TouchableOpacity>
-    </Modal>
-  );
-}
-
-/* ------------------------------- Modus-Screens ------------------------------- */
-function TruthOrDare({ players, intensity, color, addDrink }) {
-  const [turn, setTurn] = useState(0);
-  const [phase, setPhase] = useState('choose');
-  const [type, setType] = useState('');
-  const [card, setCard] = useState('');
-  const cur = players[turn % players.length];
-  const choose = (kind) => {
-    tap('Medium'); setType(kind);
-    setCard(fill(rnd(pool(kind === 'truth' ? TRUTHS : DARES, intensity)).t, players, turn % players.length));
-    setPhase('card');
-  };
-  const done = () => { setTurn((t) => t + 1); setPhase('choose'); };
-  const refuse = () => { tap('Heavy'); addDrink(cur.id, 2); setTurn((t) => t + 1); setPhase('choose'); };
-  return (
-    <View style={s.stage}>
-      <View style={s.turnBadge}><Text style={{ fontSize: 20, marginRight: 8 }}>{cur.av}</Text><Text style={s.turnTxt}>{cur.name} ist dran</Text></View>
-      {phase === 'choose' ? (
-        <View style={{ gap: 14, marginTop: 22 }}>
-          <TouchableOpacity activeOpacity={0.85} style={s.choice} onPress={() => choose('truth')}>
-            <Ionicons name="chatbox-ellipses" size={24} color="#5FD0E0" /><Text style={s.choiceTxt}>Wahrheit</Text><Ionicons name="chevron-forward" size={20} color={T.dim} />
-          </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.85} style={s.choice} onPress={() => choose('dare')}>
-            <Ionicons name="flame" size={24} color="#FF8A6E" /><Text style={s.choiceTxt}>Pflicht</Text><Ionicons name="chevron-forward" size={20} color={T.dim} />
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View>
-          <View style={[s.playCard, { backgroundColor: type === 'truth' ? '#2A3540' : '#3A2A2E' }]}>
-            <Text style={[s.playKicker, { color: type === 'truth' ? '#5FD0E0' : '#FF8A6E' }]}>{type === 'truth' ? 'WAHRHEIT' : 'PFLICHT'}</Text>
-            <Text style={s.playText}>{card}</Text>
-          </View>
-          <View style={{ flexDirection: 'row', gap: 12, marginTop: 18 }}>
-            <Btn label="Erledigt" icon="checkmark" variant="light" onPress={done} style={{ flex: 1 }} />
-            <Btn label="Trink 2" icon="beer" variant="danger" onPress={refuse} style={{ flex: 1 }} />
-          </View>
-        </View>
-      )}
-    </View>
-  );
-}
-
-function CardMode({ intensity, data, head, tail, hint, color }) {
-  const draw = () => { const c = rnd(pool(data, intensity)); return head ? head + ' ' + c.t : c.t; };
-  const [txt, setTxt] = useState(draw);
-  return (
-    <View style={s.stage}>
-      <View style={[s.playCard, { backgroundColor: T.surface }]}>
-        <Text style={s.playText}>{txt}{tail}</Text>
-      </View>
-      <Text style={s.hint}>{hint}</Text>
-      <Btn label="Nächste Karte" icon="arrow-forward" variant="accent" color={color} onPress={() => { tap(); setTxt(draw()); }} style={{ marginTop: 18 }} />
-    </View>
-  );
-}
-
-function EitherMode({ intensity, color }) {
-  const draw = () => rnd(pool(EITHER, intensity));
-  const [c, setC] = useState(draw);
-  return (
-    <View style={s.stage}>
-      <View style={[s.playCard, { backgroundColor: T.surface, paddingVertical: 30 }]}>
-        <Text style={s.eitherTxt}>{c.a}</Text>
-        <Text style={s.eitherOr}>oder</Text>
-        <Text style={s.eitherTxt}>{c.b}?</Text>
-      </View>
-      <Text style={s.hint}>Auf 3 zeigen alle. Wer in der Minderheit ist, trinkt.</Text>
-      <Btn label="Nächste Frage" icon="arrow-forward" variant="accent" color={color} onPress={() => { tap(); setC(draw()); }} style={{ marginTop: 18 }} />
-    </View>
-  );
-}
-
-function SongMode({ color }) {
-  const [song, setSong] = useState(() => rnd(SONGS));
-  const [shown, setShown] = useState(false);
-  const next = () => { tap(); setShown(false); setSong(rnd(SONGS)); };
-  return (
-    <View style={s.stage}>
-      <View style={[s.playCard, { backgroundColor: T.surface }]}>
-        <Ionicons name="musical-notes" size={30} color={color} style={{ marginBottom: 14 }} />
-        <Text style={s.songTitle}>{song.t}</Text>
-        <Text style={s.songArtist}>{song.a}</Text>
-        {shown
-          ? <Text style={[s.songYear, { color }]}>{song.y}</Text>
-          : <Text style={s.songQ}>In welchem Jahr?</Text>}
-      </View>
-      <Text style={s.hint}>Alle tippen aufs Jahr. Wer mehr als 3 Jahre daneben liegt, trinkt.</Text>
-      {shown
-        ? <Btn label="Nächster Song" icon="arrow-forward" variant="accent" color={color} onPress={next} style={{ marginTop: 18 }} />
-        : <Btn label="Auflösen" icon="eye" variant="light" onPress={() => { tap(); setShown(true); }} style={{ marginTop: 18 }} />}
     </View>
   );
 }
@@ -385,134 +274,109 @@ function Bomb() {
     ]));
     loop.start(); return () => loop.stop();
   }, [state]);
-  const start = () => { tap('Medium'); setCat(rnd(CATS)); setState('run'); timer.current = setTimeout(() => { tap('Heavy'); setState('boom'); }, 5000 + Math.random() * 16000); };
+  const start = () => { tap('Medium'); setCat(rnd(CAT_BOMB_WORDS)); setState('run'); timer.current = setTimeout(() => { tap('Heavy'); setState('boom'); }, 5000 + Math.random() * 15000); };
   return (
-    <View style={[s.stage, { alignItems: 'center', justifyContent: 'center' }]}>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       {state === 'idle' && <>
-        <Text style={{ fontSize: 76 }}>💣</Text>
-        <Text style={s.bombInfo}>Gebt das Handy reihum weiter und nennt abwechselnd Begriffe. Wer die Bombe hält, wenn sie hochgeht, trinkt.</Text>
-        <Btn label="Bombe zünden" icon="flame" variant="accent" color="#E4694E" onPress={start} style={{ marginTop: 22, alignSelf: 'stretch' }} />
+        <Text style={{ fontSize: 84 }}>💣</Text>
+        <Text style={g.bombInfo}>Handy reihum weitergeben und Begriffe nennen. Wer die Bombe hält, wenn sie hochgeht, trinkt.</Text>
+        <TouchableOpacity style={g.weiter} onPress={start}><Text style={g.weiterTxt}>Bombe zünden</Text></TouchableOpacity>
       </>}
       {state === 'run' && <>
-        <Animated.Text style={{ fontSize: 92, transform: [{ scale }] }}>💣</Animated.Text>
-        <Text style={s.bombCat}>{cat}</Text>
-        <Text style={s.bombInfo}>Abwechselnd nennen und schnell weitergeben!</Text>
+        <Animated.Text style={{ fontSize: 96, transform: [{ scale }] }}>💣</Animated.Text>
+        <Text style={g.bombCat}>{cat}</Text>
+        <Text style={g.bombInfo}>Abwechselnd nennen und schnell weitergeben!</Text>
       </>}
       {state === 'boom' && <>
-        <Text style={{ fontSize: 92 }}>💥</Text>
-        <Text style={s.boom}>Bumm!</Text>
-        <Text style={s.bombInfo}>Wer das Handy hält, trinkt 3 Schlücke.</Text>
-        <Btn label="Nochmal" icon="refresh" variant="light" onPress={() => setState('idle')} style={{ marginTop: 22, alignSelf: 'stretch' }} />
+        <Text style={{ fontSize: 96 }}>💥</Text>
+        <Text style={g.boom}>Bumm!</Text>
+        <Text style={g.bombInfo}>Wer das Handy hält, trinkt 3 Schlücke.</Text>
+        <TouchableOpacity style={g.weiter} onPress={() => setState('idle')}><Text style={g.weiterTxt}>Nochmal</Text></TouchableOpacity>
       </>}
     </View>
-  );
-}
-
-function Game({ mode, players, intensity, addDrink, onBack }) {
-  const m = MODES.find((x) => x.id === mode);
-  return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={s.gameHead}>
-        <TouchableOpacity style={s.roundBtn} onPress={() => { tap(); onBack(); }}><Ionicons name="chevron-back" size={20} color={T.text} /></TouchableOpacity>
-        <Text style={s.gameTitle}>{m.name}</Text>
-        <View style={{ width: 40 }} />
-      </View>
-      {mode === 'tod' && <TruthOrDare players={players} intensity={intensity} color={m.color} addDrink={addDrink} />}
-      {mode === 'never' && <CardMode intensity={intensity} data={NEVER} head="Ich hab noch nie" hint="Wer schon → trinkt." color={m.color} />}
-      {mode === 'likely' && <CardMode intensity={intensity} data={LIKELY} head="Wer würde am ehesten" tail="" hint="Auf 3 zeigen alle. Die Mehrheit entscheidet – wer’s ist, trinkt." color={m.color} />}
-      {mode === 'either' && <EitherMode intensity={intensity} color={m.color} />}
-      {mode === 'cats' && <CardMode intensity={3} data={CATS.map((c) => ({ l: 0, t: c }))} head="Reihum nennen:" hint="Wer stockt oder sich wiederholt, trinkt." color={m.color} />}
-      {mode === 'song' && <SongMode color={m.color} />}
-      {mode === 'bomb' && <Bomb />}
-    </SafeAreaView>
   );
 }
 
 /* ---------------------------------- App ---------------------------------- */
 export default function App() {
-  const [screen, setScreen] = useState('setup');
-  const [players, setPlayers] = useState([]);
-  const [intensity, setIntensity] = useState(1);
-  const [mode, setMode] = useState(null);
-  const [drinks, setDrinks] = useState({});
-  const addDrink = (id, n) => setDrinks((d) => ({ ...d, [id]: (d[id] || 0) + n }));
+  const [screen, setScreen] = useState('onboarding');
+  const [cat, setCat] = useState(CATS[0]);
   return (
-    <View style={{ flex: 1, backgroundColor: T.bg }}>
-      <StatusBar barStyle="light-content" />
-      {screen === 'setup' && <Setup players={players} setPlayers={setPlayers} intensity={intensity} setIntensity={setIntensity} onStart={() => setScreen('home')} />}
-      {screen === 'home' && <Home players={players} intensity={intensity} drinks={drinks} onEdit={() => setScreen('setup')} onPick={(id) => { setMode(id); setScreen('game'); }} />}
-      {screen === 'game' && <Game mode={mode} players={players} intensity={intensity} addDrink={addDrink} onBack={() => setScreen('home')} />}
+    <View style={{ flex: 1, backgroundColor: '#2A46B4' }}>
+      {screen === 'onboarding' && <Onboarding onDone={() => setScreen('home')} />}
+      {screen === 'paywall' && <Paywall onClose={() => setScreen('home')} />}
+      {screen === 'home' && <Home onPremium={() => setScreen('paywall')} onPick={(c) => { if (c.premium) return setScreen('paywall'); setCat(c); setScreen('game'); }} />}
+      {screen === 'game' && <Game cat={cat} setCat={setCat} onHome={() => setScreen('home')} onPremium={() => setScreen('paywall')} />}
     </View>
   );
 }
 
 /* --------------------------------- Styles --------------------------------- */
-const s = StyleSheet.create({
-  brandMark: { color: T.text, fontSize: 30, fontWeight: '800', letterSpacing: -0.5 },
-  h1: { color: T.text, fontSize: 30, fontWeight: '800', letterSpacing: -0.5, marginTop: 18, marginBottom: 18 },
-  label: { color: T.dim, fontSize: 13, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase', marginTop: 28, marginBottom: 14 },
-  fine: { color: T.dim2, fontSize: 12, textAlign: 'center', marginTop: 18 },
+const o = StyleSheet.create({
+  emojiWrap: { width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center', marginBottom: 40 },
+  title: { color: '#fff', fontSize: 30, fontWeight: '900', textAlign: 'center', letterSpacing: -0.5 },
+  text: { color: 'rgba(255,255,255,0.88)', fontSize: 17, textAlign: 'center', marginTop: 14, lineHeight: 24 },
+  foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 28, paddingBottom: 20 },
+  dot: { width: 22, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.35)' },
+  dotOn: { backgroundColor: '#fff', width: 30 },
+  next: { width: 66, height: 66, borderRadius: 33, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+});
 
-  inputRow: { flexDirection: 'row', gap: 10 },
-  input: { flex: 1, backgroundColor: T.surface, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 15, color: T.text, fontSize: 16, borderWidth: 1, borderColor: T.border },
-  addBtn: { width: 52, height: 52, borderRadius: 14, backgroundColor: T.text, alignItems: 'center', justifyContent: 'center' },
-  playerRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: T.surface, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 10, borderWidth: 1, borderColor: T.border },
-  playerAv: { width: 38, height: 38, borderRadius: 19, backgroundColor: T.surface2, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  playerName: { color: T.text, fontWeight: '600', fontSize: 16, flex: 1 },
+const p = StyleSheet.create({
+  close: { alignSelf: 'flex-end', margin: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' },
+  badge: { alignSelf: 'center', backgroundColor: '#FFD34E', borderRadius: 18, paddingHorizontal: 26, paddingVertical: 12, alignItems: 'center', transform: [{ rotate: '-4deg' }], marginBottom: 20 },
+  badgeTop: { color: '#5A4600', fontWeight: '800', fontSize: 13 },
+  badgeBig: { color: '#3A2E00', fontWeight: '900', fontSize: 30, letterSpacing: -0.5 },
+  title: { color: '#fff', fontSize: 30, fontWeight: '900', textAlign: 'center', marginBottom: 18, letterSpacing: -0.5 },
+  card: { backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 22, padding: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)' },
+  featRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9 },
+  featIc: { width: 34, height: 34, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  featTxt: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  price: { color: '#fff', fontSize: 20, fontWeight: '800', textAlign: 'center', marginTop: 22 },
+  strike: { color: 'rgba(255,255,255,0.6)', textDecorationLine: 'line-through', fontWeight: '700' },
+  priceSub: { color: 'rgba(255,255,255,0.75)', textAlign: 'center', marginTop: 4, fontSize: 13 },
+  cta: { backgroundColor: '#fff', borderRadius: 30, paddingVertical: 18, alignItems: 'center', marginTop: 20 },
+  ctaTxt: { color: BLUE, fontSize: 18, fontWeight: '900' },
+  restore: { color: '#fff', textAlign: 'center', textDecorationLine: 'underline', marginTop: 16, fontWeight: '600' },
+  legal: { color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginTop: 14, fontSize: 12 },
+});
 
-  intGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  intCard: { width: '48.5%', backgroundColor: T.surface, borderRadius: 16, paddingVertical: 18, alignItems: 'center', marginBottom: 12, borderWidth: 1.5, borderColor: T.border },
-  intLabel: { color: T.dim, fontWeight: '700', marginTop: 8 },
-  intDot: { position: 'absolute', top: 12, right: 12, width: 8, height: 8, borderRadius: 4, backgroundColor: T.brand },
+const h = StyleSheet.create({
+  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingVertical: 8 },
+  topBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' },
+  logo: { color: '#fff', fontSize: 22, fontWeight: '900', letterSpacing: 1 },
+  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: 26, paddingHorizontal: 22, paddingVertical: 22, marginBottom: 13, minHeight: 84 },
+  rowBig: { paddingVertical: 20 },
+  rowName: { color: '#fff', fontSize: 24, fontWeight: '900', letterSpacing: -0.4 },
+  rowSub: { color: 'rgba(255,255,255,0.8)', fontSize: 13.5, marginTop: 4, lineHeight: 18 },
+  badges: { flexDirection: 'row', alignItems: 'center', gap: 8, marginRight: 6 },
+  star: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#FFD34E', alignItems: 'center', justifyContent: 'center' },
+  age: { backgroundColor: '#F0453A', borderRadius: 12, paddingHorizontal: 9, paddingVertical: 3 },
+  ageTxt: { color: '#fff', fontWeight: '800', fontSize: 12 },
+  emoji: { fontSize: 46, marginLeft: 8 },
+});
 
-  btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 15, paddingVertical: 16 },
-  btnTxt: { fontWeight: '700', fontSize: 16 },
-
-  homeTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22 },
-  metaRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  metaPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: T.surface, borderRadius: 999, paddingHorizontal: 11, paddingVertical: 6, borderWidth: 1, borderColor: T.border },
-  metaTxt: { color: T.dim, fontWeight: '600', fontSize: 12.5 },
-  roundBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: T.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: T.border },
-
-  hero: { borderRadius: 24, padding: 22, height: 168, justifyContent: 'space-between' },
-  heroIcon: { width: 42, height: 42, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.14)', alignItems: 'center', justifyContent: 'center' },
-  heroTitle: { color: '#141414', fontSize: 27, fontWeight: '800', letterSpacing: -0.5, marginTop: 6, width: '75%' },
-  heroFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  heroShort: { color: 'rgba(20,20,20,0.7)', fontWeight: '600', fontSize: 14 },
-
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  mCard: { width: '48.5%', backgroundColor: T.surface, borderRadius: 20, padding: 16, marginBottom: 13, borderWidth: 1, borderColor: T.border, minHeight: 132, justifyContent: 'space-between' },
-  mName: { color: T.text, fontSize: 16, fontWeight: '700', marginTop: 14, letterSpacing: -0.3 },
-  mShort: { color: T.dim, fontSize: 12.5, marginTop: 3 },
-
-  stage: { flex: 1, padding: 22, justifyContent: 'center' },
-  turnBadge: { flexDirection: 'row', alignItems: 'center', alignSelf: 'center', backgroundColor: T.surface, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10, borderWidth: 1, borderColor: T.border },
-  turnTxt: { color: T.text, fontWeight: '700', fontSize: 16 },
-  choice: { flexDirection: 'row', alignItems: 'center', backgroundColor: T.surface, borderRadius: 18, paddingHorizontal: 20, paddingVertical: 22, borderWidth: 1, borderColor: T.border, gap: 14 },
-  choiceTxt: { color: T.text, fontSize: 20, fontWeight: '700', flex: 1 },
-  playCard: { borderRadius: 22, padding: 26, minHeight: 210, alignItems: 'center', justifyContent: 'center' },
-  playKicker: { fontWeight: '800', letterSpacing: 2, fontSize: 12, marginBottom: 14 },
-  playText: { color: T.text, fontSize: 23, fontWeight: '700', textAlign: 'center', lineHeight: 31, letterSpacing: -0.3 },
-  hint: { color: T.dim, textAlign: 'center', marginTop: 16, fontSize: 13.5, lineHeight: 19 },
-
-  eitherTxt: { color: T.text, fontSize: 22, fontWeight: '800', textAlign: 'center', letterSpacing: -0.3 },
-  eitherOr: { color: T.dim2, fontSize: 14, fontWeight: '600', marginVertical: 12 },
-
-  songTitle: { color: T.text, fontSize: 24, fontWeight: '800', textAlign: 'center', letterSpacing: -0.3 },
-  songArtist: { color: T.dim, fontSize: 16, marginTop: 4 },
-  songQ: { color: T.dim2, fontSize: 15, marginTop: 20, fontWeight: '600' },
-  songYear: { fontSize: 46, fontWeight: '800', marginTop: 14, letterSpacing: -1 },
-
-  bombInfo: { color: T.dim, textAlign: 'center', fontSize: 14.5, marginTop: 16, lineHeight: 21, paddingHorizontal: 6 },
-  bombCat: { color: T.text, fontSize: 26, fontWeight: '800', marginTop: 16 },
-  boom: { color: '#FF8A6E', fontSize: 40, fontWeight: '800', marginTop: 6 },
-
-  gameHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingTop: 6, paddingBottom: 8 },
-  gameTitle: { color: T.text, fontSize: 17, fontWeight: '700' },
-
-  sheetBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: T.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 22, paddingBottom: 36, borderWidth: 1, borderColor: T.border },
-  grab: { width: 40, height: 5, borderRadius: 3, backgroundColor: T.surface2, alignSelf: 'center', marginBottom: 18 },
-  sheetTitle: { color: T.text, fontSize: 20, fontWeight: '800', marginBottom: 12, letterSpacing: -0.3 },
-  rankRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: T.border },
+const g = StyleSheet.create({
+  deck1: { position: 'absolute', left: 10, right: 10, top: 18, bottom: -8, backgroundColor: 'rgba(255,255,255,0.35)', borderRadius: 28 },
+  deck2: { position: 'absolute', left: 20, right: 20, top: 26, bottom: -14, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 28 },
+  card: { backgroundColor: '#fff', borderRadius: 28, padding: 26, flex: 1, maxHeight: 440 },
+  kicker: { color: BLUE, fontSize: 22, fontWeight: '900', textAlign: 'center', marginBottom: 12, letterSpacing: -0.3 },
+  cardText: { color: '#101828', fontSize: 30, fontWeight: '900', textAlign: 'center', lineHeight: 38, letterSpacing: -0.6 },
+  year: { color: BLUE, fontSize: 44, fontWeight: '900', marginTop: 18 },
+  revealBtn: { marginTop: 20, backgroundColor: '#EEF1F6', borderRadius: 20, paddingHorizontal: 22, paddingVertical: 11 },
+  revealTxt: { color: '#4A5568', fontWeight: '800' },
+  voteRow: { flexDirection: 'row', justifyContent: 'center', gap: 12 },
+  vote: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: '#F1F3F7', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 9 },
+  voteTxt: { color: '#9AA3B2', fontWeight: '800', fontSize: 14 },
+  weiter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 30, paddingVertical: 18, marginTop: 16 },
+  weiterTxt: { color: '#fff', fontSize: 18, fontWeight: '900' },
+  bombInfo: { color: 'rgba(255,255,255,0.9)', textAlign: 'center', fontSize: 15, marginTop: 16, lineHeight: 22, paddingHorizontal: 10 },
+  bombCat: { color: '#fff', fontSize: 28, fontWeight: '900', marginTop: 16 },
+  boom: { color: '#FFD34E', fontSize: 44, fontWeight: '900', marginTop: 6 },
+  switch: { paddingHorizontal: 14, paddingTop: 6, paddingBottom: 6, gap: 16 },
+  switchItem: { alignItems: 'center', width: 66 },
+  switchEmoji: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.10)' },
+  switchEmojiOn: { backgroundColor: 'rgba(255,255,255,0.24)' },
+  lock: { position: 'absolute', top: -2, right: -2, width: 18, height: 18, borderRadius: 9, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center' },
+  switchTxt: { color: '#fff', fontSize: 11, fontWeight: '700', marginTop: 5 },
 });
