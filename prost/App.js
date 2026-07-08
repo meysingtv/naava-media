@@ -89,18 +89,29 @@ const AVA = [
 ];
 const avaImg = (id) => (AVA.find((a) => a.id === id) || AVA[0]).img;
 
-const CATS = [
-  { id: 'pre',    name: 'Pre-Party',            img: IMG.cup,     type: 'cards',  data: PRE },
-  { id: 'never',  name: 'Ich hab noch nie',      img: IMG.wink,    type: 'never',  data: NEVER },
-  { id: 'tod',    name: 'Wahrheit / Pflicht',    img: IMG.flame,   type: 'tod' },
-  { id: 'either', name: 'Entweder / Oder',       img: IMG.storm,   type: 'either', data: EITHER },
-  { id: 'likely', name: 'Most Likely',           img: IMG.heart,   type: 'likely', data: LIKELY },
-  { id: 'song',   name: 'Song-Quiz',             img: IMG.note,    type: 'song',   data: SONGS },
-  { id: 'nsfw',   name: 'NSFW',                  img: IMG.plus18,  type: 'cards',  data: NSFW, premium: true, age: true },
-  { id: 'bomb',   name: 'Die Bombe',             img: IMG.bomb,    type: 'bomb' },
-  { id: 'mixed',  name: 'Gemischt',              img: IMG.tornado, type: 'mixed',  big: true, sub: 'Mische alle Kategorien und starte ein großes Spiel.' },
-];
 const CAT_BOMB_WORDS = ['Automarken', 'Länder', 'Tiere', 'Süßigkeiten', 'Serien', 'Cocktails', 'Filme', 'Rapper'];
+
+const COV = {
+  tod: require('./assets/covers/tod.png'),
+  never: require('./assets/covers/never.png'),
+  likely: require('./assets/covers/likely.png'),
+  either: require('./assets/covers/either.png'),
+  song: require('./assets/covers/song.png'),
+  cats: require('./assets/covers/cats.png'),
+  bomb: require('./assets/covers/bomb.png'),
+  mixed: require('./assets/covers/mixed.png'),
+};
+
+const CATS = [
+  { id: 'tod',    name: 'Wahrheit oder Pflicht', cover: COV.tod,    icon: IMG.flame,   type: 'tod',    badge: 'Beliebt' },
+  { id: 'never',  name: 'Ich hab noch nie',       cover: COV.never,  icon: IMG.wink,    type: 'never',  data: NEVER },
+  { id: 'likely', name: 'Most Likely',            cover: COV.likely, icon: IMG.heart,   type: 'likely', data: LIKELY, badge: 'Neu' },
+  { id: 'either', name: 'Entweder / Oder',        cover: COV.either, icon: IMG.storm,   type: 'either', data: EITHER },
+  { id: 'song',   name: 'Song-Quiz',              cover: COV.song,   icon: IMG.note,    type: 'song',   data: SONGS },
+  { id: 'cats',   name: 'Kategorien',             cover: COV.cats,   icon: IMG.cup,     type: 'cats',   data: CAT_BOMB_WORDS },
+  { id: 'bomb',   name: 'Die Bombe',              cover: COV.bomb,   icon: IMG.bomb,    type: 'bomb',   badge: 'Beliebt' },
+  { id: 'mixed',  name: 'Party Mix',              cover: COV.mixed,  icon: IMG.tornado, type: 'mixed',  big: true },
+];
 
 /* Karte für eine Kategorie ziehen -> {kicker, kColor, text, song} */
 function draw(cat) {
@@ -110,6 +121,7 @@ function draw(cat) {
   if (t === 'either') { const [a, b] = rnd(EITHER); return { kicker: 'Entweder … oder', text: a + '\n\noder\n\n' + b + '?' }; }
   if (t === 'song') { const [ti, ar, y] = rnd(SONGS); return { kicker: 'Song-Quiz', text: ti + '\n' + ar, song: y }; }
   if (t === 'tod') { const truth = Math.random() < 0.5; return truth ? { kicker: 'Wahrheit', kColor: BLUE, text: rnd(TRUTHS) } : { kicker: 'Pflicht', kColor: '#F0603A', text: rnd(DARES) }; }
+  if (t === 'cats') return { kicker: 'Reihum nennen', text: rnd(CAT_BOMB_WORDS) };
   if (t === 'mixed') { const pick = rnd(CATS.filter((c) => c.type !== 'mixed' && c.type !== 'bomb')); return draw(pick); }
   return { kicker: cat.name, text: rnd(cat.data || PRE) };
 }
@@ -334,6 +346,21 @@ function Paywall({ onClose }) {
 
 /* ------------------------------- Spiele-Liste ------------------------------- */
 function Home({ onPick, onPremium, profile, onEditProfile, onSettings }) {
+  const games = CATS.filter((c) => !c.big);
+  const mixed = CATS.find((c) => c.big);
+  const Card = (c, full) => (
+    <TouchableOpacity key={c.id} activeOpacity={0.88} style={[h.card, full ? h.cardFull : h.cardHalf]} onPress={() => { tap('Medium'); onPick(c); }}>
+      <Image source={c.cover} style={h.cardImg} resizeMode="cover" />
+      {!!c.badge && (
+        <View style={h.badge}>
+          <View style={[h.badgeDot, { backgroundColor: c.badge === 'Neu' ? '#FFD34E' : '#FF3B30' }]}>
+            <Ionicons name={c.badge === 'Neu' ? 'star' : 'flame'} size={11} color={c.badge === 'Neu' ? '#7A5B00' : '#fff'} />
+          </View>
+          <Text style={h.badgeTxt}>{c.badge}</Text>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
   return (
     <Bg>
       <SafeAreaView style={{ flex: 1 }}>
@@ -342,23 +369,23 @@ function Home({ onPick, onPremium, profile, onEditProfile, onSettings }) {
           <TouchableOpacity onPress={() => { tap(); onEditProfile(); }}>
             <Image source={avaImg(profile?.avatarId || 1)} style={h.me} />
           </TouchableOpacity>
-          <Text style={h.logo}>PROST</Text>
-          <TouchableOpacity style={h.topBtn} onPress={() => { tap(); onSettings(); }}><Ionicons name="settings-sharp" size={20} color="#fff" /></TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={h.topBtn}><Ionicons name="football" size={18} color="#fff" /></View>
+            <TouchableOpacity style={h.topBtn} onPress={() => { tap(); onSettings(); }}><Ionicons name="settings-sharp" size={18} color="#fff" /></TouchableOpacity>
+          </View>
         </View>
-        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 6, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
-          {CATS.map((c) => (
-            <TouchableOpacity key={c.id} activeOpacity={0.85} style={[h.row, c.big && h.rowBig]} onPress={() => { tap('Medium'); onPick(c); }}>
-              <View style={{ flex: 1 }}>
-                <Text style={h.rowName}>{c.name}</Text>
-                {c.big && <Text style={h.rowSub}>{c.sub}</Text>}
-              </View>
-              <View style={h.badges}>
-                {c.premium && <View style={h.star}><Ionicons name="star" size={13} color="#7A5B00" /></View>}
-                {c.age && <View style={h.age}><Text style={h.ageTxt}>17+</Text></View>}
-              </View>
-              <Image source={c.img} style={h.icon} resizeMode="contain" />
-            </TouchableOpacity>
-          ))}
+        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 2, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
+          <Text style={h.big}>{profile?.name ? profile.name + 's Spiele' : 'Deine Spiele'}</Text>
+          <View style={h.search}>
+            <Ionicons name="search" size={18} color="rgba(255,255,255,0.7)" />
+            <Text style={h.searchTxt}>Spiel suchen</Text>
+          </View>
+          <View style={h.chips}>
+            <View style={h.chip}><Ionicons name="people" size={15} color="#7CC0FF" /><Text style={h.chipTxt}>Spieleranzahl</Text></View>
+            <View style={h.chip}><Ionicons name="heart" size={15} color="#FF6B6B" /><Text style={h.chipTxt}>Favoriten</Text></View>
+          </View>
+          <View style={h.grid}>{games.map((c) => Card(c, false))}</View>
+          {mixed && Card(mixed, true)}
         </ScrollView>
       </SafeAreaView>
     </Bg>
@@ -388,7 +415,7 @@ function Game({ cat, setCat, onHome, onPremium }) {
               <TouchableOpacity key={c.id} style={g.switchItem} activeOpacity={0.8}
                 onPress={() => { tap(); c.premium ? onPremium() : setCat(c); }}>
                 <View style={[g.switchEmoji, on && g.switchEmojiOn]}>
-                  <Image source={c.img} style={{ width: 34, height: 34, opacity: on ? 1 : 0.9 }} resizeMode="contain" />
+                  <Image source={c.icon} style={{ width: 34, height: 34, opacity: on ? 1 : 0.9 }} resizeMode="contain" />
                   {c.premium && <View style={g.lock}><Ionicons name="lock-closed" size={10} color="#fff" /></View>}
                 </View>
                 <Text style={[g.switchTxt, { opacity: on ? 1 : 0.6 }]} numberOfLines={1}>{c.name.split(' ')[0]}</Text>
@@ -530,6 +557,20 @@ const h = StyleSheet.create({
   ageTxt: { color: '#fff', fontWeight: '800', fontSize: 12 },
   icon: { width: 56, height: 56, marginLeft: 8 },
   me: { width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: 'rgba(255,255,255,0.7)' },
+  big: { color: '#fff', fontSize: 30, fontWeight: '900', letterSpacing: -0.6, marginTop: 6, marginBottom: 14 },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(255,255,255,0.16)', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 14 },
+  searchTxt: { color: 'rgba(255,255,255,0.7)', fontSize: 16 },
+  chips: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: 'rgba(0,0,0,0.28)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9 },
+  chipTxt: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  card: { borderRadius: 20, overflow: 'hidden', marginBottom: 13, backgroundColor: '#22409A', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } },
+  cardHalf: { width: '48.5%', aspectRatio: 1.53 },
+  cardFull: { width: '100%', aspectRatio: 1.53 },
+  cardImg: { width: '100%', height: '100%' },
+  badge: { position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 20, paddingRight: 11, paddingLeft: 4, paddingVertical: 4, gap: 6 },
+  badgeDot: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  badgeTxt: { color: '#1A1A1A', fontWeight: '800', fontSize: 12.5 },
 });
 
 const pf = StyleSheet.create({
