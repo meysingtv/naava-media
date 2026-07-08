@@ -114,6 +114,101 @@ function draw(cat) {
   return { kicker: cat.name, text: rnd(cat.data || PRE) };
 }
 
+/* ---------------------- Hintergrund mit Sonnen-Glows ---------------------- */
+function Bg({ children }) {
+  return (
+    <LinearGradient colors={BG} style={{ flex: 1 }}>
+      <View pointerEvents="none" style={gl.wrap}>
+        <View style={[gl.c, { width: 460, height: 460, top: -140, right: -130, backgroundColor: '#DCEEFF' }]} />
+        <View style={[gl.c, { width: 300, height: 300, top: -40, right: -30, backgroundColor: '#EAF5FF' }]} />
+        <View style={[gl.c, { width: 520, height: 520, top: 300, left: -180, backgroundColor: '#A7C4FF' }]} />
+        <View style={[gl.c, { width: 320, height: 320, top: 430, left: -70, backgroundColor: '#BBD3FF' }]} />
+      </View>
+      {children}
+    </LinearGradient>
+  );
+}
+const gl = StyleSheet.create({
+  wrap: { ...StyleSheet.absoluteFillObject, overflow: 'hidden' },
+  c: { position: 'absolute', borderRadius: 400, opacity: 0.12 },
+});
+
+/* -------------------------------- Settings -------------------------------- */
+function Settings({ profile, onClose, onPremium, onEditProfile }) {
+  const row = (icon, color, label, extra) => (
+    <TouchableOpacity style={se.row} activeOpacity={0.7} onPress={() => { tap(); extra === 'prem' ? onPremium() : null; }}>
+      <View style={[se.ic, { backgroundColor: color }]}><Ionicons name={icon} size={17} color="#fff" /></View>
+      <Text style={se.rowTxt}>{label}</Text>
+      {extra === '!' ? <View style={se.warn}><Text style={{ color: '#fff', fontWeight: '900', fontSize: 12 }}>!</Text></View>
+        : <Ionicons name="chevron-forward" size={18} color="#5A5A66" />}
+    </TouchableOpacity>
+  );
+  return (
+    <View style={{ flex: 1, backgroundColor: '#0E0E12' }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar barStyle="light-content" />
+        <View style={se.head}>
+          <Text style={se.title}>Einstellungen</Text>
+          <TouchableOpacity style={se.close} onPress={() => { tap(); onClose(); }}><Ionicons name="close" size={22} color="#fff" /></TouchableOpacity>
+        </View>
+        <ScrollView contentContainerStyle={{ padding: 18, paddingTop: 4 }} showsVerticalScrollIndicator={false}>
+          <TouchableOpacity activeOpacity={0.9} onPress={() => { tap('Medium'); onPremium(); }}>
+            <LinearGradient colors={['#FF5A7A', '#E23B5A']} style={se.promo}>
+              <Text style={se.promoTop}>PROST Premium</Text>
+              <Text style={se.promoBig}>Komm ins Team ❤️ 🪩</Text>
+              <View style={se.promoBtn}><Text style={se.promoBtnTxt}>Alle Vorteile freischalten</Text></View>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={se.profile} activeOpacity={0.8} onPress={() => { tap(); onEditProfile(); }}>
+            <Image source={avaImg(profile?.avatarId || 1)} style={se.profileAv} />
+            <View style={{ flex: 1, marginLeft: 14 }}>
+              <Text style={se.profileName}>{profile?.name || 'Dein Profil'}</Text>
+              <Text style={se.profileSub}>Dein PROST-Profil</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#5A5A66" />
+          </TouchableOpacity>
+
+          <View style={se.group}>
+            {row('globe', '#3B82F6', 'Sprache')}
+            {row('notifications', '#3B82F6', 'Benachrichtigungen', '!')}
+            {row('mail', '#3B82F6', 'Feedback')}
+            {row('shield-checkmark', '#3B82F6', 'Datenschutz')}
+            {row('document-text', '#3B82F6', 'Bedingungen')}
+            {row('information-circle', '#3B82F6', 'Über')}
+          </View>
+          <View style={se.group}>
+            {row('heart', '#34C759', 'App bewerten')}
+            {row('share', '#FF9500', 'Freunde einladen')}
+            {row('sparkles', '#FFCC00', 'Ideen & Wünsche')}
+          </View>
+          <Text style={se.version}>PROST · Demo v3</Text>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
+  );
+}
+const se = StyleSheet.create({
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 },
+  title: { color: '#fff', fontSize: 30, fontWeight: '900', letterSpacing: -0.5 },
+  close: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#26262E', alignItems: 'center', justifyContent: 'center' },
+  promo: { borderRadius: 22, padding: 18, marginBottom: 18 },
+  promoTop: { color: 'rgba(255,255,255,0.9)', fontWeight: '800', fontSize: 14 },
+  promoBig: { color: '#fff', fontWeight: '900', fontSize: 24, marginTop: 2, marginBottom: 14, letterSpacing: -0.5 },
+  promoBtn: { backgroundColor: '#FFD34E', borderRadius: 16, paddingVertical: 14, alignItems: 'center' },
+  promoBtnTxt: { color: '#1A1A00', fontWeight: '900', fontSize: 16 },
+  profile: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1A22', borderRadius: 18, padding: 12, marginBottom: 18 },
+  profileAv: { width: 52, height: 52, borderRadius: 26 },
+  profileName: { color: '#fff', fontWeight: '800', fontSize: 17 },
+  profileSub: { color: '#8A8A94', fontSize: 13, marginTop: 1 },
+  group: { backgroundColor: '#1A1A22', borderRadius: 18, paddingHorizontal: 14, marginBottom: 18 },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 13, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#2C2C36' },
+  ic: { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  rowTxt: { color: '#fff', fontSize: 16.5, flex: 1, fontWeight: '500' },
+  warn: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#FF9500', alignItems: 'center', justifyContent: 'center' },
+  version: { color: '#55555F', textAlign: 'center', marginTop: 6, marginBottom: 20, fontSize: 12 },
+});
+
 /* ------------------------------- Onboarding ------------------------------- */
 const SLIDES = [
   { img: 'cup', title: 'Willkommen bei PROST', text: 'Das ultimative Trinkspiel für jede Runde.' },
@@ -126,7 +221,7 @@ function Onboarding({ onDone }) {
   const [i, setI] = useState(0);
   const go = () => { tap(); if (i < SLIDES.length - 1) { ref.current?.scrollTo({ x: (i + 1) * W, animated: true }); setI(i + 1); } else onDone(); };
   return (
-    <LinearGradient colors={BG} style={{ flex: 1 }}>
+    <Bg>
       <SafeAreaView style={{ flex: 1 }}>
         <StatusBar barStyle="light-content" />
         <ScrollView ref={ref} horizontal pagingEnabled showsHorizontalScrollIndicator={false}
@@ -148,7 +243,7 @@ function Onboarding({ onDone }) {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-    </LinearGradient>
+    </Bg>
   );
 }
 
@@ -161,7 +256,7 @@ function ProfileSetup({ initial, onDone }) {
   const list = gender ? [...AVA].sort((a, b) => (b.g === gender) - (a.g === gender)) : AVA;
   const done = () => { if (!name.trim()) return; tap('Medium'); onDone({ name: name.trim(), age: age.trim(), gender, avatarId: sel }); };
   return (
-    <LinearGradient colors={BG} style={{ flex: 1 }}>
+    <Bg>
       <SafeAreaView style={{ flex: 1 }}>
         <StatusBar barStyle="light-content" />
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -199,7 +294,7 @@ function ProfileSetup({ initial, onDone }) {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </LinearGradient>
+    </Bg>
   );
 }
 
@@ -211,7 +306,7 @@ function Paywall({ onClose }) {
     ['ban', 'Keine Werbung mehr'], ['close-circle', 'Jederzeit kündbar'],
   ];
   return (
-    <LinearGradient colors={BG} style={{ flex: 1 }}>
+    <Bg>
       <SafeAreaView style={{ flex: 1 }}>
         <StatusBar barStyle="light-content" />
         <TouchableOpacity style={p.close} onPress={() => { tap(); onClose(); }}><Ionicons name="close" size={24} color="#fff" /></TouchableOpacity>
@@ -233,14 +328,14 @@ function Paywall({ onClose }) {
           <Text style={p.legal}>Nutzungsbedingungen · Datenschutz</Text>
         </ScrollView>
       </SafeAreaView>
-    </LinearGradient>
+    </Bg>
   );
 }
 
 /* ------------------------------- Spiele-Liste ------------------------------- */
-function Home({ onPick, onPremium, profile, onEditProfile }) {
+function Home({ onPick, onPremium, profile, onEditProfile, onSettings }) {
   return (
-    <LinearGradient colors={BG} style={{ flex: 1 }}>
+    <Bg>
       <SafeAreaView style={{ flex: 1 }}>
         <StatusBar barStyle="light-content" />
         <View style={h.top}>
@@ -248,7 +343,7 @@ function Home({ onPick, onPremium, profile, onEditProfile }) {
             <Image source={avaImg(profile?.avatarId || 1)} style={h.me} />
           </TouchableOpacity>
           <Text style={h.logo}>PROST</Text>
-          <TouchableOpacity style={h.topBtn} onPress={onPremium}><Ionicons name="star" size={20} color="#FFD34E" /></TouchableOpacity>
+          <TouchableOpacity style={h.topBtn} onPress={() => { tap(); onSettings(); }}><Ionicons name="settings-sharp" size={20} color="#fff" /></TouchableOpacity>
         </View>
         <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 6, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
           {CATS.map((c) => (
@@ -266,14 +361,14 @@ function Home({ onPick, onPremium, profile, onEditProfile }) {
           ))}
         </ScrollView>
       </SafeAreaView>
-    </LinearGradient>
+    </Bg>
   );
 }
 
 /* --------------------------------- Spiel --------------------------------- */
 function Game({ cat, setCat, onHome, onPremium }) {
   return (
-    <LinearGradient colors={BG} style={{ flex: 1 }}>
+    <Bg>
       <SafeAreaView style={{ flex: 1 }}>
         <StatusBar barStyle="light-content" />
         <View style={h.top}>
@@ -302,7 +397,7 @@ function Game({ cat, setCat, onHome, onPremium }) {
           })}
         </ScrollView>
       </SafeAreaView>
-    </LinearGradient>
+    </Bg>
   );
 }
 
@@ -384,7 +479,8 @@ export default function App() {
       {screen === 'onboarding' && <Onboarding onDone={() => setScreen('profile')} />}
       {screen === 'profile' && <ProfileSetup initial={profile} onDone={(p) => { setProfile(p); setScreen('home'); }} />}
       {screen === 'paywall' && <Paywall onClose={() => setScreen('home')} />}
-      {screen === 'home' && <Home profile={profile} onEditProfile={() => setScreen('profile')} onPremium={() => setScreen('paywall')} onPick={(c) => { if (c.premium) return setScreen('paywall'); setCat(c); setScreen('game'); }} />}
+      {screen === 'settings' && <Settings profile={profile} onClose={() => setScreen('home')} onPremium={() => setScreen('paywall')} onEditProfile={() => setScreen('profile')} />}
+      {screen === 'home' && <Home profile={profile} onEditProfile={() => setScreen('profile')} onSettings={() => setScreen('settings')} onPremium={() => setScreen('paywall')} onPick={(c) => { if (c.premium) return setScreen('paywall'); setCat(c); setScreen('game'); }} />}
       {screen === 'game' && <Game cat={cat} setCat={setCat} onHome={() => setScreen('home')} onPremium={() => setScreen('paywall')} />}
     </View>
   );
