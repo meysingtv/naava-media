@@ -2,8 +2,8 @@
 // Onboarding (animiert), Spiele-Liste, weiße Spielkarte, Premium-Screen.
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView,
-  StatusBar, Platform, Animated, Dimensions, Image,
+  View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, TextInput,
+  StatusBar, Platform, Animated, Dimensions, Image, KeyboardAvoidingView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -77,6 +77,18 @@ const IMG = {
   tornado: require('./assets/icons/tornado.png'),
 };
 
+const AVA = [
+  { id: 1, g: 'w', img: require('./assets/avatars/avatar1.png') },
+  { id: 2, g: 'm', img: require('./assets/avatars/avatar2.png') },
+  { id: 3, g: 'w', img: require('./assets/avatars/avatar3.png') },
+  { id: 4, g: 'm', img: require('./assets/avatars/avatar4.png') },
+  { id: 5, g: 'w', img: require('./assets/avatars/avatar5.png') },
+  { id: 6, g: 'm', img: require('./assets/avatars/avatar6.png') },
+  { id: 7, g: 'w', img: require('./assets/avatars/avatar7.png') },
+  { id: 8, g: 'w', img: require('./assets/avatars/avatar8.png') },
+];
+const avaImg = (id) => (AVA.find((a) => a.id === id) || AVA[0]).img;
+
 const CATS = [
   { id: 'pre',    name: 'Pre-Party',            img: IMG.cup,     type: 'cards',  data: PRE },
   { id: 'never',  name: 'Ich hab noch nie',      img: IMG.wink,    type: 'never',  data: NEVER },
@@ -140,6 +152,57 @@ function Onboarding({ onDone }) {
   );
 }
 
+/* ----------------------------- Profil erstellen ----------------------------- */
+function ProfileSetup({ initial, onDone }) {
+  const [name, setName] = useState(initial?.name || '');
+  const [age, setAge] = useState(initial?.age || '');
+  const [gender, setGender] = useState(initial?.gender || '');
+  const [sel, setSel] = useState(initial?.avatarId || 1);
+  const list = gender ? [...AVA].sort((a, b) => (b.g === gender) - (a.g === gender)) : AVA;
+  const done = () => { if (!name.trim()) return; tap('Medium'); onDone({ name: name.trim(), age: age.trim(), gender, avatarId: sel }); };
+  return (
+    <LinearGradient colors={BG} style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <StatusBar barStyle="light-content" />
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 30 }} keyboardShouldPersistTaps="handled">
+            <Text style={pf.title}>Dein Profil</Text>
+            <View style={pf.previewWrap}><Image source={avaImg(sel)} style={pf.preview} /></View>
+
+            <Text style={pf.label}>Name</Text>
+            <TextInput style={pf.input} placeholder="Wie heißt du?" placeholderTextColor="rgba(255,255,255,0.5)" value={name} onChangeText={setName} />
+
+            <Text style={pf.label}>Alter</Text>
+            <TextInput style={pf.input} placeholder="Dein Alter" placeholderTextColor="rgba(255,255,255,0.5)" value={age} onChangeText={setAge} keyboardType="number-pad" maxLength={2} />
+
+            <Text style={pf.label}>Geschlecht</Text>
+            <View style={pf.seg}>
+              {[['m', 'Männlich'], ['w', 'Weiblich'], ['d', 'Divers']].map(([k, lb]) => (
+                <TouchableOpacity key={k} style={[pf.segItem, gender === k && pf.segItemOn]} onPress={() => { tap(); setGender(k); }}>
+                  <Text style={[pf.segTxt, gender === k && { color: BLUE }]}>{lb}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={pf.label}>Profilbild</Text>
+            <View style={pf.avaGrid}>
+              {list.map((av) => (
+                <TouchableOpacity key={av.id} onPress={() => { tap(); setSel(av.id); }} style={[pf.avaWrap, sel === av.id && pf.avaOn]}>
+                  <Image source={av.img} style={pf.ava} />
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity style={[pf.cta, !name.trim() && { opacity: 0.45 }]} activeOpacity={0.9} onPress={done}>
+              <Text style={pf.ctaTxt}>Los geht’s</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
+  );
+}
+
 /* -------------------------------- Paywall -------------------------------- */
 function Paywall({ onClose }) {
   const feats = [
@@ -175,13 +238,15 @@ function Paywall({ onClose }) {
 }
 
 /* ------------------------------- Spiele-Liste ------------------------------- */
-function Home({ onPick, onPremium }) {
+function Home({ onPick, onPremium, profile, onEditProfile }) {
   return (
     <LinearGradient colors={BG} style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
         <StatusBar barStyle="light-content" />
         <View style={h.top}>
-          <TouchableOpacity style={h.topBtn} onPress={onPremium}><Ionicons name="settings-outline" size={22} color="#fff" /></TouchableOpacity>
+          <TouchableOpacity onPress={() => { tap(); onEditProfile(); }}>
+            <Image source={avaImg(profile?.avatarId || 1)} style={h.me} />
+          </TouchableOpacity>
           <Text style={h.logo}>PROST</Text>
           <TouchableOpacity style={h.topBtn} onPress={onPremium}><Ionicons name="star" size={20} color="#FFD34E" /></TouchableOpacity>
         </View>
@@ -313,11 +378,13 @@ function Bomb() {
 export default function App() {
   const [screen, setScreen] = useState('onboarding');
   const [cat, setCat] = useState(CATS[0]);
+  const [profile, setProfile] = useState(null);
   return (
     <View style={{ flex: 1, backgroundColor: '#2A46B4' }}>
-      {screen === 'onboarding' && <Onboarding onDone={() => setScreen('home')} />}
+      {screen === 'onboarding' && <Onboarding onDone={() => setScreen('profile')} />}
+      {screen === 'profile' && <ProfileSetup initial={profile} onDone={(p) => { setProfile(p); setScreen('home'); }} />}
       {screen === 'paywall' && <Paywall onClose={() => setScreen('home')} />}
-      {screen === 'home' && <Home onPremium={() => setScreen('paywall')} onPick={(c) => { if (c.premium) return setScreen('paywall'); setCat(c); setScreen('game'); }} />}
+      {screen === 'home' && <Home profile={profile} onEditProfile={() => setScreen('profile')} onPremium={() => setScreen('paywall')} onPick={(c) => { if (c.premium) return setScreen('paywall'); setCat(c); setScreen('game'); }} />}
       {screen === 'game' && <Game cat={cat} setCat={setCat} onHome={() => setScreen('home')} onPremium={() => setScreen('paywall')} />}
     </View>
   );
@@ -366,6 +433,25 @@ const h = StyleSheet.create({
   age: { backgroundColor: '#F0453A', borderRadius: 12, paddingHorizontal: 9, paddingVertical: 3 },
   ageTxt: { color: '#fff', fontWeight: '800', fontSize: 12 },
   icon: { width: 56, height: 56, marginLeft: 8 },
+  me: { width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: 'rgba(255,255,255,0.7)' },
+});
+
+const pf = StyleSheet.create({
+  title: { color: '#fff', fontSize: 30, fontWeight: '900', textAlign: 'center', marginTop: 4, marginBottom: 16, letterSpacing: -0.5 },
+  previewWrap: { alignSelf: 'center', width: 120, height: 120, borderRadius: 60, borderWidth: 3, borderColor: '#fff', overflow: 'hidden', marginBottom: 22, backgroundColor: 'rgba(255,255,255,0.15)' },
+  preview: { width: '100%', height: '100%' },
+  label: { color: 'rgba(255,255,255,0.9)', fontWeight: '800', fontSize: 14, marginBottom: 8, marginTop: 6 },
+  input: { backgroundColor: 'rgba(255,255,255,0.16)', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 15, color: '#fff', fontSize: 16, fontWeight: '600', marginBottom: 12 },
+  seg: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: 16, padding: 4, marginBottom: 12 },
+  segItem: { flex: 1, paddingVertical: 11, alignItems: 'center', borderRadius: 12 },
+  segItemOn: { backgroundColor: '#fff' },
+  segTxt: { color: '#fff', fontWeight: '800' },
+  avaGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 6 },
+  avaWrap: { width: '23%', aspectRatio: 1, borderRadius: 100, marginBottom: 12, borderWidth: 3, borderColor: 'transparent', overflow: 'hidden' },
+  avaOn: { borderColor: '#fff' },
+  ava: { width: '100%', height: '100%' },
+  cta: { backgroundColor: '#fff', borderRadius: 30, paddingVertical: 17, alignItems: 'center', marginTop: 14 },
+  ctaTxt: { color: BLUE, fontSize: 18, fontWeight: '900' },
 });
 
 const g = StyleSheet.create({
