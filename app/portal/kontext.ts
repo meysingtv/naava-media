@@ -3,7 +3,14 @@ import type { Fahrschueler } from "@/lib/types";
 
 export interface SchuelerKontext {
   schueler: Fahrschueler | null;
-  schule: { name: string; ort: string | null; logo_url: string | null } | null;
+  schule: {
+    name: string;
+    ort: string | null;
+    logo_url: string | null;
+    iban: string | null;
+    kontoinhaber: string | null;
+    zahlungslink: string | null;
+  } | null;
 }
 
 /** Lädt den eingeloggten Fahrschüler (nur eigene Zeile via RLS) + Branding. */

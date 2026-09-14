@@ -50,6 +50,7 @@ export async function fahrschuleAktualisieren(
       kontoinhaber: leerZuNull(formData.get("kontoinhaber")),
       bic: leerZuNull(formData.get("bic")),
       glaeubiger_id: leerZuNull(formData.get("glaeubiger_id")),
+      zahlungslink: leerZuNull(formData.get("zahlungslink")),
     })
     .eq("id", kontext.fahrschule.id);
 

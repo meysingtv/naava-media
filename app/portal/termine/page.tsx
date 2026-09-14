@@ -1,4 +1,4 @@
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, CalendarPlus } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
@@ -17,7 +17,7 @@ const STATUS: Record<string, { label: string; variant: "default" | "success" | "
   ausgefallen: { label: "Ausgefallen", variant: "secondary" },
 };
 
-function Zeile({ f, vergangen }: { f: Fahrstunde; vergangen?: boolean }) {
+function Zeile({ f, vergangen, kalender }: { f: Fahrstunde; vergangen?: boolean; kalender?: boolean }) {
   const typ = FAHRSTUNDE_TYPEN[f.typ];
   const st = STATUS[f.status] ?? STATUS.geplant;
   return (
@@ -31,6 +31,15 @@ function Zeile({ f, vergangen }: { f: Fahrstunde; vergangen?: boolean }) {
           {formatDatum(f.datum)} · {formatUhrzeit(f.uhrzeit)} Uhr · {f.dauer_minuten} Min
         </p>
       </div>
+      {kalender && (
+        <a
+          href={`/portal/termine/${f.id}/ics`}
+          className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface hover:text-primary active:scale-95"
+          aria-label="Zum Kalender hinzufügen"
+        >
+          <CalendarPlus className="h-[18px] w-[18px]" strokeWidth={1.75} />
+        </a>
+      )}
       <Badge variant={st.variant}>{st.label}</Badge>
     </div>
   );
@@ -74,7 +83,7 @@ export default async function PortalTerminePage() {
             ) : (
               <Card className="divide-y overflow-hidden">
                 {anstehend.map((f) => (
-                  <Zeile key={f.id} f={f} />
+                  <Zeile key={f.id} f={f} kalender />
                 ))}
               </Card>
             )}

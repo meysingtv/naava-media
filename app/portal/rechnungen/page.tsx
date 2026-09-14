@@ -1,4 +1,5 @@
-import { Receipt } from "lucide-react";
+import Link from "next/link";
+import { ChevronRight, Receipt } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
@@ -48,7 +49,11 @@ export default async function PortalRechnungenPage() {
           {rechnungen.map((r) => {
             const st = RECHNUNG_STATUS[r.status];
             return (
-              <div key={r.id} className="flex items-center gap-3 px-4 py-3">
+              <Link
+                key={r.id}
+                href={`/portal/rechnungen/${r.id}`}
+                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface active:bg-surface-muted"
+              >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary">
                   <Receipt className="h-4 w-4" strokeWidth={1.75} />
                 </span>
@@ -62,7 +67,8 @@ export default async function PortalRechnungenPage() {
                     {st.label}
                   </Badge>
                 </div>
-              </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </Link>
             );
           })}
         </Card>

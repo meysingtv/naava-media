@@ -117,6 +117,25 @@ export function EinstellungenForm({ fahrschule }: { fahrschule: Fahrschule }) {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Online-Zahlung (Schüler-Portal)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Label htmlFor="zahlungslink">Zahlungslink</Label>
+          <Input
+            id="zahlungslink"
+            name="zahlungslink"
+            placeholder="https://buy.stripe.com/… oder https://paypal.me/deinefahrschule"
+            defaultValue={fahrschule.zahlungslink ?? undefined}
+          />
+          <p className="text-xs text-muted-foreground">
+            Optional: Dein Stripe-Payment-Link oder PayPal.me-Link. Schüler sehen dann im Portal
+            einen {"„Online bezahlen“"}-Button. Ohne Link wird die Überweisung mit deiner IBAN angezeigt.
+          </p>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-end">
         <SubmitButton>Änderungen speichern</SubmitButton>
       </div>

@@ -27,6 +27,8 @@ export type Fahrschule = {
   bic: string | null;
   glaeubiger_id: string | null;
   kontoinhaber: string | null;
+  // Optionaler Online-Zahlungslink (Migration 0017)
+  zahlungslink: string | null;
   created_at: string;
 };
 
@@ -349,7 +351,14 @@ export type Database = {
       schueler_portal_verknuepfen: { Args: { p_code: string }; Returns: string };
       schueler_fahrschule: {
         Args: Record<string, never>;
-        Returns: { name: string; ort: string | null; logo_url: string | null }[];
+        Returns: {
+          name: string;
+          ort: string | null;
+          logo_url: string | null;
+          iban: string | null;
+          kontoinhaber: string | null;
+          zahlungslink: string | null;
+        }[];
       };
       setup_fahrschule: {
         Args: {
