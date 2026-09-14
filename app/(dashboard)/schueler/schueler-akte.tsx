@@ -35,6 +35,9 @@ import {
 import { cn, formatDatum, formatEuro, formatUhrzeit, initialen } from "@/lib/utils";
 import type { Fahrschueler, Fahrstunde, Rechnung } from "@/lib/types";
 import { portalZugangAktivieren, portalZugangSperren, schuelerLoeschen } from "./actions";
+import { DokumenteBox } from "./dokumente-box";
+import { RatenBox } from "./raten-box";
+import type { Dokument, Rate } from "@/lib/types";
 
 type FahrstundeDetail = Fahrstunde & {
   fahrlehrer: { vorname: string; nachname: string } | null;
@@ -95,7 +98,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
   }
   const s = schueler as Fahrschueler;
 
-  const [fahrstundenRes, rechnungenRes, theorieRes] = await Promise.all([
+  const [fahrstundenRes, rechnungenRes, theorieRes, dokumentRes, ratenRes] = await Promise.all([
     supabase
       .from("fahrstunde")
       .select("*, fahrlehrer(vorname, nachname), fahrzeug(kennzeichen)")
@@ -113,10 +116,24 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
       .select("id", { count: "exact", head: true })
       .eq("schueler_id", s.id)
       .eq("anwesend", true),
+    supabase
+      .from("dokument")
+      .select("id, name, kategorie, mime, groesse, datei")
+      .eq("schueler_id", s.id)
+      .order("created_at", { ascending: false })
+      .returns<Pick<Dokument, "id" | "name" | "kategorie" | "mime" | "groesse" | "datei">[]>(),
+    supabase
+      .from("rate")
+      .select("id, betrag, faellig_am, bezahlt, notiz")
+      .eq("schueler_id", s.id)
+      .order("faellig_am", { ascending: true, nullsFirst: false })
+      .returns<Pick<Rate, "id" | "betrag" | "faellig_am" | "bezahlt" | "notiz">[]>(),
   ]);
 
   const fahrstunden = fahrstundenRes.data ?? [];
   const rechnungen = (rechnungenRes.data ?? []) as Rechnung[];
+  const dokumente = dokumentRes.data ?? [];
+  const raten = ratenRes.data ?? [];
 
   const abgeschlossen = fahrstunden.filter((f) => f.status === "abgeschlossen");
   const zaehle = (typ: Fahrstunde["typ"]) => abgeschlossen.filter((f) => f.typ === typ).length;
@@ -550,6 +567,9 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
               )}
             </CardContent>
           </Card>
+
+          <DokumenteBox schuelerId={s.id} dokumente={dokumente} />
+          <RatenBox schuelerId={s.id} raten={raten} />
         </div>
       </div>
 

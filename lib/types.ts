@@ -54,6 +54,9 @@ export type Fahrlehrer = {
   notiz: string | null;
   // Eigene Rolle / Rollen-Profil (Migration 0012)
   benutzerrolle_id: string | null;
+  // Lohnsätze (Migration 0018)
+  stundenlohn: number | null;
+  lohn_pro_fahrstunde: number | null;
   created_at: string;
 };
 
@@ -217,6 +220,62 @@ export type Theoriestunde = {
   uhrzeit: string;
   thema: string | null;
   max_teilnehmer: number | null;
+  // Optionale Kurs-Zuordnung (Migration 0018)
+  kurs_id: string | null;
+  created_at: string;
+};
+
+export type Kurs = {
+  id: string;
+  fahrschule_id: string;
+  name: string;
+  klasse: string | null;
+  beschreibung: string | null;
+  start_datum: string | null;
+  status: string; // geplant | laufend | beendet
+  created_at: string;
+};
+
+export type KursTeilnahme = {
+  id: string;
+  fahrschule_id: string;
+  kurs_id: string;
+  schueler_id: string;
+  created_at: string;
+};
+
+export type Dokument = {
+  id: string;
+  fahrschule_id: string;
+  schueler_id: string | null;
+  name: string;
+  kategorie: string | null;
+  mime: string | null;
+  groesse: number | null;
+  datei: string;
+  created_at: string;
+};
+
+export type Zahlung = {
+  id: string;
+  fahrschule_id: string;
+  schueler_id: string | null;
+  rechnung_id: string | null;
+  betrag: number;
+  datum: string;
+  art: string; // bar | ueberweisung | lastschrift | karte
+  notiz: string | null;
+  created_at: string;
+};
+
+export type Rate = {
+  id: string;
+  fahrschule_id: string;
+  schueler_id: string;
+  betrag: number;
+  faellig_am: string | null;
+  bezahlt: boolean;
+  notiz: string | null;
   created_at: string;
 };
 
@@ -341,6 +400,11 @@ export type Database = {
       kassenbuch_eintrag: { Row: TableRow<KassenbuchEintrag>; Insert: TableInsert<KassenbuchEintrag>; Update: TableUpdate<KassenbuchEintrag>; Relationships: [] };
       nachricht: { Row: TableRow<Nachricht>; Insert: TableInsert<Nachricht>; Update: TableUpdate<Nachricht>; Relationships: [] };
       leistung: { Row: TableRow<Leistung>; Insert: TableInsert<Leistung>; Update: TableUpdate<Leistung>; Relationships: [] };
+      kurs: { Row: TableRow<Kurs>; Insert: TableInsert<Kurs>; Update: TableUpdate<Kurs>; Relationships: [] };
+      kurs_teilnahme: { Row: TableRow<KursTeilnahme>; Insert: TableInsert<KursTeilnahme>; Update: TableUpdate<KursTeilnahme>; Relationships: [] };
+      dokument: { Row: TableRow<Dokument>; Insert: TableInsert<Dokument>; Update: TableUpdate<Dokument>; Relationships: [] };
+      zahlung: { Row: TableRow<Zahlung>; Insert: TableInsert<Zahlung>; Update: TableUpdate<Zahlung>; Relationships: [] };
+      rate: { Row: TableRow<Rate>; Insert: TableInsert<Rate>; Update: TableUpdate<Rate>; Relationships: [] };
       benutzerrolle: { Row: TableRow<Benutzerrolle>; Insert: TableInsert<Benutzerrolle>; Update: TableUpdate<Benutzerrolle>; Relationships: [] };
     };
     Views: Record<string, never>;

@@ -6,7 +6,9 @@ import {
   Calendar,
   Car,
   ClipboardCheck,
+  Coins,
   FileText,
+  GraduationCap,
   HelpCircle,
   Landmark,
   LayoutDashboard,
@@ -16,6 +18,7 @@ import {
   Settings,
   UserCog,
   Users,
+  Wallet,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { FahrlehrerRolle } from "@/lib/types";
@@ -43,11 +46,14 @@ export const NAV_TOP: NavItem[] = [
   { href: "/kostentraeger", label: "Kostenträger", icon: Landmark, rollen: ["chef", "buero"] },
   { href: "/kalender", label: "Terminplaner", icon: Calendar, rollen: ["chef", "fahrlehrer"] },
   { href: "/theorie", label: "Theorie", icon: BookOpen, rollen: ALLE },
+  { href: "/kurse", label: "Kurse", icon: GraduationCap, rollen: ALLE },
   { href: "/pruefungen", label: "Prüfungen", icon: ClipboardCheck, rollen: ["chef", "fahrlehrer"] },
   { href: "/berichte", label: "Berichte", icon: BarChart3, rollen: ["chef", "buero"] },
   { href: "/rechnungen", label: "Rechnungen", icon: FileText, rollen: ["chef", "buero"] },
   { href: "/rechnungslauf", label: "Rechnungslauf", icon: Receipt, rollen: ["chef", "buero"] },
+  { href: "/zahlungen", label: "Zahlungen", icon: Wallet, rollen: ["chef", "buero"] },
   { href: "/buchhaltung", label: "Buchhaltung", icon: Calculator, rollen: ["chef", "buero"] },
+  { href: "/lohn", label: "Lohn", icon: Coins, rollen: ["chef"] },
 ];
 
 export const NAV_GRUPPEN: NavGroup[] = [
