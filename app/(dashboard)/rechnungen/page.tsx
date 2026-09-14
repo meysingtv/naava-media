@@ -29,7 +29,7 @@ export default async function RechnungenPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Rechnungen" description="Erstelle und verwalte Rechnungen.">
-        <Button asChild variant="outline">
+        <Button asChild>
           <Link href="/rechnungen/neu">
             <Plus /> Neue Rechnung
           </Link>
@@ -41,14 +41,14 @@ export default async function RechnungenPage() {
           label="Offener Betrag"
           value={formatEuro(offenerBetrag)}
           icon={Receipt}
-          iconClassName="bg-amber-100 text-amber-600"
+          iconClassName={offenerBetrag > 0 ? "bg-warning-soft text-warning" : undefined}
         />
         <StatCard label="Offene Rechnungen" value={offen.length} icon={FileText} />
         <StatCard
           label="Rechnungen gesamt"
           value={rechnungen.length}
           icon={FileText}
-          iconClassName="bg-emerald-100 text-emerald-600"
+          iconClassName="bg-success-soft text-success"
         />
       </div>
 
@@ -58,14 +58,14 @@ export default async function RechnungenPage() {
           title="Noch keine Rechnungen"
           description="Erstelle deine erste Rechnung mit Positionen und Mehrwertsteuer."
         >
-          <Button asChild variant="outline">
+          <Button asChild>
             <Link href="/rechnungen/neu">
               <Plus /> Neue Rechnung
             </Link>
           </Button>
         </EmptyState>
       ) : (
-        <Card>
+        <Card className="overflow-hidden">
           <CardContent className="p-0">
             <ul className="divide-y">
               {rechnungen.map((r) => {
@@ -74,21 +74,21 @@ export default async function RechnungenPage() {
                   <li key={r.id}>
                     <Link
                       href={`/rechnungen/${r.id}`}
-                      className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-accent"
+                      className="flex items-center gap-4 px-5 py-3 transition-colors duration-fast hover:bg-surface focus-visible:bg-surface focus-visible:outline-none"
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                        <FileText className="h-5 w-5" />
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary">
+                        <FileText className="h-4 w-4" strokeWidth={1.75} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{r.nummer}</p>
-                        <p className="truncate text-sm text-muted-foreground">
+                        <p className="truncate text-sm font-medium text-foreground">{r.nummer}</p>
+                        <p className="truncate text-[13px] text-muted-foreground">
                           {r.fahrschueler
                             ? `${r.fahrschueler.vorname} ${r.fahrschueler.nachname}`
                             : "Ohne Schüler"}{" "}
                           · {formatDatum(r.rechnungsdatum)}
                         </p>
                       </div>
-                      <span className="shrink-0 font-semibold">
+                      <span className="shrink-0 text-sm font-semibold text-foreground tabular-nums">
                         {formatEuro(Number(r.betrag_brutto))}
                       </span>
                       <Badge variant="outline" className={status.badge}>

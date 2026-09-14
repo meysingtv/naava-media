@@ -26,7 +26,7 @@ function Tip({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 const toolbarBtn =
-  "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground";
+  "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-fast hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25";
 
 type Filter = "aktiv" | "archiv" | "alle";
 
@@ -71,7 +71,7 @@ export function BenutzerListe({
       >
         <Link
           href="/fahrlehrer/neu"
-          className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-accent"
+          className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-surface"
         >
           <Plus className="h-4 w-4" /> Neuer Benutzer
         </Link>
@@ -82,7 +82,7 @@ export function BenutzerListe({
   return (
     <div>
       <Card>
-        <div className="flex flex-wrap items-center gap-1 border-b p-2">
+        <div className="flex flex-wrap items-center gap-1 border-b bg-surface/60 p-2">
           <Tip label="Neuer Benutzer">
             <Link
               href="/fahrlehrer/neu"
@@ -123,7 +123,7 @@ export function BenutzerListe({
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value as Filter)}
-              className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-8 rounded-md border border-border-strong bg-background shadow-xs px-2 text-sm focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20"
             >
               <option value="aktiv">Aktive Benutzer</option>
               <option value="archiv">Archivierte</option>
@@ -137,13 +137,13 @@ export function BenutzerListe({
         </div>
 
         <div className="max-h-[calc(100vh-16rem)] overflow-auto">
-          <table className="w-full text-sm">
-            <thead className="sticky top-0 z-10 border-b bg-muted/60 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
+          <table className="w-full text-sm tabular-nums">
+            <thead className="sticky top-0 z-10 border-b bg-surface text-left text-[13px] text-muted-foreground">
               <tr>
-                <th className="px-3 py-2 font-medium">Kürzel</th>
-                <th className="px-3 py-2 font-medium">Name</th>
-                <th className="hidden px-3 py-2 font-medium sm:table-cell">Vorname</th>
-                <th className="px-3 py-2 font-medium">Rolle</th>
+                <th className="h-10 px-3 font-medium">Kürzel</th>
+                <th className="h-10 px-3 font-medium">Name</th>
+                <th className="hidden h-10 px-3 font-medium sm:table-cell">Vorname</th>
+                <th className="h-10 px-3 font-medium">Rolle</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -155,7 +155,7 @@ export function BenutzerListe({
                     onClick={() => router.push(`/fahrlehrer?id=${b.id}`)}
                     className={cn(
                       "cursor-pointer transition-colors",
-                      aktiv ? "bg-accent" : "hover:bg-muted/50",
+                      aktiv ? "bg-primary-soft/70 shadow-[inset_2px_0_0_hsl(var(--primary))]" : "hover:bg-surface",
                       !b.aktiv && "opacity-60",
                     )}
                   >

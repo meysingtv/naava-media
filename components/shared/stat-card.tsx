@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export function StatCard({
@@ -16,22 +16,22 @@ export function StatCard({
   hint?: React.ReactNode;
 }) {
   return (
-    <Card>
-      <CardContent className="flex items-start justify-between gap-4 p-5">
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          <p className="text-2xl font-bold tracking-tight">{value}</p>
-          {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
-        </div>
-        <div
-          className={cn(
-            "flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary",
-            iconClassName,
-          )}
-        >
-          <Icon className="h-5 w-5" />
-        </div>
-      </CardContent>
+    <Card className="flex items-start justify-between gap-4 p-5">
+      <div className="min-w-0">
+        <p className="text-[13px] font-medium text-muted-foreground">{label}</p>
+        <p className="mt-2 text-[28px] font-semibold leading-none tracking-[-0.02em] text-foreground tabular-nums">
+          {value}
+        </p>
+        {hint && <p className="mt-2 text-xs text-muted-foreground">{hint}</p>}
+      </div>
+      <div
+        className={cn(
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary",
+          iconClassName,
+        )}
+      >
+        <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
+      </div>
     </Card>
   );
 }

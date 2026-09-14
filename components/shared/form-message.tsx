@@ -6,11 +6,12 @@ export function FormMessage({ error, message }: { error?: string; message?: stri
   const istFehler = Boolean(error);
   return (
     <div
+      role={istFehler ? "alert" : "status"}
       className={cn(
-        "flex items-start gap-2 rounded-md border px-3 py-2 text-sm",
+        "flex items-start gap-2.5 rounded-md border px-3 py-2.5 text-sm",
         istFehler
-          ? "border-destructive/30 bg-destructive/10 text-destructive"
-          : "border-success/30 bg-success/10 text-success",
+          ? "border-destructive/25 bg-destructive-soft text-destructive"
+          : "border-success/25 bg-success-soft text-success",
       )}
     >
       {istFehler ? (

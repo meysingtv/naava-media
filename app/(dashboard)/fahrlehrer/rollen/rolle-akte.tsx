@@ -23,7 +23,7 @@ export function RolleAkte({ mitglieder }: { mitglieder: Fahrlehrer[] }) {
               <li key={b.id}>
                 <Link
                   href={`/fahrlehrer?id=${b.id}`}
-                  className="block rounded-md py-2.5 text-center text-sm font-medium transition-colors hover:bg-muted/50"
+                  className="block rounded-md py-2.5 text-center text-sm font-medium transition-colors hover:bg-surface"
                 >
                   {b.vorname} {b.nachname}
                   {!b.aktiv && <span className="ml-2 text-xs text-muted-foreground">(archiviert)</span>}

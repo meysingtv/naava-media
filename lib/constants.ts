@@ -91,61 +91,73 @@ export interface TypMeta {
   dot: string; // Tailwind-Klasse für Farbpunkt
 }
 
+// Kalender-Farben je Art: ruhige, aufeinander abgestimmte Töne. Türkis ist die
+// normale Fahrstunde; die anderen Arten bleiben unterscheidbar, aber gedeckt.
+export const FAHRSTUNDE_FARBE: Record<FahrstundeTyp, string> = {
+  normal: "#0C8CA1",
+  ueberland: "#16A34A",
+  autobahn: "#2563EB",
+  nacht: "#4F46E5",
+  pruefung: "#DC2626",
+  theorie: "#D97706",
+  sonstiges: "#64748B",
+};
+
 export const FAHRSTUNDE_TYPEN: Record<FahrstundeTyp, TypMeta> = {
   normal: {
     label: "Normale Fahrstunde",
     kurz: "Normal",
-    badge: "bg-blue-100 text-blue-700 border-blue-200",
-    dot: "bg-blue-500",
+    badge: "border-transparent bg-primary-soft text-primary-pressed",
+    dot: "bg-primary",
   },
   ueberland: {
     label: "Überlandfahrt",
     kurz: "Überland",
-    badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    dot: "bg-emerald-500",
+    badge: "border-transparent bg-success-soft text-success",
+    dot: "bg-success",
   },
   autobahn: {
     label: "Autobahnfahrt",
     kurz: "Autobahn",
-    badge: "bg-cyan-100 text-cyan-700 border-cyan-200",
-    dot: "bg-cyan-500",
+    badge: "border-transparent bg-blue-50 text-blue-700",
+    dot: "bg-blue-600",
   },
   nacht: {
     label: "Nachtfahrt",
     kurz: "Nacht",
-    badge: "bg-indigo-100 text-indigo-700 border-indigo-200",
-    dot: "bg-indigo-500",
+    badge: "border-transparent bg-indigo-50 text-indigo-700",
+    dot: "bg-indigo-600",
   },
   pruefung: {
     label: "Prüfung",
     kurz: "Prüfung",
-    badge: "bg-red-100 text-red-700 border-red-200",
-    dot: "bg-red-500",
+    badge: "border-transparent bg-destructive-soft text-destructive",
+    dot: "bg-destructive",
   },
   theorie: {
     label: "Theoriestunde",
     kurz: "Theorie",
-    badge: "bg-teal-100 text-teal-700 border-teal-200",
-    dot: "bg-teal-500",
+    badge: "border-transparent bg-warning-soft text-warning",
+    dot: "bg-warning",
   },
   sonstiges: {
     label: "Sonstiges",
     kurz: "Sonstiges",
-    badge: "bg-slate-100 text-slate-700 border-slate-200",
-    dot: "bg-slate-500",
+    badge: "border-transparent bg-surface-muted text-foreground-secondary",
+    dot: "bg-muted-foreground",
   },
 };
 
 export const FAHRSTUNDE_STATUS: Record<FahrstundeStatus, { label: string; badge: string }> = {
-  geplant: { label: "Geplant", badge: "bg-blue-100 text-blue-700 border-blue-200" },
-  abgeschlossen: { label: "Abgeschlossen", badge: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  ausgefallen: { label: "Ausgefallen", badge: "bg-slate-100 text-slate-600 border-slate-200" },
+  geplant: { label: "Geplant", badge: "border-transparent bg-primary-soft text-primary-pressed" },
+  abgeschlossen: { label: "Abgeschlossen", badge: "border-transparent bg-success-soft text-success" },
+  ausgefallen: { label: "Ausgefallen", badge: "border-transparent bg-surface-muted text-foreground-secondary" },
 };
 
 export const RECHNUNG_STATUS: Record<RechnungStatus, { label: string; badge: string }> = {
-  offen: { label: "Offen", badge: "bg-amber-100 text-amber-700 border-amber-200" },
-  bezahlt: { label: "Bezahlt", badge: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  ueberfaellig: { label: "Überfällig", badge: "bg-red-100 text-red-700 border-red-200" },
+  offen: { label: "Offen", badge: "border-transparent bg-warning-soft text-warning" },
+  bezahlt: { label: "Bezahlt", badge: "border-transparent bg-success-soft text-success" },
+  ueberfaellig: { label: "Überfällig", badge: "border-transparent bg-destructive-soft text-destructive" },
 };
 
 export const STEUERSAETZE = [19, 7, 0] as const;
@@ -190,17 +202,17 @@ export function theoriePflichtFuer(klasse: string): number {
   return THEORIE_GRUNDSTOFF + (THEORIE_ZUSATZSTOFF_JE_KLASSE[klasse] ?? 2);
 }
 
-// Farbpalette für Schüler-Avatare
+// Farbpalette für Schüler-Avatare (gedeckte Töne, werden weich getönt dargestellt)
 export const AVATAR_FARBEN = [
+  "#0C8CA1",
   "#2563EB",
   "#16A34A",
-  "#9333EA",
+  "#7C3AED",
   "#DB2777",
   "#EA580C",
-  "#0891B2",
   "#CA8A04",
   "#4F46E5",
-  "#059669",
+  "#0F766E",
   "#DC2626",
 ];
 

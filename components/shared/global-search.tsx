@@ -74,6 +74,19 @@ export function GlobalSearch() {
     return () => document.removeEventListener("mousedown", onMouseDown);
   }, [schliessen]);
 
+  // ⌘K / Ctrl+K fokussiert die Suche
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
   // ---------------------------------------------------------------------------
   // Debounced Suche (250 ms)
   // ---------------------------------------------------------------------------
@@ -145,18 +158,20 @@ export function GlobalSearch() {
   const istLadend = suchPending || kiPending;
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-xl">
+    <div ref={containerRef} className="relative w-full">
       {/* Suchfeld */}
       <div
         className={cn(
-          "flex h-10 items-center gap-2 rounded-full border bg-muted/60 px-3 transition-colors",
-          offen && "bg-card ring-1 ring-ring",
+          "flex h-9 items-center gap-2 rounded-md border border-transparent bg-surface-muted px-2.5 transition-[background-color,border-color,box-shadow] duration-fast ease-soft",
+          "hover:bg-surface hover:border-border",
+          "focus-within:border-primary focus-within:bg-background focus-within:ring-[3px] focus-within:ring-primary/20",
+          offen && "border-primary bg-background ring-[3px] ring-primary/20",
         )}
       >
         {istLadend ? (
           <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
         ) : (
-          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
         )}
         <input
           ref={inputRef}
@@ -167,25 +182,28 @@ export function GlobalSearch() {
           onFocus={() => {
             if (hatGesucht && treffer.length > 0) setOffen(true);
           }}
-          placeholder="Suche nach Schülern, Fahrzeugen, Rechnungen …"
-          className="h-full w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+          placeholder="Suchen … Schüler, Fahrzeuge, Rechnungen"
+          className="h-full w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none [&::-webkit-search-cancel-button]:appearance-none"
           autoComplete="off"
           spellCheck={false}
         />
+        <kbd className="hidden shrink-0 select-none items-center gap-0.5 rounded-[5px] border bg-background px-1.5 py-0.5 font-sans text-2xs font-medium text-muted-foreground lg:inline-flex">
+          ⌘K
+        </kbd>
       </div>
 
       {/* Dropdown */}
       {offen && (
         <div
           className={cn(
-            "absolute left-0 right-0 top-[calc(100%+6px)] z-50",
-            "max-h-[min(480px,70vh)] overflow-y-auto",
-            "rounded-xl border bg-card shadow-lg",
+            "absolute left-0 right-0 top-[calc(100%+6px)] z-50 animate-scale-in origin-top",
+            "max-h-[min(480px,70vh)] overflow-y-auto scrollbar-thin",
+            "rounded-[10px] border bg-popover p-1 shadow-md",
           )}
         >
           {/* KI-Antwort-Banner */}
           {kiAntwort && (
-            <div className="flex items-start gap-2 border-b bg-primary/5 px-3 py-2.5">
+            <div className="mb-1 flex items-start gap-2.5 rounded-md bg-primary-soft px-3 py-2.5">
               <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
               <p className="text-sm text-foreground">{kiAntwort}</p>
             </div>
@@ -193,7 +211,7 @@ export function GlobalSearch() {
 
           {/* KI lädt noch */}
           {kiPending && !kiAntwort && (
-            <div className="flex items-center gap-2 border-b bg-primary/5 px-3 py-2.5">
+            <div className="mb-1 flex items-center gap-2.5 rounded-md bg-primary-soft px-3 py-2.5">
               <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">KI analysiert …</p>
             </div>
@@ -201,14 +219,14 @@ export function GlobalSearch() {
 
           {/* Keine Treffer */}
           {hatGesucht && treffer.length === 0 && !suchPending && (
-            <p className="px-4 py-6 text-center text-sm text-muted-foreground">Keine Treffer</p>
+            <p className="px-3 py-8 text-center text-sm text-muted-foreground">Keine Treffer</p>
           )}
 
           {/* Gruppen */}
           {gruppen.map(({ typ, eintraege }) => (
             <div key={typ}>
               {/* Gruppenüberschrift */}
-              <p className="px-3 pb-1 pt-2.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="px-2.5 pb-1 pt-2 text-2xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                 {GRUPPENBEZEICHNUNG[typ]}
               </p>
               {/* Einträge */}
@@ -218,8 +236,8 @@ export function GlobalSearch() {
                   href={eintrag.href}
                   onClick={schliessen}
                   className={cn(
-                    "flex flex-col px-3 py-2 text-sm transition-colors",
-                    "hover:bg-accent focus:bg-accent focus:outline-none",
+                    "flex flex-col rounded-sm px-2.5 py-2 text-sm transition-colors duration-fast",
+                    "hover:bg-surface focus:bg-surface focus:outline-none",
                   )}
                 >
                   <span className="font-medium text-foreground">{eintrag.titel}</span>
@@ -230,6 +248,13 @@ export function GlobalSearch() {
               ))}
             </div>
           ))}
+
+          {/* Hinweis */}
+          {!kiAntwort && !kiPending && treffer.length > 0 && (
+            <p className="mt-1 border-t px-2.5 pb-1 pt-2 text-2xs text-muted-foreground">
+              <span className="font-medium text-foreground-secondary">Enter</span> für eine KI-Antwort
+            </p>
+          )}
         </div>
       )}
     </div>

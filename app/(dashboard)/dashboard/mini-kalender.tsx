@@ -27,13 +27,13 @@ export function MiniKalender({ markierteTage }: { markierteTage: string[] }) {
 
   return (
     <Card>
-      <CardHeader className="p-4 pb-2">
-        <CardTitle className="text-base capitalize">{monatLabel}</CardTitle>
+      <CardHeader className="p-5 pb-3">
+        <CardTitle className="capitalize">{monatLabel}</CardTitle>
       </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <div className="grid grid-cols-7 gap-1 text-center text-xs">
+      <CardContent className="p-5 pt-0">
+        <div className="grid grid-cols-7 gap-y-1 text-center text-xs">
           {WOCHENTAGE.map((d) => (
-            <div key={d} className="py-1 font-medium text-muted-foreground">
+            <div key={d} className="py-1 text-2xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
               {d}
             </div>
           ))}
@@ -46,8 +46,10 @@ export function MiniKalender({ markierteTage }: { markierteTage: string[] }) {
               <div key={iso} className="flex flex-col items-center">
                 <span
                   className={cn(
-                    "flex h-7 w-7 items-center justify-center rounded-full text-sm",
-                    istHeute ? "bg-primary font-semibold text-primary-foreground" : "text-foreground",
+                    "flex h-7 w-7 items-center justify-center rounded-full text-[13px] tabular-nums",
+                    istHeute
+                      ? "bg-primary font-semibold text-primary-foreground"
+                      : "text-foreground-secondary",
                   )}
                 >
                   {t}
@@ -55,7 +57,7 @@ export function MiniKalender({ markierteTage }: { markierteTage: string[] }) {
                 <span
                   className={cn(
                     "mt-0.5 h-1 w-1 rounded-full",
-                    hatTermin && !istHeute ? "bg-primary" : "bg-transparent",
+                    hatTermin && !istHeute ? "bg-accent-bright" : "bg-transparent",
                   )}
                 />
               </div>

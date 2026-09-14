@@ -18,15 +18,15 @@ export default async function SetupPage() {
   }
 
   return (
-    <Card className="shadow-lg">
-      <CardHeader>
+    <Card className="shadow-md">
+      <CardHeader className="p-8 pb-4">
         <CardTitle className="text-xl">Fahrschule einrichten</CardTitle>
         <CardDescription>
           Nur noch ein Schritt: Lege deinen Betrieb an. Du bist damit automatisch als
           Geschäftsführer eingetragen.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-8 pt-0">
         <SetupForm defaultEmail={kontext.email ?? undefined} />
       </CardContent>
     </Card>

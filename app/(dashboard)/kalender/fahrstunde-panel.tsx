@@ -33,7 +33,7 @@ export interface FahrstundeInitial {
 }
 
 const feld =
-  "h-9 w-full rounded-md border border-input bg-background px-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "h-9 w-full rounded-md border border-border-strong bg-background shadow-xs px-3 text-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20";
 
 const initialState: KalenderState = {};
 
@@ -96,7 +96,7 @@ export function FahrstundePanel({
       {/* Kopf */}
       <div className="flex items-start justify-between gap-3 border-b p-4">
         <div>
-          <h2 className="text-base font-bold tracking-tight">
+          <h2 className="text-base font-semibold tracking-tight">
             {istBearbeiten ? "Termin bearbeiten" : "Neuer Termin"}
           </h2>
           <p className="text-xs text-muted-foreground">Plane einen Termin für deinen Betrieb.</p>

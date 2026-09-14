@@ -16,7 +16,7 @@ import type { Benutzerrolle, RolleRecht } from "@/lib/types";
 const initial: RolleState = {};
 
 const feld =
-  "h-9 w-full rounded-md border border-input bg-background px-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "h-9 w-full rounded-md border border-border-strong bg-background shadow-xs px-3 text-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20";
 
 const ZUGANGSART_VORSCHLAEGE = ["Verwaltung", "Fahrlehrer", "Büro", "Eingeschränkt"];
 
@@ -78,7 +78,7 @@ export function RolleEditor({ rolle }: { rolle?: Benutzerrolle }) {
       <div className="rounded-md border bg-card">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-            <h1 className="text-sm font-bold tracking-tight">{titel}</h1>
+            <h1 className="text-sm font-semibold tracking-tight">{titel}</h1>
             <div className="flex items-center gap-5">
               <button type="button" onClick={() => setTab("allgemein")} className={tabCls(tab === "allgemein")}>
                 Allgemein
@@ -158,7 +158,7 @@ export function RolleEditor({ rolle }: { rolle?: Benutzerrolle }) {
         {/* Berechtigungen */}
         <div className={cn("space-y-3 p-4", tab !== "rechte" && "hidden")}>
           <div className="overflow-hidden rounded-md border">
-            <div className="grid grid-cols-[1fr_4rem_5rem] items-center gap-2 border-b bg-muted/60 px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            <div className="grid grid-cols-[1fr_4rem_5rem] items-center gap-2 border-b bg-surface px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               <span>Bereich</span>
               <span className="text-center">Ansehen</span>
               <span className="text-center">Bearbeiten</span>

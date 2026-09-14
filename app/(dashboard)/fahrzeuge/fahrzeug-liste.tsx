@@ -25,7 +25,7 @@ function Tip({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 const toolbarBtn =
-  "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground";
+  "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-fast hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25";
 
 type Filter = "aktiv" | "archiv" | "alle";
 
@@ -74,7 +74,7 @@ export function FahrzeugListe({
       >
         <Link
           href="/fahrzeuge?neu=1"
-          className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-accent"
+          className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-surface"
         >
           <Plus className="h-4 w-4" /> Neues Fahrzeug
         </Link>
@@ -86,7 +86,7 @@ export function FahrzeugListe({
     <div>
       <Card>
         {/* Werkzeugleiste */}
-        <div className="flex flex-wrap items-center gap-1 border-b p-2">
+        <div className="flex flex-wrap items-center gap-1 border-b bg-surface/60 p-2">
           <Tip label="Neues Fahrzeug">
             <Link href="/fahrzeuge?neu=1" aria-label="Neues Fahrzeug" className={toolbarBtn}>
               <Plus className="h-4 w-4" />
@@ -127,7 +127,7 @@ export function FahrzeugListe({
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value as Filter)}
-              className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-8 rounded-md border border-border-strong bg-background shadow-xs px-2 text-sm focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20"
             >
               <option value="aktiv">Aktive Fahrzeuge</option>
               <option value="archiv">Archivierte</option>
@@ -147,14 +147,14 @@ export function FahrzeugListe({
 
         {/* Tabelle */}
         <div className="max-h-[calc(100vh-16rem)] overflow-auto">
-          <table className="w-full text-sm">
-            <thead className="sticky top-0 z-10 border-b bg-muted/60 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
+          <table className="w-full text-sm tabular-nums">
+            <thead className="sticky top-0 z-10 border-b bg-surface text-left text-[13px] text-muted-foreground">
               <tr>
-                <th className="px-3 py-2 font-medium">Name</th>
-                <th className="hidden px-3 py-2 font-medium sm:table-cell">Kennzeichen</th>
-                <th className="hidden px-3 py-2 font-medium lg:table-cell">Klasse</th>
-                <th className="hidden px-3 py-2 font-medium xl:table-cell">Fahrlehrer</th>
-                <th className="px-3 py-2 font-medium">Getriebe</th>
+                <th className="h-10 px-3 font-medium">Name</th>
+                <th className="hidden h-10 px-3 font-medium sm:table-cell">Kennzeichen</th>
+                <th className="hidden h-10 px-3 font-medium lg:table-cell">Klasse</th>
+                <th className="hidden h-10 px-3 font-medium xl:table-cell">Fahrlehrer</th>
+                <th className="h-10 px-3 font-medium">Getriebe</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -170,7 +170,7 @@ export function FahrzeugListe({
                     onClick={() => router.push(`/fahrzeuge?id=${f.id}`)}
                     className={cn(
                       "cursor-pointer transition-colors",
-                      aktiv ? "bg-accent" : "hover:bg-muted/50",
+                      aktiv ? "bg-primary-soft/70 shadow-[inset_2px_0_0_hsl(var(--primary))]" : "hover:bg-surface",
                       !f.aktiv && "opacity-60",
                     )}
                   >
@@ -196,7 +196,7 @@ export function FahrzeugListe({
                       {kuerzel.length ? (
                         <div className="flex flex-wrap gap-1">
                           {kuerzel.map((k, i) => (
-                            <Badge key={`${k}-${i}`} variant="outline" className="px-1.5 py-0 text-[11px]">
+                            <Badge key={`${k}-${i}`} variant="outline" className="h-5 px-1.5 text-2xs">
                               {k}
                             </Badge>
                           ))}

@@ -35,7 +35,7 @@ export function FahrzeugAkte({
         <CardContent className="flex items-start justify-between gap-3 p-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-lg font-bold tracking-tight">{name}</h1>
+              <h1 className="text-lg font-semibold tracking-tight">{name}</h1>
               {f.aktiv ? (
                 <Badge variant="secondary">Aktiv</Badge>
               ) : (

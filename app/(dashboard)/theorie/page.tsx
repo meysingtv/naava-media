@@ -49,7 +49,7 @@ export default async function TheoriePage() {
           label="Anstehend"
           value={anstehend}
           icon={CalendarClock}
-          iconClassName="bg-emerald-100 text-emerald-600"
+          iconClassName="bg-success-soft text-success"
           hint="Termine ab heute"
         />
       </div>
@@ -63,27 +63,25 @@ export default async function TheoriePage() {
       ) : (
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <table className="w-full text-sm tabular-nums">
+              <thead className="border-b bg-surface text-left text-[13px] text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Datum</th>
-                  <th className="px-4 py-3 font-medium">Uhrzeit</th>
-                  <th className="px-4 py-3 font-medium">Thema</th>
-                  <th className="px-4 py-3 font-medium">Teilnehmer</th>
-                  <th className="px-4 py-3 text-right font-medium">Aktion</th>
+                  <th className="h-10 px-4 font-medium">Datum</th>
+                  <th className="h-10 px-4 font-medium">Uhrzeit</th>
+                  <th className="h-10 px-4 font-medium">Thema</th>
+                  <th className="h-10 px-4 font-medium">Teilnehmer</th>
+                  <th className="h-10 px-4 text-right font-medium">Aktion</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {stunden.map((t) => {
                   const anzahl = t.teilnahme?.[0]?.count ?? 0;
                   return (
-                    <tr key={t.id} className="transition-colors hover:bg-muted/40">
-                      <td className="whitespace-nowrap px-4 py-3 font-medium">
+                    <tr key={t.id} className="transition-colors duration-fast hover:bg-surface">
+                      <td className="whitespace-nowrap px-4 py-3 font-medium text-foreground">
                         <span className="inline-flex items-center gap-2">
                           {formatDatum(t.datum)}
-                          {t.datum === heute && (
-                            <Badge className="text-[10px]">Heute</Badge>
-                          )}
+                          {t.datum === heute && <Badge variant="solid">Heute</Badge>}
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">

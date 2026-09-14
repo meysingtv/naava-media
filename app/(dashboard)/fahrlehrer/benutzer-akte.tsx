@@ -40,7 +40,7 @@ export function BenutzerAkte({
             </span>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-lg font-bold tracking-tight">
+                <h1 className="text-lg font-semibold tracking-tight">
                   {b.vorname} {b.nachname}
                 </h1>
                 {b.user_id === selfUserId && <Badge variant="outline">Du</Badge>}

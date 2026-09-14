@@ -1,8 +1,12 @@
+import { CalendarDays, Receipt, Users } from "lucide-react";
+
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/shared/page-header";
+import { StatCard } from "@/components/shared/stat-card";
 import { FAHRSTUNDE_TYPEN } from "@/lib/constants";
-import { cn, formatDatum, formatEuro, formatUhrzeit, initialen } from "@/lib/utils";
+import { cn, formatDatum, formatEuro, formatUhrzeit } from "@/lib/utils";
 import type { Fahrschueler, FahrstundeMitRelationen, Rechnung } from "@/lib/types";
 import { AufgabenCard, type TempAufgabe } from "./aufgaben-card";
 import { MiniKalender } from "./mini-kalender";
@@ -31,39 +35,24 @@ function wochenBereich(): { start: string; ende: string } {
 }
 
 function Ring({ prozent }: { prozent: number }) {
-  const r = 40;
+  const r = 24;
   const C = 2 * Math.PI * r;
   const off = C * (1 - Math.min(100, Math.max(0, prozent)) / 100);
   return (
-    <div className="relative h-24 w-24 shrink-0">
-      <svg viewBox="0 0 96 96" className="h-24 w-24 -rotate-90">
-        <circle cx="48" cy="48" r={r} fill="none" strokeWidth="8" className="stroke-muted" />
-        <circle
-          cx="48"
-          cy="48"
-          r={r}
-          fill="none"
-          strokeWidth="8"
-          strokeLinecap="round"
-          className="stroke-primary"
-          strokeDasharray={C}
-          strokeDashoffset={off}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xl font-bold">{prozent}%</span>
-        <span className="text-[10px] text-muted-foreground">Auslastung</span>
-      </div>
-    </div>
-  );
-}
-
-function MiniStat({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold">{value}</span>
-    </div>
+    <svg viewBox="0 0 56 56" className="h-14 w-14 shrink-0 -rotate-90" aria-hidden="true">
+      <circle cx="28" cy="28" r={r} fill="none" strokeWidth="6" className="stroke-surface-muted" />
+      <circle
+        cx="28"
+        cy="28"
+        r={r}
+        fill="none"
+        strokeWidth="6"
+        strokeLinecap="round"
+        className="stroke-accent-bright transition-[stroke-dashoffset] duration-500 ease-soft"
+        strokeDasharray={C}
+        strokeDashoffset={off}
+      />
+    </svg>
   );
 }
 
@@ -111,7 +100,6 @@ export default async function DashboardPage() {
 
   const auslastung = Math.min(100, Math.round((wochenStunden / (Math.max(aktiveLehrer, 1) * 40)) * 100));
   const vorname = kontext?.fahrlehrer?.vorname ?? "";
-  const nachname = kontext?.fahrlehrer?.nachname ?? "";
 
   // Temporäre Aufgaben (echte Zuweisung folgt später)
   const tempAufgaben: TempAufgabe[] = [
@@ -128,90 +116,103 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dashboard</p>
+      <PageHeader
+        title={`${begruessung()}${vorname ? `, ${vorname}` : ""}`}
+        description={`Dein Überblick für ${formatDatum(heute)}.`}
+      />
 
-      {/* Obere Reihe */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Überblick */}
-        <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-base">Diese Woche</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="flex items-center gap-4">
-              <Ring prozent={auslastung} />
-              <div className="flex-1 space-y-2 text-sm">
-                <MiniStat label="Aktive Schüler" value={schuelerGesamt} />
-                <MiniStat label="Offene Rechnungen" value={formatEuro(offenerBetrag)} />
-                <MiniStat label="Fahrstunden heute" value={heutigeStunden.length} />
-              </div>
-            </div>
-            <p className="mt-3 border-t pt-2 text-xs text-muted-foreground">
-              {naechstePruefung
-                ? `Nächste Prüfung: ${naechstePruefung.vorname} ${naechstePruefung.nachname} am ${formatDatum(naechstePruefung.pruefung_termin)}`
-                : "Keine anstehenden Prüfungen."}
+      {/* Kennzahlen */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Aktive Schüler" value={schuelerGesamt} icon={Users} />
+        <StatCard
+          label="Fahrstunden heute"
+          value={heutigeStunden.length}
+          icon={CalendarDays}
+          hint={`${wochenStunden} diese Woche`}
+        />
+        <StatCard
+          label="Offene Rechnungen"
+          value={formatEuro(offenerBetrag)}
+          icon={Receipt}
+          iconClassName={offene.length > 0 ? "bg-warning-soft text-warning" : undefined}
+          hint={offene.length === 1 ? "1 Rechnung offen" : `${offene.length} Rechnungen offen`}
+        />
+        <Card className="flex items-center justify-between gap-4 p-5">
+          <div className="min-w-0">
+            <p className="text-[13px] font-medium text-muted-foreground">Auslastung</p>
+            <p className="mt-2 text-[28px] font-semibold leading-none tracking-[-0.02em] text-foreground tabular-nums">
+              {auslastung}%
             </p>
-          </CardContent>
-        </Card>
-
-        {/* Meine Termine */}
-        <Card>
-          <CardHeader className="flex-row items-center justify-between p-4 pb-2">
-            <CardTitle className="text-base">Meine Termine</CardTitle>
-            <span className="text-xs text-muted-foreground">{formatDatum(heute)}</span>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {heutigeStunden.length === 0 ? (
-              <p className="py-10 text-center text-sm text-muted-foreground">Heute keine Termine.</p>
-            ) : (
-              <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-                {heutigeStunden.map((s) => {
-                  const typ = FAHRSTUNDE_TYPEN[s.typ];
-                  const ausgefallen = s.status === "ausgefallen";
-                  const name = s.fahrschueler
-                    ? `${s.fahrschueler.vorname} ${s.fahrschueler.nachname}`
-                    : typ.label;
-                  return (
-                    <div
-                      key={s.id}
-                      className={cn(
-                        "rounded-md px-3 py-2 text-white",
-                        ausgefallen ? "bg-slate-400 line-through" : typ.dot,
-                      )}
-                    >
-                      <p className="truncate text-sm font-semibold">{name}</p>
-                      <p className="truncate text-xs text-white/90">
-                        {typ.label} · {formatUhrzeit(s.uhrzeit)}
-                        {s.fahrzeug ? ` · ${s.fahrzeug.kennzeichen}` : ""}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Begrüßung */}
-        <Card>
-          <CardContent className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
-              {initialen(vorname, nachname)}
-            </div>
-            <p className="text-lg font-bold tracking-tight">
-              {begruessung()}, {vorname}!
+            <p className="mt-2 text-xs text-muted-foreground">
+              {aktiveLehrer} {aktiveLehrer === 1 ? "Fahrlehrer" : "Fahrlehrer"} · diese Woche
             </p>
-            <p className="text-sm text-muted-foreground">Schön, dass du da bist.</p>
-          </CardContent>
+          </div>
+          <Ring prozent={auslastung} />
         </Card>
       </div>
 
-      {/* Untere Reihe */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      {/* Inhalt */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <AufgabenCard aufgaben={tempAufgaben} />
         </div>
-        <MiniKalender markierteTage={monatsTage} />
+
+        <div className="space-y-4">
+          {/* Meine Termine */}
+          <Card>
+            <CardHeader className="flex-row items-center justify-between space-y-0 p-5 pb-3">
+              <CardTitle>Heute</CardTitle>
+              <span className="text-xs text-muted-foreground">{formatDatum(heute)}</span>
+            </CardHeader>
+            <CardContent className="p-5 pt-0">
+              {heutigeStunden.length === 0 ? (
+                <p className="rounded-md border border-dashed border-border-strong py-8 text-center text-sm text-muted-foreground">
+                  Heute keine Termine.
+                </p>
+              ) : (
+                <div className="max-h-72 space-y-1.5 overflow-y-auto pr-1 scrollbar-thin">
+                  {heutigeStunden.map((s) => {
+                    const typ = FAHRSTUNDE_TYPEN[s.typ];
+                    const ausgefallen = s.status === "ausgefallen";
+                    const name = s.fahrschueler
+                      ? `${s.fahrschueler.vorname} ${s.fahrschueler.nachname}`
+                      : typ.label;
+                    return (
+                      <div
+                        key={s.id}
+                        className={cn(
+                          "flex items-center gap-3 rounded-md border px-3 py-2 transition-colors duration-fast hover:bg-surface",
+                          ausgefallen && "opacity-60",
+                        )}
+                      >
+                        <span className={cn("h-8 w-1 shrink-0 rounded-full", ausgefallen ? "bg-border-strong" : typ.dot)} />
+                        <div className="min-w-0 flex-1">
+                          <p className={cn("truncate text-sm font-medium text-foreground", ausgefallen && "line-through")}>
+                            {name}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {typ.kurz}
+                            {s.fahrzeug ? ` · ${s.fahrzeug.kennzeichen}` : ""}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-[13px] font-medium text-foreground-secondary tabular-nums">
+                          {formatUhrzeit(s.uhrzeit)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <p className="mt-3 border-t pt-3 text-xs text-muted-foreground">
+                {naechstePruefung
+                  ? `Nächste Prüfung: ${naechstePruefung.vorname} ${naechstePruefung.nachname} am ${formatDatum(naechstePruefung.pruefung_termin)}`
+                  : "Keine anstehenden Prüfungen."}
+              </p>
+            </CardContent>
+          </Card>
+
+          <MiniKalender markierteTage={monatsTage} />
+        </div>
       </div>
     </div>
   );

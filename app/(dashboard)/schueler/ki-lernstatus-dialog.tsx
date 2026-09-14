@@ -120,7 +120,7 @@ export function KiLernstatusDialog() {
         ) : (
           <div className="space-y-3">
             {vorschlaege.length === 0 ? (
-              <p className="rounded-md border bg-muted/40 px-3 py-4 text-center text-sm text-muted-foreground">
+              <p className="rounded-md border border-dashed border-border-strong px-3 py-6 text-center text-sm text-muted-foreground">
                 Keine eindeutigen Zuordnungen gefunden.
               </p>
             ) : (
@@ -131,7 +131,7 @@ export function KiLernstatusDialog() {
                       type="checkbox"
                       checked={ausgewaehlt.has(v.id)}
                       onChange={() => toggle(v.id)}
-                      className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+                      className="h-4 w-4 rounded border-border-strong text-primary focus:ring-primary/25"
                     />
                     <span className="flex-1 truncate font-medium">{v.name}</span>
                     <span className="shrink-0 text-muted-foreground">
@@ -144,7 +144,7 @@ export function KiLernstatusDialog() {
             )}
 
             {hinweise.length > 0 && (
-              <div className="rounded-md border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
+              <div className="rounded-md border border-warning/25 bg-warning-soft p-2.5 text-xs text-warning">
                 <p className="mb-1 font-medium">Bitte prüfen:</p>
                 <ul className="list-disc space-y-0.5 pl-4">
                   {hinweise.map((h, i) => (

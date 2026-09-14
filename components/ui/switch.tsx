@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Schlichter Umschalter (Toggle). Grün, wenn aktiv. Steuerbar von außen.
+ * Schlichter Umschalter (Toggle). Türkis, wenn aktiv. Steuerbar von außen.
  */
 export function Switch({
   checked,
@@ -25,14 +25,14 @@ export function Switch({
       disabled={disabled}
       onClick={() => onCheckedChange(!checked)}
       className={cn(
-        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-50",
-        checked ? "bg-success" : "bg-slate-300",
+        "relative inline-flex h-6 w-10 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-fast ease-soft focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-50",
+        checked ? "bg-primary" : "bg-border-strong",
       )}
     >
       <span
         className={cn(
-          "inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform",
-          checked ? "translate-x-[22px]" : "translate-x-0.5",
+          "inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-fast ease-soft",
+          checked ? "translate-x-[18px]" : "translate-x-0.5",
         )}
       />
     </button>

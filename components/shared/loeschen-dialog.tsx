@@ -28,20 +28,23 @@ export function LoeschenDialog({
   buttonLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const nurIcon = buttonLabel.trim() === "";
 
   return (
     <>
       <Button
         type="button"
         variant="outline"
+        size={nurIcon ? "icon-sm" : "sm"}
+        aria-label={nurIcon ? "Löschen" : undefined}
         onClick={() => setOpen(true)}
-        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+        className="text-destructive hover:border-destructive/30 hover:bg-destructive-soft hover:text-destructive"
       >
-        <Trash2 className="h-4 w-4" />
-        {buttonLabel}
+        <Trash2 />
+        {!nurIcon && buttonLabel}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{titel}</DialogTitle>
             <DialogDescription>{beschreibung}</DialogDescription>

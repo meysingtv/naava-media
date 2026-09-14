@@ -15,12 +15,12 @@ export default function PasswortZuruecksetzenPage() {
   const [state, action] = useFormState(passwortAktualisieren, initial);
 
   return (
-    <Card className="shadow-lg">
-      <CardHeader>
+    <Card className="shadow-md">
+      <CardHeader className="p-8 pb-4">
         <CardTitle className="text-xl">Neues Passwort festlegen</CardTitle>
         <CardDescription>Wähle ein sicheres Passwort mit mindestens 8 Zeichen.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-8 pt-0">
         <form action={action} className="space-y-4">
           <FormMessage error={state.error} />
           <div className="space-y-2">

@@ -91,7 +91,7 @@ export default async function RechnungDetailPage({ params }: { params: { id: str
       <Card className="mx-auto max-w-3xl p-8 sm:p-12 print:border-0 print:shadow-none">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold">{fahrschule?.name ?? "Fahrschule"}</h1>
+            <h1 className="text-2xl font-semibold">{fahrschule?.name ?? "Fahrschule"}</h1>
             <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
               {[fahrschule?.strasse, [fahrschule?.plz, fahrschule?.ort].filter(Boolean).join(" ")]
                 .filter(Boolean)
@@ -179,7 +179,7 @@ export default async function RechnungDetailPage({ params }: { params: { id: str
                 {formatEuro(Number(rechnung.betrag_brutto) - Number(rechnung.betrag_netto))}
               </span>
             </div>
-            <div className="flex justify-between border-t pt-1.5 text-base font-bold">
+            <div className="flex justify-between border-t pt-1.5 text-base font-semibold">
               <span>Gesamtbetrag</span>
               <span>{formatEuro(Number(rechnung.betrag_brutto))}</span>
             </div>

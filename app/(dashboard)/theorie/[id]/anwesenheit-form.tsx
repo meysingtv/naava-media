@@ -120,7 +120,7 @@ export function AnwesenheitForm({
                 onClick={() => toggle(s.id)}
                 className={cn(
                   "flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors",
-                  an ? "bg-primary/5" : "hover:bg-muted/50",
+                  an ? "bg-primary/5" : "hover:bg-surface",
                 )}
               >
                 <SchuelerAvatar
@@ -137,7 +137,7 @@ export function AnwesenheitForm({
                     "flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors",
                     an
                       ? "border-primary bg-primary text-primary-foreground"
-                      : "border-input bg-background",
+                      : "border-border-strong bg-background",
                   )}
                 >
                   {an && <Check className="h-3.5 w-3.5" />}

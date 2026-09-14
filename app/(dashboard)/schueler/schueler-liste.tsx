@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Download, FileSpreadsheet, Loader2, Pencil, Plus, Search, Users } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Dialog,
@@ -33,7 +34,7 @@ function Tip({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 const toolbarBtn =
-  "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground";
+  "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-fast hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25";
 
 export function SchuelerListe({
   schueler,
@@ -156,21 +157,20 @@ export function SchuelerListe({
         title="Noch keine Schüler"
         description="Lege deinen ersten Fahrschüler an, um Fortschritt, Fahrstunden und Rechnungen zu verwalten."
       >
-        <Link
-          href="/schueler/neu"
-          className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-accent"
-        >
-          <Plus className="h-4 w-4" /> Neuer Schüler
-        </Link>
+        <Button asChild>
+          <Link href="/schueler/neu">
+            <Plus /> Neuer Schüler
+          </Link>
+        </Button>
       </EmptyState>
     );
   }
 
   return (
     <div>
-      <Card>
+      <Card className="overflow-hidden">
         {/* Werkzeugleiste */}
-        <div className="flex flex-wrap items-center gap-1 border-b p-2">
+        <div className="flex flex-wrap items-center gap-1 border-b bg-surface/60 p-2">
           <Tip label="Neuer Schüler">
             <Link href="/schueler/neu" aria-label="Neuer Schüler" className={toolbarBtn}>
               <Plus className="h-4 w-4" />
@@ -226,14 +226,14 @@ export function SchuelerListe({
 
         {/* Tabelle */}
         <div className="max-h-[calc(100vh-16rem)] overflow-auto">
-          <table className="w-full text-sm">
-            <thead className="sticky top-0 z-10 border-b bg-muted/60 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
+          <table className="w-full text-sm tabular-nums">
+            <thead className="sticky top-0 z-10 border-b bg-surface text-left text-[13px] text-muted-foreground">
               <tr>
-                <th className="px-3 py-2 font-medium">Kunde</th>
-                <th className="hidden px-3 py-2 font-medium xl:table-cell">Kostenträger</th>
-                <th className="hidden px-3 py-2 font-medium sm:table-cell">Fahrlehrer</th>
-                <th className="hidden px-3 py-2 font-medium lg:table-cell">Filiale</th>
-                <th className="px-3 py-2 text-right font-medium">Saldo</th>
+                <th className="h-10 px-3 font-medium">Kunde</th>
+                <th className="hidden h-10 px-3 font-medium xl:table-cell">Kostenträger</th>
+                <th className="hidden h-10 px-3 font-medium sm:table-cell">Fahrlehrer</th>
+                <th className="hidden h-10 px-3 font-medium lg:table-cell">Filiale</th>
+                <th className="h-10 px-3 text-right font-medium">Saldo</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -245,9 +245,12 @@ export function SchuelerListe({
                   <tr
                     key={s.id}
                     onClick={() => router.push(`/schueler?id=${s.id}`)}
+                    aria-selected={aktiv}
                     className={cn(
-                      "cursor-pointer transition-colors",
-                      aktiv ? "bg-accent" : "hover:bg-muted/50",
+                      "cursor-pointer transition-colors duration-fast",
+                      aktiv
+                        ? "bg-primary-soft/70 shadow-[inset_2px_0_0_hsl(var(--primary))]"
+                        : "hover:bg-surface",
                     )}
                   >
                     <td className="px-3 py-2">
@@ -259,7 +262,7 @@ export function SchuelerListe({
                           className="h-9 w-9 shrink-0 text-xs"
                         />
                         <div className="min-w-0">
-                          <p className={cn("truncate", aktiv ? "font-semibold" : "font-medium")}>
+                          <p className={cn("truncate text-foreground", aktiv ? "font-semibold" : "font-medium")}>
                             {s.vorname} {s.nachname}
                           </p>
                           <p className="truncate text-xs text-muted-foreground">
@@ -275,7 +278,7 @@ export function SchuelerListe({
                       {kuerzel.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {kuerzel.map((k) => (
-                            <Badge key={k} variant="outline" className="px-1.5 py-0 text-[11px]">
+                            <Badge key={k} variant="outline" className="h-5 px-1.5 text-2xs">
                               {k}
                             </Badge>
                           ))}

@@ -13,14 +13,14 @@ export default function LoginPage({
   searchParams: { weiter?: string; fehler?: string };
 }) {
   return (
-    <Card className="border-0 shadow-xl">
+    <Card className="shadow-md">
       <CardContent className="space-y-6 p-8">
         <div className="flex flex-col items-center gap-3 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <LogIn className="h-7 w-7" />
+          <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary">
+            <LogIn className="h-6 w-6" strokeWidth={1.75} />
           </span>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Willkommen zurück</h1>
+            <h1 className="text-xl font-semibold tracking-tight text-foreground">Willkommen zurück</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Melde dich an, um deine Fahrschule zu verwalten.
             </p>

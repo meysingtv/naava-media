@@ -80,13 +80,13 @@ export function SetupForm({ defaultEmail }: { defaultEmail?: string }) {
           type="checkbox"
           checked={zweite}
           onChange={(e) => setZweite(e.target.checked)}
-          className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+          className="h-4 w-4 rounded border-border-strong text-primary focus:ring-primary/25"
         />
         Zweite Fahrschule hinzufügen (für Filialketten)
       </label>
 
       {zweite && (
-        <div className="space-y-3 rounded-lg border bg-muted/30 p-3">
+        <div className="space-y-3 rounded-lg border bg-surface p-3">
           <div className="space-y-2">
             <Label htmlFor="name2">Name der zweiten Fahrschule</Label>
             <Input id="name2" name="name2" placeholder="z. B. Fahrschule Müller – Filiale 2" />

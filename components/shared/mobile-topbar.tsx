@@ -31,33 +31,35 @@ export function MobileTopbar({ fahrschuleName, vorname, nachname, rolle }: Mobil
   const items = navItemsFuer(rolle);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card px-4 md:hidden print:hidden">
-      <span className="truncate text-base font-semibold text-foreground">{fahrschuleName}</span>
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background px-4 md:hidden print:hidden">
+      <span className="truncate text-sm font-semibold text-foreground">{fahrschuleName}</span>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon" aria-label="Menü öffnen">
-            <Menu className="h-5 w-5" />
+            <Menu className="h-[18px] w-[18px]" strokeWidth={1.75} />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-60">
+        <DropdownMenuContent align="end" className="w-64">
           <DropdownMenuLabel>
-            <p className="font-semibold">{fahrschuleName}</p>
+            <p className="font-medium">{fahrschuleName}</p>
             <p className="text-xs font-normal text-muted-foreground">
               {vorname} {nachname} · {ROLLEN[rolle]}
             </p>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           {items.map((item) => {
-            const aktiv =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const aktiv = pathname === item.href || pathname.startsWith(`${item.href}/`);
             const Icon = item.icon;
             return (
               <DropdownMenuItem key={item.href} asChild>
                 <Link
                   href={item.href}
-                  className={cn("cursor-pointer", aktiv && "bg-accent text-accent-foreground")}
+                  className={cn(
+                    "cursor-pointer",
+                    aktiv && "bg-primary-soft font-medium text-primary [&_svg]:!text-primary",
+                  )}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon strokeWidth={1.75} />
                   {item.label}
                 </Link>
               </DropdownMenuItem>
@@ -67,7 +69,7 @@ export function MobileTopbar({ fahrschuleName, vorname, nachname, rolle }: Mobil
           <form action={abmelden}>
             <button
               type="submit"
-              className="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-destructive outline-none transition-colors hover:bg-accent"
+              className="relative flex h-9 w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2 text-sm text-destructive outline-none transition-colors duration-fast hover:bg-destructive-soft"
             >
               <LogOut className="h-4 w-4" />
               Abmelden

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, Check, ChevronDown, LogOut, Settings } from "lucide-react";
+import { Bell, Check, ChevronsUpDown, LogOut, Settings } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -30,6 +30,9 @@ interface DesktopTopbarProps {
   aktiveFahrschuleId: string | null;
 }
 
+const triggerBase =
+  "flex items-center gap-2 rounded-md outline-none transition-colors duration-fast ease-soft hover:bg-surface focus-visible:ring-[3px] focus-visible:ring-primary/25 data-[state=open]:bg-surface";
+
 export function DesktopTopbar({
   fahrschuleName,
   ort,
@@ -45,45 +48,49 @@ export function DesktopTopbar({
   const mehrereFahrschulen = fahrschulen.length > 1;
 
   return (
-    <header className="sticky top-0 z-30 hidden h-16 items-center gap-4 border-b bg-card pl-6 pr-4 md:flex print:hidden">
-      {/* Links: Logo + Fahrschulname + Dropdown */}
+    <header className="sticky top-0 z-30 hidden h-14 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur-none md:flex print:hidden">
+      {/* Links: Fahrschule (Workspace-Umschalter) */}
       <DropdownMenu>
-        <DropdownMenuTrigger className="flex shrink-0 items-center gap-2.5 rounded-lg py-1 pr-1 outline-none ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full">
+        <DropdownMenuTrigger className={`${triggerBase} h-9 w-[216px] shrink-0 pl-1.5 pr-2`}>
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary text-xs font-semibold text-primary-foreground">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt={fahrschuleName} className="h-full w-full rounded-full object-cover" />
+              <img src={logoUrl} alt={fahrschuleName} className="h-full w-full object-cover" />
             ) : (
-              <span className="text-base font-bold text-primary">{initialen(fahrschuleName, "")}</span>
+              initialen(fahrschuleName, "")
             )}
           </span>
-          <span className="hidden text-left leading-tight sm:block">
-            <span className="block max-w-[180px] truncate text-sm font-semibold text-foreground">
+          <span className="min-w-0 flex-1 text-left leading-tight">
+            <span className="block truncate text-sm font-medium text-foreground">
               {fahrschuleName}
             </span>
-            {ort && <span className="block text-xs text-muted-foreground">{ort}</span>}
+            {ort && <span className="block truncate text-2xs text-muted-foreground">{ort}</span>}
           </span>
-          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
           <DropdownMenuLabel>
-            <p className="font-semibold">{fahrschuleName}</p>
+            <p className="font-medium">{fahrschuleName}</p>
             {ort && <p className="text-xs font-normal text-muted-foreground">{ort}</p>}
           </DropdownMenuLabel>
 
           {mehrereFahrschulen && (
             <>
               <DropdownMenuSeparator />
-              <p className="px-2 py-1 text-xs font-medium text-muted-foreground">Fahrschule wechseln</p>
+              <p className="px-2 pb-1 pt-1.5 text-2xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                Fahrschule wechseln
+              </p>
               {fahrschulen.map((f) => (
                 <form key={f.id} action={fahrschuleWechseln}>
                   <input type="hidden" name="id" value={f.id} />
                   <button
                     type="submit"
-                    className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent"
+                    className="flex h-9 w-full cursor-pointer items-center justify-between gap-2 rounded-sm px-2 text-sm outline-none transition-colors duration-fast hover:bg-surface focus-visible:bg-surface"
                   >
                     <span className="truncate">{f.name}</span>
-                    {f.id === aktiveFahrschuleId && <Check className="h-4 w-4 shrink-0 text-primary" />}
+                    {f.id === aktiveFahrschuleId && (
+                      <Check className="h-4 w-4 shrink-0 text-primary" strokeWidth={2.5} />
+                    )}
                   </button>
                 </form>
               ))}
@@ -95,7 +102,7 @@ export function DesktopTopbar({
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/einstellungen" className="cursor-pointer">
-                  <Settings className="h-4 w-4" /> Einstellungen
+                  <Settings /> Einstellungen
                 </Link>
               </DropdownMenuItem>
             </>
@@ -103,64 +110,65 @@ export function DesktopTopbar({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Mitte: KI-Suche */}
+      {/* Mitte: Suche */}
       <div className="flex flex-1 justify-center">
-        <div className="w-full max-w-xl">
+        <div className="w-full max-w-md">
           <GlobalSearch />
         </div>
       </div>
 
-      {/* Rechts: Glocke + Profil */}
+      {/* Rechts: Benachrichtigungen + Profil */}
       <div className="flex shrink-0 items-center gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label="Benachrichtigungen"
-            className="mr-2 flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground outline-none ring-offset-background transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className={`${triggerBase} h-9 w-9 justify-center text-muted-foreground hover:text-foreground`}
           >
-            <Bell className="h-5 w-5" />
+            <Bell className="h-[18px] w-[18px]" strokeWidth={1.75} />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64">
+          <DropdownMenuContent align="end" className="w-72">
             <DropdownMenuLabel>Benachrichtigungen</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <p className="px-2 py-6 text-center text-sm text-muted-foreground">
+            <p className="px-2 py-8 text-center text-sm text-muted-foreground">
               Keine neuen Benachrichtigungen.
             </p>
           </DropdownMenuContent>
         </DropdownMenu>
 
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 outline-none ring-offset-background transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-xs font-semibold text-primary">
+          <DropdownMenuTrigger className={`${triggerBase} h-9 pl-1.5 pr-2`}>
+            <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-primary-soft-strong text-2xs font-semibold text-primary-pressed">
               {initialen(vorname, nachname)}
             </span>
-            <span className="hidden text-left leading-tight sm:block">
+            <span className="hidden text-left leading-tight lg:block">
               <span className="block text-sm font-medium text-foreground">
                 {vorname} {nachname}
               </span>
-              <span className="block text-xs text-muted-foreground">{ROLLEN[rolle]}</span>
+              <span className="block text-2xs text-muted-foreground">{ROLLEN[rolle]}</span>
             </span>
-            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <ChevronsUpDown className="hidden h-3.5 w-3.5 shrink-0 text-muted-foreground lg:block" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-60">
             <DropdownMenuLabel>
-              <p className="font-semibold">
+              <p className="font-medium">
                 {vorname} {nachname}
               </p>
-              <p className="truncate text-xs font-normal text-muted-foreground">{email ?? ROLLEN[rolle]}</p>
+              <p className="truncate text-xs font-normal text-muted-foreground">
+                {email ?? ROLLEN[rolle]}
+              </p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             {istChef && (
               <DropdownMenuItem asChild>
                 <Link href="/einstellungen" className="cursor-pointer">
-                  <Settings className="h-4 w-4" /> Einstellungen
+                  <Settings /> Einstellungen
                 </Link>
               </DropdownMenuItem>
             )}
-            <DropdownMenuSeparator />
             <form action={abmelden}>
               <button
                 type="submit"
-                className="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-destructive outline-none transition-colors hover:bg-accent"
+                className="relative flex h-9 w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2 text-sm text-destructive outline-none transition-colors duration-fast hover:bg-destructive-soft focus-visible:bg-destructive-soft"
               >
                 <LogOut className="h-4 w-4" />
                 Abmelden

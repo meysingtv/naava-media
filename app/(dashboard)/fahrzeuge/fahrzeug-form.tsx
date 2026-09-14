@@ -15,7 +15,7 @@ import type { Fahrzeug } from "@/lib/types";
 const initial: FahrzeugState = {};
 
 const feld =
-  "h-9 w-full rounded-md border border-input bg-background px-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "h-9 w-full rounded-md border border-border-strong bg-background shadow-xs px-3 text-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20";
 
 interface Option {
   id: string;
@@ -73,7 +73,7 @@ function ChipWahl({
               "rounded-md border px-2.5 py-1 text-sm font-medium transition-colors",
               aktiv
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-input bg-background hover:bg-accent",
+                : "border-border-strong bg-background hover:bg-surface",
             )}
           >
             {labelVon ? labelVon(v) : v}
@@ -117,7 +117,7 @@ export function FahrzeugForm({ fahrzeug, options }: { fahrzeug?: Fahrzeug; optio
         {/* Kopfleiste */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-            <h1 className="text-sm font-bold tracking-tight">{titel}</h1>
+            <h1 className="text-sm font-semibold tracking-tight">{titel}</h1>
             <div className="flex items-center gap-5">
               <button type="button" onClick={() => setTab("stamm")} className={tabCls(tab === "stamm")}>
                 Stammdaten
@@ -203,7 +203,7 @@ export function FahrzeugForm({ fahrzeug, options }: { fahrzeug?: Fahrzeug; optio
               type="checkbox"
               name="anhaenger"
               defaultChecked={fahrzeug?.anhaenger}
-              className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+              className="h-4 w-4 rounded border-border-strong text-primary focus:ring-primary/25"
             />
             Anhänger
           </label>

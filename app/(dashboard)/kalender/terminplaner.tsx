@@ -5,24 +5,21 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn, formatUhrzeit } from "@/lib/utils";
-import { FAHRSTUNDE_TYPEN } from "@/lib/constants";
-import type { Fahrstunde, FahrstundeMitRelationen, FahrstundeTyp } from "@/lib/types";
+import { FAHRSTUNDE_FARBE, FAHRSTUNDE_TYPEN } from "@/lib/constants";
+import type { Fahrstunde, FahrstundeMitRelationen } from "@/lib/types";
 import { FahrstundePanel, type FahrstundeInitial, type Option } from "./fahrstunde-panel";
 
 type Modus = "tag" | "drei" | "woche";
 
 const SPALTEN: Record<Modus, number> = { tag: 1, drei: 3, woche: 7 };
 
-// Termin-Farben je Fahrstunden-Art (wie in der App, aber ohne Orange).
-const TERMIN_FARBE: Record<FahrstundeTyp, string> = {
-  normal: "#2563EB",
-  ueberland: "#16A34A",
-  autobahn: "#0891B2",
-  nacht: "#4F46E5",
-  pruefung: "#DC2626",
-  theorie: "#0D9488",
-  sonstiges: "#64748B",
-};
+// Termin-Farben je Fahrstunden-Art – zentral in lib/constants.ts.
+const TERMIN_FARBE = FAHRSTUNDE_FARBE;
+
+const selectKlasse =
+  "h-8 rounded-md border border-border-strong bg-background px-2 text-[13px] text-foreground shadow-xs transition-[border-color,box-shadow] duration-fast hover:border-[hsl(205_18%_74%)] focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20";
+const navBtn =
+  "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-fast hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25";
 
 const TAG_START = 7; // 07:00
 const TAG_ENDE = 21; // 21:00
@@ -249,38 +246,24 @@ export function Terminplaner({
       {/* Steuerung */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <div className="flex items-center">
-            <button
-              type="button"
-              onClick={() => blättern(-1)}
-              aria-label="Zurück"
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
+          <div className="flex items-center rounded-md border bg-background p-0.5 shadow-xs">
+            <button type="button" onClick={() => blättern(-1)} aria-label="Zurück" className={cn(navBtn, "h-7 w-7")}>
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <button
-              type="button"
-              onClick={() => blättern(1)}
-              aria-label="Weiter"
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
+            <button type="button" onClick={() => blättern(1)} aria-label="Weiter" className={cn(navBtn, "h-7 w-7")}>
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
           <p className="text-sm font-semibold capitalize text-foreground">{label}</p>
           {anker !== heute && (
-            <button
-              type="button"
-              onClick={() => setAnker(heute)}
-              className="text-xs font-medium text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
-            >
+            <Button variant="ghost" size="sm" onClick={() => setAnker(heute)} className="h-7 px-2 text-xs">
               Heute
-            </button>
+            </Button>
           )}
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="inline-flex rounded-md bg-muted p-0.5 text-[13px]">
+          <div className="inline-flex rounded-md bg-surface-muted p-0.5 text-[13px]">
             {(
               [
                 ["tag", "Tag"],
@@ -293,9 +276,9 @@ export function Terminplaner({
                 type="button"
                 onClick={() => setModus(v)}
                 className={cn(
-                  "rounded px-2.5 py-1 font-medium transition-colors",
+                  "h-7 rounded-[6px] px-2.5 font-medium transition-[background-color,color,box-shadow] duration-fast",
                   modus === v
-                    ? "bg-card text-foreground shadow-sm"
+                    ? "bg-background text-foreground shadow-xs"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -303,7 +286,7 @@ export function Terminplaner({
               </button>
             ))}
           </div>
-          <Button variant="outline" size="sm" onClick={() => oeffneDialog({ datum: anker })}>
+          <Button size="sm" onClick={() => oeffneDialog({ datum: anker })}>
             <Plus /> <span className="hidden sm:inline">Neuer Termin</span>
           </Button>
         </div>
@@ -315,7 +298,7 @@ export function Terminplaner({
         <select
           value={filterLehrer}
           onChange={(e) => setFilterLehrer(e.target.value)}
-          className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={selectKlasse}
         >
           <option value="">Alle Mitarbeiter</option>
           {options.fahrlehrer.map((f) => (
@@ -325,7 +308,7 @@ export function Terminplaner({
         <select
           value={filterFahrzeug}
           onChange={(e) => setFilterFahrzeug(e.target.value)}
-          className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className={selectKlasse}
         >
           <option value="">Alle Fahrzeuge</option>
           {options.fahrzeuge.map((f) => (
@@ -333,16 +316,17 @@ export function Terminplaner({
           ))}
         </select>
         {(filterLehrer || filterFahrzeug) && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-xs"
             onClick={() => {
               setFilterLehrer("");
               setFilterFahrzeug("");
             }}
-            className="text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
           >
             Zurücksetzen
-          </button>
+          </Button>
         )}
       </div>
 
@@ -353,7 +337,7 @@ export function Terminplaner({
 
       {/* Zeitraster + Termin-Panel */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-        <div className="min-w-0 overflow-x-auto rounded-lg border bg-card lg:flex-1">
+        <div className="min-w-0 overflow-x-auto rounded-lg border bg-card shadow-xs lg:flex-1">
         <div className="flex">
           {/* Zeit-Spalte */}
           <div className="w-14 shrink-0 border-r">
@@ -383,8 +367,8 @@ export function Terminplaner({
             return (
               <div key={tagIso} className="flex min-w-[120px] flex-1 flex-col border-r last:border-r-0">
                 {/* Tages-Kopf */}
-                <div className="flex h-14 flex-col items-center justify-center gap-0.5 border-b">
-                  <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                <div className={cn("flex h-14 flex-col items-center justify-center gap-0.5 border-b", istHeute && "bg-primary-soft/40")}>
+                  <span className="text-2xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
                     {wochentag}
                   </span>
                   <span
@@ -451,7 +435,7 @@ export function Terminplaner({
                         onMouseDown={(e) => e.stopPropagation()}
                         onClick={() => stundeBearbeiten(s)}
                         className={cn(
-                          "absolute z-20 overflow-hidden rounded-md px-1.5 py-1 text-left text-[11px] leading-tight text-white shadow-sm transition hover:z-30 hover:shadow-md",
+                          "absolute z-20 overflow-hidden rounded-[6px] px-1.5 py-1 text-left text-[11px] leading-tight text-white shadow-xs transition-[box-shadow,filter] duration-fast hover:z-30 hover:shadow-md hover:brightness-[1.06]",
                           ausgefallen && "line-through",
                         )}
                         style={{
@@ -485,7 +469,7 @@ export function Terminplaner({
         </div>
         </div>
         {open && (
-          <div className="lg:sticky lg:top-16 lg:w-[380px] lg:shrink-0">
+          <div className="animate-slide-up-in lg:sticky lg:top-[4.5rem] lg:w-[380px] lg:shrink-0">
             <FahrstundePanel
               key={key}
               options={options}

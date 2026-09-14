@@ -31,7 +31,7 @@ function Tip({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 const toolbarBtn =
-  "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground";
+  "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-fast hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25";
 const toolbarBtnAus = cn(toolbarBtn, "cursor-not-allowed opacity-40");
 
 export function RollenListe({ eintraege, selectedKey }: { eintraege: RolleEintrag[]; selectedKey?: string }) {
@@ -42,7 +42,7 @@ export function RollenListe({ eintraege, selectedKey }: { eintraege: RolleEintra
   return (
     <div>
       <Card>
-        <div className="flex flex-wrap items-center gap-1 border-b p-2">
+        <div className="flex flex-wrap items-center gap-1 border-b bg-surface/60 p-2">
           <Tip label={!selected ? "Erst Rolle auswählen" : selected.system ? "Standardrolle (nicht bearbeitbar)" : "Rolle bearbeiten"}>
             {bearbeitbar ? (
               <Link href={`/fahrlehrer/rollen?rolle=${selected!.key}&edit=1`} aria-label="Rolle bearbeiten" className={toolbarBtn}>
@@ -77,13 +77,13 @@ export function RollenListe({ eintraege, selectedKey }: { eintraege: RolleEintra
         </div>
 
         <div className="max-h-[calc(100vh-16rem)] overflow-auto">
-          <table className="w-full text-sm">
-            <thead className="sticky top-0 z-10 border-b bg-muted/60 text-left text-[11px] uppercase tracking-wide text-muted-foreground">
+          <table className="w-full text-sm tabular-nums">
+            <thead className="sticky top-0 z-10 border-b bg-surface text-left text-[13px] text-muted-foreground">
               <tr>
-                <th className="px-3 py-2 font-medium">Rolle</th>
-                <th className="hidden px-3 py-2 font-medium sm:table-cell">Beschreibung</th>
-                <th className="px-3 py-2 font-medium">Zugangsart</th>
-                <th className="px-3 py-2 font-medium">Zugang</th>
+                <th className="h-10 px-3 font-medium">Rolle</th>
+                <th className="hidden h-10 px-3 font-medium sm:table-cell">Beschreibung</th>
+                <th className="h-10 px-3 font-medium">Zugangsart</th>
+                <th className="h-10 px-3 font-medium">Zugang</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -93,7 +93,7 @@ export function RollenListe({ eintraege, selectedKey }: { eintraege: RolleEintra
                   <tr
                     key={e.key}
                     onClick={() => router.push(`/fahrlehrer/rollen?rolle=${e.key}`)}
-                    className={cn("cursor-pointer transition-colors", aktiv ? "bg-accent" : "hover:bg-muted/50")}
+                    className={cn("cursor-pointer transition-colors", aktiv ? "bg-primary-soft/70 shadow-[inset_2px_0_0_hsl(var(--primary))]" : "hover:bg-surface")}
                   >
                     <td className={cn("px-3 py-2", aktiv ? "font-semibold" : "font-medium")}>
                       <span className="flex items-center gap-2">

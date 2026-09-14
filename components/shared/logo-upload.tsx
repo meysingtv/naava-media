@@ -3,6 +3,8 @@
 import { useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+
 /**
  * Logo-Auswahl: liest ein Bild als Data-URL ein und legt es in ein verstecktes
  * Feld (Standardname `logo_url`). So braucht es keinen Storage-Bucket.
@@ -47,30 +49,28 @@ export function LogoUpload({
     <div className="space-y-2">
       <input type="hidden" name={name} value={wert} />
       <div className="flex items-center gap-3">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-surface">
           {wert ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={wert} alt="Logo" className="h-full w-full object-contain" />
           ) : (
-            <ImagePlus className="h-5 w-5 text-muted-foreground" />
+            <ImagePlus className="h-5 w-5 text-muted-foreground" strokeWidth={1.75} />
           )}
         </span>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            className="rounded-md border bg-background px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent"
-          >
+          <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()}>
             {wert ? "Logo ändern" : "Logo hochladen"}
-          </button>
+          </Button>
           {wert && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={entfernen}
-              className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:text-destructive"
+              className="text-muted-foreground hover:text-destructive"
             >
-              <X className="h-4 w-4" /> Entfernen
-            </button>
+              <X /> Entfernen
+            </Button>
           )}
         </div>
         <input ref={inputRef} type="file" accept="image/*" onChange={onFile} className="hidden" />

@@ -174,7 +174,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
             />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-lg font-bold tracking-tight">
+                <h1 className="text-lg font-semibold tracking-tight">
                   {s.vorname} {s.nachname}
                 </h1>
                 {pruefungsreif ? (
@@ -286,7 +286,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
               <GraduationCap className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="space-y-2.5 p-4 pt-0">
-              <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-1.5 text-sm">
+              <div className="flex items-center justify-between rounded-md bg-surface px-3 py-1.5 text-sm">
                 <span className="font-medium">Theorieprüfung</span>
                 {s.theorie_bestanden ? (
                   <Badge variant="success">Bestanden</Badge>
@@ -363,7 +363,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
               <Separator />
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Saldo</span>
-                <span className={cn("text-lg font-bold", saldo < 0 ? "text-destructive" : "text-success")}>
+                <span className={cn("text-lg font-semibold", saldo < 0 ? "text-destructive" : "text-success")}>
                   {formatEuro(saldo)}
                 </span>
               </div>

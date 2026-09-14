@@ -4,6 +4,7 @@ import { Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn, initialen } from "@/lib/utils";
 import type { Fahrschueler } from "@/lib/types";
 import { SchuelerListe } from "./schueler-liste";
@@ -15,26 +16,25 @@ export const metadata = { title: "Schüler · FahrschulApp" };
 function AkteSkeleton() {
   return (
     <div className="space-y-3" aria-busy="true">
-      <div className="relative overflow-hidden rounded-md border bg-card p-4">
+      <div className="rounded-lg border bg-card p-4 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="h-14 w-14 animate-pulse rounded-full bg-muted" />
+          <Skeleton className="h-14 w-14 rounded-full" />
           <div className="space-y-2">
-            <div className="h-4 w-40 animate-pulse rounded bg-muted" />
-            <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-3 w-24" />
           </div>
         </div>
       </div>
       <div className="grid gap-3 xl:grid-cols-2">
         <div className="space-y-3">
-          <div className="h-36 animate-pulse rounded-md border bg-card" />
-          <div className="h-52 animate-pulse rounded-md border bg-card" />
+          <Skeleton className="h-36 rounded-lg" />
+          <Skeleton className="h-52 rounded-lg" />
         </div>
         <div className="space-y-3">
-          <div className="h-28 animate-pulse rounded-md border bg-card" />
-          <div className="h-44 animate-pulse rounded-md border bg-card" />
+          <Skeleton className="h-28 rounded-lg" />
+          <Skeleton className="h-44 rounded-lg" />
         </div>
       </div>
-      <p className="text-center text-sm text-muted-foreground">Lädt …</p>
     </div>
   );
 }
@@ -107,10 +107,12 @@ export default async function SchuelerPage({
               <SchuelerAkte schuelerId={selected.id} />
             </Suspense>
           ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center gap-2 py-24 text-center text-muted-foreground">
-                <Users className="h-8 w-8" />
-                <p className="text-sm">Wähle links einen Schüler, um die Akte zu sehen.</p>
+            <Card className="border-dashed border-border-strong shadow-none">
+              <CardContent className="flex flex-col items-center justify-center gap-3 py-24 text-center">
+                <span className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-primary-soft text-primary">
+                  <Users className="h-8 w-8" strokeWidth={1.5} />
+                </span>
+                <p className="text-sm text-muted-foreground">Wähle links einen Schüler, um die Akte zu sehen.</p>
               </CardContent>
             </Card>
           )}
