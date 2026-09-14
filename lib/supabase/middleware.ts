@@ -4,9 +4,23 @@ import { NextResponse, type NextRequest } from "next/server";
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 /**
+ * Erkennt, ob der Request über eine Schüler-Portal-Domain kommt.
+ * Konfigurierbar über die Env-Variable PORTAL_HOSTS (kommagetrennt),
+ * zusätzlich greifen die üblichen Sub-Domains mein./schueler./portal.
+ */
+function istPortalHost(host: string): boolean {
+  const hostname = host.split(":")[0].toLowerCase();
+  const konfiguriert = (process.env.PORTAL_HOSTS ?? "")
+    .split(",")
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean);
+  if (konfiguriert.includes(hostname)) return true;
+  return /^(mein|schueler|portal)\./.test(hostname);
+}
+
+/**
  * Aktualisiert die Supabase-Session bei jeder Anfrage und übernimmt den
- * grundlegenden Zugriffsschutz: Nicht angemeldete Nutzer werden auf die
- * Login-Seite geleitet, angemeldete Nutzer von den Auth-Seiten weg.
+ * Zugriffsschutz – getrennt für das Büro (Admin) und das Schüler-Portal.
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -35,28 +49,65 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Frisch gesetzte Session-Cookies auf eine andere Antwort übertragen.
+  function mitCookies(res: NextResponse): NextResponse {
+    supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c.name, c.value));
+    return res;
+  }
+
+  const host = request.headers.get("host") ?? "";
+  const portal = istPortalHost(host);
   const path = request.nextUrl.pathname;
+
+  // Auf der Portal-Domain werden alle Wurzelpfade intern unter /portal bedient
+  // (der Schüler sieht saubere URLs wie mein.fahrschule.de/termine).
+  let effektiv = path;
+  let umschreiben = false;
+  if (portal && !path.startsWith("/portal")) {
+    effektiv = `/portal${path === "/" ? "" : path}`;
+    umschreiben = true;
+  }
+
+  const imPortal = effektiv.startsWith("/portal");
+  const portalOeffentlich = effektiv === "/portal/login";
+
+  // ---- Schüler-Portal ----
+  if (imPortal) {
+    if (!user && !portalOeffentlich) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/portal/login";
+      url.search = "";
+      return mitCookies(NextResponse.redirect(url));
+    }
+    if (user && portalOeffentlich) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/portal";
+      url.search = "";
+      return mitCookies(NextResponse.redirect(url));
+    }
+    if (umschreiben) {
+      const url = request.nextUrl.clone();
+      url.pathname = effektiv;
+      return mitCookies(NextResponse.rewrite(url));
+    }
+    return supabaseResponse;
+  }
+
+  // ---- Büro / Admin (bestehende Logik) ----
   const istAuthSeite = path.startsWith("/auth");
 
-  // Nicht angemeldet + geschützter Bereich -> Login
   if (!user && !istAuthSeite) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     url.searchParams.set("weiter", path);
-    return NextResponse.redirect(url);
+    return mitCookies(NextResponse.redirect(url));
   }
 
-  // Angemeldet + Login/Registrierung -> Dashboard
-  if (
-    user &&
-    (path === "/auth/login" || path === "/auth/registrieren" || path === "/")
-  ) {
+  if (user && (path === "/auth/login" || path === "/auth/registrieren" || path === "/")) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     url.search = "";
-    const redirect = NextResponse.redirect(url);
-    supabaseResponse.cookies.getAll().forEach((c) => redirect.cookies.set(c.name, c.value));
-    return redirect;
+    return mitCookies(NextResponse.redirect(url));
   }
 
   return supabaseResponse;

@@ -131,6 +131,25 @@ export async function schuelerSpeichern(
   redirect(`/schueler?id=${schuelerId}`);
 }
 
+/** Aktiviert den Portal-Zugang und erzeugt einen Zugangscode. */
+export async function portalZugangAktivieren(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+  const supabase = createClient();
+  await supabase.from("fahrschueler").update({ portal_aktiv: true, portal_code: code }).eq("id", id);
+  revalidatePath(`/schueler`);
+}
+
+/** Sperrt den Portal-Zugang und trennt die Verknüpfung zum Konto. */
+export async function portalZugangSperren(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const supabase = createClient();
+  await supabase.from("fahrschueler").update({ portal_aktiv: false, user_id: null }).eq("id", id);
+  revalidatePath(`/schueler`);
+}
+
 /** Löscht einen Schüler vollständig (DSGVO – inkl. abhängiger Datensätze per Cascade). */
 export async function schuelerLoeschen(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");

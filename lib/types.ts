@@ -116,6 +116,10 @@ export type Fahrschueler = {
   ausweis_ok: boolean;
   vertrag_unterschrift: string | null;
   vertrag_am: string | null;
+  // Schüler-Portal (Migration 0016)
+  user_id: string | null;
+  portal_code: string | null;
+  portal_aktiv: boolean;
   created_at: string;
 };
 
@@ -341,6 +345,12 @@ export type Database = {
     Functions: {
       current_fahrschule_id: { Args: Record<string, never>; Returns: string };
       current_rolle: { Args: Record<string, never>; Returns: FahrlehrerRolle };
+      current_schueler_id: { Args: Record<string, never>; Returns: string };
+      schueler_portal_verknuepfen: { Args: { p_code: string }; Returns: string };
+      schueler_fahrschule: {
+        Args: Record<string, never>;
+        Returns: { name: string; ort: string | null; logo_url: string | null }[];
+      };
       setup_fahrschule: {
         Args: {
           p_name: string;

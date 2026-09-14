@@ -34,7 +34,7 @@ import {
 } from "@/lib/constants";
 import { cn, formatDatum, formatEuro, formatUhrzeit, initialen } from "@/lib/utils";
 import type { Fahrschueler, Fahrstunde, Rechnung } from "@/lib/types";
-import { schuelerLoeschen } from "./actions";
+import { portalZugangAktivieren, portalZugangSperren, schuelerLoeschen } from "./actions";
 
 type FahrstundeDetail = Fahrstunde & {
   fahrlehrer: { vorname: string; nachname: string } | null;
@@ -455,6 +455,63 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
                 <Badge variant="outline">Fahren Lernen</Badge>
                 <Badge variant="outline">drive.buzz</Badge>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex-row items-center justify-between p-4 pb-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Schüler-Portal
+              </CardTitle>
+              <Smartphone className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="space-y-2.5 p-4 pt-0 text-sm">
+              {s.portal_aktiv ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Status</span>
+                    {s.user_id ? (
+                      <Badge variant="success">verbunden</Badge>
+                    ) : (
+                      <Badge variant="warning">wartet auf Anmeldung</Badge>
+                    )}
+                  </div>
+                  {s.portal_code && (
+                    <div className="rounded-md border bg-surface px-3 py-2">
+                      <p className="text-xs text-muted-foreground">Zugangscode</p>
+                      <p className="font-mono text-lg font-semibold tracking-[0.2em] text-foreground">
+                        {s.portal_code}
+                      </p>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Der Schüler meldet sich auf eurer Portal-Domain mit E-Mail, Passwort und diesem Code an.
+                  </p>
+                  <form action={portalZugangSperren}>
+                    <input type="hidden" name="id" value={s.id} />
+                    <Button
+                      type="submit"
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive hover:border-destructive/30 hover:bg-destructive-soft hover:text-destructive"
+                    >
+                      Zugang sperren
+                    </Button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <p className="text-muted-foreground">
+                    Gib dem Schüler Zugriff auf Termine, Fortschritt und Rechnungen im eigenen Portal.
+                  </p>
+                  <form action={portalZugangAktivieren}>
+                    <input type="hidden" name="id" value={s.id} />
+                    <Button type="submit" size="sm">
+                      <Smartphone className="h-4 w-4" /> Portal-Zugang aktivieren
+                    </Button>
+                  </form>
+                </>
+              )}
             </CardContent>
           </Card>
 
