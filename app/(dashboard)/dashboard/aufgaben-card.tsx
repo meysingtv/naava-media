@@ -1,4 +1,5 @@
-import { ListChecks } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, ListChecks } from "lucide-react";
 
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,8 +33,18 @@ export function AufgabenCard({ aufgaben }: { aufgaben: TempAufgabe[] }) {
         <CardTitle className="flex items-center gap-2">
           <ListChecks className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} /> Aufgaben
         </CardTitle>
-        <span className="text-xs text-muted-foreground">Zuweisung folgt</span>
+        <Link
+          href="/aufgaben"
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
+        >
+          Alle ansehen <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
       </CardHeader>
+      {aufgaben.length === 0 ? (
+        <p className="border-t px-5 py-10 text-center text-sm text-muted-foreground">
+          Keine offenen Aufgaben. 🎉
+        </p>
+      ) : (
       <div className="max-h-[420px] overflow-y-auto border-t scrollbar-thin">
         <Table>
           <TableHeader>
@@ -72,6 +83,7 @@ export function AufgabenCard({ aufgaben }: { aufgaben: TempAufgabe[] }) {
           </TableBody>
         </Table>
       </div>
+      )}
     </Card>
   );
 }

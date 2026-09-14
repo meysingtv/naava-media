@@ -47,6 +47,9 @@ export async function fahrzeugSpeichern(
     saison_von: leerZuNull(formData.get("saison_von")),
     saison_bis: leerZuNull(formData.get("saison_bis")),
     hauptuntersuchung: leerZuNull(formData.get("hauptuntersuchung")),
+    versicherung: leerZuNull(formData.get("versicherung")),
+    km_stand: formData.get("km_stand") ? Number(formData.get("km_stand")) : null,
+    naechste_wartung: leerZuNull(formData.get("naechste_wartung")),
   };
 
   const supabase = createClient();

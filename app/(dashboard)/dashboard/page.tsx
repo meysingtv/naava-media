@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatCard } from "@/components/shared/stat-card";
 import { FAHRSTUNDE_TYPEN } from "@/lib/constants";
 import { cn, formatDatum, formatEuro, formatUhrzeit } from "@/lib/utils";
-import type { Fahrschueler, FahrstundeMitRelationen, Rechnung } from "@/lib/types";
+import type { Aufgabe, Fahrschueler, FahrstundeMitRelationen, Rechnung } from "@/lib/types";
 import { AufgabenCard, type TempAufgabe } from "./aufgaben-card";
 import { MiniKalender } from "./mini-kalender";
 
@@ -21,9 +21,6 @@ function begruessung(): string {
 }
 function iso(d: Date): string {
   return d.toISOString().slice(0, 10);
-}
-function inTagen(n: number): string {
-  return iso(new Date(Date.now() + n * 86400000));
 }
 function wochenBereich(): { start: string; ende: string } {
   const heute = new Date();
@@ -65,7 +62,7 @@ export default async function DashboardPage() {
   const monatStart = iso(new Date(jetzt.getFullYear(), jetzt.getMonth(), 1));
   const monatEnde = iso(new Date(jetzt.getFullYear(), jetzt.getMonth() + 1, 0));
 
-  const [heuteRes, offeneRes, pruefungRes, wocheRes, lehrerRes, schuelerRes, monatRes, namenRes] =
+  const [heuteRes, offeneRes, pruefungRes, wocheRes, lehrerRes, schuelerRes, monatRes, aufgabenRes] =
     await Promise.all([
       supabase
         .from("fahrstunde")
@@ -85,7 +82,13 @@ export default async function DashboardPage() {
       supabase.from("fahrlehrer").select("id", { count: "exact", head: true }).eq("aktiv", true),
       supabase.from("fahrschueler").select("id", { count: "exact", head: true }),
       supabase.from("fahrstunde").select("datum").gte("datum", monatStart).lte("datum", monatEnde).returns<{ datum: string }[]>(),
-      supabase.from("fahrschueler").select("vorname, nachname").order("nachname").limit(6).returns<Pick<Fahrschueler, "vorname" | "nachname">[]>(),
+      supabase
+        .from("aufgabe")
+        .select("*, fahrschueler(vorname, nachname)")
+        .eq("status", "offen")
+        .order("faellig_am", { ascending: true, nullsFirst: false })
+        .limit(12)
+        .returns<(Aufgabe & { fahrschueler: Pick<Fahrschueler, "vorname" | "nachname"> | null })[]>(),
     ]);
 
   const heutigeStunden = heuteRes.data ?? [];
@@ -96,23 +99,18 @@ export default async function DashboardPage() {
   const aktiveLehrer = lehrerRes.count ?? 0;
   const schuelerGesamt = schuelerRes.count ?? 0;
   const monatsTage = Array.from(new Set((monatRes.data ?? []).map((r) => r.datum)));
-  const namen = (namenRes.data ?? []).map((s) => `${s.vorname} ${s.nachname}`);
 
   const auslastung = Math.min(100, Math.round((wochenStunden / (Math.max(aktiveLehrer, 1) * 40)) * 100));
   const vorname = kontext?.fahrlehrer?.vorname ?? "";
 
-  // Temporäre Aufgaben (echte Zuweisung folgt später)
-  const tempAufgaben: TempAufgabe[] = [
-    { titel: "Theorieprüfung beim TÜV anmelden", faellig: inTagen(2), kunde: namen[0] ?? null, prioritaet: "hoch" },
-    { titel: "Überfällige Rechnung nachfassen", faellig: inTagen(1), kunde: namen[1] ?? null, prioritaet: "hoch" },
-    { titel: "Sehtest-Nachweis anfordern", faellig: inTagen(3), kunde: namen[2] ?? null, prioritaet: "niedrig" },
-    { titel: "Fahrzeug zur Hauptuntersuchung anmelden", faellig: inTagen(5), kunde: null, prioritaet: "mittel" },
-    { titel: "Erste-Hilfe-Bescheinigung prüfen", faellig: inTagen(7), kunde: namen[3] ?? null, prioritaet: "niedrig" },
-    { titel: "Passbild für Führerscheinantrag einscannen", faellig: inTagen(4), kunde: namen[4] ?? null, prioritaet: "mittel" },
-    { titel: "Prüfungstermine für nächste Woche planen", faellig: inTagen(6), kunde: null, prioritaet: "mittel" },
-    { titel: "Lehrmaterial Klasse B nachbestellen", faellig: inTagen(10), kunde: null, prioritaet: "niedrig" },
-    { titel: "Kaffeemaschine entkalken", faellig: inTagen(8), kunde: null, prioritaet: "niedrig" },
-  ];
+  const aufgaben: TempAufgabe[] = (aufgabenRes.data ?? []).map((a) => ({
+    titel: a.titel,
+    faellig: a.faellig_am,
+    kunde: a.fahrschueler ? `${a.fahrschueler.vorname} ${a.fahrschueler.nachname}` : null,
+    prioritaet: (["niedrig", "mittel", "hoch"].includes(a.prioritaet)
+      ? a.prioritaet
+      : "mittel") as TempAufgabe["prioritaet"],
+  }));
 
   return (
     <div className="space-y-6">
@@ -154,7 +152,7 @@ export default async function DashboardPage() {
       {/* Inhalt */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <AufgabenCard aufgaben={tempAufgaben} />
+          <AufgabenCard aufgaben={aufgaben} />
         </div>
 
         <div className="space-y-4">

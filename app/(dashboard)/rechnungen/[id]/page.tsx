@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Check, Download } from "lucide-react";
+import { ArrowLeft, Bell, Check, Download, FileCode2 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
@@ -12,7 +12,7 @@ import { RECHNUNG_STATUS } from "@/lib/constants";
 import { formatDatum, formatEuro } from "@/lib/utils";
 import type { Fahrschueler, Rechnung, RechnungPosition } from "@/lib/types";
 import { PrintButton } from "./print-button";
-import { rechnungLoeschen, rechnungStatusSetzen } from "../actions";
+import { mahnungErstellen, rechnungLoeschen, rechnungStatusSetzen } from "../actions";
 
 export const metadata = { title: "Rechnung · FahrschulApp" };
 
@@ -71,9 +71,29 @@ export default async function RechnungDetailPage({ params }: { params: { id: str
               </Button>
             </form>
           )}
+          {rechnung.status !== "bezahlt" && (
+            <form action={mahnungErstellen}>
+              <input type="hidden" name="id" value={rechnung.id} />
+              <Button type="submit" variant="outline" size="sm">
+                <Bell className="h-4 w-4" /> Mahnen{rechnung.mahnstufe > 0 ? ` (Stufe ${rechnung.mahnstufe})` : ""}
+              </Button>
+            </form>
+          )}
+          {rechnung.mahnstufe > 0 && (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/rechnungen/${rechnung.id}/mahnung`}>
+                <Bell className="h-4 w-4" /> Mahnung
+              </Link>
+            </Button>
+          )}
           <Button asChild variant="outline" size="sm">
             <a href={`/rechnungen/${rechnung.id}/pdf`} target="_blank" rel="noopener noreferrer">
               <Download className="h-4 w-4" /> PDF
+            </a>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <a href={`/rechnungen/${rechnung.id}/xrechnung`}>
+              <FileCode2 className="h-4 w-4" /> XRechnung
             </a>
           </Button>
           <PrintButton />

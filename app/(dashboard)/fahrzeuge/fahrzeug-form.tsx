@@ -222,15 +222,48 @@ export function FahrzeugForm({ fahrzeug, options }: { fahrzeug?: Fahrzeug; optio
             </div>
           </Abschnitt>
 
-          <Abschnitt title="Hauptuntersuchung">
-            <F label="Nächste HU / TÜV">
-              <input
-                name="hauptuntersuchung"
-                type="date"
-                defaultValue={fahrzeug?.hauptuntersuchung ?? undefined}
-                className={cn(feld, "max-w-xs")}
-              />
-            </F>
+          <Abschnitt title="Hauptuntersuchung & Wartung">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <F label="Nächste HU / TÜV">
+                <input
+                  name="hauptuntersuchung"
+                  type="date"
+                  defaultValue={fahrzeug?.hauptuntersuchung ?? undefined}
+                  className={feld}
+                />
+              </F>
+              <F label="Nächste Wartung / Inspektion">
+                <input
+                  name="naechste_wartung"
+                  type="date"
+                  defaultValue={fahrzeug?.naechste_wartung ?? undefined}
+                  className={feld}
+                />
+              </F>
+            </div>
+          </Abschnitt>
+
+          <Abschnitt title="Versicherung & Kilometerstand">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <F label="Versicherung">
+                <input
+                  name="versicherung"
+                  defaultValue={fahrzeug?.versicherung ?? undefined}
+                  placeholder="z. B. HUK-Coburg, Police 123"
+                  className={feld}
+                />
+              </F>
+              <F label="Kilometerstand">
+                <input
+                  name="km_stand"
+                  type="number"
+                  min={0}
+                  defaultValue={fahrzeug?.km_stand ?? undefined}
+                  placeholder="km"
+                  className={feld}
+                />
+              </F>
+            </div>
           </Abschnitt>
         </div>
       </div>

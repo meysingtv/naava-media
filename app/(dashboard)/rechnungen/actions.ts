@@ -103,9 +103,39 @@ export async function rechnungStatusSetzen(formData: FormData): Promise<void> {
   if (!id) return;
 
   const supabase = createClient();
-  await supabase.from("rechnung").update({ status }).eq("id", id);
+  const update: { status: RechnungStatus; bezahlt_am?: string | null; mahnstufe?: number } = { status };
+  if (status === "bezahlt") {
+    update.bezahlt_am = new Date().toISOString().slice(0, 10);
+    update.mahnstufe = 0;
+  } else {
+    update.bezahlt_am = null;
+  }
+  await supabase.from("rechnung").update(update).eq("id", id);
   revalidatePath("/rechnungen");
   revalidatePath(`/rechnungen/${id}`);
+}
+
+/** Nächste Mahnstufe setzen (1 = Erinnerung, 2 = 1. Mahnung, 3 = 2. Mahnung). */
+export async function mahnungErstellen(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const supabase = createClient();
+  const { data } = await supabase.from("rechnung").select("mahnstufe").eq("id", id).maybeSingle();
+  const stufe = Math.min(((data?.mahnstufe as number | undefined) ?? 0) + 1, 3);
+
+  await supabase
+    .from("rechnung")
+    .update({
+      mahnstufe: stufe,
+      letzte_mahnung: new Date().toISOString().slice(0, 10),
+      status: "ueberfaellig",
+    })
+    .eq("id", id);
+
+  revalidatePath("/rechnungen");
+  revalidatePath(`/rechnungen/${id}`);
+  revalidatePath("/rechnungslauf");
 }
 
 export async function rechnungLoeschen(formData: FormData): Promise<void> {

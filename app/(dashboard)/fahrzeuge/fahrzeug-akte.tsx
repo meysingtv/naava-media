@@ -118,10 +118,41 @@ export function FahrzeugAkte({
               : "—"}
           </Datenzeile>
           <Datenzeile label="Hauptuntersuchung">
-            {f.hauptuntersuchung ? formatDatum(f.hauptuntersuchung) : "—"}
+            {f.hauptuntersuchung ? (
+              <span className="inline-flex items-center gap-2">
+                {formatDatum(f.hauptuntersuchung)}
+                <FristBadge datum={f.hauptuntersuchung} />
+              </span>
+            ) : (
+              "—"
+            )}
+          </Datenzeile>
+          <Datenzeile label="Nächste Wartung">
+            {f.naechste_wartung ? (
+              <span className="inline-flex items-center gap-2">
+                {formatDatum(f.naechste_wartung)}
+                <FristBadge datum={f.naechste_wartung} />
+              </span>
+            ) : (
+              "—"
+            )}
+          </Datenzeile>
+          <Datenzeile label="Versicherung">{f.versicherung || "—"}</Datenzeile>
+          <Datenzeile label="Kilometerstand">
+            {f.km_stand != null ? `${f.km_stand.toLocaleString("de-DE")} km` : "—"}
           </Datenzeile>
         </CardContent>
       </Card>
     </div>
   );
+}
+
+/** Zeigt eine Ampel, wenn ein Termin bald fällig oder überfällig ist. */
+function FristBadge({ datum }: { datum: string }) {
+  const heute = new Date().toISOString().slice(0, 10);
+  const tage = Math.round((Date.parse(datum) - Date.parse(heute)) / 86400000);
+  if (Number.isNaN(tage)) return null;
+  if (tage < 0) return <Badge variant="destructive">überfällig</Badge>;
+  if (tage <= 30) return <Badge variant="warning">in {tage} T.</Badge>;
+  return null;
 }

@@ -222,7 +222,12 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
               </div>
             </div>
           </div>
-          <div className="flex shrink-0 gap-2">
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/schueler/${s.id}/ausbildungsnachweis`}>
+                <FileText className="h-4 w-4" /> Ausbildungsnachweis
+              </Link>
+            </Button>
             <Button asChild variant="outline" size="sm">
               <Link href={`/schueler/${s.id}/bearbeiten`}>
                 <Pencil className="h-4 w-4" /> Bearbeiten

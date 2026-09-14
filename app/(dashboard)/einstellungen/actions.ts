@@ -47,6 +47,9 @@ export async function fahrschuleAktualisieren(
       website: leerZuNull(formData.get("website")),
       iban: leerZuNull(formData.get("iban")),
       steuernummer: leerZuNull(formData.get("steuernummer")),
+      kontoinhaber: leerZuNull(formData.get("kontoinhaber")),
+      bic: leerZuNull(formData.get("bic")),
+      glaeubiger_id: leerZuNull(formData.get("glaeubiger_id")),
     })
     .eq("id", kontext.fahrschule.id);
 

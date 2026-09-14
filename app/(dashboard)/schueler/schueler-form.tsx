@@ -394,6 +394,22 @@ export function SchuelerForm({ schueler }: { schueler?: Fahrschueler }) {
                     <input name="iban" defaultValue={schueler?.iban ?? undefined} placeholder="DE…" className={feld} />
                   </F>
                 </div>
+                <F label="SEPA-Mandatsreferenz">
+                  <input
+                    name="sepa_mandat_ref"
+                    defaultValue={schueler?.sepa_mandat_ref ?? undefined}
+                    placeholder="z. B. M-2026-0001"
+                    className={feld}
+                  />
+                </F>
+                <F label="Mandat erteilt am">
+                  <input
+                    name="sepa_mandat_am"
+                    type="date"
+                    defaultValue={schueler?.sepa_mandat_am ?? undefined}
+                    className={feld}
+                  />
+                </F>
                 <F label="Kostenträger">
                   <input name="kostentraeger" defaultValue={schueler?.kostentraeger ?? undefined} className={feld} />
                 </F>

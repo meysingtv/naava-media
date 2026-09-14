@@ -23,6 +23,10 @@ export type Fahrschule = {
   logo_url: string | null;
   iban: string | null;
   steuernummer: string | null;
+  // SEPA-Gläubigerdaten (Migration 0014) – für Lastschrift-Dateien
+  bic: string | null;
+  glaeubiger_id: string | null;
+  kontoinhaber: string | null;
   created_at: string;
 };
 
@@ -101,6 +105,9 @@ export type Fahrschueler = {
   ausgabedatum: string | null;
   zweiter_preis: boolean;
   autom_leistungspakete: boolean;
+  // SEPA-Mandat (Migration 0014)
+  sepa_mandat_ref: string | null;
+  sepa_mandat_am: string | null;
   created_at: string;
 };
 
@@ -136,6 +143,11 @@ export type Fahrzeug = {
   saison_von: string | null;
   saison_bis: string | null;
   hauptuntersuchung: string | null;
+  // Erweiterte Flotten-Daten (Migration 0014)
+  hu_faellig: string | null;
+  versicherung: string | null;
+  km_stand: number | null;
+  naechste_wartung: string | null;
   created_at: string;
 };
 
@@ -151,6 +163,8 @@ export type Fahrstunde = {
   typ: FahrstundeTyp;
   status: FahrstundeStatus;
   notiz: string | null;
+  // Digitale Unterschrift des Schülers (Migration 0003) – Data-URL/SVG
+  unterschrift: string | null;
   created_at: string;
 };
 
@@ -166,6 +180,10 @@ export type Rechnung = {
   rechnungsdatum: string;
   faelligkeitsdatum: string | null;
   notiz: string | null;
+  // Mahnwesen + Zahlungsdatum (Migration 0014)
+  mahnstufe: number;
+  letzte_mahnung: string | null;
+  bezahlt_am: string | null;
   created_at: string;
 };
 
@@ -203,6 +221,49 @@ export type Aufgabe = {
   prioritaet: string; // niedrig | mittel | hoch
   faellig_am: string | null;
   schueler_id: string | null;
+  created_at: string;
+};
+
+export type PruefungArt = "theorie" | "praxis";
+export type PruefungErgebnis = "offen" | "bestanden" | "nicht_bestanden";
+
+export type Pruefung = {
+  id: string;
+  fahrschule_id: string;
+  schueler_id: string | null;
+  art: PruefungArt;
+  klasse: string | null;
+  datum: string;
+  uhrzeit: string | null;
+  pruefstelle: string | null;
+  ergebnis: PruefungErgebnis;
+  versuch: number;
+  gebuehr: number | null;
+  notiz: string | null;
+  created_at: string;
+};
+
+export type KassenbuchEintrag = {
+  id: string;
+  fahrschule_id: string;
+  datum: string;
+  typ: "einnahme" | "ausgabe";
+  betrag: number;
+  kategorie: string | null;
+  beschreibung: string | null;
+  beleg: string | null;
+  created_at: string;
+};
+
+export type Nachricht = {
+  id: string;
+  fahrschule_id: string;
+  kanal: "email" | "sms" | "notiz";
+  betreff: string | null;
+  text: string;
+  empfaenger: string | null;
+  anzahl: number;
+  status: "entwurf" | "gesendet";
   created_at: string;
 };
 
@@ -249,6 +310,9 @@ export type Database = {
       theoriestunde: { Row: TableRow<Theoriestunde>; Insert: TableInsert<Theoriestunde>; Update: TableUpdate<Theoriestunde>; Relationships: [] };
       theorie_teilnahme: { Row: TableRow<TheorieTeilnahme>; Insert: TableInsert<TheorieTeilnahme>; Update: TableUpdate<TheorieTeilnahme>; Relationships: [] };
       aufgabe: { Row: TableRow<Aufgabe>; Insert: TableInsert<Aufgabe>; Update: TableUpdate<Aufgabe>; Relationships: [] };
+      pruefung: { Row: TableRow<Pruefung>; Insert: TableInsert<Pruefung>; Update: TableUpdate<Pruefung>; Relationships: [] };
+      kassenbuch_eintrag: { Row: TableRow<KassenbuchEintrag>; Insert: TableInsert<KassenbuchEintrag>; Update: TableUpdate<KassenbuchEintrag>; Relationships: [] };
+      nachricht: { Row: TableRow<Nachricht>; Insert: TableInsert<Nachricht>; Update: TableUpdate<Nachricht>; Relationships: [] };
       benutzerrolle: { Row: TableRow<Benutzerrolle>; Insert: TableInsert<Benutzerrolle>; Update: TableUpdate<Benutzerrolle>; Relationships: [] };
     };
     Views: Record<string, never>;
@@ -310,4 +374,8 @@ export type FahrstundeMitRelationen = Fahrstunde & {
 
 export type RechnungMitSchueler = Rechnung & {
   fahrschueler: Pick<Fahrschueler, "id" | "vorname" | "nachname"> | null;
+};
+
+export type PruefungMitSchueler = Pruefung & {
+  fahrschueler: Pick<Fahrschueler, "id" | "vorname" | "nachname" | "avatar_farbe"> | null;
 };

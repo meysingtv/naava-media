@@ -84,6 +84,39 @@ export function EinstellungenForm({ fahrschule }: { fahrschule: Fahrschule }) {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>SEPA-Lastschrift</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="kontoinhaber">Kontoinhaber</Label>
+            <Input
+              id="kontoinhaber"
+              name="kontoinhaber"
+              placeholder="z. B. Fahrschule Müller GmbH"
+              defaultValue={fahrschule.kontoinhaber ?? undefined}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bic">BIC</Label>
+            <Input id="bic" name="bic" placeholder="optional" defaultValue={fahrschule.bic ?? undefined} />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="glaeubiger_id">Gläubiger-Identifikationsnummer</Label>
+            <Input
+              id="glaeubiger_id"
+              name="glaeubiger_id"
+              placeholder="z. B. DE98ZZZ09999999999"
+              defaultValue={fahrschule.glaeubiger_id ?? undefined}
+            />
+            <p className="text-xs text-muted-foreground">
+              Nötig für den SEPA-Lastschrift-Einzug (Rechnungslauf). Bei der Bundesbank kostenlos beantragbar.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-end">
         <SubmitButton>Änderungen speichern</SubmitButton>
       </div>

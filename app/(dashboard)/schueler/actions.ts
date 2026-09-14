@@ -60,6 +60,8 @@ export async function schuelerSpeichern(
     prueforganisation: leerZuNull(formData.get("prueforganisation")),
     preisliste: leerZuNull(formData.get("preisliste")),
     iban: leerZuNull(formData.get("iban")),
+    sepa_mandat_ref: leerZuNull(formData.get("sepa_mandat_ref")),
+    sepa_mandat_am: leerZuNull(formData.get("sepa_mandat_am")),
     intensivkurs: formData.get("intensivkurs") === "on",
     theorie_versuch: Number(formData.get("theorie_versuch") ?? 1) || 1,
     praxis_versuch: Number(formData.get("praxis_versuch") ?? 1) || 1,
