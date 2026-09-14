@@ -108,6 +108,14 @@ export type Fahrschueler = {
   // SEPA-Mandat (Migration 0014)
   sepa_mandat_ref: string | null;
   sepa_mandat_am: string | null;
+  // Unterlagen-Checkliste + Ausbildungsvertrag (Migration 0015)
+  sehtest_am: string | null;
+  passbild_ok: boolean;
+  erste_hilfe_am: string | null;
+  antrag_gestellt_am: string | null;
+  ausweis_ok: boolean;
+  vertrag_unterschrift: string | null;
+  vertrag_am: string | null;
   created_at: string;
 };
 
@@ -224,6 +232,19 @@ export type Aufgabe = {
   created_at: string;
 };
 
+export type Leistung = {
+  id: string;
+  fahrschule_id: string;
+  name: string;
+  kategorie: string | null;
+  preis: number;
+  einheit: string;
+  klasse: string | null;
+  aktiv: boolean;
+  sortierung: number;
+  created_at: string;
+};
+
 export type PruefungArt = "theorie" | "praxis";
 export type PruefungErgebnis = "offen" | "bestanden" | "nicht_bestanden";
 
@@ -313,6 +334,7 @@ export type Database = {
       pruefung: { Row: TableRow<Pruefung>; Insert: TableInsert<Pruefung>; Update: TableUpdate<Pruefung>; Relationships: [] };
       kassenbuch_eintrag: { Row: TableRow<KassenbuchEintrag>; Insert: TableInsert<KassenbuchEintrag>; Update: TableUpdate<KassenbuchEintrag>; Relationships: [] };
       nachricht: { Row: TableRow<Nachricht>; Insert: TableInsert<Nachricht>; Update: TableUpdate<Nachricht>; Relationships: [] };
+      leistung: { Row: TableRow<Leistung>; Insert: TableInsert<Leistung>; Update: TableUpdate<Leistung>; Relationships: [] };
       benutzerrolle: { Row: TableRow<Benutzerrolle>; Insert: TableInsert<Benutzerrolle>; Update: TableUpdate<Benutzerrolle>; Relationships: [] };
     };
     Views: Record<string, never>;

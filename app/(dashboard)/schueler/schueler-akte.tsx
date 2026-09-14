@@ -225,7 +225,12 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
           <div className="flex shrink-0 flex-wrap gap-2">
             <Button asChild variant="outline" size="sm">
               <Link href={`/schueler/${s.id}/ausbildungsnachweis`}>
-                <FileText className="h-4 w-4" /> Ausbildungsnachweis
+                <FileText className="h-4 w-4" /> Nachweis
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/schueler/${s.id}/vertrag`}>
+                <FileText className="h-4 w-4" /> Vertrag
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm">
@@ -397,6 +402,37 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
                 {s.intensivkurs ? <Badge variant="secondary">Ja</Badge> : "Nein"}
               </Datenzeile>
               <Datenzeile label="IBAN">{s.iban || "—"}</Datenzeile>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="p-4 pb-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Unterlagen &amp; Nachweise
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 p-4 pt-0 text-sm">
+              {[
+                { label: "Sehtest", ok: Boolean(s.sehtest_am), datum: s.sehtest_am },
+                { label: "Erste-Hilfe-Kurs", ok: Boolean(s.erste_hilfe_am), datum: s.erste_hilfe_am },
+                { label: "Passbild", ok: s.passbild_ok, datum: null },
+                { label: "Ausweiskopie", ok: s.ausweis_ok, datum: null },
+                { label: "Antrag bei Behörde", ok: Boolean(s.antrag_gestellt_am), datum: s.antrag_gestellt_am },
+              ].map((u) => (
+                <div key={u.label} className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2">
+                    {u.ok ? (
+                      <CheckCircle2 className="h-4 w-4 text-success" />
+                    ) : (
+                      <span className="h-4 w-4 rounded-full border-2 border-border-strong" />
+                    )}
+                    <span className={u.ok ? "text-foreground" : "text-muted-foreground"}>{u.label}</span>
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {u.datum ? formatDatum(u.datum) : u.ok ? "vorhanden" : "offen"}
+                  </span>
+                </div>
+              ))}
             </CardContent>
           </Card>
 

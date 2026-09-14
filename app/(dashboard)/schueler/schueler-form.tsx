@@ -369,6 +369,39 @@ export function SchuelerForm({ schueler }: { schueler?: Fahrschueler }) {
                 />
               </div>
             </Abschnitt>
+
+            <Abschnitt title="Unterlagen & Nachweise">
+              <div className="grid grid-cols-2 gap-3">
+                <F label="Sehtest am">
+                  <input
+                    name="sehtest_am"
+                    type="date"
+                    defaultValue={schueler?.sehtest_am ?? undefined}
+                    className={feld}
+                  />
+                </F>
+                <F label="Erste-Hilfe-Kurs am">
+                  <input
+                    name="erste_hilfe_am"
+                    type="date"
+                    defaultValue={schueler?.erste_hilfe_am ?? undefined}
+                    className={feld}
+                  />
+                </F>
+                <F label="Antrag bei Behörde am">
+                  <input
+                    name="antrag_gestellt_am"
+                    type="date"
+                    defaultValue={schueler?.antrag_gestellt_am ?? undefined}
+                    className={feld}
+                  />
+                </F>
+              </div>
+              <div className="flex flex-wrap gap-x-6 gap-y-2">
+                <Schalter name="passbild_ok" label="Passbild vorhanden" defaultChecked={schueler?.passbild_ok} />
+                <Schalter name="ausweis_ok" label="Ausweiskopie vorhanden" defaultChecked={schueler?.ausweis_ok} />
+              </div>
+            </Abschnitt>
           </div>
         </div>
 

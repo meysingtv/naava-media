@@ -21,6 +21,7 @@ import { SubmitButton } from "@/components/shared/submit-button";
 import { FormMessage } from "@/components/shared/form-message";
 import { STEUERSAETZE } from "@/lib/constants";
 import { formatEuro } from "@/lib/utils";
+import type { Leistung } from "@/lib/types";
 
 interface SchuelerOption {
   id: string;
@@ -46,11 +47,34 @@ const neuePosition = (): Position => ({
   einzelpreis: 0,
 });
 
-export function RechnungForm({ schueler }: { schueler: SchuelerOption[] }) {
+export function RechnungForm({
+  schueler,
+  leistungen = [],
+}: {
+  schueler: SchuelerOption[];
+  leistungen?: Leistung[];
+}) {
   const [state, action] = useFormState(rechnungErstellen, initial);
   const [schuelerId, setSchuelerId] = useState("none");
   const [satz, setSatz] = useState(19);
   const [positionen, setPositionen] = useState<Position[]>([neuePosition()]);
+
+  function leistungHinzufuegen(id: string) {
+    const l = leistungen.find((x) => x.id === id);
+    if (!l) return;
+    setPositionen((prev) => {
+      const neu: Position = {
+        key: counter++,
+        beschreibung: l.name,
+        menge: 1,
+        einheit: l.einheit || "Stk",
+        einzelpreis: Number(l.preis) || 0,
+      };
+      // Leere Startzeile ersetzen, sonst anhängen.
+      if (prev.length === 1 && prev[0].beschreibung === "" && prev[0].einzelpreis === 0) return [neu];
+      return [...prev, neu];
+    });
+  }
 
   const heute = new Date().toISOString().slice(0, 10);
 
@@ -133,16 +157,32 @@ export function RechnungForm({ schueler }: { schueler: SchuelerOption[] }) {
       </Card>
 
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader className="flex-row flex-wrap items-center justify-between gap-2">
           <CardTitle>Positionen</CardTitle>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setPositionen((p) => [...p, neuePosition()])}
-          >
-            <Plus className="h-4 w-4" /> Position
-          </Button>
+          <div className="flex items-center gap-2">
+            {leistungen.length > 0 && (
+              <Select value="" onValueChange={leistungHinzufuegen}>
+                <SelectTrigger className="h-9 w-[200px]">
+                  <SelectValue placeholder="Aus Preisliste …" />
+                </SelectTrigger>
+                <SelectContent>
+                  {leistungen.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      {l.name} · {formatEuro(Number(l.preis))}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setPositionen((p) => [...p, neuePosition()])}
+            >
+              <Plus className="h-4 w-4" /> Position
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
           {positionen.map((p) => (

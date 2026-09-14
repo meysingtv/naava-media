@@ -1,15 +1,22 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/shared/page-header";
+import type { Leistung } from "@/lib/types";
 import { RechnungForm } from "../rechnung-form";
 
 export const metadata = { title: "Neue Rechnung · FahrschulApp" };
 
 export default async function NeueRechnungPage() {
   const supabase = createClient();
-  const { data } = await supabase
-    .from("fahrschueler")
-    .select("*")
-    .order("nachname", { ascending: true });
+  const [schuelerRes, leistungRes] = await Promise.all([
+    supabase.from("fahrschueler").select("*").order("nachname", { ascending: true }),
+    supabase
+      .from("leistung")
+      .select("*")
+      .eq("aktiv", true)
+      .order("sortierung", { ascending: true })
+      .order("name", { ascending: true })
+      .returns<Leistung[]>(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -17,7 +24,7 @@ export default async function NeueRechnungPage() {
         title="Neue Rechnung"
         description="Erstelle eine Rechnung mit Positionen und Mehrwertsteuer."
       />
-      <RechnungForm schueler={data ?? []} />
+      <RechnungForm schueler={schuelerRes.data ?? []} leistungen={leistungRes.data ?? []} />
     </div>
   );
 }
