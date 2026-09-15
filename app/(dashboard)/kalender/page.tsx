@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/shared/page-header";
 import type { Fahrlehrer, Fahrschueler, FahrstundeMitRelationen, Fahrzeug, Pruefung } from "@/lib/types";
 import { Terminplaner } from "./terminplaner";
+import { SmartVorschlag } from "./smart-vorschlag";
 
 export const metadata = { title: "Disposition · FahrschulApp" };
 
@@ -63,7 +64,9 @@ export default async function DispositionPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader eyebrow="Termine" title="Disposition" description="Wer fährt wann mit wem – Fahrlehrer und Fahrzeuge im Einsatz." />
+      <PageHeader eyebrow="Termine" title="Disposition" description="Wer fährt wann mit wem – Fahrlehrer und Fahrzeuge im Einsatz.">
+        <SmartVorschlag schueler={options.schueler} />
+      </PageHeader>
       <Terminplaner heute={heute} stunden={stundenRes.data ?? []} options={options} pruefungen={pruefungen} />
     </div>
   );
