@@ -25,6 +25,7 @@ const config: Config = {
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
+        canvas: "hsl(var(--canvas))",
         foreground: {
           DEFAULT: "hsl(var(--foreground))",
           secondary: "hsl(var(--text-secondary))",
@@ -81,19 +82,19 @@ const config: Config = {
         },
       },
       borderRadius: {
-        sm: "0.375rem", // 6px
-        md: "0.5rem", // 8px – Buttons, Inputs
-        lg: "0.75rem", // 12px – Cards
-        xl: "1rem", // 16px – Dialoge
-        "2xl": "1.25rem",
+        sm: "0.25rem", // 4px – Chips
+        md: "0.375rem", // 6px – Controls
+        lg: "0.5rem", // 8px – kleine Panels
+        xl: "0.625rem", // 10px – Panels / Dialoge
+        "2xl": "0.75rem",
       },
       boxShadow: {
-        // Neutral und minimal – keine farbigen Schatten
-        xs: "0 1px 2px 0 rgba(11, 18, 32, 0.04)",
-        sm: "0 1px 3px 0 rgba(11, 18, 32, 0.06), 0 1px 2px -1px rgba(11, 18, 32, 0.04)",
-        md: "0 4px 12px -2px rgba(11, 18, 32, 0.08), 0 1px 3px 0 rgba(11, 18, 32, 0.04)",
-        lg: "0 12px 32px -8px rgba(11, 18, 32, 0.12), 0 2px 6px -2px rgba(11, 18, 32, 0.06)",
-        DEFAULT: "0 1px 3px 0 rgba(11, 18, 32, 0.06), 0 1px 2px -1px rgba(11, 18, 32, 0.04)",
+        // Flächen ohne Schatten; nur schwebende Ebenen (Menüs, Dialoge)
+        xs: "none",
+        sm: "none",
+        md: "0 6px 20px -6px rgba(27, 35, 39, 0.16), 0 1px 2px 0 rgba(27, 35, 39, 0.06)",
+        lg: "0 16px 40px -12px rgba(27, 35, 39, 0.22), 0 2px 6px -2px rgba(27, 35, 39, 0.08)",
+        DEFAULT: "none",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
