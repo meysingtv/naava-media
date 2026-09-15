@@ -17,7 +17,7 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-border-strong bg-background px-3 py-2 text-sm text-foreground shadow-xs transition-[border-color,box-shadow] duration-fast ease-soft",
+      "flex h-8 w-full items-center justify-between gap-2 rounded-md border border-border-strong bg-card px-2.5 text-[13px] text-foreground transition-[border-color,box-shadow] duration-fast ease-soft",
       "hover:border-[hsl(205_18%_74%)] data-[placeholder]:text-foreground-disabled",
       "focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/20",
       "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-foreground-disabled disabled:shadow-none [&>span]:line-clamp-1",
@@ -69,7 +69,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-[10px] border bg-popover text-popover-foreground shadow-md",
+        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-md",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-[0.98] data-[state=open]:zoom-in-[0.98] data-[state=open]:duration-overlay data-[state=closed]:duration-fast",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
@@ -113,8 +113,8 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex h-9 w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm text-foreground outline-none transition-colors duration-fast",
-      "focus:bg-surface data-[state=checked]:font-medium data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex h-8 w-full cursor-default select-none items-center rounded-[4px] py-1 pl-8 pr-2 text-[13px] text-foreground outline-none transition-colors duration-fast",
+      "focus:bg-surface-muted data-[state=checked]:font-medium data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className,
     )}
     {...props}

@@ -263,7 +263,7 @@ export function Terminplaner({
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="inline-flex rounded-md bg-surface-muted p-0.5 text-[13px]">
+          <div className="inline-flex rounded-md border bg-card p-0.5 text-xs">
             {(
               [
                 ["tag", "Tag"],
@@ -278,7 +278,7 @@ export function Terminplaner({
                 className={cn(
                   "h-7 rounded-[6px] px-2.5 font-medium transition-[background-color,color,box-shadow] duration-fast",
                   modus === v
-                    ? "bg-background text-foreground shadow-xs"
+                    ? "bg-foreground text-background"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -337,7 +337,7 @@ export function Terminplaner({
 
       {/* Zeitraster + Termin-Panel */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-        <div className="min-w-0 overflow-x-auto rounded-lg border bg-card shadow-xs lg:flex-1">
+        <div className="min-w-0 overflow-x-auto rounded-xl border bg-card lg:flex-1">
         <div className="flex">
           {/* Zeit-Spalte */}
           <div className="w-14 shrink-0 border-r">
@@ -374,7 +374,7 @@ export function Terminplaner({
                   <span
                     className={cn(
                       "flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold",
-                      istHeute ? "bg-primary text-primary-foreground" : "text-foreground",
+                      istHeute ? "bg-primary-soft text-primary" : "text-foreground",
                     )}
                   >
                     {tag.getDate()}
@@ -435,19 +435,19 @@ export function Terminplaner({
                         onMouseDown={(e) => e.stopPropagation()}
                         onClick={() => stundeBearbeiten(s)}
                         className={cn(
-                          "absolute z-20 overflow-hidden rounded-[6px] px-1.5 py-1 text-left text-[11px] leading-tight text-white shadow-xs transition-[box-shadow,filter] duration-fast hover:z-30 hover:shadow-md hover:brightness-[1.06]",
-                          ausgefallen && "line-through",
+                          "absolute z-20 overflow-hidden rounded-[4px] border bg-card px-1.5 py-1 text-left text-[11px] leading-tight text-foreground transition-[box-shadow,border-color] duration-fast hover:z-30 hover:border-border-strong hover:shadow-md",
+                          ausgefallen && "line-through opacity-60",
                         )}
                         style={{
                           top,
                           height: hoehe,
                           left: `calc(${(spur / anzahl) * 100}% + 2px)`,
                           width: `calc(${(1 / anzahl) * 100}% - 4px)`,
-                          backgroundColor: ausgefallen ? "#94A3B8" : TERMIN_FARBE[s.typ],
+                          borderLeft: `3px solid ${ausgefallen ? "#CBD3D7" : TERMIN_FARBE[s.typ]}`,
                         }}
                       >
-                        <span className="font-semibold">{formatUhrzeit(s.uhrzeit)}</span>{" "}
-                        <span className="opacity-95">{name}</span>
+                        <span className="font-semibold tabular-nums">{formatUhrzeit(s.uhrzeit)}</span>{" "}
+                        <span className="text-foreground-secondary">{name}</span>
                       </button>
                     );
                   })}

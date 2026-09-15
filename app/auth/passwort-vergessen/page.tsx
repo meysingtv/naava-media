@@ -16,14 +16,14 @@ export default function PasswortVergessenPage() {
   const [state, action] = useFormState(passwortVergessen, initial);
 
   return (
-    <Card className="shadow-md">
-      <CardHeader className="p-8 pb-4">
-        <CardTitle className="text-xl">Passwort vergessen?</CardTitle>
+    <Card>
+      <CardHeader className="px-6 pb-3 pt-6 sm:px-7 sm:pt-7">
+        <CardTitle className="text-xl font-semibold tracking-[-0.01em]">Passwort vergessen?</CardTitle>
         <CardDescription>
           Gib deine E-Mail-Adresse ein – wir senden dir einen Link zum Zurücksetzen.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 p-8 pt-0">
+      <CardContent className="space-y-4 px-6 pb-6 pt-0 sm:px-7 sm:pb-7">
         {state.message ? (
           <FormMessage message={state.message} />
         ) : (

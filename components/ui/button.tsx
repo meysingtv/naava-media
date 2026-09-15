@@ -4,31 +4,30 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Buttons v2: kompakt (32 px), 6-px-Radius, keine Schatten. Primär = Türkis,
+ * Sekundär = weiß mit Haarlinie, Ghost = nur Text. Keine Pillen.
+ */
 const buttonVariants = cva(
-  "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors duration-fast ease-soft focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-[13px] font-medium leading-none transition-colors duration-fast ease-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg]:size-[15px] [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground shadow-xs hover:bg-primary-hover active:bg-primary-pressed",
-        destructive:
-          "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 active:bg-destructive/80",
-        success:
-          "bg-success text-success-foreground shadow-xs hover:bg-success/90 active:bg-success/80",
+        default: "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-pressed",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        success: "bg-success text-success-foreground hover:bg-success/90",
         outline:
-          "border border-border-strong bg-background text-foreground shadow-xs hover:bg-surface active:bg-surface-muted",
-        secondary:
-          "bg-surface-muted text-foreground hover:bg-border active:bg-border-strong/70",
-        ghost:
-          "text-foreground-secondary hover:bg-surface hover:text-foreground active:bg-surface-muted",
+          "border border-border-strong bg-card text-foreground hover:bg-surface-muted active:bg-border",
+        secondary: "bg-foreground text-background hover:bg-foreground/90 active:bg-foreground",
+        ghost: "text-foreground-secondary hover:bg-foreground/[0.06] hover:text-foreground",
         link: "h-auto px-0 text-primary underline-offset-4 hover:text-primary-hover hover:underline",
       },
       size: {
-        default: "h-9 px-3.5",
-        sm: "h-8 px-3 text-[13px]",
-        lg: "h-10 px-4 text-sm",
-        icon: "h-9 w-9",
-        "icon-sm": "h-8 w-8",
+        default: "h-8 px-3",
+        sm: "h-7 px-2.5 text-xs",
+        lg: "h-9 px-4",
+        icon: "h-8 w-8",
+        "icon-sm": "h-7 w-7",
       },
     },
     defaultVariants: {
@@ -47,13 +46,7 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    );
+    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
   },
 );
 Button.displayName = "Button";

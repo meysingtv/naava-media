@@ -94,7 +94,7 @@ export interface TypMeta {
 // Kalender-Farben je Art: ruhige, aufeinander abgestimmte Töne. Türkis ist die
 // normale Fahrstunde; die anderen Arten bleiben unterscheidbar, aber gedeckt.
 export const FAHRSTUNDE_FARBE: Record<FahrstundeTyp, string> = {
-  normal: "#0C8CA1",
+  normal: "#0F9BA8",
   ueberland: "#16A34A",
   autobahn: "#2563EB",
   nacht: "#4F46E5",
@@ -107,57 +107,57 @@ export const FAHRSTUNDE_TYPEN: Record<FahrstundeTyp, TypMeta> = {
   normal: {
     label: "Normale Fahrstunde",
     kurz: "Normal",
-    badge: "border-transparent bg-primary-soft text-primary-pressed",
+    badge: "[&_i]:bg-primary",
     dot: "bg-primary",
   },
   ueberland: {
     label: "Überlandfahrt",
     kurz: "Überland",
-    badge: "border-transparent bg-success-soft text-success",
+    badge: "[&_i]:bg-success",
     dot: "bg-success",
   },
   autobahn: {
     label: "Autobahnfahrt",
     kurz: "Autobahn",
-    badge: "border-transparent bg-blue-50 text-blue-700",
+    badge: "[&_i]:bg-blue-600",
     dot: "bg-blue-600",
   },
   nacht: {
     label: "Nachtfahrt",
     kurz: "Nacht",
-    badge: "border-transparent bg-indigo-50 text-indigo-700",
+    badge: "[&_i]:bg-indigo-600",
     dot: "bg-indigo-600",
   },
   pruefung: {
     label: "Prüfung",
     kurz: "Prüfung",
-    badge: "border-transparent bg-destructive-soft text-destructive",
+    badge: "[&_i]:bg-destructive",
     dot: "bg-destructive",
   },
   theorie: {
     label: "Theoriestunde",
     kurz: "Theorie",
-    badge: "border-transparent bg-warning-soft text-warning",
+    badge: "[&_i]:bg-warning",
     dot: "bg-warning",
   },
   sonstiges: {
     label: "Sonstiges",
     kurz: "Sonstiges",
-    badge: "border-transparent bg-surface-muted text-foreground-secondary",
+    badge: "[&_i]:bg-border-strong",
     dot: "bg-muted-foreground",
   },
 };
 
 export const FAHRSTUNDE_STATUS: Record<FahrstundeStatus, { label: string; badge: string }> = {
-  geplant: { label: "Geplant", badge: "border-transparent bg-primary-soft text-primary-pressed" },
-  abgeschlossen: { label: "Abgeschlossen", badge: "border-transparent bg-success-soft text-success" },
-  ausgefallen: { label: "Ausgefallen", badge: "border-transparent bg-surface-muted text-foreground-secondary" },
+  geplant: { label: "Geplant", badge: "[&_i]:bg-primary" },
+  abgeschlossen: { label: "Abgeschlossen", badge: "[&_i]:bg-success" },
+  ausgefallen: { label: "Ausgefallen", badge: "[&_i]:bg-border-strong" },
 };
 
 export const RECHNUNG_STATUS: Record<RechnungStatus, { label: string; badge: string }> = {
-  offen: { label: "Offen", badge: "border-transparent bg-warning-soft text-warning" },
-  bezahlt: { label: "Bezahlt", badge: "border-transparent bg-success-soft text-success" },
-  ueberfaellig: { label: "Überfällig", badge: "border-transparent bg-destructive-soft text-destructive" },
+  offen: { label: "Offen", badge: "[&_i]:bg-warning" },
+  bezahlt: { label: "Bezahlt", badge: "[&_i]:bg-success" },
+  ueberfaellig: { label: "Überfällig", badge: "[&_i]:bg-destructive" },
 };
 
 export const STEUERSAETZE = [19, 7, 0] as const;

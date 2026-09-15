@@ -1,7 +1,11 @@
 import type { LucideIcon } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
+/**
+ * Kennzahl v2: kein Kasten, keine Icon-Kachel. Versalien-Label, große
+ * tabellarische Zahl, Hinweis – mit linker Markierungslinie. Über
+ * `iconClassName` (Alt-API) wird die Linie eingefärbt (success/warning).
+ */
 export function StatCard({
   label,
   value,
@@ -11,27 +15,25 @@ export function StatCard({
 }: {
   label: string;
   value: React.ReactNode;
-  icon: LucideIcon;
+  icon?: LucideIcon;
   iconClassName?: string;
   hint?: React.ReactNode;
 }) {
+  const ton = iconClassName?.includes("success")
+    ? "border-success"
+    : iconClassName?.includes("warning")
+      ? "border-warning"
+      : iconClassName?.includes("destructive")
+        ? "border-destructive"
+        : "border-primary";
   return (
-    <Card className="flex items-start justify-between gap-4 p-5">
-      <div className="min-w-0">
-        <p className="text-[13px] font-medium text-muted-foreground">{label}</p>
-        <p className="mt-2 text-[28px] font-semibold leading-none tracking-[-0.02em] text-foreground tabular-nums">
-          {value}
-        </p>
-        {hint && <p className="mt-2 text-xs text-muted-foreground">{hint}</p>}
-      </div>
-      <div
-        className={cn(
-          "flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary",
-          iconClassName,
-        )}
-      >
-        <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
-      </div>
-    </Card>
+    <div className={cn("flex min-w-0 flex-col gap-1 border-l-2 py-0.5 pl-3", ton)}>
+      <p className="label-caps flex items-center gap-1.5">
+        {Icon && <Icon className="h-3 w-3" strokeWidth={2} />}
+        {label}
+      </p>
+      <p className="text-[22px] font-semibold leading-7 tracking-[-0.01em] text-foreground tabular-nums">{value}</p>
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    </div>
   );
 }

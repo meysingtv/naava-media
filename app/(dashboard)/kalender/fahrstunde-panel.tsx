@@ -92,7 +92,7 @@ export function FahrstundePanel({
   }, [state]);
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-lg border bg-card lg:h-[calc(100vh-7rem)]">
+    <div className="flex flex-col overflow-hidden rounded-xl border bg-card lg:h-[calc(100vh-7rem)]">
       {/* Kopf */}
       <div className="flex items-start justify-between gap-3 border-b p-4">
         <div>

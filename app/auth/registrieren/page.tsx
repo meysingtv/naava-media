@@ -7,14 +7,14 @@ export const metadata = { title: "Registrieren · FahrschulApp" };
 
 export default function RegistrierenPage() {
   return (
-    <Card className="shadow-md">
-      <CardHeader className="p-8 pb-4">
-        <CardTitle className="text-xl">Konto erstellen</CardTitle>
+    <Card>
+      <CardHeader className="px-6 pb-3 pt-6 sm:px-7 sm:pt-7">
+        <CardTitle className="text-xl font-semibold tracking-[-0.01em]">Konto erstellen</CardTitle>
         <CardDescription>
           Starte in wenigen Minuten mit der digitalen Verwaltung deiner Fahrschule.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 p-8 pt-0">
+      <CardContent className="space-y-4 px-6 pb-6 pt-0 sm:px-7 sm:pb-7">
         <RegisterForm />
         <p className="text-center text-sm text-muted-foreground">
           Bereits registriert?{" "}

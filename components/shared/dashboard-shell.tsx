@@ -1,8 +1,5 @@
-"use client";
-
-import { Sidebar } from "@/components/shared/sidebar";
-import { DesktopTopbar } from "@/components/shared/desktop-topbar";
-import { MobileTopbar } from "@/components/shared/mobile-topbar";
+import { AreaNav, MobileAreaBar } from "@/components/shared/area-nav";
+import { TopBar } from "@/components/shared/top-bar";
 import type { FahrlehrerRolle, FahrschulMitgliedschaft } from "@/lib/types";
 
 interface DashboardShellProps {
@@ -18,6 +15,10 @@ interface DashboardShellProps {
   children: React.ReactNode;
 }
 
+/**
+ * App-Rahmen v2: Top-Bar + Bereichs-Navigation oben, Inhalt in voller
+ * Breite auf der Arbeitsfläche. Keine Sidebar. Mobil: Bottom-Bar.
+ */
 export function DashboardShell({
   fahrschuleName,
   ort,
@@ -31,14 +32,8 @@ export function DashboardShell({
   children,
 }: DashboardShellProps) {
   return (
-    <div className="min-h-screen bg-background">
-      <MobileTopbar
-        fahrschuleName={fahrschuleName}
-        vorname={vorname}
-        nachname={nachname}
-        rolle={rolle}
-      />
-      <DesktopTopbar
+    <div className="min-h-screen bg-canvas">
+      <TopBar
         fahrschuleName={fahrschuleName}
         ort={ort}
         logoUrl={logoUrl}
@@ -49,13 +44,11 @@ export function DashboardShell({
         fahrschulen={fahrschulen}
         aktiveFahrschuleId={aktiveFahrschuleId}
       />
-
-      <div className="flex">
-        <Sidebar rolle={rolle} />
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-7 print:!p-0">
-          <div className="mx-auto w-full max-w-[1400px]">{children}</div>
-        </main>
-      </div>
+      <AreaNav rolle={rolle} />
+      <main className="mx-auto w-full max-w-[1440px] px-3 pb-20 pt-4 md:px-5 md:pb-8 md:pt-5 lg:px-8 print:!p-0">
+        {children}
+      </main>
+      <MobileAreaBar rolle={rolle} />
     </div>
   );
 }

@@ -3,65 +3,65 @@
 @tailwind utilities;
 
 /* ---------------------------------------------------------------------
-   Design-Tokens „Clear Turquoise"
-   Weiße Basis, Türkis-Blau als einziger Akzent, neutrale kühle Grautöne.
-   Alle Werte als HSL-Triplets (shadcn-Format) – Nutzung über tailwind.config.ts.
+   Designsystem v2 – „Fahrschul OS"
+   Kühle Off-White-Arbeitsfläche, weiße Panels mit Haarlinien, Anthrazit
+   als Schrift, Türkis nur für Aktion/Status/Auswahl. Keine Schatten auf
+   Flächen, kleine Radien, dichte, ruhige Typografie.
    --------------------------------------------------------------------- */
 @layer base {
   :root {
     /* Flächen */
-    --background: 0 0% 100%;                 /* #FFFFFF – Seite */
-    --foreground: 222 49% 8%;                /* #0B1220 – Überschriften, Primärtext */
+    --canvas: 195 17% 96%;                   /* #F3F6F7 – Arbeitsfläche */
+    --background: 195 17% 96%;               /* = canvas (Seite) */
+    --foreground: 200 17% 13%;               /* #1B2327 – Anthrazit */
 
-    --surface: 200 29% 98%;                  /* #F7FAFB – Tabellen-Header, Hover-Zeilen */
-    --surface-muted: 200 23% 95%;            /* #F0F4F6 – Skeletons, deaktivierte Felder */
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 49% 8%;
-
+    --card: 0 0% 100%;                       /* Panels */
+    --card-foreground: 200 17% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 49% 8%;
+    --popover-foreground: 200 17% 13%;
+
+    --surface: 0 0% 100%;                    /* weiße Fläche */
+    --surface-muted: 195 20% 97%;            /* #F6F9F9 – Tabellenkopf, Zonen */
 
     /* Text-Stufen */
-    --text-secondary: 211 18% 30%;           /* #3F4C5A – Fließtext */
-    --muted: 200 23% 95%;                    /* #F0F4F6 */
-    --muted-foreground: 210 12% 48%;         /* #6B7A89 – Labels, Hilfetexte */
-    --text-disabled: 209 14% 65%;            /* #9AA7B3 */
+    --text-secondary: 200 14% 34%;           /* #4B5B63 */
+    --muted: 195 20% 96%;
+    --muted-foreground: 199 10% 52%;         /* #7A8A92 */
+    --text-disabled: 199 12% 69%;            /* #A7B3B9 */
 
-    /* Primär: Türkis-Blau */
-    --primary: 188 86% 34%;                  /* #0C8CA1 */
+    /* Marke: Türkis (präzise, nicht neon) */
+    --primary: 185 84% 36%;                  /* #0F9BA8 */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 188 86% 29%;            /* #0A7587 */
-    --primary-pressed: 188 86% 23%;          /* #085F6E */
-    --primary-soft: 190 60% 94%;             /* #E7F6F9 */
-    --primary-soft-strong: 190 60% 88%;      /* #CDEDF3 */
-    --primary-soft-border: 189 58% 78%;      /* #A6DDE7 */
-    --accent-bright: 188 82% 44%;            /* #14B4CC – Progress, Indikatoren */
+    --primary-hover: 185 84% 31%;            /* #0D8792 */
+    --primary-pressed: 185 84% 27%;          /* #0B7380 */
+    --primary-soft: 186 56% 93%;             /* #E3F5F7 */
+    --primary-soft-strong: 186 50% 86%;      /* #C6EAEE */
+    --primary-soft-border: 186 45% 76%;
+    --accent-bright: 185 70% 44%;            /* #21B4C2 */
 
-    /* Sekundär/Akzent-Flächen (neutral) */
-    --secondary: 200 29% 98%;
-    --secondary-foreground: 222 49% 8%;
-    --accent: 200 29% 97%;
-    --accent-foreground: 222 49% 8%;
+    --secondary: 195 20% 96%;
+    --secondary-foreground: 200 17% 13%;
+    --accent: 195 20% 96%;
+    --accent-foreground: 200 17% 13%;
 
     /* Status */
-    --success: 142 72% 29%;                  /* #15803D */
+    --success: 152 65% 34%;                  /* #1E8E5A */
     --success-foreground: 0 0% 100%;
-    --success-soft: 138 76% 93%;             /* #DCFCE7 */
-    --warning: 26 90% 37%;                   /* #B45309 */
+    --success-soft: 150 50% 93%;
+    --warning: 35 87% 41%;                   /* #C27C0E */
     --warning-foreground: 0 0% 100%;
-    --warning-soft: 48 96% 89%;              /* #FEF3C7 */
-    --destructive: 0 72% 51%;                /* #DC2626 */
+    --warning-soft: 40 90% 92%;
+    --destructive: 0 62% 54%;                /* #D23F3F */
     --destructive-foreground: 0 0% 100%;
-    --destructive-soft: 0 93% 94%;           /* #FEE2E2 */
+    --destructive-soft: 0 80% 95%;
 
-    /* Rahmen & Fokus */
-    --border: 204 22% 91%;                   /* #E4EAEE */
-    --border-strong: 205 18% 84%;            /* #CFD8DE */
-    --input: 205 18% 84%;
-    --ring: 188 86% 34%;
+    /* Linien & Fokus */
+    --border: 197 14% 90%;                   /* #E3E8EA – Haarlinie */
+    --border-strong: 198 12% 82%;            /* #CBD3D7 */
+    --input: 198 12% 82%;
+    --ring: 185 84% 36%;
 
-    --radius: 0.5rem;
+    --radius: 0.375rem;                      /* 6px */
   }
 }
 
@@ -74,12 +74,13 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+    font-size: 13px;
+    line-height: 1.5;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1, "cv11" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
-  /* Ruhige, schnelle Standard-Übergänge – nur Farbe/Opacity/Transform */
   a,
   button,
   input,
@@ -87,14 +88,13 @@
   textarea,
   [role="button"] {
     transition-property: color, background-color, border-color, box-shadow, opacity, transform;
-    transition-duration: 150ms;
-    transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition-duration: 130ms;
+    transition-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
   }
   ::selection {
     background: hsl(var(--primary-soft-strong));
     color: hsl(var(--foreground));
   }
-  /* Native Checkboxen/Radios übernehmen die Akzentfarbe */
   input[type="checkbox"],
   input[type="radio"] {
     accent-color: hsl(var(--primary));
@@ -111,49 +111,46 @@
 }
 
 @layer utilities {
-  /* Sanftes Einblenden von Seiteninhalten (200 ms, 4 px nach oben) */
+  /* Seiteninhalt sanft einblenden */
   .animate-page-in {
-    animation: page-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation: page-in 160ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
   @keyframes page-in {
-    from {
-      opacity: 0;
-      transform: translateY(4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(3px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-  /* Dezenter Skeleton-Puls (nur Opacity) */
   .animate-soft-pulse {
     animation: soft-pulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
   @keyframes soft-pulse {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.55;
-    }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
   }
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
-  /* Dünne, ruhige Scrollbars in Listen */
+  /* Kleine Versalien-Labels (Meta, Tabellenköpfe, Abschnitte) */
+  .label-caps {
+    font-size: 11px;
+    line-height: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border-strong)) transparent;
   }
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
+  .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: hsl(var(--border-strong));
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: content-box;
+  }
+  /* Haarlinien-Raster für Zeitachsen */
+  .hairline-y {
+    background-image: linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px);
   }
 }

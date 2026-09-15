@@ -162,10 +162,10 @@ export function GlobalSearch() {
       {/* Suchfeld */}
       <div
         className={cn(
-          "flex h-9 items-center gap-2 rounded-md border border-transparent bg-surface-muted px-2.5 transition-[background-color,border-color,box-shadow] duration-fast ease-soft",
-          "hover:bg-surface hover:border-border",
-          "focus-within:border-primary focus-within:bg-background focus-within:ring-[3px] focus-within:ring-primary/20",
-          offen && "border-primary bg-background ring-[3px] ring-primary/20",
+          "flex h-8 items-center gap-2 rounded-md border border-transparent bg-surface-muted px-2.5 transition-[background-color,border-color,box-shadow] duration-fast ease-soft",
+          "hover:border-border-strong",
+          "focus-within:border-primary focus-within:bg-card focus-within:ring-2 focus-within:ring-primary/25",
+          offen && "border-primary bg-card ring-2 ring-primary/25",
         )}
       >
         {istLadend ? (
@@ -182,8 +182,8 @@ export function GlobalSearch() {
           onFocus={() => {
             if (hatGesucht && treffer.length > 0) setOffen(true);
           }}
-          placeholder="Suchen … Schüler, Fahrzeuge, Rechnungen"
-          className="h-full w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none [&::-webkit-search-cancel-button]:appearance-none"
+          placeholder="Suchen oder fragen …"
+          className="h-full w-full bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none [&::-webkit-search-cancel-button]:appearance-none"
           autoComplete="off"
           spellCheck={false}
         />
@@ -198,7 +198,7 @@ export function GlobalSearch() {
           className={cn(
             "absolute left-0 right-0 top-[calc(100%+6px)] z-50 animate-scale-in origin-top",
             "max-h-[min(480px,70vh)] overflow-y-auto scrollbar-thin",
-            "rounded-[10px] border bg-popover p-1 shadow-md",
+            "rounded-lg border bg-popover p-1 shadow-md",
           )}
         >
           {/* KI-Antwort-Banner */}
