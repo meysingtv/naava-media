@@ -5,7 +5,7 @@
 /* ---------------------------------------------------------------------
    Designsystem v2 – „Fahrschul OS"
    Kühle Off-White-Arbeitsfläche, weiße Panels mit Haarlinien, Anthrazit
-   als Schrift, Türkis nur für Aktion/Status/Auswahl. Keine Schatten auf
+   als Schrift, Mint-Grün nur für Aktion/Status/Auswahl. Keine Schatten auf
    Flächen, kleine Radien, dichte, ruhige Typografie.
    --------------------------------------------------------------------- */
 @layer base {
@@ -29,15 +29,15 @@
     --muted-foreground: 199 10% 52%;         /* #7A8A92 */
     --text-disabled: 199 12% 69%;            /* #A7B3B9 */
 
-    /* Marke: Türkis (präzise, nicht neon) */
-    --primary: 185 84% 36%;                  /* #0F9BA8 */
+    /* Marke: Mint-Grün (frisch, klar) – abgeleitet aus #9DF1C8 */
+    --primary: 151 66% 30%;                  /* #1A7F4E – Fläche & Text, trägt Weiß */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 185 84% 31%;            /* #0D8792 */
-    --primary-pressed: 185 84% 27%;          /* #0B7380 */
-    --primary-soft: 186 56% 93%;             /* #E3F5F7 */
-    --primary-soft-strong: 186 50% 86%;      /* #C6EAEE */
-    --primary-soft-border: 186 45% 76%;
-    --accent-bright: 185 70% 44%;            /* #21B4C2 */
+    --primary-hover: 151 68% 25%;            /* #16693F – dunkler */
+    --primary-pressed: 151 70% 21%;          /* #105733 – am dunkelsten */
+    --primary-soft: 151 72% 93%;             /* #E4FBF0 – sehr helle Mint-Fläche */
+    --primary-soft-strong: 151 75% 78%;      /* #9DF1C8 – die gewählte Farbe */
+    --primary-soft-border: 151 52% 72%;      /* #92D9BA */
+    --accent-bright: 151 62% 45%;            /* #2CBA75 – kräftiges Mint */
 
     --secondary: 195 20% 96%;
     --secondary-foreground: 200 17% 13%;
@@ -59,7 +59,7 @@
     --border: 197 14% 90%;                   /* #E3E8EA – Haarlinie */
     --border-strong: 198 12% 82%;            /* #CBD3D7 */
     --input: 198 12% 82%;
-    --ring: 185 84% 36%;
+    --ring: 151 66% 30%;
 
     --radius: 0.375rem;                      /* 6px */
   }

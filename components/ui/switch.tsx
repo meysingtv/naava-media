@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Schlichter Umschalter (Toggle). Türkis, wenn aktiv. Steuerbar von außen.
+ * Schlichter Umschalter (Toggle). Mint-Grün, wenn aktiv. Steuerbar von außen.
  */
 export function Switch({
   checked,

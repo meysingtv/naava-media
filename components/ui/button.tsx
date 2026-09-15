@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * Buttons v2: kompakt (32 px), 6-px-Radius, keine Schatten. Primär = Türkis,
+ * Buttons v2: kompakt (32 px), 6-px-Radius, keine Schatten. Primär = Mint-Grün,
  * Sekundär = weiß mit Haarlinie, Ghost = nur Text. Keine Pillen.
  */
 const buttonVariants = cva(

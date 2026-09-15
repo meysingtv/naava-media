@@ -11,8 +11,8 @@ import type { FahrlehrerRolle } from "@/lib/types";
  * Bereichs-Navigation v3.
  *
  * Ebene 1 (Desktop): die sechs Arbeitsbereiche als Reihe. Der aktive Bereich
- * bekommt sein Icon in einem gefüllten Türkis-Quadrat („Du bist hier") plus
- * eine feine Türkis-Linie – ein markanter, ruhiger Anker statt eines schwarzen
+ * bekommt sein Icon in einem gefüllten Mint-Quadrat („Du bist hier") plus
+ * eine feine Mint-Linie – ein markanter, ruhiger Anker statt eines schwarzen
  * Buttons.
  *
  * Ebene 2 (Kontext): keine schwebenden Chips mehr, sondern eine leicht
@@ -98,7 +98,7 @@ export function AreaNav({ rolle }: { rolle: FahrlehrerRolle }) {
   );
 }
 
-/** Mobile Bottom-Bar mit den Bereichen – aktive Kachel mit Türkis-Pille. */
+/** Mobile Bottom-Bar mit den Bereichen – aktive Kachel mit Mint-Pille. */
 export function MobileAreaBar({ rolle }: { rolle: FahrlehrerRolle }) {
   const pathname = usePathname();
   const bereiche = bereicheFuer(rolle);

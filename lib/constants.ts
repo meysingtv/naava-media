@@ -91,10 +91,10 @@ export interface TypMeta {
   dot: string; // Tailwind-Klasse für Farbpunkt
 }
 
-// Kalender-Farben je Art: ruhige, aufeinander abgestimmte Töne. Türkis ist die
-// normale Fahrstunde; die anderen Arten bleiben unterscheidbar, aber gedeckt.
+// Kalender-Farben je Art: ruhige, aufeinander abgestimmte Töne. Mint-Grün ist
+// die normale Fahrstunde; die anderen Arten bleiben unterscheidbar, aber gedeckt.
 export const FAHRSTUNDE_FARBE: Record<FahrstundeTyp, string> = {
-  normal: "#0F9BA8",
+  normal: "#2CBA75",
   ueberland: "#16A34A",
   autobahn: "#2563EB",
   nacht: "#4F46E5",

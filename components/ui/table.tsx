@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Business-Tabelle v2: 40-px-Zeilen, Versalien-Kopf, Haarlinien, dichte
- * Information, Zahlen tabular. Ausgewählte Zeile mit Türkis-Kante.
+ * Information, Zahlen tabular. Ausgewählte Zeile mit Mint-Kante.
  */
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
