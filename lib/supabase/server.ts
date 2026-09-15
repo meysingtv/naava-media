@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
@@ -5,9 +6,10 @@ type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 /**
  * Supabase-Client für Server-Komponenten, Server-Actions und Route-Handler.
- * Liest und schreibt die Session über die Next.js-Cookies.
+ * Liest und schreibt die Session über die Next.js-Cookies. `cache()` gibt pro
+ * Request denselben Client zurück – die Cookies werden also nur einmal geparst.
  */
-export function createClient() {
+export const createClient = cache(() => {
   const cookieStore = cookies();
 
   return createServerClient(
@@ -31,4 +33,4 @@ export function createClient() {
       },
     },
   );
-}
+});

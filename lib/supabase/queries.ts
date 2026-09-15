@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { createClient } from "@/lib/supabase/server";
 import type { Fahrlehrer, Fahrschule, FahrschulMitgliedschaft } from "@/lib/types";
 
@@ -15,12 +17,19 @@ export interface Kontext {
  * und der Liste aller Fahrschulen, zu denen der Nutzer gehört.
  * Gibt `null` zurück, wenn niemand angemeldet ist.
  */
-export async function getKontext(): Promise<Kontext | null> {
+/**
+ * `cache()` dedupliziert den Aufruf innerhalb EINES Requests: Layout, Seite und
+ * verschachtelte Server-Komponenten teilen sich das Ergebnis, statt Auth +
+ * Fahrlehrer + Fahrschule + RPC mehrfach pro Navigation auszuführen.
+ * `getSession()` liest die Session lokal aus dem Cookie (kein Netzwerk).
+ */
+export const getKontext = cache(async (): Promise<Kontext | null> => {
   const supabase = createClient();
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user;
 
   if (!user) return null;
 
@@ -67,4 +76,4 @@ export async function getKontext(): Promise<Kontext | null> {
     fahrschule,
     fahrschulen,
   };
-}
+});

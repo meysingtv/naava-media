@@ -44,10 +44,15 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // WICHTIG: getUser() validiert das Token serverseitig und erneuert es.
+  // Routing-Entscheidung aus der LOKALEN Session – kein Netzwerk-Roundtrip zum
+  // Auth-Server pro Navigation. Die eigentliche Sicherheit liegt in der
+  // Row-Level-Security der Datenbank: Dort wird das JWT bei jeder Abfrage
+  // serverseitig geprüft, ein gefälschtes Cookie bekommt also keine Daten.
+  // getSession() erneuert ein abgelaufenes Token bei Bedarf still im Hintergrund.
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
 
   // Frisch gesetzte Session-Cookies auf eine andere Antwort übertragen.
   function mitCookies(res: NextResponse): NextResponse {
