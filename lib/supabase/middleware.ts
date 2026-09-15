@@ -64,6 +64,11 @@ export async function updateSession(request: NextRequest) {
   const portal = istPortalHost(host);
   const path = request.nextUrl.pathname;
 
+  // Öffentliche Termin-Bestätigung per Token – ohne Login, unabhängig vom Host.
+  if (path.startsWith("/t/")) {
+    return supabaseResponse;
+  }
+
   // Auf der Portal-Domain werden alle Wurzelpfade intern unter /portal bedient
   // (der Schüler sieht saubere URLs wie mein.fahrschule.de/termine).
   let effektiv = path;

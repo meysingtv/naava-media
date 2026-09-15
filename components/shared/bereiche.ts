@@ -58,7 +58,10 @@ export const BEREICHE: Bereich[] = [
     key: "termine",
     label: "Termine",
     icon: CalendarDays,
-    items: [{ href: "/kalender", label: "Kalender", rollen: CHEF_LEHRER }],
+    items: [
+      { href: "/kalender", label: "Kalender", rollen: CHEF_LEHRER },
+      { href: "/erinnerungen", label: "Erinnerungen", rollen: ALLE },
+    ],
   },
   {
     key: "finanzen",

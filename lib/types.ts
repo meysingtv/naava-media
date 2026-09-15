@@ -182,6 +182,11 @@ export type Fahrstunde = {
   notiz: string | null;
   // Digitale Unterschrift des Schülers (Migration 0003) – Data-URL/SVG
   unterschrift: string | null;
+  // Termin-Bestätigung / Erinnerung (Migration 0019)
+  bestaetigung_token: string | null;
+  bestaetigt_am: string | null;
+  abgesagt_am: string | null;
+  erinnerung_gesendet_am: string | null;
   created_at: string;
 };
 
@@ -412,6 +417,22 @@ export type Database = {
       current_fahrschule_id: { Args: Record<string, never>; Returns: string };
       current_rolle: { Args: Record<string, never>; Returns: FahrlehrerRolle };
       current_schueler_id: { Args: Record<string, never>; Returns: string };
+      termin_by_token: {
+        Args: { p_token: string };
+        Returns: {
+          datum: string;
+          uhrzeit: string;
+          dauer_minuten: number;
+          typ: FahrstundeTyp;
+          status: FahrstundeStatus;
+          bestaetigt: boolean;
+          abgesagt: boolean;
+          fahrschule_name: string;
+          schueler_vorname: string | null;
+        }[];
+      };
+      termin_bestaetigen: { Args: { p_token: string }; Returns: boolean };
+      termin_absagen: { Args: { p_token: string }; Returns: boolean };
       schueler_portal_verknuepfen: { Args: { p_code: string }; Returns: string };
       schueler_fahrschule: {
         Args: Record<string, never>;
