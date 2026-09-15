@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/shared/page-header";
-import type { Fahrlehrer, Fahrschueler, FahrstundeMitRelationen, Fahrzeug } from "@/lib/types";
+import type { Fahrlehrer, Fahrschueler, FahrstundeMitRelationen, Fahrzeug, Pruefung } from "@/lib/types";
 import { Terminplaner } from "./terminplaner";
 
-export const metadata = { title: "Terminplaner · FahrschulApp" };
+export const metadata = { title: "Disposition · FahrschulApp" };
 
 function iso(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -14,24 +14,36 @@ function addTage(n: number): string {
   return iso(d);
 }
 
-export default async function TerminplanerPage() {
+type PruefRow = Pick<Pruefung, "id" | "datum" | "uhrzeit" | "art" | "pruefstelle"> & {
+  fahrschueler: Pick<Fahrschueler, "vorname" | "nachname"> | null;
+};
+
+export default async function DispositionPage() {
   const supabase = createClient();
   const heute = iso(new Date());
+  const von = addTage(-21);
+  const bis = addTage(60);
 
   const selectStunden =
     "*, fahrschueler(id, vorname, nachname, avatar_farbe), fahrlehrer(id, vorname, nachname), fahrzeug(id, kennzeichen)";
 
-  const [schuelerRes, lehrerRes, fahrzeugRes, stundenRes] = await Promise.all([
-    supabase.from("fahrschueler").select("*").order("nachname").returns<Fahrschueler[]>(),
-    supabase.from("fahrlehrer").select("*").eq("aktiv", true).order("nachname").returns<Fahrlehrer[]>(),
-    supabase.from("fahrzeug").select("*").eq("aktiv", true).order("kennzeichen").returns<Fahrzeug[]>(),
+  const [schuelerRes, lehrerRes, fahrzeugRes, stundenRes, pruefRes] = await Promise.all([
+    supabase.from("fahrschueler").select("id, vorname, nachname").order("nachname").returns<Pick<Fahrschueler, "id" | "vorname" | "nachname">[]>(),
+    supabase.from("fahrlehrer").select("id, vorname, nachname").eq("aktiv", true).order("nachname").returns<Pick<Fahrlehrer, "id" | "vorname" | "nachname">[]>(),
+    supabase.from("fahrzeug").select("id, kennzeichen").eq("aktiv", true).order("kennzeichen").returns<Pick<Fahrzeug, "id" | "kennzeichen">[]>(),
     supabase
       .from("fahrstunde")
       .select(selectStunden)
-      .gte("datum", addTage(-21))
-      .lte("datum", addTage(60))
+      .gte("datum", von)
+      .lte("datum", bis)
       .order("uhrzeit", { ascending: true })
       .returns<FahrstundeMitRelationen[]>(),
+    supabase
+      .from("pruefung")
+      .select("id, datum, uhrzeit, art, pruefstelle, fahrschueler(vorname, nachname)")
+      .gte("datum", von)
+      .lte("datum", bis)
+      .returns<PruefRow[]>(),
   ]);
 
   const options = {
@@ -40,13 +52,19 @@ export default async function TerminplanerPage() {
     fahrzeuge: (fahrzeugRes.data ?? []).map((f) => ({ id: f.id, label: f.kennzeichen })),
   };
 
+  const pruefungen = (pruefRes.data ?? []).map((p) => ({
+    id: p.id,
+    datum: p.datum,
+    uhrzeit: p.uhrzeit,
+    art: p.art,
+    pruefstelle: p.pruefstelle,
+    schueler: p.fahrschueler ? `${p.fahrschueler.vorname} ${p.fahrschueler.nachname}` : null,
+  }));
+
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Terminplaner"
-        description="Alle Fahrstunden im Zeitraster – wie in der App."
-      />
-      <Terminplaner heute={heute} stunden={stundenRes.data ?? []} options={options} />
+    <div className="space-y-4">
+      <PageHeader eyebrow="Termine" title="Disposition" description="Wer fährt wann mit wem – Fahrlehrer und Fahrzeuge im Einsatz." />
+      <Terminplaner heute={heute} stunden={stundenRes.data ?? []} options={options} pruefungen={pruefungen} />
     </div>
   );
 }

@@ -29,6 +29,7 @@ export interface FahrstundeInitial {
   uhrzeit?: string;
   dauer_minuten?: number;
   fahrlehrer_id?: string;
+  fahrzeug_id?: string;
   typ?: FahrstundeTyp;
 }
 
@@ -74,7 +75,7 @@ export function FahrstundePanel({
   const [typ, setTyp] = useState<FahrstundeTyp>(fahrstunde?.typ ?? initial?.typ ?? "normal");
   const [schuelerId, setSchuelerId] = useState(fahrstunde?.schueler_id ?? "");
   const [lehrerId, setLehrerId] = useState(fahrstunde?.fahrlehrer_id ?? initial?.fahrlehrer_id ?? "");
-  const [fahrzeugId, setFahrzeugId] = useState(fahrstunde?.fahrzeug_id ?? "");
+  const [fahrzeugId, setFahrzeugId] = useState(fahrstunde?.fahrzeug_id ?? initial?.fahrzeug_id ?? "");
   const [notiz, setNotiz] = useState(fahrstunde?.notiz ?? "");
 
   useEffect(() => {
