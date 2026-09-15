@@ -88,7 +88,10 @@ export const BEREICHE: Bereich[] = [
     key: "auswertung",
     label: "Auswertung",
     icon: BarChart3,
-    items: [{ href: "/berichte", label: "Berichte", rollen: CHEF_BUERO }],
+    items: [
+      { href: "/cockpit", label: "Cockpit", rollen: CHEF_BUERO },
+      { href: "/berichte", label: "Berichte", rollen: CHEF_BUERO },
+    ],
   },
 ];
 
