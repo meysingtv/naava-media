@@ -6,7 +6,6 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { pflichtFahrtenFuer } from "@/lib/constants";
 import { cn, initialen } from "@/lib/utils";
-import { DEMO, demoSchuelerFull, demoSchuelerLessonRows, demoSchuelerRechnungRows } from "@/lib/demo";
 import type { Fahrschueler } from "@/lib/types";
 import { SchuelerListe, type Fortschritt } from "./schueler-liste";
 import { SchuelerAkte } from "./schueler-akte";
@@ -41,13 +40,11 @@ export default async function SchuelerPage({ searchParams }: { searchParams: { i
       >(),
   ]);
 
-  const schueler = DEMO ? demoSchuelerFull : ((schuelerRes.data ?? []) as Fahrschueler[]);
-  const rechnungRows = DEMO ? demoSchuelerRechnungRows : ((rechnungRes.data ?? []) as { schueler_id: string | null; betrag_brutto: number | null; status: string }[]);
-  const lessonRows = DEMO ? demoSchuelerLessonRows : (lessonsRes.data ?? []);
+  const schueler = (schuelerRes.data ?? []) as Fahrschueler[];
 
   // Saldo je Schüler (offene Rechnungen negativ)
   const saldoMap: Record<string, number> = {};
-  for (const r of rechnungRows) {
+  for (const r of (rechnungRes.data ?? []) as { schueler_id: string | null; betrag_brutto: number | null; status: string }[]) {
     if (!r.schueler_id) continue;
     const brutto = Number(r.betrag_brutto ?? 0);
     saldoMap[r.schueler_id] = (saldoMap[r.schueler_id] ?? 0) + (r.status === "bezahlt" ? 0 : -brutto);
@@ -56,7 +53,7 @@ export default async function SchuelerPage({ searchParams }: { searchParams: { i
   // Fahrlehrer-Kürzel + Ausbildungsfortschritt je Schüler
   const lehrerSets: Record<string, Set<string>> = {};
   const zaehler: Record<string, { ueberland: number; autobahn: number; nacht: number; gesamt: number }> = {};
-  for (const row of lessonRows) {
+  for (const row of lessonsRes.data ?? []) {
     if (!row.schueler_id) continue;
     if (row.fahrlehrer) (lehrerSets[row.schueler_id] ??= new Set()).add(initialen(row.fahrlehrer.vorname, row.fahrlehrer.nachname));
     if (row.status !== "abgeschlossen") continue;

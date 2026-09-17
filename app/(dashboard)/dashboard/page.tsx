@@ -3,7 +3,6 @@ import { ArrowRight, Check, ClipboardCheck, ListChecks } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
-import { DEMO, demoAufgaben, demoDashSchueler, demoEingaengeMonat, demoOffene, demoPruefungen, demoTermineHeute } from "@/lib/demo";
 import { Badge } from "@/components/ui/badge";
 import { FAHRSTUNDE_TYPEN } from "@/lib/constants";
 import { cn, formatDatum, formatEuro, formatUhrzeit } from "@/lib/utils";
@@ -109,12 +108,12 @@ export default async function LeitstandPage() {
       .returns<Pick<Rechnung, "betrag_brutto" | "bezahlt_am">[]>(),
   ]);
 
-  const termine = DEMO ? demoTermineHeute : (heuteRes.data ?? []);
-  const offene = DEMO ? demoOffene : (offeneRes.data ?? []);
-  const aufgaben = DEMO ? demoAufgaben : (aufgabenRes.data ?? []);
-  const pruefungen = DEMO ? demoPruefungen : (pruefungRes.data ?? []);
-  const schueler = DEMO ? demoDashSchueler : (schuelerRes.data ?? []);
-  const eingaengeMonat = DEMO ? demoEingaengeMonat : (zahlungMonatRes.data ?? []).reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
+  const termine = heuteRes.data ?? [];
+  const offene = offeneRes.data ?? [];
+  const aufgaben = aufgabenRes.data ?? [];
+  const pruefungen = pruefungRes.data ?? [];
+  const schueler = schuelerRes.data ?? [];
+  const eingaengeMonat = (zahlungMonatRes.data ?? []).reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
 
   const offenerBetrag = offene.reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
   const ueberfaellig = offene.filter((r) => r.status === "ueberfaellig" || (r.faelligkeitsdatum && r.faelligkeitsdatum < heute));
