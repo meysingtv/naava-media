@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { DEMO, demoCockpitFahrzeuge, demoCockpitLehrer, demoCockpitOffene, demoCockpitStunden } from "@/lib/demo";
 import { CockpitView, type CockpitFahrzeug, type CockpitLehrer, type CockpitRechnung, type CockpitStunde } from "./cockpit-view";
 
 export const metadata = { title: "Cockpit · FahrschulApp" };
@@ -35,10 +36,10 @@ export default async function CockpitPage() {
 
   return (
     <CockpitView
-      stunden={stundenRes.data ?? []}
-      lehrer={lehrerRes.data ?? []}
-      fahrzeuge={fahrzeugRes.data ?? []}
-      offene={offeneRes.data ?? []}
+      stunden={DEMO ? demoCockpitStunden : (stundenRes.data ?? [])}
+      lehrer={DEMO ? demoCockpitLehrer : (lehrerRes.data ?? [])}
+      fahrzeuge={DEMO ? demoCockpitFahrzeuge : (fahrzeugRes.data ?? [])}
+      offene={DEMO ? demoCockpitOffene : (offeneRes.data ?? [])}
     />
   );
 }

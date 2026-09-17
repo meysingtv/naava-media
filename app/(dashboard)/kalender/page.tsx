@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import type { Fahrlehrer, Fahrschueler, FahrstundeMitRelationen, Fahrzeug, Pruefung } from "@/lib/types";
 import { Terminplaner } from "./terminplaner";
 import { SmartVorschlag } from "./smart-vorschlag";
+import { DEMO, demoKalenderPruefungen, demoKalenderStunden, demoOptions } from "@/lib/demo";
 
 export const metadata = { title: "Disposition · FahrschulApp" };
 
@@ -47,27 +48,31 @@ export default async function DispositionPage() {
       .returns<PruefRow[]>(),
   ]);
 
-  const options = {
-    schueler: (schuelerRes.data ?? []).map((s) => ({ id: s.id, label: `${s.vorname} ${s.nachname}` })),
-    fahrlehrer: (lehrerRes.data ?? []).map((f) => ({ id: f.id, label: `${f.vorname} ${f.nachname}` })),
-    fahrzeuge: (fahrzeugRes.data ?? []).map((f) => ({ id: f.id, label: f.kennzeichen })),
-  };
+  const options = DEMO
+    ? demoOptions
+    : {
+        schueler: (schuelerRes.data ?? []).map((s) => ({ id: s.id, label: `${s.vorname} ${s.nachname}` })),
+        fahrlehrer: (lehrerRes.data ?? []).map((f) => ({ id: f.id, label: `${f.vorname} ${f.nachname}` })),
+        fahrzeuge: (fahrzeugRes.data ?? []).map((f) => ({ id: f.id, label: f.kennzeichen })),
+      };
 
-  const pruefungen = (pruefRes.data ?? []).map((p) => ({
-    id: p.id,
-    datum: p.datum,
-    uhrzeit: p.uhrzeit,
-    art: p.art,
-    pruefstelle: p.pruefstelle,
-    schueler: p.fahrschueler ? `${p.fahrschueler.vorname} ${p.fahrschueler.nachname}` : null,
-  }));
+  const pruefungen = DEMO
+    ? demoKalenderPruefungen
+    : (pruefRes.data ?? []).map((p) => ({
+        id: p.id,
+        datum: p.datum,
+        uhrzeit: p.uhrzeit,
+        art: p.art,
+        pruefstelle: p.pruefstelle,
+        schueler: p.fahrschueler ? `${p.fahrschueler.vorname} ${p.fahrschueler.nachname}` : null,
+      }));
 
   return (
     <div className="space-y-4">
       <PageHeader eyebrow="Termine" title="Disposition" description="Wer fährt wann mit wem – Fahrlehrer und Fahrzeuge im Einsatz.">
         <SmartVorschlag schueler={options.schueler} />
       </PageHeader>
-      <Terminplaner heute={heute} stunden={stundenRes.data ?? []} options={options} pruefungen={pruefungen} />
+      <Terminplaner heute={heute} stunden={DEMO ? demoKalenderStunden : (stundenRes.data ?? [])} options={options} pruefungen={pruefungen} />
     </div>
   );
 }
