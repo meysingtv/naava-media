@@ -38,7 +38,6 @@ export const BEREICHE: Bereich[] = [
     icon: LayoutDashboard,
     items: [
       { href: "/dashboard", label: "Leitstand", rollen: ALLE },
-      { href: "/assistent", label: "Assistent", rollen: ALLE },
       { href: "/aufgaben", label: "Aufgaben", rollen: ALLE },
       { href: "/kommunikation", label: "Kommunikation", rollen: ALLE },
     ],

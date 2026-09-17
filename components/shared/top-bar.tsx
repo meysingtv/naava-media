@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { GlobalSearch } from "@/components/shared/global-search";
+import { AssistentWidget } from "@/components/shared/assistent-widget";
 import { Logo } from "@/components/shared/logo";
 import { ROLLEN } from "@/lib/constants";
 import { cn, initialen } from "@/lib/utils";
@@ -125,6 +126,7 @@ export function TopBar({
 
         {/* Aktionen */}
         <div className="flex shrink-0 items-center gap-1">
+          <AssistentWidget />
           <DropdownMenu>
             <DropdownMenuTrigger className="inline-flex h-8 items-center gap-1 rounded-md bg-primary pl-2.5 pr-2 text-[13px] font-medium text-primary-foreground outline-none transition-colors duration-fast hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-1">
               <Plus className="h-[15px] w-[15px]" strokeWidth={2.25} />
