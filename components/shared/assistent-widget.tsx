@@ -23,9 +23,18 @@ const WERKZEUG_LABEL: Record<string, string> = {
   termin_anlegen: "Termin angelegt",
   offene_rechnungen: "Rechnungen geprüft",
   auslastung: "Auslastung berechnet",
+  termine_am_tag: "Tagesplan geöffnet",
+  schueler_details: "Schüler-Akte geöffnet",
+  pruefungen_anstehend: "Prüfungen geprüft",
+  offene_aufgaben: "Aufgaben geprüft",
+  umsatz_statistik: "Monats-Kennzahlen",
+  schueler_anlegen: "Schüler angelegt",
+  aufgabe_anlegen: "Aufgabe angelegt",
+  termin_absagen: "Termin abgesagt",
+  zahlung_erfassen: "Zahlung erfasst",
 };
 
-const VORSCHLAEGE = ["Wer ist prüfungsreif?", "Auslastung diese Woche?", "Offene Rechnungen", "Freie Termine nächste Woche"];
+const VORSCHLAEGE = ["Was steht heute an?", "Wer ist prüfungsreif?", "Wie läuft der Monat?", "Freie Termine nächste Woche"];
 
 export function AssistentWidget() {
   const [offen, setOffen] = useState(false);
@@ -136,7 +145,7 @@ export function AssistentWidget() {
             <div className="flex-1 space-y-4 overflow-y-auto p-3.5">
               {leer ? (
                 <div className="pt-2">
-                  <p className="px-1 text-[13px] text-foreground">Frag mich nach Schülern, Terminen, Auslastung oder Rechnungen – oder lass mich eine Fahrstunde planen.</p>
+                  <p className="px-1 text-[13px] text-foreground">Frag mich zu Schülern, Terminen, Prüfungen, Aufgaben oder Finanzen – oder lass mich Termine planen, Schüler anlegen oder Zahlungen erfassen.</p>
                   <div className="mt-3 space-y-1">
                     {VORSCHLAEGE.map((v) => (
                       <button
