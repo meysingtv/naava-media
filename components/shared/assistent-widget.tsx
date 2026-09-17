@@ -2,9 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowUp, Sparkles, Wrench, X } from "lucide-react";
+import { Sparkles, Wrench, X } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+const feld =
+  "w-full rounded-md border border-border-strong bg-background px-3 py-2 text-[13px] shadow-xs placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20";
 
 interface Nachricht {
   role: "user" | "assistant";
@@ -190,7 +194,7 @@ export function AssistentWidget() {
               <div ref={endeRef} />
             </div>
 
-            {/* Eingabe */}
+            {/* Eingabe – hauseigene App-Controls */}
             <div className="border-t p-2.5">
               <form
                 onSubmit={(e) => {
@@ -210,17 +214,12 @@ export function AssistentWidget() {
                   }}
                   rows={1}
                   autoFocus
-                  placeholder="Nachricht …"
-                  className="max-h-24 min-h-[2.25rem] flex-1 resize-none rounded-lg border border-border-strong bg-background px-2.5 py-1.5 text-[13px] placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20"
+                  placeholder="Frage oder Anweisung …"
+                  className={cn(feld, "max-h-24 min-h-[2.25rem] flex-1 resize-none")}
                 />
-                <button
-                  type="submit"
-                  disabled={!eingabe.trim() || laedt}
-                  aria-label="Senden"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary-hover disabled:opacity-40"
-                >
-                  <ArrowUp className="h-4 w-4" strokeWidth={2.5} />
-                </button>
+                <Button type="submit" disabled={!eingabe.trim() || laedt} className="shrink-0">
+                  Senden
+                </Button>
               </form>
             </div>
           </div>,
