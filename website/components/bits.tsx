@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Check } from "lucide-react";
 
 import { Btn, Container, Eyebrow, cn } from "@/components/ui";
@@ -85,7 +86,10 @@ export function CtaBand({ compact }: { compact?: boolean }) {
   return (
     <section className={cn(compact ? "py-14" : "py-20")}>
       <Container>
-        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-mint-dark to-mint px-8 py-14 text-center text-white md:px-16 md:py-20">
+        <div className="relative overflow-hidden rounded-[28px] bg-mint-dark px-8 py-14 text-center text-white md:px-16 md:py-20">
+          <Image src="/images/lektion-pov.jpg" alt="" aria-hidden fill sizes="(max-width: 1200px) 100vw, 1152px" className="object-cover object-center" />
+          <div className="pointer-events-none absolute inset-0 bg-mint-dark/68" aria-hidden />
+          <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(75% 96% at 50% 52%, rgba(6,34,21,.6), transparent 78%)" }} aria-hidden />
           <div
             className="pointer-events-none absolute inset-0 opacity-30"
             style={{ backgroundImage: "radial-gradient(60% 80% at 85% -10%, rgba(157,241,200,.5), transparent 70%)" }}
@@ -95,7 +99,7 @@ export function CtaBand({ compact }: { compact?: boolean }) {
             <h2 className="mx-auto max-w-3xl font-display text-[clamp(26px,3.6vw,40px)] font-bold leading-[1.08] text-balance">
               Schau dir an, wie deine Fahrschule damit laufen könnte.
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-[18px] text-mint-hi/90">
+            <p className="mx-auto mt-4 max-w-xl text-[18px] text-white/85">
               Wir zeigen dir FahrschulApp anhand deines Arbeitsalltags – von der ersten Fahrstunde bis zur Rechnung.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">

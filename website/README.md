@@ -102,3 +102,15 @@ lib/            Validierung, Rate-Limit, Mail-Adapter
 - **Kundenstimmen** durch echte Zitate ersetzen (aktuell Platzhalter).
 - **Produktname/Logo** anpassen, falls abweichend.
 - `NEXT_PUBLIC_SITE_URL` auf die echte Domain setzen (SEO/Canonical/Sitemap).
+
+## Bilder / Fotos
+
+Die Fotos liegen unter `public/images/` und werden per `next/image` eingebunden
+(Hero, Foto-Mosaik „Aus dem Fahrschulalltag", Zahlen-Band, Abschluss-CTA).
+Sie stammen von [Pexels](https://www.pexels.com) und sind unter der
+Pexels-Lizenz kostenlos, auch kommerziell und ohne Nennungspflicht, nutzbar.
+
+Zum Austauschen einfach die JPGs in `public/images/` durch eigene Fotos mit
+denselben Dateinamen ersetzen (z. B. echte Bilder deiner Fahrschule) – am
+besten in ähnlichem Seitenverhältnis. Referenziert werden sie in
+`app/page.tsx` und `components/bits.tsx`.

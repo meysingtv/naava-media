@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { Bell, Check, Gauge, Lock, Server, Shield, Sparkles, Users2, Wand2, X } from "lucide-react";
 
 import { Btn, Container, cn } from "@/components/ui";
@@ -7,7 +9,6 @@ import {
   BrowserFrame,
   ChatMock,
   CockpitMock,
-  DashboardMock,
   DispoMock,
   FinanzenMock,
   PhoneMock,
@@ -62,31 +63,56 @@ export default function HomePage() {
           </div>
 
           <div data-reveal data-delay="60ms" className="relative">
-            {/* Farbige Bühne */}
-            <div className="relative overflow-hidden rounded-[30px] bg-gradient-to-br from-mint to-mint-dark p-4 shadow-[0_50px_100px_-40px_rgba(15,45,30,.55)] sm:p-6">
-              <RouteMotif className="text-white/15" />
-              <div className="relative">
-                <BrowserFrame url="app.fahrschulapp.de/leitstand">
-                  <div className="flex items-center gap-2 border-b border-line bg-mint-soft/50 px-3 py-2">
-                    <span className="font-display text-[14px] font-extrabold">
-                      Fahrschul<span className="text-mint">App</span>
+            {/* Farb-Glow */}
+            <div
+              className="pointer-events-none absolute -inset-6 -z-10 rounded-[44px]"
+              style={{ background: "radial-gradient(62% 60% at 62% 28%, rgba(44,186,117,.38), transparent 72%)" }}
+              aria-hidden
+            />
+            {/* Echtes Foto */}
+            <div className="relative mx-auto aspect-[4/5] w-full max-w-[440px] overflow-hidden rounded-[28px] shadow-[0_50px_100px_-40px_rgba(15,45,30,.55)] ring-1 ring-black/5">
+              <Image
+                src="/images/hero-fahrstunde.jpg"
+                alt="Fahrlehrer und Fahrschülerin lachen während einer Fahrstunde im Auto"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 440px"
+                className="object-cover"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/5" aria-hidden />
+              <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[12px] font-bold text-ink shadow-lg backdrop-blur">
+                <span className="h-2 w-2 animate-pulse2 rounded-full bg-mint-accent" /> Fahrstunde läuft
+              </span>
+            </div>
+            {/* Schwebende Produkt-Karte */}
+            <div className="absolute -bottom-6 -left-3 w-[262px] rounded-2xl border border-line bg-white/95 p-3 shadow-[0_30px_60px_-24px_rgba(15,45,30,.5)] backdrop-blur sm:-left-9 sm:w-[300px]">
+              <div className="mb-2 flex items-center gap-2 border-b border-line pb-2">
+                <span className="font-display text-[13px] font-extrabold">
+                  Fahrschul<span className="text-mint">App</span>
+                </span>
+                <span className="rounded-full border border-mint-hi bg-mint-soft px-1.5 py-0.5 text-[9px] font-bold text-mint">Leitstand</span>
+                <span className="ml-auto text-[10px] text-muted">heute</span>
+              </div>
+              <div className="grid gap-1.5">
+                {[
+                  { t: "09:00", n: "Lisa Schneider", s: "bestätigt", ok: true },
+                  { t: "10:30", n: "Jonas Müller", s: "offen", ok: false },
+                  { t: "12:00", n: "Max Weber", s: "bestätigt", ok: true },
+                ].map((r) => (
+                  <div key={r.t} className="flex items-center gap-2 rounded-lg bg-paper px-2 py-1.5 text-[11.5px]">
+                    <span className="tnum font-bold text-ink">{r.t}</span>
+                    <span className="min-w-0 flex-1 truncate text-ink/80">{r.n}</span>
+                    <span className={cn("inline-flex items-center gap-1 font-semibold", r.ok ? "text-mint" : "text-[#C27C0E]")}>
+                      <span className={cn("h-1.5 w-1.5 rounded-full", r.ok ? "bg-mint-accent" : "bg-[#E0A11B]")} /> {r.s}
                     </span>
-                    <span className="rounded-full border border-mint-hi bg-white px-2 py-0.5 text-[10px] font-bold text-mint">Leitstand</span>
-                    <span className="ml-auto text-[11px] text-muted">Fahrschule Weber</span>
                   </div>
-                  <DashboardMock />
-                </BrowserFrame>
+                ))}
               </div>
             </div>
-            {/* Schwebende Karte */}
-            <div className="absolute -bottom-5 -left-4 hidden items-center gap-2.5 rounded-2xl border border-line bg-white/95 px-3.5 py-2.5 shadow-[0_20px_40px_-16px_rgba(15,45,30,.35)] backdrop-blur sm:flex">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-mint-soft text-mint">
-                <Bell className="h-4.5 w-4.5" />
-              </span>
-              <div className="leading-tight">
-                <div className="text-[13px] font-bold text-ink">Termin bestätigt ✓</div>
-                <div className="text-[11.5px] text-muted">Lisa · Do 09:00</div>
-              </div>
+            {/* Schwebende Kennzahl */}
+            <div className="absolute -right-3 top-8 hidden rounded-2xl border border-line bg-white/95 px-4 py-3 text-center shadow-[0_20px_40px_-16px_rgba(15,45,30,.4)] backdrop-blur sm:block">
+              <div className="font-display text-[22px] font-extrabold text-mint">−30 %</div>
+              <div className="text-[10.5px] font-medium text-muted">Terminausfälle</div>
             </div>
           </div>
         </Container>
@@ -105,6 +131,52 @@ export default function HomePage() {
           )}
         </Container>
       </div>
+
+      {/* FOTO-MOSAIK */}
+      <section className="py-16 md:py-20">
+        <Container>
+          <div className="mb-9 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <SectionHead eyebrow="Aus dem Fahrschulalltag" title="Gemacht für echte Fahrschulen" className="!max-w-xl" />
+            <p className="max-w-sm text-[15px] leading-relaxed text-muted">
+              Vom ersten Kennenlernen bis zur bestandenen Prüfung – FahrschulApp begleitet jeden Schritt deines Alltags.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="group relative min-h-[300px] overflow-hidden rounded-3xl ring-1 ring-black/5 md:min-h-[452px]">
+              <Image
+                src="/images/lektion-steuer.jpg"
+                alt="Fahrschüler am Steuer, Fahrlehrerin gibt Anweisungen"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover transition-transform duration-[900ms] group-hover:scale-105"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" aria-hidden />
+              <div className="absolute inset-x-5 bottom-5 text-white">
+                <div className="text-[12px] font-bold uppercase tracking-[0.14em] text-mint-hi">Praxis</div>
+                <div className="mt-0.5 font-display text-[22px] font-bold leading-tight">Jede Fahrstunde sauber geplant</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { src: "/images/schilder.jpg", alt: "Fahrschulautos mit Fahrschüler-Schildern auf dem Dach" },
+                { src: "/images/fahrlehrerin.jpg", alt: "Fahrlehrer erklärt einer Fahrschülerin das Fahrzeug" },
+                { src: "/images/schueler-fahren.jpg", alt: "Konzentrierter Fahrschüler mit beiden Händen am Lenkrad" },
+                { src: "/images/schluessel.jpg", alt: "Autoschlüssel-Übergabe nach bestandener Prüfung" },
+              ].map((im) => (
+                <div key={im.src} className="group relative aspect-square overflow-hidden rounded-2xl ring-1 ring-black/5">
+                  <Image
+                    src={im.src}
+                    alt={im.alt}
+                    fill
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    className="object-cover transition-transform duration-[900ms] group-hover:scale-105"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </Container>
+      </section>
 
       {/* PROBLEM -> LÖSUNG */}
       <section className="bg-paper py-20 md:py-24">
@@ -362,8 +434,10 @@ export default function HomePage() {
       </section>
 
       {/* IMPACT / ZAHLEN */}
-      <section className="bg-ink py-16 text-white">
-        <Container>
+      <section className="relative overflow-hidden bg-ink py-16 text-white">
+        <Image src="/images/uebungsplatz.jpg" alt="" aria-hidden fill sizes="100vw" className="object-cover opacity-[0.32]" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-ink via-ink/85 to-ink/40" aria-hidden />
+        <Container className="relative">
           <div className="grid gap-8 md:grid-cols-4">
             {[
               { v: "−30 %", l: "weniger Terminausfälle" },
