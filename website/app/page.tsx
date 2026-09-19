@@ -1,7 +1,8 @@
 import { Bell, Check, Gauge, Lock, Server, Shield, Sparkles, Users2, Wand2, X } from "lucide-react";
 
-import { Btn, Container, Eyebrow, cn } from "@/components/ui";
+import { Btn, Container, cn } from "@/components/ui";
 import { CtaBand, FeatureRow, SectionHead } from "@/components/bits";
+import { GridMotif, RouteMotif } from "@/components/decor";
 import {
   BrowserFrame,
   ChatMock,
@@ -17,24 +18,29 @@ export default function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden bg-gradient-to-b from-mint-soft/70 via-white to-white">
+        <GridMotif className="opacity-70" />
         <div
           className="pointer-events-none absolute inset-0 -z-10"
-          style={{
-            background:
-              "radial-gradient(60% 55% at 88% -5%, rgba(157,241,200,.42), transparent 68%), radial-gradient(40% 40% at 0% 5%, rgba(44,186,117,.10), transparent 60%)",
-          }}
+          style={{ background: "radial-gradient(55% 50% at 90% -8%, rgba(44,186,117,.28), transparent 66%)" }}
           aria-hidden
         />
-        <Container className="grid items-center gap-14 py-16 md:grid-cols-[1.05fr_.95fr] md:py-24">
+        <Container className="relative grid items-center gap-12 py-16 md:grid-cols-[1.02fr_.98fr] md:py-24">
           <div>
-            <Eyebrow>Software für Fahrschulen</Eyebrow>
-            <h1 className="mt-5 font-display text-[clamp(40px,6vw,66px)] font-extrabold leading-[0.98] tracking-[-0.03em] text-ink text-balance">
+            <span className="inline-flex items-center gap-2 rounded-full border border-mint/25 bg-white px-3.5 py-1.5 text-[13px] font-semibold text-mint shadow-sm">
+              <span className="h-2 w-2 animate-pulse2 rounded-full bg-mint-accent" /> Software für Fahrschulen
+            </span>
+            <h1 className="mt-6 font-display text-[clamp(42px,6.2vw,70px)] font-extrabold leading-[0.95] tracking-[-0.03em] text-ink text-balance">
               Die Fahrschule läuft.
               <br />
-              <span className="text-mint">Du hast den Kopf frei.</span>
+              <span className="relative inline-block text-mint">
+                Du hast den Kopf frei.
+                <svg className="absolute -bottom-2 left-0 w-full" height="10" viewBox="0 0 300 10" fill="none" aria-hidden>
+                  <path d="M2 7 C 80 2, 220 2, 298 6" stroke="#9DF1C8" strokeWidth="5" strokeLinecap="round" />
+                </svg>
+              </span>
             </h1>
-            <p className="mt-6 max-w-[42ch] text-[19px] leading-relaxed text-muted">
+            <p className="mt-7 max-w-[42ch] text-[19px] leading-relaxed text-muted">
               FahrschulApp verbindet Disposition, Schüler, Finanzen, Prüfungen und Kommunikation in einer Software – damit
               weniger organisiert werden muss und mehr einfach läuft.
             </p>
@@ -54,17 +60,34 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-          <div data-reveal data-delay="60ms">
-            <BrowserFrame url="app.fahrschulapp.de/leitstand">
-              <div className="flex items-center gap-2 border-b border-line px-3 py-2">
-                <span className="font-display text-[14px] font-extrabold">
-                  Fahrschul<span className="text-mint">App</span>
-                </span>
-                <span className="rounded-full border border-mint-hi bg-mint-soft px-2 py-0.5 text-[10px] font-bold text-mint">Leitstand</span>
-                <span className="ml-auto text-[11px] text-muted">Fahrschule Weber</span>
+
+          <div data-reveal data-delay="60ms" className="relative">
+            {/* Farbige Bühne */}
+            <div className="relative overflow-hidden rounded-[30px] bg-gradient-to-br from-mint to-mint-dark p-4 shadow-[0_50px_100px_-40px_rgba(15,45,30,.55)] sm:p-6">
+              <RouteMotif className="text-white/15" />
+              <div className="relative">
+                <BrowserFrame url="app.fahrschulapp.de/leitstand">
+                  <div className="flex items-center gap-2 border-b border-line bg-mint-soft/50 px-3 py-2">
+                    <span className="font-display text-[14px] font-extrabold">
+                      Fahrschul<span className="text-mint">App</span>
+                    </span>
+                    <span className="rounded-full border border-mint-hi bg-white px-2 py-0.5 text-[10px] font-bold text-mint">Leitstand</span>
+                    <span className="ml-auto text-[11px] text-muted">Fahrschule Weber</span>
+                  </div>
+                  <DashboardMock />
+                </BrowserFrame>
               </div>
-              <DashboardMock />
-            </BrowserFrame>
+            </div>
+            {/* Schwebende Karte */}
+            <div className="absolute -bottom-5 -left-4 hidden items-center gap-2.5 rounded-2xl border border-line bg-white/95 px-3.5 py-2.5 shadow-[0_20px_40px_-16px_rgba(15,45,30,.35)] backdrop-blur sm:flex">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-mint-soft text-mint">
+                <Bell className="h-4.5 w-4.5" />
+              </span>
+              <div className="leading-tight">
+                <div className="text-[13px] font-bold text-ink">Termin bestätigt ✓</div>
+                <div className="text-[11.5px] text-muted">Lisa · Do 09:00</div>
+              </div>
+            </div>
           </div>
         </Container>
       </section>
@@ -84,7 +107,7 @@ export default function HomePage() {
       </div>
 
       {/* PROBLEM -> LÖSUNG */}
-      <section className="py-20 md:py-24">
+      <section className="bg-paper py-20 md:py-24">
         <Container>
           <SectionHead
             center
@@ -266,21 +289,25 @@ export default function HomePage() {
         </Container>
       </section>
 
-      {/* ABLAUF */}
-      <section className="py-20 md:py-24">
-        <Container>
-          <SectionHead center eyebrow="So einfach startest du" title="In vier Schritten startklar" />
-          <ol className="mt-12 grid gap-6 md:grid-cols-4">
+      {/* ABLAUF (Mint-Band) */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-mint to-mint-dark py-20 text-white md:py-24">
+        <RouteMotif className="text-white/12" />
+        <Container className="relative">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="text-[12px] font-bold uppercase tracking-[0.16em] text-mint-hi">So einfach startest du</span>
+            <h2 className="mt-3 font-display text-[clamp(28px,4vw,44px)] font-bold leading-[1.05] text-balance">In vier Schritten startklar</h2>
+          </div>
+          <ol className="mt-12 grid gap-5 md:grid-cols-4">
             {[
               { n: "01", t: "Demo ansehen", d: "Wir zeigen dir FahrschulApp anhand deines Alltags." },
               { n: "02", t: "Fahrschule einrichten", d: "Zugänge, Fahrlehrer und Fahrzeuge – in Minuten." },
               { n: "03", t: "Daten übernehmen", d: "Bestehende Schüler und Termine ziehen wir mit dir um." },
               { n: "04", t: "Loslegen", d: "Planen, abrechnen, den Kopf frei haben." },
             ].map((s) => (
-              <li key={s.n} data-reveal className="relative rounded-2xl border border-line bg-white p-6">
-                <span className="font-display text-[15px] font-extrabold text-mint">{s.n}</span>
-                <h3 className="mt-2 text-[18px] font-bold">{s.t}</h3>
-                <p className="mt-1.5 text-[14.5px] text-muted">{s.d}</p>
+              <li key={s.n} data-reveal className="rounded-2xl border border-white/15 bg-white/[0.07] p-6 backdrop-blur-sm">
+                <span className="font-display text-[16px] font-extrabold text-mint-hi">{s.n}</span>
+                <h3 className="mt-2 font-display text-[19px] font-bold text-white">{s.t}</h3>
+                <p className="mt-1.5 text-[14.5px] text-white/65">{s.d}</p>
               </li>
             ))}
           </ol>

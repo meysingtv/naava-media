@@ -67,8 +67,15 @@ export function FeatureRow({
           </div>
         )}
       </div>
-      <div data-reveal data-delay="80ms" className={cn(reverse && "md:order-1")}>
-        {children}
+      <div data-reveal data-delay="80ms" className={cn("relative", reverse && "md:order-1")}>
+        <div
+          aria-hidden
+          className={cn(
+            "absolute -inset-5 -z-10 rounded-[32px] md:-inset-8",
+            reverse ? "bg-gradient-to-bl from-mint-soft via-white to-mint-hi/40" : "bg-gradient-to-br from-mint-hi/45 via-white to-mint-soft",
+          )}
+        />
+        <div className="rounded-[22px] shadow-[0_40px_80px_-40px_rgba(15,45,30,.4)]">{children}</div>
       </div>
     </div>
   );
