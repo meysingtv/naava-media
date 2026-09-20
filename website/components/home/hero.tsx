@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Bell, Cloud, FileCheck2, LayoutGrid, Users2 } from "lucide-react";
 
 import { Btn, Check, Container, cn } from "@/components/ui";
-import { DashboardMock, LaptopFrame, PhoneMock } from "@/components/mockups";
+import { AppShot, LaptopFrame, PhoneShot } from "@/components/mockups";
 
 export function Hero() {
   return (
@@ -41,18 +41,15 @@ export function Hero() {
 
         <div className="relative md:pl-6" data-reveal data-delay="80ms">
           <LaptopFrame className="max-w-[640px]">
-            <div className="flex items-center gap-2 border-b border-line bg-white px-3 py-2">
-              <span className="text-[13px] font-extrabold">
-                Fahrschul<span className="text-brand">App</span>
-              </span>
-              <span className="rounded-full bg-brand-light px-2 py-0.5 text-[10px] font-bold text-brand-dark">Leitstand</span>
-              <span className="ml-auto text-[11px] text-muted">Fahrschule Weber · heute</span>
-            </div>
-            <DashboardMock />
+            <AppShot
+              src="/images/app/leitstand.jpg"
+              alt="FahrschulApp Leitstand: heutige Fahrstunden, offene Aufgaben, anstehende Prüfungen und Finanzstatus"
+              priority
+            />
           </LaptopFrame>
-          <div className="absolute -bottom-20 -left-6 hidden origin-bottom-left scale-[0.68] sm:block md:-left-10">
+          <div className="absolute -bottom-20 -left-6 hidden origin-bottom-left scale-[0.64] sm:block md:-left-10">
             <div className="animate-floaty">
-              <PhoneMock />
+              <PhoneShot src="/images/app/portal-start.jpg" alt="Schüler-App: nächster Termin, Theorie bestanden, offener Betrag" priority />
             </div>
           </div>
           <div className="absolute -right-2 top-4 flex items-center gap-2.5 rounded-2xl bg-white px-3.5 py-2.5 text-ink shadow-lift md:-right-4">
@@ -61,7 +58,7 @@ export function Hero() {
             </span>
             <div className="leading-tight">
               <div className="text-[13px] font-extrabold">Termin bestätigt ✓</div>
-              <div className="text-[11.5px] text-muted">Lisa · Do 09:00</div>
+              <div className="text-[11.5px] text-muted">Lena · Mo 09:00</div>
             </div>
           </div>
         </div>

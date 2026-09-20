@@ -127,3 +127,13 @@ Zum Austauschen einfach die JPGs in `public/images/` durch eigene Fotos mit
 denselben Dateinamen ersetzen (z. B. echte Bilder deiner Fahrschule) – am
 besten in ähnlichem Seitenverhältnis. Referenziert werden sie in
 `components/home/*` und `components/bits.tsx`.
+
+## App-Screenshots
+
+Die Produktansichten in Laptop-, Browser- und Handy-Rahmen sind echte Aufnahmen
+der Software (`public/images/app/`) mit Beispieldaten einer fiktiven
+„Fahrschule Weber": Leitstand, Disposition, Schülerakte, Finanzen, Prüfungen,
+Cockpit (1440 px breit, Disposition 1440 × 720) sowie Start und Fortschritt der
+Schüler-App (390 × 760) – jeweils in doppelter Auflösung. Neue Aufnahmen einfach
+unter denselben Dateinamen ablegen; eingebunden sind sie über `AppShot` und
+`PhoneShot` in `components/mockups.tsx`.

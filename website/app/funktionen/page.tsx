@@ -5,7 +5,7 @@ import { PageHero } from "@/components/page-hero";
 import { Modules } from "@/components/home/modules";
 import { FeatureRows } from "@/components/home/rows";
 import { Highlights } from "@/components/home/highlights";
-import { LaptopFrame, DashboardMock } from "@/components/mockups";
+import { AppShot, LaptopFrame } from "@/components/mockups";
 
 export const metadata: Metadata = {
   title: "Funktionen",
@@ -24,7 +24,7 @@ export default function FunktionenPage() {
         cta
       >
         <LaptopFrame className="max-w-[560px]">
-          <DashboardMock />
+          <AppShot src="/images/app/leitstand.jpg" alt="FahrschulApp Leitstand mit Terminen, Aufgaben, Prüfungen und Finanzstatus" priority />
         </LaptopFrame>
       </PageHero>
       <Modules />
