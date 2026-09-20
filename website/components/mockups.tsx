@@ -5,7 +5,7 @@ import { cn } from "@/components/ui";
 /* Browser-Rahmen um eine App-Ansicht */
 export function BrowserFrame({ url, children, className }: { url: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("overflow-hidden rounded-2xl border border-line bg-white shadow-[0_30px_70px_-30px_rgba(15,45,30,.32)]", className)}>
+    <div className={cn("overflow-hidden rounded-lg border border-line bg-white shadow-[0_30px_70px_-30px_rgba(15,45,30,.32)]", className)}>
       <div className="flex h-9 items-center gap-1.5 border-b border-line bg-paper px-3.5">
         <span className="h-2.5 w-2.5 rounded-full bg-line2" />
         <span className="h-2.5 w-2.5 rounded-full bg-line2" />
@@ -54,7 +54,7 @@ export function DashboardMock() {
         ].map((k) => (
           <div key={k.l} className="rounded-xl border border-line bg-white p-3">
             <div className="text-[10px] font-bold uppercase tracking-wider text-muted">{k.l}</div>
-            <div className={cn("font-display text-[22px] font-bold leading-tight", k.c)}>{k.v}</div>
+            <div className={cn("font-sans text-[22px] font-bold leading-tight", k.c)}>{k.v}</div>
             <div className="mt-1.5">
               <Bar w={k.w} color={k.bc} />
             </div>
@@ -62,7 +62,7 @@ export function DashboardMock() {
         ))}
         <div className="rounded-xl border border-line bg-white p-3">
           <div className="text-[10px] font-bold uppercase tracking-wider text-muted">Offene Posten</div>
-          <div className="font-display text-[22px] font-bold leading-tight text-[#D23F3F]">5.550 €</div>
+          <div className="font-sans text-[22px] font-bold leading-tight text-[#D23F3F]">5.550 €</div>
           <div className="text-[11px] text-muted">davon 4.200 € überfällig</div>
         </div>
       </div>
@@ -92,7 +92,7 @@ export function DispoMock() {
           </div>
           <div
             className="relative flex-1"
-            style={{ backgroundImage: "repeating-linear-gradient(to right, transparent, transparent calc(16.66% - 1px), #DDE3DF 16.66%)" }}
+            style={{ backgroundImage: "repeating-linear-gradient(to right, transparent, transparent calc(16.66% - 1px), #E1DACD 16.66%)" }}
           >
             {L.blk.map((b, i) => (
               <div key={i} className={cn("absolute bottom-1.5 top-1.5 overflow-hidden rounded-md border-l-[3px] px-1.5 py-1 text-[9.5px] font-semibold text-ink", b.c)} style={{ left: `${b.l}%`, width: `${b.w}%` }}>
@@ -129,7 +129,7 @@ export function CockpitMock() {
         ].map((k) => (
           <div key={k.l} className="rounded-xl border border-line bg-white p-3">
             <div className="text-[10px] font-bold uppercase tracking-wider text-muted">{k.l}</div>
-            <div className={cn("font-display text-[20px] font-bold", k.c)}>{k.v}</div>
+            <div className={cn("font-sans text-[20px] font-bold", k.c)}>{k.v}</div>
           </div>
         ))}
       </div>
@@ -282,7 +282,7 @@ export function PhoneMock() {
       <div className="overflow-hidden rounded-[28px] border border-ink bg-paper">
         <div className="bg-white px-4 pb-3 pt-4">
           <div className="text-[11px] text-muted">Fahrschule Weber</div>
-          <div className="mt-0.5 flex items-center gap-1.5 font-display text-[16px] font-bold">Hallo, Lisa <Calendar className="h-4 w-4 text-mint" /></div>
+          <div className="mt-0.5 flex items-center gap-1.5 font-sans text-[16px] font-bold">Hallo, Lisa <Calendar className="h-4 w-4 text-mint" /></div>
         </div>
         <div className="space-y-2.5 p-3">
           <div className="rounded-xl border border-line bg-white p-3">

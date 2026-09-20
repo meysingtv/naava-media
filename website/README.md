@@ -103,14 +103,23 @@ lib/            Validierung, Rate-Limit, Mail-Adapter
 - **Produktname/Logo** anpassen, falls abweichend.
 - `NEXT_PUBLIC_SITE_URL` auf die echte Domain setzen (SEO/Canonical/Sitemap).
 
+## Design
+
+Die Seite ist wie ein Magazin aufgebaut: Cover-Hero, Laufband, Inhaltsverzeichnis
+und acht nummerierte Kapitel (`components/home/*`). Schriften über `next/font`:
+**Fraunces** (Überschriften), **Hanken Grotesk** (Lesetext), **IBM Plex Mono**
+(Meta-Zeilen, Bildunterschriften, Zahlen). Farben und Papierkorn liegen in
+`tailwind.config.ts` und `app/globals.css` (`.grain`). Buttons, Links und
+Rubriken kommen aus `components/ui.tsx`.
+
 ## Bilder / Fotos
 
 Die Fotos liegen unter `public/images/` und werden per `next/image` eingebunden
-(Hero, Foto-Mosaik „Aus dem Fahrschulalltag", Zahlen-Band, Abschluss-CTA).
-Sie stammen von [Pexels](https://www.pexels.com) und sind unter der
-Pexels-Lizenz kostenlos, auch kommerziell und ohne Nennungspflicht, nutzbar.
+(Hero, Kapitel „Der Alltag", Produkt-Spread Schüler-App, Bildstrecke, Wirkung,
+Abschluss-CTA). Sie stammen von [Pexels](https://www.pexels.com) und sind unter
+der Pexels-Lizenz kostenlos, auch kommerziell und ohne Nennungspflicht, nutzbar.
 
 Zum Austauschen einfach die JPGs in `public/images/` durch eigene Fotos mit
 denselben Dateinamen ersetzen (z. B. echte Bilder deiner Fahrschule) – am
 besten in ähnlichem Seitenverhältnis. Referenziert werden sie in
-`app/page.tsx` und `components/bits.tsx`.
+`components/home/*` und `components/bits.tsx`.

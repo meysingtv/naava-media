@@ -1,18 +1,7 @@
 import type { Metadata } from "next";
-import {
-  BarChart3,
-  Bell,
-  CalendarClock,
-  Check,
-  GraduationCap,
-  Smartphone,
-  Sparkles,
-  Wallet,
-  Wand2,
-} from "lucide-react";
 
 import { Container, Eyebrow } from "@/components/ui";
-import { CtaBand, SectionHead } from "@/components/bits";
+import { CtaBand } from "@/components/bits";
 
 export const metadata: Metadata = {
   title: "Funktionen",
@@ -23,103 +12,111 @@ export const metadata: Metadata = {
 
 const FEATURES = [
   {
-    icon: CalendarClock,
     t: "Disposition",
-    d: "Fahrlehrer, Fahrzeuge und Schüler auf einer Zeitachse. Verfügbarkeiten, Prüfungen und Sperrzeiten inklusive.",
-    p: ["Ressourcen-Board", "Farbcodierte Termine", "Konflikterkennung"],
+    d: "Fahrlehrer, Fahrzeuge und Schüler auf einer Zeitachse. Verfügbarkeiten, Prüfungen und Sperrzeiten inklusive – Konflikte erkennt das System, bevor sie entstehen.",
+    p: ["Ressourcen-Board für Lehrer und Fahrzeuge", "Farbcodierte Termine, freie Slots", "Konflikterkennung"],
   },
   {
-    icon: GraduationCap,
     t: "Schülerverwaltung",
-    d: "Digitale Ausbildungsakte mit Fortschritt, Dokumenten, Unterlagen-Checkliste und Ausbildungsnachweis.",
-    p: ["Fortschritt & Prüfungsreife", "E-Signatur", "Dokumente"],
+    d: "Digitale Ausbildungsakte mit Fortschritt, Dokumenten, Unterlagen-Checkliste und Ausbildungsnachweis – papierlos und immer aktuell.",
+    p: ["Fortschritt und Prüfungsreife", "Ausbildungsnachweis mit E-Signatur", "Dokumente und Checklisten"],
   },
   {
-    icon: Wallet,
     t: "Finanzen",
-    d: "Rechnungen, Ratenpläne und Mahnwesen mit SEPA, XRechnung und DATEV. Zahlungsstatus jederzeit klar.",
-    p: ["Ratenpläne", "Offene Posten nach Alter", "DATEV-Export"],
+    d: "Rechnungen, Ratenpläne und Mahnwesen mit SEPA, XRechnung und DATEV. Der Zahlungsstatus ist jederzeit klar.",
+    p: ["Ratenpläne und Mahnwesen", "Offene Posten nach Alter", "DATEV-Export"],
   },
   {
-    icon: BarChart3,
     t: "Theorie & Prüfungen",
-    d: "Theoriefortschritt, Prüfungstermine und offene Voraussetzungen an einem Ort.",
-    p: ["Prüfungstermine", "Status & Erinnerungen", "Theorie/Praxis verbunden"],
+    d: "Theoriefortschritt, Prüfungstermine und offene Voraussetzungen an einem Ort. So weißt du früh, wer bereit ist.",
+    p: ["Prüfungstermine und Status", "Erinnerungen an offene Voraussetzungen", "Theorie und Praxis verbunden"],
   },
   {
-    icon: Smartphone,
     t: "Schüler-App & Portal",
-    d: "Termine, Fortschritt, Zahlungen und Nachrichten in einer App im Design deiner Fahrschule.",
+    d: "Termine, Fortschritt, Zahlungen und Nachrichten in einer App im Design deiner Fahrschule. Termine bestätigen die Schüler per Link.",
     p: ["Termine bestätigen", "Online bezahlen", "Eigenes Branding"],
   },
   {
-    icon: BarChart3,
     t: "Auswertung & Cockpit",
-    d: "Live-Auslastung, No-Show-Quote und offene Posten nach Alter – die wichtigsten Zahlen auf einen Blick.",
-    p: ["Auslastung je Ressource", "No-Show-Quote", "Frühwarnungen"],
+    d: "Live-Auslastung, No-Show-Quote und offene Posten nach Alter – die wichtigsten Zahlen, bevor du danach suchen musst.",
+    p: ["Auslastung je Fahrlehrer und Fahrzeug", "No-Show-Quote in Echtzeit", "Frühwarnungen"],
   },
 ];
 
 const HIGHLIGHTS = [
-  { icon: Sparkles, t: "KI-Assistent", d: "Die Fahrschule per Chat steuern." },
-  { icon: Bell, t: "No-Show-Killer", d: "Automatische Erinnerungen mit Zusage/Absage." },
-  { icon: Wand2, t: "Smart-Disposition", d: "Nächste sinnvolle Fahrstunde auf einen Klick." },
+  { n: "1", t: "KI-Assistent", d: "Sag in normaler Sprache, was passieren soll. Der Assistent schlägt Aktionen vor und führt sie nach Bestätigung aus." },
+  { n: "2", t: "No-Show-Killer", d: "Automatische Erinnerungen per WhatsApp, SMS und E-Mail – mit Zusage- und Absage-Link." },
+  { n: "3", t: "Smart-Disposition", d: "Die nächste sinnvolle Fahrstunde auf einen Klick – mit freiem Slot, Fahrlehrer und Fahrzeug." },
+  { n: "4", t: "Chef-Cockpit", d: "Auslastung, Ausfälle und offene Posten nach Alter – live und ohne Suchen." },
 ];
 
 export default function FunktionenPage() {
   return (
     <>
-      <section className="relative overflow-hidden py-16 md:py-20">
-        <div
-          className="pointer-events-none absolute inset-0 -z-10"
-          style={{ background: "radial-gradient(45% 40% at 90% 0%, rgba(157,241,200,.35), transparent 65%)" }}
-          aria-hidden
-        />
-        <Container>
-          <Eyebrow>Funktionen</Eyebrow>
-          <h1 className="mt-5 max-w-3xl font-display text-[clamp(34px,5vw,54px)] font-extrabold leading-[1.0] tracking-[-0.02em] text-ink text-balance">
-            Alles, was den Fahrschulalltag leichter macht.
-          </h1>
-          <p className="mt-5 max-w-[46ch] text-[18px] leading-relaxed text-muted">
-            Von der Disposition bis zur Abrechnung – ein System, das zusammenarbeitet, statt gegeneinander.
-          </p>
-        </Container>
-      </section>
-
-      <section className="pb-20">
-        <Container>
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f) => (
-              <div key={f.t} data-reveal className="rounded-2xl border border-line bg-white p-7 transition-shadow hover:shadow-[0_20px_50px_-30px_rgba(15,45,30,.25)]">
-                <span className="grid h-12 w-12 place-items-center rounded-xl bg-mint-soft text-mint">
-                  <f.icon className="h-6 w-6" />
-                </span>
-                <h2 className="mt-4 font-display text-[21px] font-bold">{f.t}</h2>
-                <p className="mt-2 text-[15px] leading-relaxed text-muted">{f.d}</p>
-                <ul className="mt-4 grid gap-2">
-                  {f.p.map((p) => (
-                    <li key={p} className="flex items-center gap-2 text-[14.5px] text-ink/80">
-                      <Check className="h-4 w-4 text-mint" strokeWidth={3} /> {p}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+      <section className="bg-cream pb-6 pt-14 md:pt-20">
+        <Container wide>
+          <div className="flex items-center justify-between border-b border-line pb-4 font-mono text-[11.5px] uppercase tracking-[0.16em] text-muted">
+            <span>Funktionen</span>
+            <span className="tnum">Sechs Bereiche · Ein System</span>
+          </div>
+          <div className="grid gap-8 pt-12 md:grid-cols-12 md:pt-16">
+            <div className="md:col-span-3">
+              <Eyebrow>Übersicht</Eyebrow>
+            </div>
+            <div className="md:col-span-9 lg:col-span-8">
+              <h1 className="font-display text-[clamp(38px,5.4vw,76px)] font-normal leading-[0.98] tracking-[-0.02em] text-ink text-balance">
+                Alles, was den Fahrschulalltag leichter macht.
+              </h1>
+              <p className="mt-6 max-w-[52ch] text-[18px] leading-[1.6] text-ink/70">
+                Von der Disposition bis zur Abrechnung – ein System, das zusammenarbeitet, statt gegeneinander.
+              </p>
+            </div>
           </div>
         </Container>
       </section>
 
-      <section className="bg-ink py-16 text-white">
-        <Container>
-          <SectionHead center eyebrow="Highlights" title={<span className="text-white">Das, was sonst keiner hat</span>} />
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {HIGHLIGHTS.map((h) => (
-              <div key={h.t} className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
-                <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-mint-accent/15 text-mint-accent">
-                  <h.icon className="h-6 w-6" />
-                </span>
-                <h3 className="mt-4 font-display text-[19px] font-bold text-white">{h.t}</h3>
-                <p className="mt-1.5 text-[14.5px] text-white/60">{h.d}</p>
+      <section className="bg-cream pb-20 pt-10 md:pb-28">
+        <Container wide>
+          <ol className="border-t border-line">
+            {FEATURES.map((f, i) => (
+              <li key={f.t} data-reveal className="grid gap-4 border-b border-line py-10 md:grid-cols-12 md:gap-8 md:py-14">
+                <span className="tnum font-mono text-[12px] uppercase tracking-[0.16em] text-pylon md:col-span-2">0{i + 1}</span>
+                <h2 className="font-display text-[clamp(26px,3vw,40px)] leading-[1.05] tracking-[-0.015em] text-ink md:col-span-4">{f.t}</h2>
+                <div className="md:col-span-6">
+                  <p className="max-w-[56ch] text-[16.5px] leading-[1.6] text-ink/70">{f.d}</p>
+                  <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
+                    {f.p.map((p) => (
+                      <li key={p} className="flex items-center gap-2 text-[14.5px] text-ink/80">
+                        <span className="text-mint" aria-hidden>
+                          —
+                        </span>
+                        {p}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </Container>
+      </section>
+
+      <section className="grain grain-dark bg-ink py-20 text-cream md:py-28">
+        <Container wide className="relative z-[2]">
+          <div className="grid gap-8 md:grid-cols-12">
+            <div className="md:col-span-3">
+              <Eyebrow className="!text-mint-hi">Highlights</Eyebrow>
+            </div>
+            <h2 className="font-display text-[clamp(32px,4.2vw,58px)] font-normal leading-[1.02] tracking-[-0.02em] text-cream text-balance md:col-span-9 lg:col-span-8">
+              Das, was sonst keiner hat.
+            </h2>
+          </div>
+          <div className="mt-14 grid gap-10 border-t border-cream/15 pt-10 md:grid-cols-4 md:gap-8">
+            {HIGHLIGHTS.map((h, i) => (
+              <div key={h.t} data-reveal data-delay={`${i * 70}ms`} className="md:border-l md:border-cream/15 md:pl-6 md:first:border-l-0 md:first:pl-0">
+                <span className="tnum font-display text-[52px] leading-none text-mint-hi">{h.n}</span>
+                <h3 className="mt-5 font-display text-[24px] leading-tight">{h.t}</h3>
+                <p className="mt-3 text-[15px] leading-[1.6] text-cream/65">{h.d}</p>
               </div>
             ))}
           </div>

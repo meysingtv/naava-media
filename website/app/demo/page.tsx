@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Check, PhoneCall } from "lucide-react";
 
 import { Container, Eyebrow } from "@/components/ui";
 import { DemoForm } from "@/components/demo-form";
@@ -19,59 +18,52 @@ const SCHRITTE = [
 
 export default function DemoPage() {
   return (
-    <section className="relative overflow-hidden py-16 md:py-24">
-      <div
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{ background: "radial-gradient(50% 45% at 95% 0%, rgba(157,241,200,.4), transparent 68%)" }}
-        aria-hidden
-      />
-      <Container className="grid gap-14 md:grid-cols-[1fr_1.05fr] md:gap-16">
-        <div>
-          <Eyebrow>Demo anfordern</Eyebrow>
-          <h1 className="mt-5 font-display text-[clamp(34px,5vw,52px)] font-extrabold leading-[1.0] tracking-[-0.02em] text-ink text-balance">
-            Schau dir an, wie deine Fahrschule laufen könnte.
-          </h1>
-          <p className="mt-5 max-w-[44ch] text-[18px] leading-relaxed text-muted">
-            Wir zeigen dir FahrschulApp anhand deines Arbeitsalltags – von der ersten Fahrstunde bis zur Rechnung. Unverbindlich
-            und ohne Verpflichtung.
-          </p>
+    <section className="bg-cream pb-20 pt-14 md:pb-28 md:pt-20">
+      <Container wide>
+        <div className="flex items-center justify-between border-b border-line pb-4 font-mono text-[11.5px] uppercase tracking-[0.16em] text-muted">
+          <span>Demo anfordern</span>
+          <span>Persönlich · Unverbindlich</span>
+        </div>
+        <div className="grid gap-14 pt-12 md:grid-cols-12 md:gap-8 md:pt-16">
+          <div className="md:col-span-5">
+            <Eyebrow>Demo</Eyebrow>
+            <h1 className="mt-5 font-display text-[clamp(36px,4.8vw,64px)] font-normal leading-[0.98] tracking-[-0.02em] text-ink text-balance">
+              Schau dir an, wie deine Fahrschule laufen könnte.
+            </h1>
+            <p className="mt-6 max-w-[44ch] text-[18px] leading-[1.6] text-ink/70">
+              Wir zeigen dir FahrschulApp anhand deines Arbeitsalltags – von der ersten Fahrstunde bis zur Rechnung. Ohne Verkaufsshow,
+              ohne Verpflichtung.
+            </p>
 
-          <div className="mt-9">
-            <h2 className="text-[13px] font-bold uppercase tracking-[0.12em] text-mint">Was nach der Anfrage passiert</h2>
-            <ol className="mt-4 grid gap-3">
+            <ol className="mt-10 border-t border-line">
               {SCHRITTE.map((s, i) => (
-                <li key={s.t} className="flex items-start gap-3">
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-mint-soft text-[13px] font-bold text-mint">{i + 1}</span>
+                <li key={s.t} className="grid grid-cols-[auto_1fr] items-baseline gap-5 border-b border-line py-4">
+                  <span className="tnum font-mono text-[12px] text-pylon">0{i + 1}</span>
                   <div>
-                    <div className="text-[15.5px] font-semibold text-ink">{s.t}</div>
-                    <div className="text-[14px] text-muted">{s.d}</div>
+                    <div className="font-display text-[21px] leading-tight text-ink">{s.t}</div>
+                    <div className="mt-1 text-[15px] text-ink/65">{s.d}</div>
                   </div>
                 </li>
               ))}
             </ol>
+
+            <dl className="mt-8 grid gap-3 font-mono text-[11.5px] uppercase tracking-[0.14em] text-muted sm:grid-cols-2">
+              <div>
+                <dt className="text-ink">Lieber direkt sprechen?</dt>
+                <dd className="mt-1">+49 … (Platzhalter)</dd>
+              </div>
+              <div>
+                <dt className="text-ink">Gut zu wissen</dt>
+                <dd className="mt-1">Keine Kreditkarte · DSGVO-konform</dd>
+              </div>
+            </dl>
           </div>
 
-          <div className="mt-9 flex items-center gap-3 rounded-2xl border border-line bg-paper p-4">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-mint text-white">
-              <PhoneCall className="h-5 w-5" />
-            </span>
-            <div className="text-[14.5px]">
-              <div className="font-semibold text-ink">Lieber direkt sprechen?</div>
-              <div className="text-muted">Ruf uns an: <span className="font-medium text-ink">+49 … (Platzhalter)</span></div>
+          <div className="md:col-span-7 lg:col-span-6 lg:col-start-7">
+            <div className="rounded-md border border-line bg-white p-6 md:p-8">
+              <DemoForm />
             </div>
           </div>
-
-          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-[14px] font-medium text-muted">
-            {["Keine Verpflichtung", "Keine Kreditkarte", "DSGVO-konform"].map((t) => (
-              <span key={t} className="inline-flex items-center gap-1.5">
-                <Check className="h-4 w-4 text-mint" strokeWidth={3} /> {t}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-3xl border border-line bg-white p-6 shadow-[0_30px_70px_-40px_rgba(15,45,30,.3)] md:p-8">
-          <DemoForm />
         </div>
       </Container>
     </section>
