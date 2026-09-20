@@ -1,40 +1,43 @@
 import type { Config } from "tailwindcss";
 
+const brand = {
+  DEFAULT: "#14A15A",
+  dark: "#0B6B3A",
+  deep: "#073D22",
+  light: "#E7F8EE",
+  accent: "#2ED47A",
+};
+
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        // Marke
-        mint: {
-          DEFAULT: "#1A7F4E",
-          dark: "#12643C",
-          deep: "#0C3D27",
-          accent: "#2CBA75",
-          hi: "#9DF1C8",
-          soft: "#E7FAF0",
-        },
-        // Signalakzent – wie die Pylonen auf dem Übungsplatz
-        pylon: {
-          DEFAULT: "#E4602B",
-          soft: "#FBE9DF",
-        },
-        // Warme Papier-Neutraltöne
-        ink: "#171A19",
-        cream: "#F5F1E9",
-        sand: "#EAE3D5",
-        paper: "#F7F4EE",
-        muted: "#6E6A61",
-        line: "#E1DACD",
-        line2: "#C9C0B0",
+        brand,
+        // Alias, damit Mockups/Unterseiten weiter funktionieren
+        mint: { DEFAULT: brand.DEFAULT, dark: brand.dark, deep: brand.deep, accent: brand.accent, hi: "#9DF1C8", soft: brand.light },
+        orange: { DEFAULT: "#FF6A2B", dark: "#E9561A", light: "#FFF0E8" },
+        yellow: "#FFC532",
+        purple: "#6D3BE0",
+        sky: "#2F80ED",
+        ink: "#0F1A15",
+        dark: "#0B1F16",
+        paper: "#F4F6F5",
+        muted: "#5B6B63",
+        line: "#E3E8E5",
+        line2: "#CBD3CF",
       },
       fontFamily: {
-        display: ["var(--font-display)", "Fraunces", "Georgia", "serif"],
-        sans: ["var(--font-sans)", "Hanken Grotesk", "system-ui", "sans-serif"],
-        mono: ["var(--font-mono)", "IBM Plex Mono", "ui-monospace", "monospace"],
+        display: ["var(--font-display)", "Barlow Condensed", "Impact", "sans-serif"],
+        sans: ["var(--font-sans)", "Plus Jakarta Sans", "system-ui", "sans-serif"],
       },
       maxWidth: {
-        wrap: "1280px",
+        wrap: "1240px",
+      },
+      boxShadow: {
+        card: "0 12px 40px -18px rgba(15,26,21,.25)",
+        lift: "0 24px 60px -24px rgba(15,26,21,.35)",
+        cta: "0 12px 28px -10px rgba(255,106,43,.6)",
       },
       keyframes: {
         "reveal-up": {
@@ -42,15 +45,14 @@ const config: Config = {
           to: { opacity: "1", transform: "translateY(0)" },
         },
         pulse2: { "0%,100%": { opacity: "1" }, "50%": { opacity: ".55" } },
-        marquee: {
-          from: { transform: "translateX(0)" },
-          to: { transform: "translateX(-50%)" },
-        },
+        floaty: { "0%,100%": { transform: "translateY(0)" }, "50%": { transform: "translateY(-8px)" } },
+        marquee: { from: { transform: "translateX(0)" }, to: { transform: "translateX(-50%)" } },
       },
       animation: {
         "reveal-up": "reveal-up .6s cubic-bezier(.2,.7,.2,1) both",
         pulse2: "pulse2 1.8s ease-in-out infinite",
-        marquee: "marquee 42s linear infinite",
+        floaty: "floaty 5s ease-in-out infinite",
+        marquee: "marquee 36s linear infinite",
       },
     },
   },

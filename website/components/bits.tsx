@@ -1,29 +1,38 @@
 import Image from "next/image";
 
-import { Btn, Container, Eyebrow, TextLink, cn } from "@/components/ui";
+import { Btn, Check, Container, Eyebrow, TextLink, cn } from "@/components/ui";
 
 export function SectionHead({
   eyebrow,
   title,
   sub,
   center,
+  light,
   className,
 }: {
   eyebrow?: string;
   title: React.ReactNode;
   sub?: React.ReactNode;
   center?: boolean;
+  light?: boolean;
   className?: string;
 }) {
   return (
     <div className={cn(center ? "mx-auto max-w-3xl text-center" : "max-w-3xl", className)}>
-      {eyebrow && <Eyebrow className={center ? "justify-center" : ""}>{eyebrow}</Eyebrow>}
-      <h2 className="mt-5 font-display text-[clamp(32px,4.2vw,56px)] font-normal leading-[1.04] tracking-[-0.02em] text-ink text-balance">{title}</h2>
-      {sub && <p className="mt-5 text-[17.5px] leading-[1.6] text-ink/70">{sub}</p>}
+      {eyebrow && (
+        <Eyebrow light={light} className={center ? "justify-center" : ""}>
+          {eyebrow}
+        </Eyebrow>
+      )}
+      <h2 className={cn("mt-4 text-[clamp(30px,4.2vw,50px)] font-extrabold leading-[1.05] tracking-[-0.025em] text-balance", light ? "text-white" : "text-ink")}>
+        {title}
+      </h2>
+      {sub && <p className={cn("mt-5 text-[17.5px] leading-relaxed", light ? "text-white/75" : "text-muted")}>{sub}</p>}
     </div>
   );
 }
 
+/** Feature-Zeile: Text links, Screenshot rechts (oder umgekehrt) auf hellem Panel. */
 export function FeatureRow({
   kick,
   title,
@@ -33,6 +42,7 @@ export function FeatureRow({
   children,
   id,
   cta,
+  tone = "paper",
 }: {
   kick: string;
   title: React.ReactNode;
@@ -42,21 +52,33 @@ export function FeatureRow({
   children: React.ReactNode;
   id?: string;
   cta?: { href: string; label: string };
+  tone?: "paper" | "brand" | "orange" | "purple" | "sky" | "yellow";
 }) {
+  const panel = {
+    paper: "bg-paper",
+    brand: "bg-brand-light",
+    orange: "bg-orange-light",
+    purple: "bg-[#EFE9FC]",
+    sky: "bg-[#E8F1FD]",
+    yellow: "bg-[#FFF6DD]",
+  }[tone];
+  const blob = {
+    paper: "bg-brand/15",
+    brand: "bg-brand/25",
+    orange: "bg-orange/25",
+    purple: "bg-purple/20",
+    sky: "bg-sky/20",
+    yellow: "bg-yellow/40",
+  }[tone];
   return (
-    <div id={id} className="grid items-center gap-10 border-t border-line py-14 md:grid-cols-12 md:gap-10 md:py-20">
-      <div data-reveal className={cn("md:col-span-4 md:row-start-1", reverse ? "md:col-start-9" : "md:col-start-1")}>
-        <span className="font-mono text-[12px] uppercase tracking-[0.16em] text-pylon">{kick}</span>
-        <h3 className="mt-3 font-display text-[clamp(26px,2.8vw,38px)] leading-[1.08] tracking-[-0.015em] text-ink text-balance">{title}</h3>
-        <p className="mt-5 text-[16.5px] leading-[1.6] text-ink/70">{text}</p>
-        <ul className="mt-6 border-t border-line">
+    <div id={id} className="grid items-center gap-10 py-12 md:grid-cols-2 md:gap-16 md:py-16">
+      <div data-reveal className={cn(reverse && "md:order-2")}>
+        <Eyebrow>{kick}</Eyebrow>
+        <h3 className="mt-4 text-[clamp(26px,3.2vw,38px)] font-extrabold leading-[1.08] tracking-[-0.02em] text-ink text-balance">{title}</h3>
+        <p className="mt-4 max-w-[50ch] text-[16.5px] leading-relaxed text-muted">{text}</p>
+        <ul className="mt-6 grid gap-3">
           {points.map((p) => (
-            <li key={p} className="flex gap-3 border-b border-line py-2.5 text-[15px] text-ink/85">
-              <span className="text-mint" aria-hidden>
-                —
-              </span>
-              {p}
-            </li>
+            <Check key={p}>{p}</Check>
           ))}
         </ul>
         {cta && (
@@ -65,9 +87,10 @@ export function FeatureRow({
           </div>
         )}
       </div>
-      <div data-reveal data-delay="80ms" className={cn("md:col-span-8 md:row-start-1", reverse ? "md:col-start-1" : "md:col-start-5")}>
-        <div className="grain rounded-sm bg-sand p-4 sm:p-8 lg:p-12">
-          <div className="relative z-[2]">{children}</div>
+      <div data-reveal data-delay="80ms" className={cn("relative", reverse && "md:order-1")}>
+        <div className={cn("relative overflow-hidden rounded-[28px] p-5 sm:p-8 md:p-10", panel)}>
+          <span className={cn("pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full blur-2xl", blob)} aria-hidden />
+          <div className="relative">{children}</div>
         </div>
       </div>
     </div>
@@ -76,30 +99,34 @@ export function FeatureRow({
 
 export function CtaBand({ compact }: { compact?: boolean }) {
   return (
-    <section className={cn("relative overflow-hidden bg-mint-deep text-cream", compact ? "py-20 md:py-24" : "py-24 md:py-36")}>
-      <Image src="/images/fahrt.jpg" alt="" aria-hidden fill sizes="100vw" className="object-cover" />
-      <div className="pointer-events-none absolute inset-0 bg-mint-deep/80" aria-hidden />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-mint-deep via-transparent to-mint-deep/50" aria-hidden />
-      <Container wide className="relative z-[2] grid gap-10 md:grid-cols-12 md:items-end md:gap-8">
-        <div className="md:col-span-8">
-          <Eyebrow className="!text-mint-hi">Demo</Eyebrow>
-          <h2 className="mt-5 font-display text-[clamp(36px,5.2vw,76px)] leading-[0.98] tracking-[-0.02em] text-balance">
-            Schau dir an, wie deine Fahrschule damit laufen könnte.
+    <section className={cn("relative overflow-hidden bg-brand-deep text-white", compact ? "py-20" : "py-24 md:py-32")}>
+      <Image src="/images/fahrt.jpg" alt="" aria-hidden fill sizes="100vw" className="object-cover opacity-30" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-brand-deep via-brand-deep/90 to-brand-dark/70" aria-hidden />
+      <Container className="relative grid items-center gap-10 md:grid-cols-[1.2fr_1fr]">
+        <div>
+          <Eyebrow light>Persönliche Demo</Eyebrow>
+          <h2 className="mt-4 text-[clamp(32px,4.8vw,58px)] font-extrabold leading-[1.02] tracking-[-0.025em] text-balance">
+            Bereit für weniger Büro und mehr Fahrstunden?
           </h2>
-        </div>
-        <div className="md:col-span-4 md:pb-2">
-          <p className="text-[17px] leading-[1.6] text-cream/80">
-            Wir zeigen dir FahrschulApp anhand deines Alltags – von der ersten Fahrstunde bis zur Rechnung. Persönlich, ohne Verkaufsshow.
+          <p className="mt-5 max-w-[48ch] text-[17.5px] leading-relaxed text-white/80">
+            Wir zeigen dir FahrschulApp anhand deines Alltags – von der ersten Fahrstunde bis zur Rechnung. Kostenlos, unverbindlich, ohne
+            Verkaufsshow.
           </p>
-          <div className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-4">
-            <Btn href="/demo" variant="light" size="lg" arrow>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Btn href="/demo" size="lg" arrow>
               Demo anfordern
             </Btn>
-            <TextLink light href="/kontakt">
+            <Btn href="/kontakt" variant="outline" size="lg">
               Oder schreib uns
-            </TextLink>
+            </Btn>
           </div>
         </div>
+        <ul className="grid gap-3 rounded-3xl bg-white/10 p-6 backdrop-blur md:p-8">
+          <Check light>Demo in 30 Minuten – online oder bei dir</Check>
+          <Check light>Einrichtung und Datenübernahme inklusive</Check>
+          <Check light>Direkter Draht zum Gründer, kein Ticket-System</Check>
+          <Check light>DSGVO-konform, Server in Deutschland</Check>
+        </ul>
       </Container>
     </section>
   );

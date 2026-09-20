@@ -13,25 +13,19 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 84px;
+  scroll-padding-top: 96px;
 }
 
 body {
-  background: #f5f1e9;
-  color: #171a19;
-  font-family: var(--font-sans), "Hanken Grotesk", system-ui, sans-serif;
+  background: #ffffff;
+  color: #0f1a15;
+  font-family: var(--font-sans), "Plus Jakarta Sans", system-ui, sans-serif;
   text-rendering: optimizeLegibility;
-}
-
-/* Fraunces: optische Größe automatisch, leicht weicher Schnitt */
-.font-display {
-  font-optical-sizing: auto;
-  font-feature-settings: "liga", "kern";
 }
 
 ::selection {
   background: #9df1c8;
-  color: #0c3d27;
+  color: #073d22;
 }
 
 a,
@@ -40,50 +34,27 @@ button {
 }
 
 :focus-visible {
-  outline: 2px solid #1a7f4e;
-  outline-offset: 3px;
+  outline: 3px solid #ff6a2b;
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 .tnum {
   font-variant-numeric: tabular-nums;
 }
 
-/* Feines Papierkorn auf Farbflächen – wirkt gedruckt statt gerendert */
-.grain {
-  position: relative;
-  isolation: isolate;
-}
-.grain::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  opacity: 0.11;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 220px 220px;
-}
-.grain-dark::after {
-  mix-blend-mode: screen;
-  opacity: 0.09;
-}
-
-/* Laufband (Ticker) */
-.ticker-track {
+/* Logo-Leiste läuft auf kleinen Screens durch */
+.marquee-track {
   display: flex;
   width: max-content;
-  animation: marquee 42s linear infinite;
-}
-.ticker:hover .ticker-track {
-  animation-play-state: paused;
+  animation: marquee 36s linear infinite;
 }
 
 /* Auf Scroll einblenden – JS setzt .in */
 [data-reveal] {
   opacity: 0;
   transform: translateY(18px);
-  transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition: opacity 0.6s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
   will-change: opacity, transform;
 }
 [data-reveal].in {
@@ -100,7 +71,7 @@ button {
     transform: none !important;
     transition: none;
   }
-  .ticker-track {
+  .marquee-track {
     animation: none;
   }
   * {

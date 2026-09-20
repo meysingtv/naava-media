@@ -1,136 +1,152 @@
 import Image from "next/image";
+import { Bell, Cloud, FileCheck2, LayoutGrid, Users2 } from "lucide-react";
 
-import { Arrow, Btn, Container, Eyebrow, TextLink } from "@/components/ui";
-import { RouteMark } from "@/components/home/marks";
+import { Btn, Check, Container, cn } from "@/components/ui";
+import { DashboardMock, LaptopFrame, PhoneMock } from "@/components/mockups";
 
 export function Hero() {
   return (
-    <section className="grain relative overflow-hidden bg-cream">
-      <RouteMark className="text-mint/15" />
-      <Container wide className="relative z-[2]">
-        {/* Kopfzeile wie im Heft */}
-        <div className="flex items-center justify-between gap-4 border-b border-line py-4 font-mono text-[11.5px] uppercase tracking-[0.16em] text-muted">
-          <span>Software für Fahrschulen</span>
-          <span className="hidden sm:inline">Ausgabe 2026 · Deutschland</span>
-          <span className="tnum">№ 01 — Start</span>
+    <section className="relative overflow-hidden bg-brand text-white">
+      <div className="pointer-events-none absolute -right-40 -top-48 h-[620px] w-[620px] rounded-full bg-brand-accent/35 blur-3xl" aria-hidden />
+      <div className="pointer-events-none absolute -bottom-52 left-1/4 h-[480px] w-[480px] rounded-full bg-brand-deep/50 blur-3xl" aria-hidden />
+      <Container className="relative grid items-center gap-14 pb-28 pt-12 md:grid-cols-[1.02fr_.98fr] md:pb-36 md:pt-20">
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 py-1.5 pl-1.5 pr-4 text-[13px] font-bold backdrop-blur">
+            <span className="rounded-full bg-orange px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wider">Neu</span>
+            KI-Assistent · bereit für die Reform 2027
+          </span>
+          <h1 className="mt-6 text-[clamp(42px,6.2vw,78px)] font-extrabold leading-[1.0] tracking-[-0.03em] text-balance">
+            Weniger Büro.
+            <br />
+            Mehr Fahrstunden.
+          </h1>
+          <p className="mt-6 max-w-[46ch] text-[18px] leading-relaxed text-white/85 md:text-[19px]">
+            FahrschulApp verbindet Disposition, Schülerakte, Finanzen, Prüfungen und Schüler-App in einem System – mit KI-Assistent und
+            automatischen Terminerinnerungen. Für Fahrschulen, die lieber fahren als verwalten.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Btn href="/demo" size="lg" arrow>
+              Demo anfordern
+            </Btn>
+            <Btn href="/funktionen" variant="outline" size="lg">
+              Funktionen ansehen
+            </Btn>
+          </div>
+          <ul className="mt-8 flex flex-wrap gap-x-7 gap-y-2.5">
+            <Check light>DSGVO-konform, Server in Deutschland</Check>
+            <Check light>In Minuten startklar</Check>
+            <Check light>Persönlicher Support</Check>
+          </ul>
         </div>
 
-        <div className="grid gap-12 pb-16 pt-12 md:grid-cols-12 md:gap-8 md:pb-24 md:pt-16">
-          <div className="flex flex-col justify-center md:col-span-7">
-            <h1 className="font-display text-[clamp(46px,7.3vw,110px)] font-medium leading-[0.94] tracking-[-0.025em] text-ink text-balance">
-              Für Fahrschulen, die lieber <em className="font-normal italic text-mint">fahren</em> als verwalten.
-            </h1>
-            <p className="mt-8 max-w-[44ch] text-[18px] leading-[1.55] text-ink/75 md:text-[20px]">
-              FahrschulApp legt Disposition, Schülerakte, Finanzen und Kommunikation in ein ruhiges System. Damit der Tag im Auto
-              stattfindet – nicht am Schreibtisch.
-            </p>
-            <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
-              <Btn href="/demo" size="lg" arrow>
-                Demo anfordern
-              </Btn>
-              <TextLink href="/funktionen">Funktionen ansehen</TextLink>
+        <div className="relative md:pl-6" data-reveal data-delay="80ms">
+          <LaptopFrame className="max-w-[640px]">
+            <div className="flex items-center gap-2 border-b border-line bg-white px-3 py-2">
+              <span className="text-[13px] font-extrabold">
+                Fahrschul<span className="text-brand">App</span>
+              </span>
+              <span className="rounded-full bg-brand-light px-2 py-0.5 text-[10px] font-bold text-brand-dark">Leitstand</span>
+              <span className="ml-auto text-[11px] text-muted">Fahrschule Weber · heute</span>
             </div>
-            <dl className="mt-12 grid max-w-md grid-cols-3 gap-6 border-t border-line pt-6 font-mono text-[11.5px] uppercase tracking-[0.14em] text-muted">
-              <div>
-                <dt className="text-ink">DSGVO</dt>
-                <dd className="mt-1">Server in der EU</dd>
-              </div>
-              <div>
-                <dt className="text-ink">Deutsch</dt>
-                <dd className="mt-1">Gemacht & gehostet</dd>
-              </div>
-              <div>
-                <dt className="text-ink">Start</dt>
-                <dd className="mt-1">In Minuten</dd>
-              </div>
-            </dl>
+            <DashboardMock />
+          </LaptopFrame>
+          <div className="absolute -bottom-20 -left-6 hidden origin-bottom-left scale-[0.68] sm:block md:-left-10">
+            <div className="animate-floaty">
+              <PhoneMock />
+            </div>
           </div>
-
-          <figure className="relative md:col-span-5" data-reveal>
-            <span className="absolute -left-4 top-8 hidden h-20 w-2.5 bg-pylon md:block" aria-hidden />
-            <div className="relative aspect-[4/5] overflow-hidden rounded-sm md:-mr-8 md:aspect-[5/6] lg:-mr-12">
-              <Image
-                src="/images/hero-fahrstunde.jpg"
-                alt="Fahrlehrer und Fahrschüler lachen während einer Fahrstunde"
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 46vw"
-                className="object-cover"
-              />
+          <div className="absolute -right-2 top-4 flex items-center gap-2.5 rounded-2xl bg-white px-3.5 py-2.5 text-ink shadow-lift md:-right-4">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-light text-brand">
+              <Bell className="h-4 w-4" />
+            </span>
+            <div className="leading-tight">
+              <div className="text-[13px] font-extrabold">Termin bestätigt ✓</div>
+              <div className="text-[11.5px] text-muted">Lisa · Do 09:00</div>
             </div>
-            <figcaption className="mt-3 flex items-start justify-between gap-6 font-mono text-[11.5px] leading-relaxed text-muted md:-mr-8 lg:-mr-12">
-              <span>Fahrstunde, 09:00 Uhr. Termin gestern Abend per Link bestätigt.</span>
-              <span className="tnum shrink-0">Abb. 01</span>
-            </figcaption>
-          </figure>
+          </div>
         </div>
       </Container>
     </section>
   );
 }
 
-const TICKER = [
-  "Disposition",
-  "Schülerakte",
-  "Finanzen",
-  "Theorie & Prüfungen",
-  "Schüler-App",
-  "Chef-Cockpit",
-  "KI-Assistent",
-  "No-Show-Killer",
-  "Smart-Disposition",
+const TILES = [
+  { icon: LayoutGrid, v: "6 Module", l: "Disposition bis Schüler-App – ein Login" },
+  { icon: Users2, v: "3 Rollen", l: "Chef, Büro und Fahrlehrer sehen ihr Nötiges" },
+  { icon: Cloud, v: "24/7", l: "Cloud, alle Geräte, immer aktuell" },
+  { icon: FileCheck2, v: "0 Papier", l: "Digitale Akte mit E-Signatur" },
 ];
 
-/** Laufband – Rubriken wie auf einem Titelblatt. */
-export function Ticker() {
-  const row = [...TICKER, ...TICKER];
+/** Vier Fakten-Kacheln, die in den Hero hineinragen. */
+export function TrustTiles() {
   return (
-    <div className="ticker overflow-hidden border-y border-line bg-cream" aria-hidden>
-      <div className="ticker-track py-3.5 font-mono text-[12px] uppercase tracking-[0.18em] text-ink/70">
-        {row.map((t, i) => (
-          <span key={i} className="flex items-center gap-6 pr-6">
-            <span>{t}</span>
-            <span className="h-[6px] w-[6px] bg-pylon" />
-          </span>
-        ))}
-      </div>
+    <div className="relative z-10 -mt-14 md:-mt-16">
+      <Container>
+        <div className="grid gap-3 rounded-3xl bg-white p-3 shadow-lift sm:grid-cols-2 lg:grid-cols-4" data-reveal>
+          {TILES.map((t) => (
+            <div key={t.v} className="flex items-center gap-4 rounded-2xl bg-paper px-5 py-4">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand text-white">
+                <t.icon className="h-5 w-5" />
+              </span>
+              <div className="leading-tight">
+                <div className="tnum text-[22px] font-extrabold tracking-tight text-ink">{t.v}</div>
+                <div className="text-[13px] text-muted">{t.l}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Container>
     </div>
   );
 }
 
-const CHAPTERS = [
-  { n: "01", t: "Der Alltag", href: "#alltag" },
-  { n: "02", t: "Das Produkt", href: "#produkt" },
-  { n: "03", t: "Was es nur hier gibt", href: "#highlights" },
-  { n: "04", t: "Bildstrecke", href: "#bildstrecke" },
-  { n: "05", t: "In vier Schritten", href: "#ablauf" },
-  { n: "06", t: "Vertrauen", href: "#sicherheit" },
-  { n: "07", t: "Wirkung", href: "#wirkung" },
-  { n: "08", t: "Fragen", href: "#faq" },
-];
+const LOGOS = ["DATEV", "SEPA", "XRechnung", "TÜV", "DEKRA", "WhatsApp", "DSGVO", "GoBD"];
 
-/** Inhaltsverzeichnis – die Seite liest sich wie ein Heft. */
-export function Inhalt() {
+/** Leiste mit Standards & Schnittstellen – als Wortmarken, ohne erfundene Kundenlogos. */
+export function LogoStrip() {
   return (
-    <section className="bg-cream">
-      <Container wide className="grid gap-10 py-14 md:grid-cols-12 md:gap-8 md:py-20">
-        <div className="md:col-span-4">
-          <Eyebrow>Inhalt</Eyebrow>
-          <p className="mt-5 max-w-[26ch] font-display text-[clamp(24px,2.6vw,34px)] leading-[1.15] text-ink">
-            Eine Software, erklärt wie ein gutes Heft: der Reihe nach, mit Bildern, ohne Blabla.
-          </p>
-        </div>
-        <ol className="grid gap-x-10 md:col-span-8 sm:grid-cols-2">
-          {CHAPTERS.map((c) => (
-            <li key={c.n} className="border-t border-line">
-              <a href={c.href} className="group flex items-baseline gap-5 py-4 text-ink transition-colors hover:text-mint">
-                <span className="tnum font-mono text-[12px] text-pylon">{c.n}</span>
-                <span className="font-display text-[22px] leading-tight">{c.t}</span>
-                <Arrow className="ml-auto shrink-0 self-center opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100" />
-              </a>
-            </li>
+    <div className="border-b border-line bg-white py-10">
+      <Container>
+        <p className="text-center text-[13px] font-bold uppercase tracking-[0.14em] text-muted">Gemacht für den deutschen Fahrschulalltag</p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+          {LOGOS.map((l) => (
+            <span key={l} className={cn("text-[22px] font-extrabold tracking-tight text-ink/35 md:text-[26px]")}>
+              {l}
+            </span>
           ))}
-        </ol>
+        </div>
+        <p className="mt-5 text-center text-[12.5px] text-muted">Den Stand einzelner Schnittstellen besprechen wir transparent im Gespräch.</p>
+      </Container>
+    </div>
+  );
+}
+
+/** Foto-Banner mit großer Versalien-Headline. */
+export function PhotoBanner() {
+  return (
+    <section className="relative overflow-hidden bg-dark text-white">
+      <Image src="/images/lektion-steuer.jpg" alt="" aria-hidden fill sizes="100vw" className="object-cover" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-dark/90 via-dark/60 to-dark/20" aria-hidden />
+      <Container className="relative py-28 md:py-40">
+        <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-[13px] font-bold backdrop-blur">
+          <span className="h-2 w-2 rounded-full bg-orange" /> Für Fahrschulen, die lieber fahren
+        </span>
+        <h2 className="mt-5 max-w-5xl font-display text-[clamp(44px,6.8vw,96px)] font-extrabold uppercase leading-[0.92] tracking-[0.005em]">
+          Deine Schüler fahren.
+          <br />
+          Du hast den Kopf frei.
+        </h2>
+        <p className="mt-6 max-w-[48ch] text-[18px] leading-relaxed text-white/85">
+          Termine, Erinnerungen, Rechnungen und Prüfungen laufen im Hintergrund. Du bist dort, wo deine Fahrschule Geld verdient: im Auto.
+        </p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Btn href="/demo" size="lg" arrow>
+            Jetzt Demo anfordern
+          </Btn>
+          <Btn href="/#highlights" variant="outline" size="lg">
+            Das hat sonst keiner
+          </Btn>
+        </div>
       </Container>
     </section>
   );

@@ -2,10 +2,23 @@ import { Calendar, Car, CheckCircle2, Clock, Sparkles, Wrench } from "lucide-rea
 
 import { cn } from "@/components/ui";
 
+/* Laptop-Rahmen – wie auf Produktseiten dieser Branche üblich */
+export function LaptopFrame({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn("relative mx-auto w-full", className)}>
+      <div className="rounded-[22px] bg-[#1c1c1e] p-2.5 shadow-lift sm:p-3">
+        <div className="overflow-hidden rounded-[12px] bg-white text-ink">{children}</div>
+      </div>
+      <div className="mx-auto h-[14px] w-[94%] rounded-b-[16px] bg-[#2c2c2e]" />
+      <div className="mx-auto h-[6px] w-[36%] rounded-b-md bg-[#3a3a3c]" />
+    </div>
+  );
+}
+
 /* Browser-Rahmen um eine App-Ansicht */
 export function BrowserFrame({ url, children, className }: { url: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("overflow-hidden rounded-lg border border-line bg-white shadow-[0_30px_70px_-30px_rgba(15,45,30,.32)]", className)}>
+    <div className={cn("overflow-hidden rounded-2xl border border-line bg-white shadow-card", className)}>
       <div className="flex h-9 items-center gap-1.5 border-b border-line bg-paper px-3.5">
         <span className="h-2.5 w-2.5 rounded-full bg-line2" />
         <span className="h-2.5 w-2.5 rounded-full bg-line2" />

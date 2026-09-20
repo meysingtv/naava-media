@@ -105,17 +105,21 @@ lib/            Validierung, Rate-Limit, Mail-Adapter
 
 ## Design
 
-Die Seite ist wie ein Magazin aufgebaut: Cover-Hero, Laufband, Inhaltsverzeichnis
-und acht nummerierte Kapitel (`components/home/*`). Schriften über `next/font`:
-**Fraunces** (Überschriften), **Hanken Grotesk** (Lesetext), **IBM Plex Mono**
-(Meta-Zeilen, Bildunterschriften, Zahlen). Farben und Papierkorn liegen in
-`tailwind.config.ts` und `app/globals.css` (`.grain`). Buttons, Links und
-Rubriken kommen aus `components/ui.tsx`.
+Die Startseite folgt dem Aufbau etablierter Fahrschul-Software-Seiten: grüner
+Hero mit Laptop-/Handy-Mockup, Fakten-Kacheln, Standards-Leiste, bunte
+Modul-Kacheln, abwechselnde Feature-Zeilen mit Screenshots, Foto-Banner,
+dunkle Highlight-Sektion, Umstiegs-Schritte, Zahlen, Pilotphase, FAQ und
+Abschluss-CTA (`components/home/*`, `components/bits.tsx`). Schriften über
+`next/font`: **Plus Jakarta Sans** (alles) und **Barlow Condensed** (große
+Versalien-Banner und Kachel-Titel). Farben in `tailwind.config.ts`
+(`brand` = Grün, `orange` = Conversion-Buttons, dazu `purple`, `sky`, `yellow`
+für Kacheln). Buttons, Häkchen-Listen und Rubriken kommen aus `components/ui.tsx`,
+der schwebende Demo-Button aus `components/sticky-cta.tsx`.
 
 ## Bilder / Fotos
 
 Die Fotos liegen unter `public/images/` und werden per `next/image` eingebunden
-(Hero, Kapitel „Der Alltag", Produkt-Spread Schüler-App, Bildstrecke, Wirkung,
+(Foto-Banner, Schüler-App-Zeile, Zahlen-Sektion, Pilotphase, Über uns,
 Abschluss-CTA). Sie stammen von [Pexels](https://www.pexels.com) und sind unter
 der Pexels-Lizenz kostenlos, auch kommerziell und ohne Nennungspflicht, nutzbar.
 
