@@ -114,3 +114,21 @@ supabase/
 - **Typsicherheit:** Die Query-Ergebnisse werden über Domänen-Typen abgesichert.
   Volle End-to-End-Typisierung lässt sich später mit
   `supabase gen types typescript` erzeugen und in `lib/types.ts` einsetzen.
+
+## Marketing-Website (Startseite)
+
+Die öffentliche Website liegt im selben Projekt: Routen unter `app/(marketing)/`
+(`/`, `/funktionen`, `/ueber-uns`, `/demo`, `/kontakt`, `/impressum`,
+`/datenschutz`, `/agb`), Komponenten unter `components/marketing/`, Fotos und
+App-Screenshots unter `public/images/`. Das Demo-Formular sendet an
+`app/api/demo` (Validierung, Rate-Limit, Mail-Versand über `lib/marketing/`;
+ohne `RESEND_API_KEY` landet die Anfrage im Server-Log).
+
+Kurz-URLs: `/login` → Anmeldung, `/register` → Registrierung. Wer angemeldet
+ist, sieht im Website-Kopf „Zum Dashboard" statt „Login".
+
+Die Marketing-Tokens (Farben `brand`, `orange`, `ink`, `paper` …, Schriften
+`font-mk`/`font-display`) sind in `tailwind.config.ts` markiert. Die Fotos
+stammen von Pexels (kostenlos, auch kommerziell) und lassen sich unter
+denselben Dateinamen durch eigene ersetzen; die App-Screenshots sind echte
+Aufnahmen der Software mit Beispieldaten.

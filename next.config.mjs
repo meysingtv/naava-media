@@ -12,6 +12,15 @@ const nextConfig = {
     // die Dev-Kompilierung als auch die First-Load-Chunks je Route deutlich.
     optimizePackageImports: ["lucide-react"],
   },
+  // Kurz-URLs für Anmeldung und Registrierung (Website → App).
+  async redirects() {
+    return [
+      { source: "/login", destination: "/auth/login", permanent: false },
+      { source: "/anmelden", destination: "/auth/login", permanent: false },
+      { source: "/register", destination: "/auth/registrieren", permanent: false },
+      { source: "/registrieren", destination: "/auth/registrieren", permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;

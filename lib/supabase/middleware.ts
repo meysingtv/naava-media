@@ -18,6 +18,15 @@ function istPortalHost(host: string): boolean {
   return /^(mein|schueler|portal)\./.test(hostname);
 }
 
+/** Öffentliche Marketing-Seiten (Startseite, Funktionen, Demo …) – ohne Login erreichbar. */
+const MARKETING_PFADE = new Set([
+  "/", "/funktionen", "/ueber-uns", "/demo", "/kontakt", "/impressum", "/datenschutz", "/agb",
+  "/api/demo", "/sitemap.xml", "/robots.txt",
+]);
+function istMarketingPfad(path: string): boolean {
+  return MARKETING_PFADE.has(path.replace(/\/+$/, "") || "/");
+}
+
 /**
  * Aktualisiert die Supabase-Session bei jeder Anfrage und übernimmt den
  * Zugriffsschutz – getrennt für das Büro (Admin) und das Schüler-Portal.
@@ -63,6 +72,11 @@ export async function updateSession(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
   const portal = istPortalHost(host);
   const path = request.nextUrl.pathname;
+
+  // Marketing-Website: auf der Haupt-Domain ohne Anmeldung, keine Umleitung.
+  if (!portal && istMarketingPfad(path)) {
+    return supabaseResponse;
+  }
 
   // Öffentliche Termin-Bestätigung per Token – ohne Login, unabhängig vom Host.
   if (path.startsWith("/t/")) {
@@ -113,7 +127,7 @@ export async function updateSession(request: NextRequest) {
     return mitCookies(NextResponse.redirect(url));
   }
 
-  if (user && (path === "/auth/login" || path === "/auth/registrieren" || path === "/")) {
+  if (user && (path === "/auth/login" || path === "/auth/registrieren")) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     url.search = "";
