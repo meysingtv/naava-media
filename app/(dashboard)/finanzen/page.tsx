@@ -94,8 +94,8 @@ export default async function FinanzenPage() {
           </div>
           <div className="flex h-44 items-end gap-3">
             {monate.map((m) => (
-              <div key={m.key} className="group flex min-w-0 flex-1 flex-col items-center gap-1.5">
-                <div className="flex h-full w-full items-end justify-center gap-1">
+              <div key={m.key} className="group flex h-full min-w-0 flex-1 flex-col items-center gap-1.5">
+                <div className="flex min-h-0 w-full flex-1 items-end justify-center gap-1">
                   <div className="w-[38%] rounded-t-[3px] bg-border-strong" style={{ height: `${Math.max(2, (m.rechnungen / max) * 100)}%` }} title={`Rechnungen ${formatEuro(m.rechnungen)}`} />
                   <div className="w-[38%] rounded-t-[3px] bg-primary" style={{ height: `${Math.max(2, (m.zahlungen / max) * 100)}%` }} title={`Zahlungen ${formatEuro(m.zahlungen)}`} />
                 </div>
