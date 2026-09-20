@@ -20,18 +20,30 @@ export default async function DashboardLayout({
   const { fahrlehrer, fahrschule } = kontext;
 
   return (
-    <DashboardShell
-      fahrschuleName={fahrschule.name}
-      ort={fahrschule.ort}
-      logoUrl={fahrschule.logo_url}
-      vorname={fahrlehrer.vorname}
-      nachname={fahrlehrer.nachname}
-      rolle={fahrlehrer.rolle}
-      email={kontext.email}
-      fahrschulen={kontext.fahrschulen}
-      aktiveFahrschuleId={fahrschule.id}
-    >
-      {children}
-    </DashboardShell>
+    <>
+      {/*
+        Sidebar-Zustand vor dem ersten Paint setzen – sonst flackert die
+        Breite. Nur im Dashboard, nicht in app/layout.tsx: Marketing und
+        Portal dürfen das Attribut nicht bekommen.
+      */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `try{if(localStorage.getItem("fsapp.sidebar")==="collapsed")document.documentElement.dataset.sidebar="collapsed"}catch(e){}`,
+        }}
+      />
+      <DashboardShell
+        fahrschuleName={fahrschule.name}
+        ort={fahrschule.ort}
+        logoUrl={fahrschule.logo_url}
+        vorname={fahrlehrer.vorname}
+        nachname={fahrlehrer.nachname}
+        rolle={fahrlehrer.rolle}
+        email={kontext.email}
+        fahrschulen={kontext.fahrschulen}
+        aktiveFahrschuleId={fahrschule.id}
+      >
+        {children}
+      </DashboardShell>
+    </>
   );
 }

@@ -120,7 +120,7 @@ export function KiLernstatusDialog() {
         ) : (
           <div className="space-y-3">
             {vorschlaege.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border-strong px-3 py-6 text-center text-sm text-muted-foreground">
+              <p className="rounded-md bg-surface-muted/60 px-3 py-6 text-center text-sm text-muted-foreground">
                 Keine eindeutigen Zuordnungen gefunden.
               </p>
             ) : (

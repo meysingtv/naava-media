@@ -75,7 +75,7 @@ export function TeamGrid({
           onClick={() => setArchiv((v) => !v)}
           className={cn(
             "h-7 rounded-md px-2 text-xs font-medium transition-colors",
-            archiv ? "bg-foreground text-background" : "text-foreground-secondary hover:bg-foreground/[0.06]",
+            archiv ? "bg-primary-soft text-primary-text" : "text-foreground-secondary hover:bg-foreground/[0.06]",
           )}
         >
           Archivierte anzeigen
@@ -95,7 +95,7 @@ export function TeamGrid({
                 type="button"
                 onClick={() => router.push(`/fahrlehrer?id=${b.id}`)}
                 className={cn(
-                  "w-full rounded-xl border bg-card p-3.5 text-left transition-[border-color,box-shadow] duration-fast hover:border-border-strong",
+                  "w-full rounded-xl bg-card shadow-panel p-3.5 text-left transition-[border-color,box-shadow] duration-fast hover:border-border-strong",
                   aktiv && "border-primary ring-2 ring-primary/20",
                   !b.aktiv && "opacity-60",
                 )}

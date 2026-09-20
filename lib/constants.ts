@@ -1,5 +1,20 @@
 import type { FahrlehrerRolle, FahrstundeStatus, FahrstundeTyp, RechnungStatus } from "@/lib/types";
 
+/**
+ * Badge-Variante je Status (Designsystem v3). `badge` und `dot` bleiben
+ * erhalten – Kalender und Punkte nutzen sie weiter.
+ */
+export type BadgeVariante =
+  | "default"
+  | "success"
+  | "warning"
+  | "destructive"
+  | "info"
+  | "secondary"
+  | "outline"
+  | "solid"
+  | "neutral";
+
 // Gängige Führerscheinklassen in Deutschland
 export const FUEHRERSCHEINKLASSEN = [
   "AM",
@@ -89,15 +104,16 @@ export interface TypMeta {
   kurz: string;
   badge: string; // Tailwind-Klassen für Badge/Block
   dot: string; // Tailwind-Klasse für Farbpunkt
+  variant: BadgeVariante; // v3: Badge-Variante statt Klassen-Override
 }
 
 // Kalender-Farben je Art: ruhige, aufeinander abgestimmte Töne. Mint-Grün ist
 // die normale Fahrstunde; die anderen Arten bleiben unterscheidbar, aber gedeckt.
 export const FAHRSTUNDE_FARBE: Record<FahrstundeTyp, string> = {
-  normal: "#2CBA75",
-  ueberland: "#16A34A",
-  autobahn: "#2563EB",
-  nacht: "#4F46E5",
+  normal: "#14A15A",
+  ueberland: "#1E8E5A",
+  autobahn: "#2F80ED",
+  nacht: "#1F5FB8",
   pruefung: "#DC2626",
   theorie: "#D97706",
   sonstiges: "#64748B",
@@ -109,55 +125,62 @@ export const FAHRSTUNDE_TYPEN: Record<FahrstundeTyp, TypMeta> = {
     kurz: "Normal",
     badge: "[&_i]:bg-primary",
     dot: "bg-primary",
+    variant: "default",
   },
   ueberland: {
     label: "Überlandfahrt",
     kurz: "Überland",
     badge: "[&_i]:bg-success",
     dot: "bg-success",
+    variant: "success",
   },
   autobahn: {
     label: "Autobahnfahrt",
     kurz: "Autobahn",
-    badge: "[&_i]:bg-blue-600",
-    dot: "bg-blue-600",
+    badge: "[&_i]:bg-info",
+    dot: "bg-info",
+    variant: "info",
   },
   nacht: {
     label: "Nachtfahrt",
     kurz: "Nacht",
-    badge: "[&_i]:bg-indigo-600",
-    dot: "bg-indigo-600",
+    badge: "[&_i]:bg-primary",
+    dot: "bg-primary",
+    variant: "default",
   },
   pruefung: {
     label: "Prüfung",
     kurz: "Prüfung",
     badge: "[&_i]:bg-destructive",
     dot: "bg-destructive",
+    variant: "destructive",
   },
   theorie: {
     label: "Theoriestunde",
     kurz: "Theorie",
     badge: "[&_i]:bg-warning",
     dot: "bg-warning",
+    variant: "warning",
   },
   sonstiges: {
     label: "Sonstiges",
     kurz: "Sonstiges",
     badge: "[&_i]:bg-border-strong",
     dot: "bg-muted-foreground",
+    variant: "secondary",
   },
 };
 
-export const FAHRSTUNDE_STATUS: Record<FahrstundeStatus, { label: string; badge: string }> = {
-  geplant: { label: "Geplant", badge: "[&_i]:bg-primary" },
-  abgeschlossen: { label: "Abgeschlossen", badge: "[&_i]:bg-success" },
-  ausgefallen: { label: "Ausgefallen", badge: "[&_i]:bg-border-strong" },
+export const FAHRSTUNDE_STATUS: Record<FahrstundeStatus, { label: string; badge: string; variant: BadgeVariante }> = {
+  geplant: { label: "Geplant", badge: "[&_i]:bg-primary", variant: "default" },
+  abgeschlossen: { label: "Abgeschlossen", badge: "[&_i]:bg-success", variant: "success" },
+  ausgefallen: { label: "Ausgefallen", badge: "[&_i]:bg-border-strong", variant: "secondary" },
 };
 
-export const RECHNUNG_STATUS: Record<RechnungStatus, { label: string; badge: string }> = {
-  offen: { label: "Offen", badge: "[&_i]:bg-warning" },
-  bezahlt: { label: "Bezahlt", badge: "[&_i]:bg-success" },
-  ueberfaellig: { label: "Überfällig", badge: "[&_i]:bg-destructive" },
+export const RECHNUNG_STATUS: Record<RechnungStatus, { label: string; badge: string; variant: BadgeVariante }> = {
+  offen: { label: "Offen", badge: "[&_i]:bg-warning", variant: "warning" },
+  bezahlt: { label: "Bezahlt", badge: "[&_i]:bg-success", variant: "success" },
+  ueberfaellig: { label: "Überfällig", badge: "[&_i]:bg-destructive", variant: "destructive" },
 };
 
 export const STEUERSAETZE = [19, 7, 0] as const;

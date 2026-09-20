@@ -245,7 +245,7 @@ export function Terminplaner({
                     onClick={() => setDimension(v)}
                     className={cn(
                       "inline-flex h-7 items-center gap-1.5 rounded-[4px] px-2 font-medium transition-colors",
-                      dimension === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+                      dimension === v ? "bg-primary-soft text-primary-text" : "text-muted-foreground hover:text-foreground",
                     )}
                   >
                     <Icon className="h-3.5 w-3.5" strokeWidth={1.75} /> {l}
@@ -278,7 +278,7 @@ export function Terminplaner({
                   onClick={() => setAnsicht(v)}
                   className={cn(
                     "h-7 rounded-[4px] px-2.5 font-medium transition-colors",
-                    ansicht === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+                    ansicht === v ? "bg-primary-soft text-primary-text" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {l}
@@ -368,7 +368,7 @@ function TagBoard({
   const istHeute = anker === heute;
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-card">
+    <div className="overflow-hidden rounded-xl bg-card shadow-panel">
       <div className="overflow-x-auto scrollbar-thin">
         <div className="min-w-[760px]">
           {/* Zeit-Kopf */}
@@ -565,7 +565,7 @@ function WochenHeatmap({
   const maxZelle = Math.max(1, ...tage.flatMap((d) => Object.values(daten[d]?.pro ?? {})));
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-card">
+    <div className="overflow-hidden rounded-xl bg-card shadow-panel">
       <div className="overflow-x-auto scrollbar-thin">
         <div className="min-w-[720px]">
           {/* Kopf */}

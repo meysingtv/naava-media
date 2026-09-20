@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
-const sans = localFont({
-  src: "./fonts/GeistVF.woff",
+/**
+ * Schrift v3: Inter als einzige Schrift der App. Acht Stufen, drei Gewichte
+ * (400/500/600), Zahlen tabellarisch (global in globals.css gesetzt).
+ */
+const sans = Inter({
+  subsets: ["latin", "latin-ext"],
   variable: "--font-sans",
-  weight: "100 900",
   display: "swap",
 });
 
@@ -28,7 +31,7 @@ export default function RootLayout({
     <html lang="de">
       <body className={`${sans.variable} font-sans antialiased`}>
         {children}
-        <Toaster position="top-right" />
+        <Toaster position="bottom-right" />
       </body>
     </html>
   );

@@ -80,7 +80,7 @@ export default async function RechnungslaufPage() {
                 </span>
               </div>
             ) : sepaFaehig.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border-strong px-3 py-6 text-center text-sm text-muted-foreground">
+              <p className="rounded-md bg-surface-muted/60 px-3 py-6 text-center text-sm text-muted-foreground">
                 Keine einzugsfähigen Rechnungen. Voraussetzung: Schüler mit IBAN + SEPA-Mandat.
               </p>
             ) : (
@@ -126,7 +126,7 @@ export default async function RechnungslaufPage() {
             </div>
 
             {ueberfaellig.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border-strong px-3 py-6 text-center text-sm text-muted-foreground">
+              <p className="rounded-md bg-surface-muted/60 px-3 py-6 text-center text-sm text-muted-foreground">
                 Keine überfälligen Rechnungen. 🎉
               </p>
             ) : (

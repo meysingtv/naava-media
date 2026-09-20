@@ -1,9 +1,27 @@
 import {
+  ArrowDownToLine,
+  Banknote,
   BarChart3,
+  Bell,
+  BookMarked,
+  BookOpen,
+  Building,
   Building2,
   CalendarDays,
+  Car,
+  CheckSquare,
+  ClipboardCheck,
+  Contact,
+  FileText,
+  Gauge,
   GraduationCap,
   LayoutDashboard,
+  LifeBuoy,
+  MessageSquare,
+  Repeat,
+  Settings,
+  ShieldCheck,
+  Users,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -11,18 +29,25 @@ import {
 import type { FahrlehrerRolle } from "@/lib/types";
 
 /**
- * Navigation v2: sechs Arbeitsbereiche mit Kontext-Ebene statt einer
- * langen Sidebar. Rollen steuern die Sichtbarkeit je Eintrag.
+ * Navigation v3: sechs Gruppen in der linken Sidebar. `BEREICHE`,
+ * `bereicheFuer` und `aktiverBereich` bleiben die einzige Quelle für
+ * Einträge und Rollen-Sichtbarkeit – die Rollen sind gegenüber v2
+ * unverändert.
  */
 export interface BereichItem {
   href: string;
   label: string;
   rollen: FahrlehrerRolle[];
+  /** Ein Icon je Eintrag – ausschließlich lucide, strokeWidth 1.75. */
+  icon: LucideIcon;
+  /** Optionaler Zähler-Slot; wird nur gefüllt, wenn die Zahl gratis vorliegt. */
+  badgeKey?: "aufgaben" | "rechnungen_ueberfaellig";
 }
 
 export interface Bereich {
   key: string;
   label: string;
+  /** Gruppen-Icon – bleibt im Typ, wird von der Sidebar nicht gerendert. */
   icon: LucideIcon;
   items: BereichItem[];
 }
@@ -37,9 +62,9 @@ export const BEREICHE: Bereich[] = [
     label: "Übersicht",
     icon: LayoutDashboard,
     items: [
-      { href: "/dashboard", label: "Leitstand", rollen: ALLE },
-      { href: "/aufgaben", label: "Aufgaben", rollen: ALLE },
-      { href: "/kommunikation", label: "Kommunikation", rollen: ALLE },
+      { href: "/dashboard", label: "Leitstand", rollen: ALLE, icon: LayoutDashboard },
+      { href: "/aufgaben", label: "Aufgaben", rollen: ALLE, icon: CheckSquare, badgeKey: "aufgaben" },
+      { href: "/kommunikation", label: "Kommunikation", rollen: ALLE, icon: MessageSquare },
     ],
   },
   {
@@ -47,11 +72,11 @@ export const BEREICHE: Bereich[] = [
     label: "Ausbildung",
     icon: GraduationCap,
     items: [
-      { href: "/schueler", label: "Schüler", rollen: ALLE },
-      { href: "/fahrlehrer", label: "Fahrlehrer", rollen: ["chef"] },
-      { href: "/theorie", label: "Theorie", rollen: ALLE },
-      { href: "/kurse", label: "Kurse", rollen: ALLE },
-      { href: "/pruefungen", label: "Prüfungen", rollen: CHEF_LEHRER },
+      { href: "/schueler", label: "Schüler", rollen: ALLE, icon: Users },
+      { href: "/fahrlehrer", label: "Fahrlehrer", rollen: ["chef"], icon: Contact },
+      { href: "/theorie", label: "Theorie", rollen: ALLE, icon: BookOpen },
+      { href: "/kurse", label: "Kurse", rollen: ALLE, icon: GraduationCap },
+      { href: "/pruefungen", label: "Prüfungen", rollen: CHEF_LEHRER, icon: ClipboardCheck },
     ],
   },
   {
@@ -59,8 +84,8 @@ export const BEREICHE: Bereich[] = [
     label: "Termine",
     icon: CalendarDays,
     items: [
-      { href: "/kalender", label: "Kalender", rollen: CHEF_LEHRER },
-      { href: "/erinnerungen", label: "Erinnerungen", rollen: ALLE },
+      { href: "/kalender", label: "Kalender", rollen: CHEF_LEHRER, icon: CalendarDays },
+      { href: "/erinnerungen", label: "Erinnerungen", rollen: ALLE, icon: Bell },
     ],
   },
   {
@@ -68,13 +93,19 @@ export const BEREICHE: Bereich[] = [
     label: "Finanzen",
     icon: Wallet,
     items: [
-      { href: "/finanzen", label: "Übersicht", rollen: CHEF_BUERO },
-      { href: "/rechnungen", label: "Rechnungen", rollen: CHEF_BUERO },
-      { href: "/zahlungen", label: "Zahlungen", rollen: CHEF_BUERO },
-      { href: "/rechnungslauf", label: "Rechnungslauf", rollen: CHEF_BUERO },
-      { href: "/kostentraeger", label: "Kostenträger", rollen: CHEF_BUERO },
-      { href: "/buchhaltung", label: "Buchhaltung", rollen: CHEF_BUERO },
-      { href: "/lohn", label: "Lohn", rollen: ["chef"] },
+      { href: "/finanzen", label: "Übersicht", rollen: CHEF_BUERO, icon: Wallet },
+      {
+        href: "/rechnungen",
+        label: "Rechnungen",
+        rollen: CHEF_BUERO,
+        icon: FileText,
+        badgeKey: "rechnungen_ueberfaellig",
+      },
+      { href: "/zahlungen", label: "Zahlungen", rollen: CHEF_BUERO, icon: ArrowDownToLine },
+      { href: "/rechnungslauf", label: "Rechnungslauf", rollen: CHEF_BUERO, icon: Repeat },
+      { href: "/kostentraeger", label: "Kostenträger", rollen: CHEF_BUERO, icon: Building },
+      { href: "/buchhaltung", label: "Buchhaltung", rollen: CHEF_BUERO, icon: BookMarked },
+      { href: "/lohn", label: "Lohn", rollen: ["chef"], icon: Banknote },
     ],
   },
   {
@@ -82,9 +113,10 @@ export const BEREICHE: Bereich[] = [
     label: "Betrieb",
     icon: Building2,
     items: [
-      { href: "/fahrzeuge", label: "Fahrzeuge", rollen: CHEF_BUERO },
-      { href: "/fahrlehrer/rollen", label: "Rollen & Rechte", rollen: ["chef"] },
-      { href: "/einstellungen", label: "Einstellungen", rollen: ["chef"] },
+      { href: "/fahrzeuge", label: "Fahrzeuge", rollen: CHEF_BUERO, icon: Car },
+      { href: "/fahrlehrer/rollen", label: "Rollen & Rechte", rollen: ["chef"], icon: ShieldCheck },
+      { href: "/einstellungen", label: "Einstellungen", rollen: ["chef"], icon: Settings },
+      { href: "/hilfe", label: "Hilfe", rollen: ALLE, icon: LifeBuoy },
     ],
   },
   {
@@ -92,8 +124,8 @@ export const BEREICHE: Bereich[] = [
     label: "Auswertung",
     icon: BarChart3,
     items: [
-      { href: "/cockpit", label: "Cockpit", rollen: CHEF_BUERO },
-      { href: "/berichte", label: "Berichte", rollen: CHEF_BUERO },
+      { href: "/cockpit", label: "Cockpit", rollen: CHEF_BUERO, icon: Gauge },
+      { href: "/berichte", label: "Berichte", rollen: CHEF_BUERO, icon: BarChart3 },
     ],
   },
 ];
@@ -116,3 +148,6 @@ export function aktiverBereich(bereiche: Bereich[], pathname: string): { bereich
   }
   return best ?? { bereich: null, item: null };
 }
+
+/** Zähler an Sidebar-Einträgen – nur gesetzt, wenn die Zahl ohne Extrakosten anfällt. */
+export type Zaehler = Partial<Record<NonNullable<BereichItem["badgeKey"]>, number>>;

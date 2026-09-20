@@ -14,6 +14,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+const HINWEIS = "Das lässt sich nicht rückgängig machen.";
+
+/**
+ * Löschen mit Rückfrage v3: Trigger als weicher Danger-Button (keine
+ * rot eingefärbte Outline mehr), Dialog in `size="sm"`. Fehlt der Hinweis
+ * „nicht rückgängig", wird er angehängt.
+ */
 export function LoeschenDialog({
   action,
   id,
@@ -29,25 +36,28 @@ export function LoeschenDialog({
 }) {
   const [open, setOpen] = useState(false);
   const nurIcon = buttonLabel.trim() === "";
+  const text = beschreibung.toLowerCase().includes("rückgängig")
+    ? beschreibung
+    : `${beschreibung} ${HINWEIS}`;
 
   return (
     <>
       <Button
         type="button"
-        variant="outline"
+        variant="danger-soft"
         size={nurIcon ? "icon-sm" : "sm"}
         aria-label={nurIcon ? "Löschen" : undefined}
         onClick={() => setOpen(true)}
-        className="text-destructive hover:border-destructive/30 hover:bg-destructive-soft hover:text-destructive"
       >
-        <Trash2 />
+        <Trash2 strokeWidth={1.75} />
         {!nurIcon && buttonLabel}
       </Button>
+
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent size="sm">
           <DialogHeader>
             <DialogTitle>{titel}</DialogTitle>
-            <DialogDescription>{beschreibung}</DialogDescription>
+            <DialogDescription>{text}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
@@ -55,7 +65,7 @@ export function LoeschenDialog({
             </DialogClose>
             <form action={action}>
               <input type="hidden" name="id" value={id} />
-              <Button type="submit" variant="destructive">
+              <Button type="submit" variant="destructive" data-primary>
                 Endgültig löschen
               </Button>
             </form>

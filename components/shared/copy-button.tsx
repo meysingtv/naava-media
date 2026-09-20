@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
-/** Kleiner Kopieren-Button mit kurzer Bestätigung. */
+/** Kopieren-Button v3: Ghost in Buttongröße `xs`, Bestätigung für 1,5 s. */
 export function CopyButton({
   text,
   label,
@@ -23,22 +23,21 @@ export function CopyButton({
       setKopiert(true);
       setTimeout(() => setKopiert(false), 1500);
     } catch {
-      /* ignore */
+      /* Zwischenablage nicht verfügbar */
     }
   }
 
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      size="xs"
       onClick={kopieren}
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-surface hover:text-foreground active:scale-95",
-        className,
-      )}
+      className={className}
       aria-label={`${label ?? "Wert"} kopieren`}
     >
-      {kopiert ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
+      {kopiert ? <Check className="text-success" strokeWidth={2} /> : <Copy strokeWidth={1.75} />}
       {kopiert ? "Kopiert" : "Kopieren"}
-    </button>
+    </Button>
   );
 }

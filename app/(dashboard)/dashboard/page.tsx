@@ -2,8 +2,10 @@ import Link from "next/link";
 import { ArrowRight, Check, ClipboardCheck, ListChecks } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
-import { getKontext } from "@/lib/supabase/queries";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { KpiCard, KpiRow } from "@/components/ui/kpi-card";
+import { PageHeader } from "@/components/shared/page-header";
 import { FAHRSTUNDE_TYPEN } from "@/lib/constants";
 import { cn, formatDatum, formatEuro, formatUhrzeit } from "@/lib/utils";
 import type { Aufgabe, Fahrschueler, FahrstundeMitRelationen, Pruefung, Rechnung } from "@/lib/types";
@@ -45,7 +47,7 @@ function Abschnitt({
       <div className="mb-2 flex items-center justify-between">
         <h2 className="label-caps">{label}</h2>
         {href && (
-          <Link href={href} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-hover">
+          <Link href={href} className="inline-flex items-center gap-1 text-xs font-medium text-primary-text hover:underline">
             {hrefLabel ?? "Alle"} <ArrowRight className="h-3 w-3" />
           </Link>
         )}
@@ -57,7 +59,6 @@ function Abschnitt({
 
 export default async function LeitstandPage() {
   const supabase = createClient();
-  const kontext = await getKontext();
   const heute = iso(new Date());
   const inSieben = inTagen(7);
   const jetztMin = new Date().getHours() * 60 + new Date().getMinutes();
@@ -140,37 +141,55 @@ export default async function LeitstandPage() {
     return t.status !== "ausgefallen" && h * 60 + m >= jetztMin;
   });
 
-  const vorname = kontext?.fahrlehrer?.vorname ?? "";
+  const ueberfaelligeAufgaben = aufgaben.filter((a) => a.faellig_am && a.faellig_am < heute).length;
 
   return (
     <div className="space-y-6">
-      {/* Tagesleiste – Text statt Kacheln */}
-      <div className="flex flex-col gap-2 border-b pb-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="label-caps mb-1">{wochentag()}</p>
-          <h1 className="text-xl font-semibold tracking-[-0.01em] text-foreground">
-            {vorname ? `Guten Tag, ${vorname}.` : "Leitstand"}
-          </h1>
-        </div>
-        <p className="text-[13px] text-foreground-secondary tabular-nums">
-          <span className="font-semibold text-foreground">{termine.length}</span> Termine heute
-          <span className="mx-2 text-border-strong">·</span>
-          <span className="font-semibold text-foreground">{pruefungen.length}</span> Prüfungen diese Woche
-          <span className="mx-2 text-border-strong">·</span>
-          <span className="font-semibold text-foreground">{aufgaben.length}</span> offene Aufgaben
-          <span className="mx-2 text-border-strong">·</span>
-          <span className={cn("font-semibold", ueberfaellig.length > 0 ? "text-destructive" : "text-foreground")}>
-            {formatEuro(offenerBetrag)}
-          </span>{" "}
-          offen
-        </p>
-      </div>
+      {/* Kopfzeile (56 px) + Kennzahlen – keine Begrüßung, kein Vorname im Inhalt */}
+      <PageHeader
+        title="Leitstand"
+        description={wochentag()}
+        actions={
+          <Button asChild variant="outline" size="sm">
+            <Link href="/kalender">Kalender</Link>
+          </Button>
+        }
+      />
+
+      <KpiRow>
+        <KpiCard
+          label="Termine heute"
+          value={termine.length}
+          sub={naechster ? `Nächster ${formatUhrzeit(naechster.uhrzeit)}` : "Keine weiteren"}
+          href="/kalender"
+        />
+        <KpiCard
+          label="Prüfungen · 7 Tage"
+          value={pruefungen.length}
+          sub={pruefungen.length === 1 ? "1 Termin" : `${pruefungen.length} Termine`}
+          href="/pruefungen"
+        />
+        <KpiCard
+          label="Offene Aufgaben"
+          value={aufgaben.length}
+          sub={`${ueberfaelligeAufgaben} überfällig`}
+          tone={ueberfaelligeAufgaben > 0 ? "warning" : "neutral"}
+          href="/aufgaben"
+        />
+        <KpiCard
+          label="Offene Beträge"
+          value={formatEuro(offenerBetrag)}
+          sub={`${ueberfaellig.length} überfällig`}
+          tone={ueberfaellig.length > 0 ? "destructive" : "neutral"}
+          href="/finanzen"
+        />
+      </KpiRow>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
         {/* Linke Spalte: Heute als Zeitachse */}
         <div className="space-y-6">
           <Abschnitt label="Heute" href="/kalender" hrefLabel="Kalender">
-            <div className="rounded-xl border bg-card">
+            <div className="rounded-xl bg-card shadow-panel">
               {termine.length === 0 ? (
                 <p className="px-4 py-10 text-center text-[13px] text-muted-foreground">Heute sind keine Termine geplant.</p>
               ) : (
@@ -192,7 +211,7 @@ export default async function LeitstandPage() {
                               {name}
                             </p>
                             {istNaechster && (
-                              <Badge variant="default" className="text-primary">
+                              <Badge variant="default">
                                 als Nächstes
                               </Badge>
                             )}
@@ -213,11 +232,11 @@ export default async function LeitstandPage() {
 
           <Abschnitt label="Schüler mit Handlungsbedarf" href="/schueler" hrefLabel="Alle Schüler">
             {handlungsbedarf.length === 0 ? (
-              <p className="rounded-xl border bg-card px-4 py-8 text-center text-[13px] text-muted-foreground">
+              <p className="rounded-xl bg-card shadow-panel px-4 py-8 text-center text-[13px] text-muted-foreground">
                 Alles im grünen Bereich – kein Schüler braucht gerade Aufmerksamkeit.
               </p>
             ) : (
-              <ul className="divide-y rounded-xl border bg-card">
+              <ul className="divide-y rounded-xl bg-card shadow-panel">
                 {handlungsbedarf.map(({ s, gruende }) => (
                   <li key={s.id}>
                     <Link href={`/schueler?id=${s.id}`} className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-surface-muted">
@@ -243,9 +262,9 @@ export default async function LeitstandPage() {
         <div className="space-y-6">
           <Abschnitt label="Aufgaben" href="/aufgaben">
             {aufgaben.length === 0 ? (
-              <p className="rounded-xl border bg-card px-4 py-8 text-center text-[13px] text-muted-foreground">Keine offenen Aufgaben.</p>
+              <p className="rounded-xl bg-card shadow-panel px-4 py-8 text-center text-[13px] text-muted-foreground">Keine offenen Aufgaben.</p>
             ) : (
-              <ul className="divide-y rounded-xl border bg-card">
+              <ul className="divide-y rounded-xl bg-card shadow-panel">
                 {aufgaben.map((a) => {
                   const ueberf = a.faellig_am != null && a.faellig_am < heute;
                   return (
@@ -282,12 +301,12 @@ export default async function LeitstandPage() {
 
           <Abschnitt label="Prüfungen · nächste 7 Tage" href="/pruefungen">
             {pruefungen.length === 0 ? (
-              <p className="rounded-xl border bg-card px-4 py-6 text-center text-[13px] text-muted-foreground">
+              <p className="rounded-xl bg-card shadow-panel px-4 py-6 text-center text-[13px] text-muted-foreground">
                 <ClipboardCheck className="mx-auto mb-1 h-4 w-4" strokeWidth={1.75} />
                 Keine Prüfungen in den nächsten 7 Tagen.
               </p>
             ) : (
-              <ul className="divide-y rounded-xl border bg-card">
+              <ul className="divide-y rounded-xl bg-card shadow-panel">
                 {pruefungen.map((p) => (
                   <li key={p.id} className="flex items-center gap-3 px-4 py-2.5 text-[13px]">
                     <span className="w-14 shrink-0 font-semibold tabular-nums">{formatDatum(p.datum).slice(0, 5)}</span>
@@ -303,7 +322,7 @@ export default async function LeitstandPage() {
           </Abschnitt>
 
           <Abschnitt label="Finanzstatus" href="/finanzen" hrefLabel="Finanzen">
-            <div className="rounded-xl border bg-card px-4 py-3">
+            <div className="rounded-xl bg-card shadow-panel px-4 py-3">
               <dl className="grid grid-cols-3 divide-x">
                 <div className="pr-3">
                   <dt className="text-xs text-muted-foreground">Offen</dt>
@@ -324,7 +343,7 @@ export default async function LeitstandPage() {
                 </div>
               </dl>
               {ueberfaellig.length > 0 && (
-                <Link href="/rechnungslauf" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-hover">
+                <Link href="/rechnungslauf" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-text hover:underline">
                   <ListChecks className="h-3.5 w-3.5" /> Mahnlauf starten
                 </Link>
               )}

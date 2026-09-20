@@ -118,7 +118,7 @@ export default async function KursDetailPage({ params }: { params: { id: string 
             )}
 
             {teilnahmen.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border-strong py-6 text-center text-sm text-muted-foreground">
+              <p className="rounded-md bg-surface-muted/60 py-6 text-center text-sm text-muted-foreground">
                 Noch keine Teilnehmer.
               </p>
             ) : (
@@ -173,7 +173,7 @@ export default async function KursDetailPage({ params }: { params: { id: string 
               <Progress value={grundstoffProzent} indicatorClassName={stunden.length >= THEORIE_GRUNDSTOFF ? "bg-success" : undefined} />
             </div>
             {stunden.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border-strong py-6 text-center text-sm text-muted-foreground">
+              <p className="rounded-md bg-surface-muted/60 py-6 text-center text-sm text-muted-foreground">
                 Noch keine Theorie-Einheiten diesem Kurs zugeordnet.
               </p>
             ) : (

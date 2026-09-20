@@ -99,7 +99,7 @@ export default async function FahrlehrerPage({ searchParams }: { searchParams: {
           {selected ? (
             <BenutzerAkte benutzer={selected} selfUserId={kontext.userId} rollenMap={rollenMap} />
           ) : (
-            <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-xl border border-dashed border-border-strong text-center">
+            <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-xl bg-surface-muted/60 text-center">
               <UserCog className="mb-2 h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
               <p className="text-[13px] text-muted-foreground">Person auswählen, um Details zu sehen.</p>
             </div>

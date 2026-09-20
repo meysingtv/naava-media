@@ -3,65 +3,110 @@
 @tailwind utilities;
 
 /* ---------------------------------------------------------------------
-   Designsystem v2 – „Fahrschul OS"
-   Kühle Off-White-Arbeitsfläche, weiße Panels mit Haarlinien, Anthrazit
-   als Schrift, Mint-Grün nur für Aktion/Status/Auswahl. Keine Schatten auf
-   Flächen, kleine Radien, dichte, ruhige Typografie.
+   Designsystem v3 – „Werkbank"
+   Warm-helle Arbeitsfläche (#F7F7F5), weiße Panels mit weichem Schatten
+   statt Haarlinien, Tinte-Sidebar links, Markengrün nur für Aktion,
+   aktive Zustände und Links. Vier Statusfarben, sonst Tinte/Grau/Weiß.
+   Jede Farbe existiert in drei Rollen: Fläche, Soft-Fläche, Text.
    --------------------------------------------------------------------- */
 @layer base {
   :root {
     /* Flächen */
-    --canvas: 195 17% 96%;                   /* #F3F6F7 – Arbeitsfläche */
-    --background: 195 17% 96%;               /* = canvas (Seite) */
-    --foreground: 200 17% 13%;               /* #1B2327 – Anthrazit */
+    --canvas: 60 11% 96%; /* #F7F7F5 – Arbeitsfläche */
+    --background: 60 11% 96%; /* = canvas (Seite) */
+    --foreground: 163 17% 8%; /* #111816 – Tinte */
 
-    --card: 0 0% 100%;                       /* Panels */
-    --card-foreground: 200 17% 13%;
+    --card: 0 0% 100%; /* Panels */
+    --card-foreground: 163 17% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 200 17% 13%;
+    --popover-foreground: 163 17% 8%;
 
-    --surface: 0 0% 100%;                    /* weiße Fläche */
-    --surface-muted: 195 20% 97%;            /* #F6F9F9 – Tabellenkopf, Zonen */
+    --surface: 0 0% 100%; /* Alias Weiß */
+    --surface-muted: 90 8% 95%; /* #F2F3F1 – Tabellenkopf, Zeilen-Hover, Zonen */
 
     /* Text-Stufen */
-    --text-secondary: 200 14% 34%;           /* #4B5B63 */
-    --muted: 195 20% 96%;
-    --muted-foreground: 199 10% 52%;         /* #7A8A92 */
-    --text-disabled: 199 12% 69%;            /* #A7B3B9 */
+    --text-secondary: 150 8% 39%; /* #5B6B63 – 5,6:1 auf Weiß */
+    --text-tertiary: 145 5% 56%; /* #8A968F – nur Icons, Platzhalter, Trenner, kbd */
+    --muted: 90 8% 95%;
+    --muted-foreground: 150 8% 39%; /* bewusst = Sekundär (über 170 Fließtext-Stellen) */
+    --text-disabled: 144 6% 68%; /* #A9B3AD */
 
-    /* Marke: Mint-Grün (frisch, klar) – abgeleitet aus #9DF1C8 */
-    --primary: 151 66% 30%;                  /* #1A7F4E – Fläche & Text, trägt Weiß */
+    /* Marke: Markengrün */
+    --primary: 150 78% 35%; /* #14A15A */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 151 68% 25%;            /* #16693F – dunkler */
-    --primary-pressed: 151 70% 21%;          /* #105733 – am dunkelsten */
-    --primary-soft: 151 72% 93%;             /* #E4FBF0 – sehr helle Mint-Fläche */
-    --primary-soft-strong: 151 75% 78%;      /* #9DF1C8 – die gewählte Farbe */
-    --primary-soft-border: 151 52% 72%;      /* #92D9BA */
-    --accent-bright: 151 62% 45%;            /* #2CBA75 – kräftiges Mint */
+    --primary-hover: 150 80% 30%; /* #0F8A4C */
+    --primary-pressed: 150 80% 25%; /* #0C7340 */
+    --primary-soft: 145 55% 94%; /* #E7F8EE */
+    --primary-soft-strong: 145 60% 84%; /* #BFEFD3 */
+    --primary-soft-border: 148 44% 74%; /* #9ED9BA */
+    --primary-text: 150 80% 25%; /* #0C7340 – jeder grüne Text, 5,9:1 */
+    --accent-bright: 147 66% 51%; /* #2ED47A – nur Sidebar-Balken/Spur */
 
-    --secondary: 195 20% 96%;
-    --secondary-foreground: 200 17% 13%;
-    --accent: 195 20% 96%;
-    --accent-foreground: 200 17% 13%;
+    --secondary: 90 8% 95%; /* neutraler Grau-Button */
+    --secondary-foreground: 163 17% 8%;
+    --accent: 90 8% 95%; /* Radix-Konvention: Hover in Menüs */
+    --accent-foreground: 163 17% 8%;
 
-    /* Status */
-    --success: 152 65% 34%;                  /* #1E8E5A */
+    /* Status – je Fläche, Soft-Fläche, Text */
+    --success: 152 65% 34%; /* #1E8E5A */
     --success-foreground: 0 0% 100%;
-    --success-soft: 150 50% 93%;
-    --warning: 35 87% 41%;                   /* #C27C0E */
+    --success-soft: 144 43% 93%; /* #E6F5EC */
+    --success-text: 154 66% 27%; /* #17724A – 5,9:1 */
+
+    --warning: 38 89% 44%; /* #D48A0C */
     --warning-foreground: 0 0% 100%;
-    --warning-soft: 40 90% 92%;
-    --destructive: 0 62% 54%;                /* #D23F3F */
+    --warning-soft: 39 78% 93%; /* #FBF1DE */
+    --warning-text: 38 89% 29%; /* #8A5A08 – 5,9:1 */
+
+    --destructive: 3 67% 55%; /* #D9463D */
     --destructive-foreground: 0 0% 100%;
-    --destructive-soft: 0 80% 95%;
+    --destructive-soft: 3 76% 95%; /* #FCEAE9 */
+    --destructive-text: 3 62% 43%; /* #B3312A – 6,2:1 */
 
-    /* Linien & Fokus */
-    --border: 197 14% 90%;                   /* #E3E8EA – Haarlinie */
-    --border-strong: 198 12% 82%;            /* #CBD3D7 */
-    --input: 198 12% 82%;
-    --ring: 151 66% 30%;
+    --info: 214 84% 56%; /* #2F80ED */
+    --info-foreground: 0 0% 100%;
+    --info-soft: 214 84% 95%; /* #E8F1FD */
+    --info-text: 215 71% 42%; /* #1F5FB8 – 6,2:1 */
 
-    --radius: 0.375rem;                      /* 6px */
+    /* Linien & Fokus – Linien nur noch INNERHALB von Panels */
+    --border: 100 6% 90%; /* #E6E8E5 */
+    --border-strong: 132 5% 82%; /* #CFD4D0 */
+    --border-hover: 132 5% 73%; /* #B7BEB8 */
+    --input: 132 5% 82%;
+    --ring: 150 78% 35%;
+
+    /* Sidebar („Tinte") – ausschließlich in Sidebar und Mobil-Drawer */
+    --sidebar: 153 27% 8%; /* #0F1A15 Fläche */
+    --sidebar-foreground: 137 10% 86%; /* #D7DED9 – 13,0:1 auf Tinte */
+    --sidebar-muted: 145 5% 56%; /* #8A968F Gruppentitel – 5,8:1 */
+    --sidebar-hover: 148 23% 11%; /* #16231C */
+    --sidebar-active: 148 22% 14%; /* #1B2A22 */
+    --sidebar-active-foreground: 0 0% 100%;
+    --sidebar-bar: 147 66% 51%; /* #2ED47A – 9,2:1 */
+    --sidebar-border: 150 18% 15%; /* #1F2D26 */
+    --sidebar-badge: 150 16% 20%; /* #2B3B33 */
+
+    /* Maße */
+    --sidebar-w: 256px;
+    --header-h: 56px;
+    --radius: 0.5rem; /* 8 px = Controls */
+    --radius-control: 0.5rem; /* 8 px */
+    --radius-panel: 0.625rem; /* 10 px */
+    --radius-dialog: 0.875rem; /* 14 px */
+
+    /* Schatten – 1-px-Ring als Kante, weicher Schatten als Höhe */
+    --shadow-panel: 0 0 0 1px rgba(15, 26, 21, 0.04), 0 1px 2px rgba(15, 26, 21, 0.06),
+      0 8px 24px -12px rgba(15, 26, 21, 0.12);
+    --shadow-control: 0 1px 2px rgba(15, 26, 21, 0.06);
+    --shadow-popover: 0 0 0 1px rgba(15, 26, 21, 0.05), 0 4px 12px -2px rgba(15, 26, 21, 0.1),
+      0 12px 32px -8px rgba(15, 26, 21, 0.16);
+    --shadow-overlay: 0 0 0 1px rgba(15, 26, 21, 0.05), 0 8px 24px -8px rgba(15, 26, 21, 0.12),
+      0 24px 64px -16px rgba(15, 26, 21, 0.28);
+  }
+
+  /* Eingeklappte Sidebar – gesetzt vom Inline-Script vor dem ersten Paint */
+  html[data-sidebar="collapsed"] {
+    --sidebar-w: 68px;
   }
 }
 
@@ -75,11 +120,17 @@
   body {
     @apply bg-background text-foreground;
     font-size: 13px;
-    line-height: 1.5;
-    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1, "cv11" 1;
+    line-height: 20px;
+    font-variant-numeric: tabular-nums; /* Business-App: Zahlen immer tabellarisch */
+    font-feature-settings: "calt" 1, "liga" 1, "cv11" 1; /* Inter: einstöckiges a */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2,
+  h3 {
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
   a,
   button,
@@ -89,7 +140,7 @@
   [role="button"] {
     transition-property: color, background-color, border-color, box-shadow, opacity, transform;
     transition-duration: 130ms;
-    transition-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
   }
   ::selection {
     background: hsl(var(--primary-soft-strong));
@@ -113,44 +164,108 @@
 @layer utilities {
   /* Seiteninhalt sanft einblenden */
   .animate-page-in {
-    animation: page-in 160ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation: page-in 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
   @keyframes page-in {
-    from { opacity: 0; transform: translateY(3px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   .animate-soft-pulse {
     animation: soft-pulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
   @keyframes soft-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
   }
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
-  /* Kleine Versalien-Labels (Meta, Tabellenköpfe, Abschnitte) */
+
+  /* Neu definiert: keine Versalien mehr. Damit verlieren alle bestehenden
+     Aufrufe sofort den v2-Look, ohne dass eine Seite angefasst wird.
+     Versalien gibt es in v3 nur noch in der Sidebar und im Palettentitel. */
   .label-caps {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Sidebar-Gruppentitel – die einzige Versalien-Stelle im System */
+  .nav-group {
     font-size: 11px;
-    line-height: 1rem;
+    line-height: 16px;
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: hsl(var(--muted-foreground));
+    color: hsl(var(--sidebar-muted));
   }
+
+  .kbd {
+    display: inline-flex;
+    height: 18px;
+    min-width: 18px;
+    padding: 0 5px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    background: hsl(var(--muted));
+    color: hsl(var(--text-tertiary));
+    font-size: 11px;
+    font-weight: 500;
+    box-shadow: inset 0 -1px 0 hsl(var(--border-strong));
+  }
+  .sidebar .kbd {
+    background: hsl(var(--sidebar-badge));
+    color: hsl(var(--sidebar-muted));
+    box-shadow: none;
+  }
+
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border-strong)) transparent;
   }
-  .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: hsl(var(--border-strong));
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: content-box;
   }
-  /* Haarlinien-Raster für Zeitachsen */
-  .hairline-y {
-    background-image: linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px);
+  .scrollbar-sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--sidebar-badge)) transparent;
+  }
+  .scrollbar-sidebar::-webkit-scrollbar {
+    width: 8px;
+  }
+  .scrollbar-sidebar::-webkit-scrollbar-thumb {
+    background: hsl(var(--sidebar-badge));
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  /* Zeilenmenüs auf Geräten ohne Hover dauerhaft sichtbar */
+  @media (hover: none) {
+    .row-action {
+      opacity: 1 !important;
+    }
   }
 }

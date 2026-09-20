@@ -5,13 +5,22 @@ import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
 import { cn } from "@/lib/utils";
 
+const groessen = {
+  xs: "h-5 w-5 text-[10px]",
+  sm: "h-6 w-6 text-2xs",
+  md: "h-7 w-7 text-2xs",
+  lg: "h-9 w-9 text-xs",
+  xl: "h-12 w-12 text-sm",
+} as const;
+
+/** Avatar v3: neutraler Fallback – Farbe trägt nur der `SchuelerAvatar`. */
 const Avatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root> & { size?: keyof typeof groessen }
+>(({ className, size = "md", ...props }, ref) => (
   <AvatarPrimitive.Root
     ref={ref}
-    className={cn("relative flex h-9 w-9 shrink-0 overflow-hidden rounded-full", className)}
+    className={cn("relative flex shrink-0 overflow-hidden rounded-full", groessen[size], className)}
     {...props}
   />
 ));
@@ -36,7 +45,7 @@ const AvatarFallback = React.forwardRef<
   <AvatarPrimitive.Fallback
     ref={ref}
     className={cn(
-      "flex h-full w-full items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary-pressed",
+      "flex h-full w-full items-center justify-center rounded-full bg-surface-muted font-semibold text-foreground-secondary",
       className,
     )}
     {...props}

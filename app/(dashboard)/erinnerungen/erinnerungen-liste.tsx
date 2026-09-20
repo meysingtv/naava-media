@@ -66,7 +66,7 @@ export function ErinnerungenListe({
 
   if (items.length === 0) {
     return (
-      <div className="rounded-xl border bg-card px-4 py-10 text-center text-[13px] text-muted-foreground">
+      <div className="rounded-xl bg-card shadow-panel px-4 py-10 text-center text-[13px] text-muted-foreground">
         Keine geplanten Termine in den nächsten 3 Tagen.
       </div>
     );
@@ -79,7 +79,7 @@ export function ErinnerungenListe({
         <span className={cn("font-semibold", offen > 0 ? "text-warning" : "text-success")}>{offen}</span> noch offen
       </p>
 
-      <ul className="divide-y overflow-hidden rounded-xl border bg-card">
+      <ul className="divide-y overflow-hidden rounded-xl bg-card shadow-panel">
         {items.map((item) => {
           const typ = FAHRSTUNDE_TYPEN[item.typ];
           const text = nachricht(item, fahrschule, origin);

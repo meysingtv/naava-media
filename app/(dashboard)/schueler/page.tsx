@@ -108,7 +108,7 @@ export default async function SchuelerPage({ searchParams }: { searchParams: { i
               <SchuelerAkte schuelerId={selected.id} />
             </Suspense>
           ) : (
-            <div className="flex h-full min-h-[320px] flex-col items-center justify-center rounded-xl border border-dashed border-border-strong text-center">
+            <div className="flex h-full min-h-[320px] flex-col items-center justify-center rounded-xl bg-surface-muted/60 text-center">
               <Users className="mb-2 h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
               <p className="text-[13px] text-muted-foreground">Schüler auswählen, um den Ausbildungsprozess zu sehen.</p>
             </div>

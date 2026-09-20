@@ -1,39 +1,34 @@
 import type { LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+
+import { KpiCard } from "@/components/ui/kpi-card";
 
 /**
- * Kennzahl v2: kein Kasten, keine Icon-Kachel. Versalien-Label, große
- * tabellarische Zahl, Hinweis – mit linker Markierungslinie. Über
- * `iconClassName` (Alt-API) wird die Linie eingefärbt (success/warning).
+ * Kennzahl v3 – Hülle um `KpiCard`, damit alle bestehenden Aufrufe ohne
+ * Änderung die neue Optik bekommen. `iconClassName` wird zum Ton,
+ * `hint` zur Kontextzeile; `icon` wird bewusst IGNORIERT – KPI-Karten
+ * tragen in v3 kein Icon.
  */
 export function StatCard({
   label,
   value,
-  icon: Icon,
   iconClassName,
   hint,
+  className,
 }: {
   label: string;
   value: React.ReactNode;
   icon?: LucideIcon;
   iconClassName?: string;
   hint?: React.ReactNode;
+  className?: string;
 }) {
   const ton = iconClassName?.includes("success")
-    ? "border-success"
+    ? "success"
     : iconClassName?.includes("warning")
-      ? "border-warning"
+      ? "warning"
       : iconClassName?.includes("destructive")
-        ? "border-destructive"
-        : "border-primary";
-  return (
-    <div className={cn("flex min-w-0 flex-col gap-1 border-l-2 py-0.5 pl-3", ton)}>
-      <p className="label-caps flex items-center gap-1.5">
-        {Icon && <Icon className="h-3 w-3" strokeWidth={2} />}
-        {label}
-      </p>
-      <p className="text-[22px] font-semibold leading-7 tracking-[-0.01em] text-foreground tabular-nums">{value}</p>
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
-    </div>
-  );
+        ? "destructive"
+        : "neutral";
+
+  return <KpiCard label={label} value={value} sub={hint} tone={ton} className={className} />;
 }

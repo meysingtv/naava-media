@@ -133,7 +133,7 @@ export function SchuelerListe({
   }
 
   return (
-    <div className="rounded-xl border bg-card">
+    <div className="rounded-xl bg-card shadow-panel">
       {/* Kopf: Suche + Segmente + Aktionen */}
       <div className="flex flex-col gap-2 border-b p-2.5 sm:flex-row sm:items-center">
         <div className="relative sm:w-56">
@@ -150,11 +150,11 @@ export function SchuelerListe({
                 onClick={() => setSegment(s.key)}
                 className={cn(
                   "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-colors duration-fast",
-                  a ? "bg-foreground text-background" : "text-foreground-secondary hover:bg-foreground/[0.06] hover:text-foreground",
+                  a ? "bg-primary-soft text-primary-text" : "text-foreground-secondary hover:bg-foreground/[0.06] hover:text-foreground",
                 )}
               >
                 {s.label}
-                <span className={cn("tabular-nums", a ? "text-background/70" : "text-muted-foreground")}>{zaehl(s.key)}</span>
+                <span className={cn("tabular-nums", a ? "text-primary-text/70" : "text-muted-foreground")}>{zaehl(s.key)}</span>
               </button>
             );
           })}

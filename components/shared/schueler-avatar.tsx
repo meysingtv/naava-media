@@ -1,9 +1,9 @@
-import { cn } from "@/lib/utils";
-import { initialen } from "@/lib/utils";
+import { cn, initialen } from "@/lib/utils";
 
 /**
- * Schüler-Avatar mit persönlicher Farbe: weich getönter Hintergrund +
- * Initialen im Farbton – ruhig statt knallig.
+ * Schüler-Avatar v3: weich getönte Fläche, Initialen im Farbton, 32 px.
+ * Kein Inset-Ring mehr. Die persönliche Farbe bleibt – sie trägt Daten,
+ * nicht Dekor.
  */
 export function SchuelerAvatar({
   vorname,
@@ -16,14 +16,14 @@ export function SchuelerAvatar({
   farbe?: string | null;
   className?: string;
 }) {
-  const ton = farbe ?? "#0C8CA1";
+  const ton = farbe ?? "#14A15A";
   return (
     <div
       className={cn(
-        "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold",
+        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-13 font-semibold",
         className,
       )}
-      style={{ backgroundColor: `${ton}1F`, color: ton, boxShadow: `inset 0 0 0 1px ${ton}33` }}
+      style={{ backgroundColor: `${ton}1F`, color: ton }}
     >
       {initialen(vorname, nachname)}
     </div>

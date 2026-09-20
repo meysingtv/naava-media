@@ -1,262 +1,63 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import Link from "next/link";
-import { Loader2, Search, Sparkles } from "lucide-react";
+import { Search } from "lucide-react";
 
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useSidebar } from "@/components/shared/sidebar-context";
 import { cn } from "@/lib/utils";
-import { globalSuche, kiSuche, type SuchTreffer } from "@/app/(dashboard)/such-actions";
+import type { FahrlehrerRolle } from "@/lib/types";
 
-// ---------------------------------------------------------------------------
-// Gruppenbezeichnungen je Typ
-// ---------------------------------------------------------------------------
-const GRUPPENBEZEICHNUNG: Record<SuchTreffer["typ"], string> = {
-  schueler: "Schüler",
-  benutzer: "Benutzer",
-  fahrzeug: "Fahrzeuge",
-  rechnung: "Rechnungen",
-};
+/**
+ * Suche v3: Auslöser für die Kommandopalette – ein Button, kein Eingabefeld.
+ * Die Palette selbst hängt einmal in der Shell (`shell-overlays.tsx`), damit
+ * Sidebar und Mobil-Drawer sie sich teilen; die Such- und KI-Logik liegt in
+ * `command-palette.tsx`.
+ */
+export function GlobalSearch({
+  variant = "sidebar",
+  collapsed,
+  className,
+}: {
+  variant?: "sidebar" | "icon";
+  collapsed?: boolean;
+  /** Wird von der Palette in der Shell genutzt; hier nur zur API-Gleichheit. */
+  rolle?: FahrlehrerRolle;
+  className?: string;
+}) {
+  const { setPaletteOffen } = useSidebar();
+  const eingeklappt = collapsed || variant === "icon";
 
-const REIHENFOLGE: SuchTreffer["typ"][] = ["schueler", "benutzer", "fahrzeug", "rechnung"];
-
-// ---------------------------------------------------------------------------
-// Hilfsfunktion: Treffer nach Typ gruppieren (in definierter Reihenfolge)
-// ---------------------------------------------------------------------------
-function gruppiereNachTyp(treffer: SuchTreffer[]): { typ: SuchTreffer["typ"]; eintraege: SuchTreffer[] }[] {
-  const map = new Map<SuchTreffer["typ"], SuchTreffer[]>();
-  for (const t of treffer) {
-    const gruppe = map.get(t.typ) ?? [];
-    gruppe.push(t);
-    map.set(t.typ, gruppe);
-  }
-  return REIHENFOLGE.filter((typ) => map.has(typ)).map((typ) => ({
-    typ,
-    eintraege: map.get(typ)!,
-  }));
-}
-
-// ---------------------------------------------------------------------------
-// Komponente
-// ---------------------------------------------------------------------------
-
-export function GlobalSearch() {
-  const [query, setQuery] = useState("");
-  const [treffer, setTreffer] = useState<SuchTreffer[]>([]);
-  const [kiAntwort, setKiAntwort] = useState<string | undefined>(undefined);
-  const [offen, setOffen] = useState(false);
-  const [hatGesucht, setHatGesucht] = useState(false);
-
-  const [suchPending, startSuche] = useTransition();
-  const [kiPending, startKi] = useTransition();
-
-  const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  // Stale-result-Schutz: letzte abgeschickte Query merken
-  const letzteQueryRef = useRef<string>("");
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // ---------------------------------------------------------------------------
-  // Dropdown schließen
-  // ---------------------------------------------------------------------------
-  const schliessen = useCallback(() => {
-    setOffen(false);
-    setKiAntwort(undefined);
-  }, []);
-
-  // Außen-Klick-Listener
-  useEffect(() => {
-    function onMouseDown(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        schliessen();
-      }
-    }
-    document.addEventListener("mousedown", onMouseDown);
-    return () => document.removeEventListener("mousedown", onMouseDown);
-  }, [schliessen]);
-
-  // ⌘K / Ctrl+K fokussiert die Suche
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        inputRef.current?.focus();
-        inputRef.current?.select();
-      }
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
-
-  // ---------------------------------------------------------------------------
-  // Debounced Suche (250 ms)
-  // ---------------------------------------------------------------------------
-  const fuehereSucheAus = useCallback(
-    (wert: string) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-
-      if (wert.trim().length < 2) {
-        setTreffer([]);
-        setHatGesucht(false);
-        setOffen(false);
-        return;
-      }
-
-      debounceRef.current = setTimeout(() => {
-        const aktuelleQuery = wert;
-        letzteQueryRef.current = aktuelleQuery;
-
-        startSuche(async () => {
-          const ergebnis = await globalSuche(aktuelleQuery);
-          // Veraltete Antworten verwerfen
-          if (letzteQueryRef.current !== aktuelleQuery) return;
-          setTreffer(ergebnis);
-          setHatGesucht(true);
-          setOffen(true);
-          setKiAntwort(undefined);
-        });
-      }, 250);
-    },
-    [startSuche],
+  const knopf = (
+    <button
+      type="button"
+      onClick={() => setPaletteOffen(true)}
+      aria-label={eingeklappt ? "Suchen · ⌘K" : undefined}
+      className={cn(
+        "flex items-center rounded-md bg-sidebar-hover text-13 text-sidebar-muted ring-1 ring-inset ring-sidebar-border transition-colors duration-fast",
+        "hover:ring-sidebar-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-bar/70",
+        eingeklappt ? "mx-auto mt-3 h-10 w-10 justify-center" : "mx-3 mt-3 h-9 gap-2 px-2.5",
+        className,
+      )}
+    >
+      <Search className="h-[15px] w-[15px] shrink-0" strokeWidth={1.75} aria-hidden="true" />
+      {!eingeklappt && (
+        <>
+          <span className="flex-1 text-left">Suchen …</span>
+          <kbd className="kbd">⌘K</kbd>
+        </>
+      )}
+    </button>
   );
 
-  function onInput(e: React.ChangeEvent<HTMLInputElement>) {
-    const wert = e.target.value;
-    setQuery(wert);
-    fuehereSucheAus(wert);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Enter → KI-Suche
-  // ---------------------------------------------------------------------------
-  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Escape") {
-      schliessen();
-      inputRef.current?.blur();
-      return;
-    }
-
-    if (e.key === "Enter" && query.trim().length >= 2) {
-      e.preventDefault();
-      const aktuelleQuery = query;
-      letzteQueryRef.current = aktuelleQuery;
-
-      startKi(async () => {
-        const ergebnis = await kiSuche(aktuelleQuery);
-        if (letzteQueryRef.current !== aktuelleQuery) return;
-        setTreffer(ergebnis.treffer);
-        setHatGesucht(true);
-        setOffen(true);
-        setKiAntwort(ergebnis.kiAntwort);
-      });
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // Rendern
-  // ---------------------------------------------------------------------------
-  const gruppen = gruppiereNachTyp(treffer);
-  const istLadend = suchPending || kiPending;
+  if (!eingeklappt) return knopf;
 
   return (
-    <div ref={containerRef} className="relative w-full">
-      {/* Suchfeld */}
-      <div
-        className={cn(
-          "flex h-8 items-center gap-2 rounded-md border border-transparent bg-surface-muted px-2.5 transition-[background-color,border-color,box-shadow] duration-fast ease-soft",
-          "hover:border-border-strong",
-          "focus-within:border-primary focus-within:bg-card focus-within:ring-2 focus-within:ring-primary/25",
-          offen && "border-primary bg-card ring-2 ring-primary/25",
-        )}
-      >
-        {istLadend ? (
-          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
-        ) : (
-          <Search className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
-        )}
-        <input
-          ref={inputRef}
-          type="search"
-          value={query}
-          onChange={onInput}
-          onKeyDown={onKeyDown}
-          onFocus={() => {
-            if (hatGesucht && treffer.length > 0) setOffen(true);
-          }}
-          placeholder="Suchen oder fragen …"
-          className="h-full w-full bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none [&::-webkit-search-cancel-button]:appearance-none"
-          autoComplete="off"
-          spellCheck={false}
-        />
-        <kbd className="hidden shrink-0 select-none items-center gap-0.5 rounded-[5px] border bg-background px-1.5 py-0.5 font-sans text-2xs font-medium text-muted-foreground lg:inline-flex">
-          ⌘K
-        </kbd>
-      </div>
-
-      {/* Dropdown */}
-      {offen && (
-        <div
-          className={cn(
-            "absolute left-0 right-0 top-[calc(100%+6px)] z-50 animate-scale-in origin-top",
-            "max-h-[min(480px,70vh)] overflow-y-auto scrollbar-thin",
-            "rounded-lg border bg-popover p-1 shadow-md",
-          )}
-        >
-          {/* KI-Antwort-Banner */}
-          {kiAntwort && (
-            <div className="mb-1 flex items-start gap-2.5 rounded-md bg-primary-soft px-3 py-2.5">
-              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <p className="text-sm text-foreground">{kiAntwort}</p>
-            </div>
-          )}
-
-          {/* KI lädt noch */}
-          {kiPending && !kiAntwort && (
-            <div className="mb-1 flex items-center gap-2.5 rounded-md bg-primary-soft px-3 py-2.5">
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">KI analysiert …</p>
-            </div>
-          )}
-
-          {/* Keine Treffer */}
-          {hatGesucht && treffer.length === 0 && !suchPending && (
-            <p className="px-3 py-8 text-center text-sm text-muted-foreground">Keine Treffer</p>
-          )}
-
-          {/* Gruppen */}
-          {gruppen.map(({ typ, eintraege }) => (
-            <div key={typ}>
-              {/* Gruppenüberschrift */}
-              <p className="px-2.5 pb-1 pt-2 text-2xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                {GRUPPENBEZEICHNUNG[typ]}
-              </p>
-              {/* Einträge */}
-              {eintraege.map((eintrag) => (
-                <Link
-                  key={eintrag.id}
-                  href={eintrag.href}
-                  onClick={schliessen}
-                  className={cn(
-                    "flex flex-col rounded-sm px-2.5 py-2 text-sm transition-colors duration-fast",
-                    "hover:bg-surface focus:bg-surface focus:outline-none",
-                  )}
-                >
-                  <span className="font-medium text-foreground">{eintrag.titel}</span>
-                  {eintrag.untertitel && (
-                    <span className="text-xs text-muted-foreground">{eintrag.untertitel}</span>
-                  )}
-                </Link>
-              ))}
-            </div>
-          ))}
-
-          {/* Hinweis */}
-          {!kiAntwort && !kiPending && treffer.length > 0 && (
-            <p className="mt-1 border-t px-2.5 pb-1 pt-2 text-2xs text-muted-foreground">
-              <span className="font-medium text-foreground-secondary">Enter</span> für eine KI-Antwort
-            </p>
-          )}
-        </div>
-      )}
-    </div>
+    <Tooltip side="right" sideOffset={10}>
+      <TooltipTrigger>{knopf}</TooltipTrigger>
+      <TooltipContent>
+        Suchen
+        <kbd className="kbd">⌘K</kbd>
+      </TooltipContent>
+    </Tooltip>
   );
 }

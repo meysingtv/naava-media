@@ -4,7 +4,7 @@ import { ArrowRight, Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/page-header";
-import { StatCard } from "@/components/shared/stat-card";
+import { KpiCard, KpiRow } from "@/components/ui/kpi-card";
 import { cn, formatDatum, formatEuro } from "@/lib/utils";
 import type { Fahrschueler, Rechnung, Zahlung } from "@/lib/types";
 
@@ -72,19 +72,40 @@ export default async function FinanzenPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Finanzen" title="Übersicht" description="Liquidität, offene Posten und Zahlungsfluss auf einen Blick." />
+      <PageHeader
+        breadcrumb={[{ label: "Finanzen", href: "/finanzen" }]}
+        title="Übersicht"
+        description={`${offen.length} offene Posten`}
+      />
 
-      {/* Kennzahlen-Zeile */}
-      <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
-        <StatCard label="Eingänge diesen Monat" value={formatEuro(eingaengeMonat)} iconClassName="success" />
-        <StatCard label="Offen" value={formatEuro(offenSumme)} hint={`${offen.length} Rechnungen`} />
-        <StatCard label="Überfällig" value={formatEuro(ueberfaelligSumme)} hint={`${ueberfaellig.length} Rechnungen`} iconClassName={ueberfaellig.length ? "destructive" : ""} />
-        <StatCard label={`Umsatz ${jahr}`} value={formatEuro(umsatzJahr)} />
-      </div>
+      {/* Kennzahlen-Zeile – jede Zahl mit Kontext, gap-4 statt v2-Luft */}
+      <KpiRow>
+        <KpiCard
+          label="Eingänge diesen Monat"
+          value={formatEuro(eingaengeMonat)}
+          tone="success"
+          sub="Zahlungseingänge brutto"
+          trend={monate.map((m) => m.zahlungen)}
+        />
+        <KpiCard
+          label="Offen"
+          value={formatEuro(offenSumme)}
+          sub={`${offen.length} Rechnungen`}
+          href="/rechnungen"
+        />
+        <KpiCard
+          label="Überfällig"
+          value={formatEuro(ueberfaelligSumme)}
+          sub={`${ueberfaellig.length} Rechnungen`}
+          tone={ueberfaellig.length ? "destructive" : "neutral"}
+          href="/rechnungslauf"
+        />
+        <KpiCard label={`Umsatz ${jahr}`} value={formatEuro(umsatzJahr)} sub="Rechnungsbeträge brutto" />
+      </KpiRow>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         {/* Zahlungsfluss */}
-        <section className="rounded-xl border bg-card p-4">
+        <section className="rounded-xl bg-card shadow-panel p-4">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="label-caps">Rechnungen vs. Zahlungseingänge · 6 Monate</h2>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -114,11 +135,11 @@ export default async function FinanzenPage() {
         </section>
 
         {/* Überfällig */}
-        <section className="rounded-xl border bg-card">
+        <section className="rounded-xl bg-card shadow-panel">
           <div className="flex items-center justify-between px-4 pb-2 pt-3.5">
             <h2 className="label-caps">Überfällig</h2>
             {ueberfaellig.length > 0 && (
-              <Link href="/rechnungslauf" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-hover">
+              <Link href="/rechnungslauf" className="inline-flex items-center gap-1 text-xs font-medium text-primary-text hover:underline">
                 <Bell className="h-3.5 w-3.5" /> Mahnlauf
               </Link>
             )}
@@ -150,12 +171,12 @@ export default async function FinanzenPage() {
         </section>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {/* Letzte Zahlungen */}
-        <section className="rounded-xl border bg-card">
+        <section className="rounded-xl bg-card shadow-panel">
           <div className="flex items-center justify-between px-4 pb-2 pt-3.5">
             <h2 className="label-caps">Letzte Zahlungseingänge</h2>
-            <Link href="/zahlungen" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-hover">
+            <Link href="/zahlungen" className="inline-flex items-center gap-1 text-xs font-medium text-primary-text hover:underline">
               Alle <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
@@ -176,10 +197,10 @@ export default async function FinanzenPage() {
         </section>
 
         {/* Letzte Rechnungen */}
-        <section className="rounded-xl border bg-card">
+        <section className="rounded-xl bg-card shadow-panel">
           <div className="flex items-center justify-between px-4 pb-2 pt-3.5">
             <h2 className="label-caps">Letzte Rechnungen</h2>
-            <Link href="/rechnungen" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-hover">
+            <Link href="/rechnungen" className="inline-flex items-center gap-1 text-xs font-medium text-primary-text hover:underline">
               Alle <ArrowRight className="h-3 w-3" />
             </Link>
           </div>

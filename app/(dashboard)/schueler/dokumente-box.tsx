@@ -83,7 +83,7 @@ export function DokumenteBox({ schuelerId, dokumente }: { schuelerId: string; do
         </div>
 
         {dokumente.length === 0 ? (
-          <p className="rounded-md border border-dashed border-border-strong py-6 text-center text-sm text-muted-foreground">
+          <p className="rounded-md bg-surface-muted/60 py-6 text-center text-sm text-muted-foreground">
             Noch keine Dokumente. Sehtest, Passbild &amp; Co. hier ablegen.
           </p>
         ) : (

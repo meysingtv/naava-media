@@ -1,20 +1,15 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonKpiRow, SkeletonTable } from "@/components/ui/skeleton";
 
-// Wird beim Navigieren sofort angezeigt, während die Seite (server-seitig)
-// lädt – verhindert das „Hängen"/Leer-Gefühl beim ersten Seitenwechsel.
+// Wird beim Navigieren sofort angezeigt, während die Seite server-seitig
+// lädt – Maße wie die neue Shell: 56-px-Kopf, KPI-Zeile, Datentabelle.
 export default function Loading() {
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <Skeleton className="h-7 w-48" />
-        <Skeleton className="h-4 w-72" />
+      <div className="mb-5 flex h-14 items-center">
+        <Skeleton className="h-6 w-40" />
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-[104px] rounded-lg" />
-        ))}
-      </div>
-      <Skeleton className="h-72 rounded-lg" />
+      <SkeletonKpiRow n={4} />
+      <SkeletonTable rows={8} />
     </div>
   );
 }

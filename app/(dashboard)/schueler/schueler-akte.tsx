@@ -62,7 +62,7 @@ function Balken({ label, ist, soll }: { label: string; ist: number; soll: number
 /** Panel-Abschnitt in der Akte. */
 function Block({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className={cn("rounded-xl border bg-card px-4 py-3", className)}>
+    <section className={cn("rounded-xl bg-card shadow-panel px-4 py-3", className)}>
       <h3 className="label-caps mb-1.5">{title}</h3>
       {children}
     </section>
@@ -74,7 +74,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
 
   const { data: schueler } = await supabase.from("fahrschueler").select("*").eq("id", schuelerId).maybeSingle();
   if (!schueler) {
-    return <div className="rounded-xl border bg-card p-6 text-[13px] text-muted-foreground">Schüler nicht gefunden.</div>;
+    return <div className="rounded-xl bg-card shadow-panel p-6 text-[13px] text-muted-foreground">Schüler nicht gefunden.</div>;
   }
   const s = schueler as Fahrschueler;
 
@@ -188,7 +188,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
       </Link>
 
       {/* Kopf */}
-      <div className="rounded-xl border bg-card">
+      <div className="rounded-xl bg-card shadow-panel">
         <div className="flex flex-col gap-3 px-4 pb-3 pt-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
             <SchuelerAvatar vorname={s.vorname} nachname={s.nachname} farbe={s.avatar_farbe} className="h-11 w-11 text-sm" />
@@ -364,7 +364,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
         </TabsContent>
 
         <TabsContent value="fahrstunden" className="mt-3">
-          <div className="rounded-xl border bg-card">
+          <div className="rounded-xl bg-card shadow-panel">
             {fahrstunden.length === 0 ? (
               <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">Noch keine Fahrstunden – im Kalender eintragen.</p>
             ) : (

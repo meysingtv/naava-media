@@ -160,7 +160,7 @@ export default async function BerichtePage({ searchParams }: { searchParams: { z
             <Link
               key={v}
               href={`/berichte?zeitraum=${v}`}
-              className={cn("h-7 rounded-[4px] px-2.5 leading-7 font-medium transition-colors", zeitraum === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
+              className={cn("h-7 rounded-[4px] px-2.5 leading-7 font-medium transition-colors", zeitraum === v ? "bg-primary-soft text-primary-text" : "text-muted-foreground hover:text-foreground")}
             >
               {l}
             </Link>
@@ -177,18 +177,18 @@ export default async function BerichtePage({ searchParams }: { searchParams: { z
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <section className="rounded-xl border bg-card p-4">
+        <section className="rounded-xl bg-card shadow-panel p-4">
           <h2 className="label-caps mb-3">Umsatz · 12 Monate</h2>
           <Balken daten={monate.map((m) => ({ ...m, wert: Math.round(umsatzMap[m.key] ?? 0) }))} format={(n) => formatEuro(n)} />
         </section>
-        <section className="rounded-xl border bg-card p-4">
+        <section className="rounded-xl bg-card shadow-panel p-4">
           <h2 className="label-caps mb-3">Neuanmeldungen · 12 Monate</h2>
           <Balken daten={monate.map((m) => ({ ...m, wert: anmeldMap[m.key] ?? 0 }))} />
         </section>
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <section className="rounded-xl border bg-card p-4">
+        <section className="rounded-xl bg-card shadow-panel p-4">
           <h2 className="label-caps mb-3">Fahrlehrer-Auslastung · {label}</h2>
           {topLehrer.length === 0 ? (
             <p className="py-6 text-center text-[13px] text-muted-foreground">Keine Fahrstunden im Zeitraum.</p>
@@ -209,7 +209,7 @@ export default async function BerichtePage({ searchParams }: { searchParams: { z
           )}
         </section>
 
-        <section className="rounded-xl border bg-card p-4">
+        <section className="rounded-xl bg-card shadow-panel p-4">
           <h2 className="label-caps mb-3">Prüfungserfolg · {label}</h2>
           <div className="grid grid-cols-2 gap-4">
             {[

@@ -30,10 +30,11 @@ const config: Config = {
         paper: "#F4F6F5",
         line: "#E3E8E5",
         line2: "#CBD3CF",
-        // --- App ---
+        // --- App (Designsystem v3) ---
         border: {
           DEFAULT: "hsl(var(--border))",
           strong: "hsl(var(--border-strong))",
+          hover: "hsl(var(--border-hover))",
         },
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -42,6 +43,7 @@ const config: Config = {
         foreground: {
           DEFAULT: "hsl(var(--foreground))",
           secondary: "hsl(var(--text-secondary))",
+          tertiary: "hsl(var(--text-tertiary))",
           disabled: "hsl(var(--text-disabled))",
         },
         surface: {
@@ -56,6 +58,7 @@ const config: Config = {
           soft: "hsl(var(--primary-soft))",
           "soft-strong": "hsl(var(--primary-soft-strong))",
           "soft-border": "hsl(var(--primary-soft-border))",
+          text: "hsl(var(--primary-text))",
         },
         "accent-bright": "hsl(var(--accent-bright))",
         secondary: {
@@ -66,16 +69,36 @@ const config: Config = {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
           soft: "hsl(var(--success-soft))",
+          text: "hsl(var(--success-text))",
         },
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
           soft: "hsl(var(--warning-soft))",
+          text: "hsl(var(--warning-text))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
           soft: "hsl(var(--destructive-soft))",
+          text: "hsl(var(--destructive-text))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+          soft: "hsl(var(--info-soft))",
+          text: "hsl(var(--info-text))",
+        },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          muted: "hsl(var(--sidebar-muted))",
+          hover: "hsl(var(--sidebar-hover))",
+          active: "hsl(var(--sidebar-active))",
+          "active-foreground": "hsl(var(--sidebar-active-foreground))",
+          bar: "hsl(var(--sidebar-bar))",
+          border: "hsl(var(--sidebar-border))",
+          badge: "hsl(var(--sidebar-badge))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -95,34 +118,52 @@ const config: Config = {
         },
       },
       borderRadius: {
-        sm: "0.25rem", // 4px – Chips
-        md: "0.375rem", // 6px – Controls
-        lg: "0.5rem", // 8px – kleine Panels
-        xl: "0.625rem", // 10px – Panels / Dialoge
-        "2xl": "0.75rem",
+        sm: "0.375rem", // 6px – Checkbox, Menü-Items
+        md: "var(--radius-control)", // 8px – Buttons, Inputs, Chips
+        lg: "var(--radius-panel)", // 10px – Panels, Popover
+        xl: "var(--radius-panel)", // 10px – Panels (Alias)
+        "2xl": "var(--radius-dialog)", // 14px – Dialog, Kommandopalette
       },
       boxShadow: {
-        // Flächen ohne Schatten; nur schwebende Ebenen (Menüs, Dialoge)
-        xs: "none",
-        sm: "none",
-        md: "0 6px 20px -6px rgba(27, 35, 39, 0.16), 0 1px 2px 0 rgba(27, 35, 39, 0.06)",
-        lg: "0 16px 40px -12px rgba(27, 35, 39, 0.22), 0 2px 6px -2px rgba(27, 35, 39, 0.08)",
-        // Marketing-Website
+        // v3: der 1-px-Ring gibt die Kante, der weiche Schatten die Höhe
+        xs: "var(--shadow-control)",
+        sm: "var(--shadow-control)",
+        DEFAULT: "var(--shadow-panel)",
+        panel: "var(--shadow-panel)",
+        md: "var(--shadow-popover)",
+        lg: "var(--shadow-overlay)",
+        // Marketing-Website (unverändert)
         card: "0 12px 40px -18px rgba(15,26,21,.25)",
         lift: "0 24px 60px -24px rgba(15,26,21,.35)",
         cta: "0 12px 28px -10px rgba(255,106,43,.6)",
-        DEFAULT: "none",
       },
       fontFamily: {
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
         // Marketing-Website
         mk: ["var(--font-mk-sans)", "Plus Jakarta Sans", "system-ui", "sans-serif"],
         display: ["var(--font-display)", "Barlow Condensed", "Impact", "sans-serif"],
       },
       fontSize: {
-        // Zusatzgröße für Labels/Tabellen-Header (13 px); Standard-Skala bleibt.
-        "2xs": ["0.6875rem", { lineHeight: "1rem" }],
-        "13": ["0.8125rem", { lineHeight: "1.25rem" }],
+        // Tailwind-Standardgrößen bleiben (Marketing + Portal nutzen sie).
+        "2xs": ["0.6875rem", { lineHeight: "1rem" }], // 11
+        "13": ["0.8125rem", { lineHeight: "1.25rem" }], // 13 – Body der App
+        kpi: ["1.375rem", { lineHeight: "1.75rem" }], // 22 – KPI-Wert
+        "kpi-lg": ["1.75rem", { lineHeight: "2.125rem" }], // 28 – KPI hervorgehoben
+      },
+      spacing: {
+        "9.5": "2.375rem", // 38 px – Inputs, Button size="lg"
+        sidebar: "var(--sidebar-w)",
+        header: "var(--header-h)",
+      },
+      zIndex: {
+        sticky: "10",
+        header: "20",
+        sidebar: "30",
+        sheet: "40",
+        dialog: "50",
+        popover: "60",
+        palette: "70",
+        toast: "80",
       },
       maxWidth: {
         wrap: "1240px",

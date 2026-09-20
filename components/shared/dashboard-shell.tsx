@@ -1,5 +1,7 @@
-import { AreaNav, MobileAreaBar } from "@/components/shared/area-nav";
-import { TopBar } from "@/components/shared/top-bar";
+import { Sidebar, SidebarDrawer } from "@/components/shared/sidebar";
+import { SidebarProvider } from "@/components/shared/sidebar-context";
+import { ShellOverlays } from "@/components/shared/shell-overlays";
+import type { Zaehler } from "@/components/shared/bereiche";
 import type { FahrlehrerRolle, FahrschulMitgliedschaft } from "@/lib/types";
 
 interface DashboardShellProps {
@@ -12,43 +14,46 @@ interface DashboardShellProps {
   email: string | null;
   fahrschulen: FahrschulMitgliedschaft[];
   aktiveFahrschuleId: string | null;
+  /** Zähler an Sidebar-Einträgen – nur, wenn die Zahl ohne Extrakosten vorliegt. */
+  zaehler?: Zaehler;
   children: React.ReactNode;
 }
 
 /**
- * App-Rahmen v2: Top-Bar + Bereichs-Navigation oben, Inhalt in voller
- * Breite auf der Arbeitsfläche. Keine Sidebar. Mobil: Bottom-Bar.
+ * App-Rahmen v3: feste Sidebar links (256 px / eingeklappt 68 px), rechts
+ * der Inhalt mit eigener 56-px-Kopfzeile je Seite. Keine Top-Bar, keine
+ * Bereichs-Leiste, keine Kontext-Tabs, keine Bottom-Bar.
+ *
+ * Gescrollt wird die SEITE, nicht `main` – dadurch funktionieren
+ * `sticky top-0` am Seitenkopf und `sticky top-14` am Tabellenkopf ohne
+ * Sonderfälle, und der Druck bleibt einfach.
  */
-export function DashboardShell({
-  fahrschuleName,
-  ort,
-  logoUrl,
-  vorname,
-  nachname,
-  rolle,
-  email,
-  fahrschulen,
-  aktiveFahrschuleId,
-  children,
-}: DashboardShellProps) {
+export function DashboardShell({ children, zaehler, ...kontext }: DashboardShellProps) {
   return (
-    <div className="min-h-screen bg-canvas">
-      <TopBar
-        fahrschuleName={fahrschuleName}
-        ort={ort}
-        logoUrl={logoUrl}
-        vorname={vorname}
-        nachname={nachname}
-        rolle={rolle}
-        email={email}
-        fahrschulen={fahrschulen}
-        aktiveFahrschuleId={aktiveFahrschuleId}
-      />
-      <AreaNav rolle={rolle} />
-      <main className="mx-auto w-full max-w-[1440px] px-3 pb-20 pt-4 md:px-5 md:pb-8 md:pt-5 lg:px-8 print:!p-0">
-        {children}
-      </main>
-      <MobileAreaBar rolle={rolle} />
-    </div>
+    <SidebarProvider>
+      <a
+        href="#inhalt"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-palette focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:text-13 focus:font-medium focus:shadow-md"
+      >
+        Zum Inhalt springen
+      </a>
+
+      <div className="min-h-dvh bg-canvas">
+        <Sidebar {...kontext} zaehler={zaehler} />
+        <SidebarDrawer {...kontext} zaehler={zaehler} />
+
+        <div className="transition-[padding] duration-overlay ease-soft lg:pl-[var(--sidebar-w)] print:pl-0">
+          <main
+            id="inhalt"
+            tabIndex={-1}
+            className="mx-auto w-full max-w-[1440px] px-4 pb-16 focus-visible:outline-none md:px-6 lg:px-8 print:!p-0"
+          >
+            {children}
+          </main>
+        </div>
+      </div>
+
+      <ShellOverlays rolle={kontext.rolle} />
+    </SidebarProvider>
   );
 }

@@ -55,7 +55,7 @@ function Kachel({
   const tonKlasse =
     ton === "gut" ? "text-success" : ton === "warnung" ? "text-warning" : ton === "kritisch" ? "text-destructive" : "text-foreground";
   return (
-    <div className="rounded-xl border bg-card p-4">
+    <div className="rounded-xl bg-card shadow-panel p-4">
       <div className="mb-2 flex items-center gap-2 text-muted-foreground">
         <Icon className="h-4 w-4" strokeWidth={1.75} />
         <span className="label-caps">{label}</span>
@@ -198,7 +198,7 @@ export function CockpitView({ stunden, lehrer, fahrzeuge, offene, jetztIso }: Co
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <section className="rounded-xl border bg-card p-4">
+        <section className="rounded-xl bg-card shadow-panel p-4">
           <div className="mb-3 flex items-center gap-2">
             <Users className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
             <h2 className="label-caps">Auslastung Fahrlehrer · diese Woche</h2>
@@ -215,7 +215,7 @@ export function CockpitView({ stunden, lehrer, fahrzeuge, offene, jetztIso }: Co
           <p className="mt-3 text-[11px] text-muted-foreground">Basis: {KAPAZITAET_STD_WOCHE} planbare Std/Woche je Fahrlehrer.</p>
         </section>
 
-        <section className="rounded-xl border bg-card p-4">
+        <section className="rounded-xl bg-card shadow-panel p-4">
           <div className="mb-3 flex items-center gap-2">
             <Car className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
             <h2 className="label-caps">Auslastung Fahrzeuge · diese Woche</h2>
@@ -234,10 +234,10 @@ export function CockpitView({ stunden, lehrer, fahrzeuge, offene, jetztIso }: Co
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <section className="rounded-xl border bg-card p-4">
+        <section className="rounded-xl bg-card shadow-panel p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="label-caps">Offene Posten nach Alter</h2>
-            <Link href="/rechnungslauf" className="text-xs font-medium text-primary hover:text-primary-hover">
+            <Link href="/rechnungslauf" className="text-xs font-medium text-primary-text hover:underline">
               Mahnlauf
             </Link>
           </div>
@@ -259,7 +259,7 @@ export function CockpitView({ stunden, lehrer, fahrzeuge, offene, jetztIso }: Co
           </ul>
         </section>
 
-        <section className="rounded-xl border bg-card p-4">
+        <section className="rounded-xl bg-card shadow-panel p-4">
           <div className="mb-3 flex items-center gap-2">
             <TrendingDown className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
             <h2 className="label-caps">Ausfälle je Fahrlehrer · 30 Tage</h2>
