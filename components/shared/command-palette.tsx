@@ -354,7 +354,6 @@ export function CommandPalette({
           <div className="flex h-9 items-center gap-4 border-t border-border px-4 text-2xs text-foreground-tertiary">
             <span>↑↓ navigieren</span>
             <span>↵ öffnen</span>
-            <span>⌘↵ KI fragen</span>
           </div>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

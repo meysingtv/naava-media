@@ -3,9 +3,10 @@ import Link from "next/link";
 import { Bell, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { GlobalSearch } from "@/components/shared/global-search";
 import { HeaderSentinel } from "@/components/shared/header-sentinel";
-import { HeaderTools } from "@/components/shared/header-tools";
 import { MobileMenuButton } from "@/components/shared/mobile-menu-button";
+import { NeuMenu } from "@/components/shared/neu-menu";
 import { cn } from "@/lib/utils";
 
 export interface PageTopbarProps {
@@ -26,10 +27,10 @@ export interface PageTopbarProps {
 }
 
 /**
- * Seitenkopf v3: genau 56 px, eine Zeile, klebend. Links Menü-Button (mobil),
- * Zurück-Chevron, Breadcrumb und Titel; rechts die Seitenaktionen und die
- * Glocke. KEIN zweites Navigationsband, keine Kontext-Tabs – Unterbereiche
- * sind Sidebar-Einträge oder Tabs im Inhalt.
+ * Seitenkopf: genau 56 px, eine Zeile, klebend. Drei Zonen – links
+ * Menü-Button (mobil), Zurück-Chevron, Breadcrumb und Titel; MITTIG die
+ * Suche; rechts Seitenaktionen, „Neu" und die Glocke, bündig am rechten
+ * Fensterrand.
  *
  * Server-Komponente: Der Breadcrumb wird übergeben, nicht aus dem Pfad
  * geraten – so wandert kein "use client" durch den Baum.
@@ -97,12 +98,21 @@ export function PageTopbar({
           )}
         </nav>
 
-        <div data-actions className="ml-auto flex shrink-0 items-center gap-2 print:hidden">
-          {/* Seitenaktionen zuerst, danach die app-weiten Werkzeuge */}
+        {/* Suche – mittig im FENSTER. Ab `lg` schiebt der Versatz um die halbe
+            Navigationsbreite nach links, damit die Mitte auf dem Bildschirm
+            stimmt und nicht nur im Inhaltsbereich. */}
+        <div className="pointer-events-none absolute inset-x-0 hidden justify-center md:flex lg:translate-x-[calc(var(--sidebar-w)/-2)] print:hidden">
+          <div className="pointer-events-auto w-full max-w-[420px] px-4">
+            <GlobalSearch />
+          </div>
+        </div>
+
+        <div data-actions className="relative ml-auto flex shrink-0 items-center gap-2 print:hidden">
           {seitenAktionen}
           {seitenAktionen ? <span className="mx-0.5 hidden h-5 w-px bg-border sm:block" /> : null}
 
-          <HeaderTools />
+          <GlobalSearch variant="icon" className="md:hidden" />
+          <NeuMenu />
 
           {notifications && (
             <Button asChild variant="ghost" size="icon-sm" className="relative">

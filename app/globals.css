@@ -32,15 +32,15 @@
     --text-disabled: 144 6% 68%; /* #A9B3AD */
 
     /* Marke: Markengrün */
-    --primary: 150 78% 35%; /* #14A15A */
+    --primary: 225 79% 54%; /* #2B59E6 – Kobaltblau */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 150 80% 30%; /* #0F8A4C */
-    --primary-pressed: 150 80% 25%; /* #0C7340 */
-    --primary-soft: 145 55% 94%; /* #E7F8EE */
-    --primary-soft-strong: 145 60% 84%; /* #BFEFD3 */
-    --primary-soft-border: 148 44% 74%; /* #9ED9BA */
-    --primary-text: 150 80% 25%; /* #0C7340 – jeder grüne Text, 5,9:1 */
-    --accent-bright: 147 66% 51%; /* #2ED47A – nur Sidebar-Balken/Spur */
+    --primary-hover: 226 70% 45%; /* #2249C4 */
+    --primary-pressed: 225 71% 37%; /* #1B3CA0 */
+    --primary-soft: 224 85% 96%; /* #EBF0FE */
+    --primary-soft-strong: 222 87% 87%; /* #C2D2FB */
+    --primary-soft-border: 224 83% 79%; /* #9BB4F6 */
+    --primary-text: 225 71% 37%; /* #1B3CA0 – jeder blaue Text, 9,1:1 */
+    --accent-bright: 224 100% 65%; /* #4C7BFF – Balken am aktiven Eintrag */
 
     --secondary: 90 8% 95%; /* neutraler Grau-Button */
     --secondary-foreground: 163 17% 8%;
@@ -63,28 +63,29 @@
     --destructive-soft: 3 76% 95%; /* #FCEAE9 */
     --destructive-text: 3 62% 43%; /* #B3312A – 6,2:1 */
 
-    --info: 214 84% 56%; /* #2F80ED */
+    /* Info bewusst türkis, damit es sich vom blauen Markenton abhebt */
+    --info: 192 91% 36%; /* #0891B2 */
     --info-foreground: 0 0% 100%;
-    --info-soft: 214 84% 95%; /* #E8F1FD */
-    --info-text: 215 71% 42%; /* #1F5FB8 – 6,2:1 */
+    --info-soft: 191 62% 92%; /* #E0F4F8 */
+    --info-text: 193 82% 31%; /* #0E7490 – 5,4:1 */
 
     /* Linien & Fokus – Linien nur noch INNERHALB von Panels */
     --border: 100 6% 90%; /* #E6E8E5 */
     --border-strong: 132 5% 82%; /* #CFD4D0 */
     --border-hover: 132 5% 73%; /* #B7BEB8 */
     --input: 132 5% 82%;
-    --ring: 150 78% 35%;
+    --ring: 225 79% 54%;
 
-    /* Sidebar – weiße Fläche wie die Panels. Die Trennung zur Arbeitsfläche
-       macht die Linie rechts, nicht ein Farbsprung. */
-    --sidebar: 0 0% 100%; /* #FFFFFF Fläche */
+    /* Sidebar – KEINE eigene Fläche: exakt die Arbeitsfläche, keine Linie,
+       kein Schatten. Die Navigation steht frei auf der Seite. */
+    --sidebar: var(--canvas);
     --sidebar-foreground: 163 17% 8%; /* #111816 – Haupttext */
     --sidebar-muted: 154 8% 39%; /* #5B6B63 Gruppentitel und Icons – 6,1:1 */
-    --sidebar-hover: 90 8% 95%; /* #F2F3F1 */
-    --sidebar-active: 145 55% 94%; /* #E7F8EE – helle Mint-Fläche */
-    --sidebar-active-foreground: 150 80% 25%; /* #0C7340 – 5,9:1 auf Mint */
-    --sidebar-bar: 150 78% 35%; /* #14A15A – Balken am aktiven Eintrag */
-    --sidebar-border: 100 6% 90%; /* #E6E8E5 */
+    --sidebar-hover: 80 7% 92%; /* #EBEDE7 – leichte Abhebung beim Überfahren */
+    --sidebar-active: 224 85% 96%; /* #EBF0FE – helle Blaufläche */
+    --sidebar-active-foreground: 225 71% 37%; /* #1B3CA0 – 8,3:1 auf Blau */
+    --sidebar-bar: 225 79% 54%; /* #2B59E6 – Balken am aktiven Eintrag */
+    --sidebar-border: 100 6% 90%; /* #E6E8E5 – nur noch im Mobil-Drawer */
     --sidebar-badge: 90 8% 92%; /* #EBEDE9 */
 
     /* Maße */

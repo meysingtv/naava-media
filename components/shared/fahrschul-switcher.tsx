@@ -78,7 +78,7 @@ export function FahrschulSwitcher({
   return (
     <div
       className={cn(
-        "flex h-14 shrink-0 items-center border-b border-sidebar-border px-3",
+        "flex h-14 shrink-0 items-center px-3",
         eingeklappt && "justify-center px-0",
       )}
     >

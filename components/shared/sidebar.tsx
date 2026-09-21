@@ -52,11 +52,10 @@ function SidebarInhalt({ imDrawer, ...props }: SidebarProps & { imDrawer?: boole
       <SidebarNav rolle={props.rolle} zaehler={props.zaehler} imDrawer={imDrawer} />
 
       {/* C – Fuß */}
-      <div className="mt-auto space-y-1 border-t border-sidebar-border p-3">
+      <div className="mt-auto space-y-1 p-3 pt-4">
         <SidebarButton
           icon={Sparkles}
           label="Assistent"
-          shortcut="⌘J"
           iconClassName="text-primary"
           onClick={() => setAssistentOffen(true)}
           imDrawer={imDrawer}
@@ -74,7 +73,6 @@ function SidebarInhalt({ imDrawer, ...props }: SidebarProps & { imDrawer?: boole
           <SidebarButton
             icon={collapsed ? PanelLeftOpen : PanelLeftClose}
             label={collapsed ? "Ausklappen" : "Einklappen"}
-            shortcut="⌘B"
             onClick={umschalten}
             className="hidden text-sidebar-muted lg:flex"
           />
@@ -94,7 +92,7 @@ export function Sidebar(props: SidebarProps) {
       aria-label="Hauptnavigation"
       className={cn(
         "sidebar fixed inset-y-0 left-0 z-sidebar hidden w-[var(--sidebar-w)] flex-col",
-        "border-r border-sidebar-border bg-sidebar text-sidebar-foreground",
+        "bg-sidebar text-sidebar-foreground",
         "transition-[width] duration-overlay ease-soft lg:flex print:hidden",
       )}
     >

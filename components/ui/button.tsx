@@ -49,16 +49,14 @@ export interface ButtonProps
   asChild?: boolean;
   /** Zeigt einen Spinner links, setzt `aria-busy` und deaktiviert den Button. */
   loading?: boolean;
-  /** Tastenkürzel rechts im Button – erst ab `md` sichtbar. */
-  shortcut?: string;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, loading, shortcut, children, disabled, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, loading, children, disabled, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
 
-    // Bei `asChild` reicht Radix nur ein einziges Kind durch – Spinner und
-    // Kürzel bleiben dort außen vor, damit der Aufruf gültig bleibt.
+    // Bei `asChild` reicht Radix nur ein einziges Kind durch – der Spinner
+    // bleibt dort außen vor, damit der Aufruf gültig bleibt.
     if (asChild) {
       return (
         <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props}>
@@ -77,7 +75,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading && <Loader2 className="animate-spin" aria-hidden="true" />}
         {children}
-        {shortcut && <kbd className="kbd ml-1.5 hidden md:inline-flex">{shortcut}</kbd>}
       </Comp>
     );
   },

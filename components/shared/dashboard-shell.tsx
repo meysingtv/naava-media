@@ -46,7 +46,7 @@ export function DashboardShell({ children, zaehler, ...kontext }: DashboardShell
           <main
             id="inhalt"
             tabIndex={-1}
-            className="mx-auto w-full max-w-[1440px] px-4 pb-16 focus-visible:outline-none md:px-6 lg:px-8 print:!p-0"
+            className="w-full px-4 pb-16 pt-4 focus-visible:outline-none md:px-6 md:pt-5 lg:px-8 print:!p-0"
           >
             {children}
           </main>

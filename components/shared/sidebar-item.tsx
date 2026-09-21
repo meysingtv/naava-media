@@ -95,14 +95,14 @@ export function SidebarItem({
 }
 
 /**
- * Eintrag im Nav-Stil, der kein Link ist (Assistent, Einklappen, Suche).
- * Gleiche Maße und Zustände wie `SidebarItem`.
+ * Eintrag im Nav-Stil, der kein Link ist (Assistent, Einklappen).
+ * Gleiche Maße und Zustände wie `SidebarItem`. Tastaturkürzel werden
+ * bewusst nicht angezeigt – sie funktionieren trotzdem.
  */
 export function SidebarButton({
   icon: Icon,
   label,
   onClick,
-  shortcut,
   offen,
   iconClassName,
   imDrawer,
@@ -111,7 +111,6 @@ export function SidebarButton({
   icon: LucideIcon;
   label: string;
   onClick: () => void;
-  shortcut?: string;
   offen?: boolean;
   iconClassName?: string;
   imDrawer?: boolean;
@@ -140,7 +139,6 @@ export function SidebarButton({
         aria-hidden={true}
       />
       <span className={cn("truncate", eingeklappt && "sr-only")}>{label}</span>
-      {shortcut && !eingeklappt && <kbd className="kbd ml-auto">{shortcut}</kbd>}
     </button>
   );
 
@@ -149,10 +147,7 @@ export function SidebarButton({
   return (
     <Tooltip side="right" sideOffset={10}>
       <TooltipTrigger>{knopf}</TooltipTrigger>
-      <TooltipContent>
-        {label}
-        {shortcut && <kbd className="kbd">{shortcut}</kbd>}
-      </TooltipContent>
+      <TooltipContent>{label}</TooltipContent>
     </Tooltip>
   );
 }
