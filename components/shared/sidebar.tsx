@@ -5,12 +5,10 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { PanelLeftClose, PanelLeftOpen, Sparkles, X } from "lucide-react";
 
 import { FahrschulSwitcher } from "@/components/shared/fahrschul-switcher";
-import { NeuMenu } from "@/components/shared/neu-menu";
 import { NutzerMenu } from "@/components/shared/nutzer-menu";
 import { SidebarButton } from "@/components/shared/sidebar-item";
 import { SidebarNav } from "@/components/shared/sidebar-nav";
 import { useSidebar } from "@/components/shared/sidebar-context";
-import { GlobalSearch } from "@/components/shared/global-search";
 import { cn } from "@/lib/utils";
 import type { Zaehler } from "@/components/shared/bereiche";
 import type { FahrlehrerRolle, FahrschulMitgliedschaft } from "@/lib/types";
@@ -28,10 +26,14 @@ export interface SidebarProps {
   zaehler?: Zaehler;
 }
 
-/** Gemeinsames Innenleben von fester Sidebar und Mobil-Drawer. */
+/**
+ * Gemeinsames Innenleben von fester Sidebar und Mobil-Drawer.
+ *
+ * Die Sidebar trägt ausschließlich NAVIGATION. Suche und „Neu" sitzen in der
+ * Kopfzeile der Seite (`page-topbar.tsx` → `header-tools.tsx`).
+ */
 function SidebarInhalt({ imDrawer, ...props }: SidebarProps & { imDrawer?: boolean }) {
   const { collapsed, umschalten, setAssistentOffen } = useSidebar();
-  const eingeklappt = collapsed && !imDrawer;
 
   return (
     <>
@@ -46,21 +48,16 @@ function SidebarInhalt({ imDrawer, ...props }: SidebarProps & { imDrawer?: boole
         imDrawer={imDrawer}
       />
 
-      {/* B – Suche (Auslöser der Kommandopalette) */}
-      <GlobalSearch variant="sidebar" collapsed={eingeklappt} rolle={props.rolle} />
-
-      {/* C – Navigation */}
+      {/* B – Navigation */}
       <SidebarNav rolle={props.rolle} zaehler={props.zaehler} imDrawer={imDrawer} />
 
-      {/* D – Fuß */}
+      {/* C – Fuß */}
       <div className="mt-auto space-y-1 border-t border-sidebar-border p-3">
-        <NeuMenu rolle={props.rolle} imDrawer={imDrawer} />
-
         <SidebarButton
           icon={Sparkles}
           label="Assistent"
           shortcut="⌘J"
-          iconClassName="text-sidebar-bar"
+          iconClassName="text-primary"
           onClick={() => setAssistentOffen(true)}
           imDrawer={imDrawer}
         />
@@ -89,9 +86,7 @@ function SidebarInhalt({ imDrawer, ...props }: SidebarProps & { imDrawer?: boole
 
 /**
  * Feste Sidebar (≥ 1024 px): 256 px, eingeklappt 68 px. Die Breite kommt
- * ausschließlich aus CSS (`--sidebar-w`), nie aus React-State. Zwischen
- * Sidebar und Arbeitsfläche gibt es keinen Rand und keinen Schatten – die
- * Trennung ist der Farbsprung von Tinte zu Warm-Hell.
+ * ausschließlich aus CSS (`--sidebar-w`), nie aus React-State.
  */
 export function Sidebar(props: SidebarProps) {
   return (
@@ -99,8 +94,8 @@ export function Sidebar(props: SidebarProps) {
       aria-label="Hauptnavigation"
       className={cn(
         "sidebar fixed inset-y-0 left-0 z-sidebar hidden w-[var(--sidebar-w)] flex-col",
-        "bg-sidebar text-sidebar-foreground transition-[width] duration-overlay ease-soft",
-        "lg:flex print:hidden",
+        "border-r border-sidebar-border bg-sidebar text-sidebar-foreground",
+        "transition-[width] duration-overlay ease-soft lg:flex print:hidden",
       )}
     >
       <SidebarInhalt {...props} />
@@ -119,6 +114,7 @@ export function SidebarDrawer(props: SidebarProps) {
         <DialogPrimitive.Content
           className={cn(
             "sidebar fixed inset-y-0 left-0 z-sheet flex w-[288px] max-w-[85vw] flex-col bg-sidebar p-0 text-sidebar-foreground",
+            "border-r border-sidebar-border shadow-lg",
             "data-[state=open]:animate-in data-[state=open]:slide-in-from-left",
             "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left duration-overlay lg:hidden",
           )}
@@ -127,7 +123,7 @@ export function SidebarDrawer(props: SidebarProps) {
           <SidebarInhalt {...props} imDrawer />
           <DialogPrimitive.Close
             aria-label="Menü schließen"
-            className="absolute right-2 top-2.5 flex h-9 w-9 items-center justify-center rounded-md text-sidebar-muted outline-none transition-colors hover:bg-sidebar-hover hover:text-sidebar-active-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sidebar-bar/70"
+            className="absolute right-2 top-2.5 flex h-9 w-9 items-center justify-center rounded-md text-sidebar-muted outline-none transition-colors hover:bg-sidebar-hover hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/70"
           >
             <X className="h-[18px] w-[18px]" strokeWidth={1.75} />
           </DialogPrimitive.Close>

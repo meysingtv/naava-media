@@ -30,7 +30,7 @@ interface DashboardShellProps {
  */
 export function DashboardShell({ children, zaehler, ...kontext }: DashboardShellProps) {
   return (
-    <SidebarProvider>
+    <SidebarProvider rolle={kontext.rolle}>
       <a
         href="#inhalt"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-palette focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:text-13 focus:font-medium focus:shadow-md"

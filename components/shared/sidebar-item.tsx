@@ -43,13 +43,13 @@ export function SidebarItem({
       data-active={aktiv}
       data-aktiv-eintrag={aktiv ? "true" : undefined}
       className={cn(
-        "group relative flex items-center rounded-md text-13 font-medium text-sidebar-foreground/90",
-        "hover:bg-sidebar-hover hover:text-sidebar-active-foreground",
-        "data-[active=true]:bg-sidebar-active data-[active=true]:text-sidebar-active-foreground",
+        "group relative flex items-center rounded-md text-13 font-medium text-sidebar-foreground/85",
+        "hover:bg-sidebar-hover hover:text-sidebar-foreground",
+        "data-[active=true]:bg-sidebar-active data-[active=true]:font-semibold data-[active=true]:text-sidebar-active-foreground",
         "data-[active=true]:before:absolute data-[active=true]:before:-left-3 data-[active=true]:before:top-1/2",
         "data-[active=true]:before:h-5 data-[active=true]:before:w-[3px] data-[active=true]:before:-translate-y-1/2",
         "data-[active=true]:before:rounded-r-full data-[active=true]:before:bg-sidebar-bar",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sidebar-bar/70",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/70",
         eingeklappt ? "mx-auto h-10 w-10 justify-center px-0" : imDrawer ? "h-10 gap-2.5 px-2" : "h-8 gap-2.5 px-2",
       )}
     >
@@ -127,9 +127,9 @@ export function SidebarButton({
       data-state={offen ? "open" : "closed"}
       aria-label={eingeklappt ? label : undefined}
       className={cn(
-        "group relative flex w-full items-center rounded-md text-13 font-medium text-sidebar-foreground/90",
-        "hover:bg-sidebar-hover hover:text-sidebar-active-foreground data-[state=open]:bg-sidebar-active",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sidebar-bar/70",
+        "group relative flex w-full items-center rounded-md text-13 font-medium text-sidebar-foreground/85",
+        "hover:bg-sidebar-hover hover:text-sidebar-foreground data-[state=open]:bg-sidebar-hover",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/70",
         eingeklappt ? "mx-auto h-10 w-10 justify-center px-0" : "h-8 gap-2.5 px-2",
         className,
       )}

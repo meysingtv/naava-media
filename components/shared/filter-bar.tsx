@@ -144,7 +144,7 @@ export function FilterChip({
           type="button"
           className={cn(
             "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium transition-colors duration-fast",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             aktiv
               ? "border-primary-soft-border bg-primary-soft text-primary-text"
               : "border-border-strong text-foreground-secondary hover:border-border-hover hover:text-foreground",

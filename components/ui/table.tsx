@@ -91,7 +91,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
           type="button"
           onClick={onSort}
           className={cn(
-            "group inline-flex items-center gap-1 rounded-sm text-xs font-medium text-foreground-secondary transition-colors duration-fast hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+            "group inline-flex items-center gap-1 rounded-sm text-xs font-medium text-foreground-secondary transition-colors duration-fast hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             align === "right" && "flex-row-reverse",
           )}
         >

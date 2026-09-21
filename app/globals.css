@@ -75,16 +75,17 @@
     --input: 132 5% 82%;
     --ring: 150 78% 35%;
 
-    /* Sidebar („Tinte") – ausschließlich in Sidebar und Mobil-Drawer */
-    --sidebar: 153 27% 8%; /* #0F1A15 Fläche */
-    --sidebar-foreground: 137 10% 86%; /* #D7DED9 – 13,0:1 auf Tinte */
-    --sidebar-muted: 145 5% 56%; /* #8A968F Gruppentitel – 5,8:1 */
-    --sidebar-hover: 148 23% 11%; /* #16231C */
-    --sidebar-active: 148 22% 14%; /* #1B2A22 */
-    --sidebar-active-foreground: 0 0% 100%;
-    --sidebar-bar: 147 66% 51%; /* #2ED47A – 9,2:1 */
-    --sidebar-border: 150 18% 15%; /* #1F2D26 */
-    --sidebar-badge: 150 16% 20%; /* #2B3B33 */
+    /* Sidebar – weiße Fläche wie die Panels. Die Trennung zur Arbeitsfläche
+       macht die Linie rechts, nicht ein Farbsprung. */
+    --sidebar: 0 0% 100%; /* #FFFFFF Fläche */
+    --sidebar-foreground: 163 17% 8%; /* #111816 – Haupttext */
+    --sidebar-muted: 154 8% 39%; /* #5B6B63 Gruppentitel und Icons – 6,1:1 */
+    --sidebar-hover: 90 8% 95%; /* #F2F3F1 */
+    --sidebar-active: 145 55% 94%; /* #E7F8EE – helle Mint-Fläche */
+    --sidebar-active-foreground: 150 80% 25%; /* #0C7340 – 5,9:1 auf Mint */
+    --sidebar-bar: 150 78% 35%; /* #14A15A – Balken am aktiven Eintrag */
+    --sidebar-border: 100 6% 90%; /* #E6E8E5 */
+    --sidebar-badge: 90 8% 92%; /* #EBEDE9 */
 
     /* Maße */
     --sidebar-w: 256px;

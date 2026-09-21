@@ -1,4 +1,4 @@
-import { Check, ListChecks, RotateCcw, Trash2 } from "lucide-react";
+import { Check, CheckCircle2, ListChecks, RotateCcw, Trash2 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
@@ -151,9 +151,13 @@ export default async function AufgabenPage() {
               <p className="text-[13px] font-medium text-muted-foreground">Offen ({offen.length})</p>
             </div>
             {offen.length === 0 ? (
-              <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-                Alles erledigt – stark! 🎉
-              </p>
+              <EmptyState
+                variant="inline"
+                icon={CheckCircle2}
+                title="Alles erledigt"
+                description="Keine offenen Aufgaben – lege bei Bedarf ein neues To-do an."
+                className="py-8"
+              />
             ) : (
               <div className="divide-y">
                 {offen.map((a) => (

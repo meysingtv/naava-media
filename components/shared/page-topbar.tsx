@@ -4,6 +4,7 @@ import { Bell, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { HeaderSentinel } from "@/components/shared/header-sentinel";
+import { HeaderTools } from "@/components/shared/header-tools";
 import { MobileMenuButton } from "@/components/shared/mobile-menu-button";
 import { cn } from "@/lib/utils";
 
@@ -97,22 +98,24 @@ export function PageTopbar({
         </nav>
 
         <div data-actions className="ml-auto flex shrink-0 items-center gap-2 print:hidden">
+          {/* Seitenaktionen zuerst, danach die app-weiten Werkzeuge */}
           {seitenAktionen}
+          {seitenAktionen ? <span className="mx-0.5 hidden h-5 w-px bg-border sm:block" /> : null}
+
+          <HeaderTools />
+
           {notifications && (
-            <>
-              {seitenAktionen ? <span className="mx-0.5 hidden h-5 w-px bg-border sm:block" /> : null}
-              <Button asChild variant="ghost" size="icon-sm" className="relative">
-                <Link href="/erinnerungen" aria-label="Erinnerungen">
-                  <Bell className="!size-[18px]" strokeWidth={1.75} />
-                  {notificationCount != null && notificationCount > 0 && (
-                    <span
-                      aria-hidden="true"
-                      className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-background"
-                    />
-                  )}
-                </Link>
-              </Button>
-            </>
+            <Button asChild variant="ghost" size="icon-sm" className="relative">
+              <Link href="/erinnerungen" aria-label="Erinnerungen">
+                <Bell className="!size-[18px]" strokeWidth={1.75} />
+                {notificationCount != null && notificationCount > 0 && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-background"
+                  />
+                )}
+              </Link>
+            </Button>
           )}
         </div>
       </header>

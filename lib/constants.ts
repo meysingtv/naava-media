@@ -114,9 +114,9 @@ export const FAHRSTUNDE_FARBE: Record<FahrstundeTyp, string> = {
   ueberland: "#1E8E5A",
   autobahn: "#2F80ED",
   nacht: "#1F5FB8",
-  pruefung: "#DC2626",
-  theorie: "#D97706",
-  sonstiges: "#64748B",
+  pruefung: "#D9463D", // --destructive
+  theorie: "#D48A0C", // --warning
+  sonstiges: "#5B6B63", // --text-secondary (kräftig genug für den 3-px-Block)
 };
 
 export const FAHRSTUNDE_TYPEN: Record<FahrstundeTyp, TypMeta> = {

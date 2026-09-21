@@ -49,7 +49,7 @@ export function FahrschulSwitcher({
     // eslint-disable-next-line @next/next/no-img-element
     <img src={logoUrl} alt="" className="h-7 w-7 shrink-0 rounded-[6px] object-cover" />
   ) : (
-    <Logo compact tone="dark" />
+    <Logo compact />
   );
 
   const trigger = (
@@ -66,9 +66,7 @@ export function FahrschulSwitcher({
       {!eingeklappt && (
         <>
           <span className="min-w-0 flex-1 text-left">
-            <span className="block truncate text-13 font-semibold text-sidebar-active-foreground">
-              {fahrschuleName}
-            </span>
+            <span className="block truncate text-13 font-semibold text-sidebar-foreground">{fahrschuleName}</span>
             {ort && <span className="block truncate text-2xs text-sidebar-muted">{ort}</span>}
           </span>
           <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-sidebar-muted" strokeWidth={1.75} aria-hidden="true" />

@@ -91,7 +91,7 @@ const SheetContent = React.forwardRef<
             )}
           </div>
           {actions}
-          <DialogPrimitive.Close className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors duration-fast hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40">
+          <DialogPrimitive.Close className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors duration-fast hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <X className="h-[18px] w-[18px]" strokeWidth={1.75} />
             <span className="sr-only">Schließen</span>
           </DialogPrimitive.Close>

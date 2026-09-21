@@ -164,7 +164,7 @@ export function KpiCard({
 
   if (href) {
     return (
-      <Link href={href} className={cn(klassen, "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background")}>
+      <Link href={href} className={cn(klassen, "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background")}>
         {inhalt}
       </Link>
     );

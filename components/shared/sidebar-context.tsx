@@ -4,8 +4,11 @@ import * as React from "react";
 import { usePathname } from "next/navigation";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import type { FahrlehrerRolle } from "@/lib/types";
 
 interface SidebarKontext {
+  /** Rolle des angemeldeten Nutzers – steuert die Sichtbarkeit im „Neu"-Menü. */
+  rolle: FahrlehrerRolle;
   /** Desktop: Sidebar auf 68 px eingeklappt. */
   collapsed: boolean;
   umschalten: () => void;
@@ -39,7 +42,7 @@ const SPEICHER_SCHLUESSEL = "fsapp.sidebar";
  *
  * Hier sitzt auch der EINZIGE globale Tastatur-Listener: ⌘K, ⌘B, ⌘J.
  */
-export function SidebarProvider({ children }: { children: React.ReactNode }) {
+export function SidebarProvider({ rolle, children }: { rolle: FahrlehrerRolle; children: React.ReactNode }) {
   const [collapsed, setCollapsed] = React.useState(false);
   const [drawerOffen, setDrawerOffen] = React.useState(false);
   const [paletteOffen, setPaletteOffen] = React.useState(false);
@@ -98,6 +101,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 
   const wert = React.useMemo(
     () => ({
+      rolle,
       collapsed,
       umschalten,
       drawerOffen,
@@ -107,7 +111,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
       assistentOffen,
       setAssistentOffen: oeffneAssistent,
     }),
-    [collapsed, umschalten, drawerOffen, paletteOffen, assistentOffen, oeffneAssistent],
+    [rolle, collapsed, umschalten, drawerOffen, paletteOffen, assistentOffen, oeffneAssistent],
   );
 
   return (

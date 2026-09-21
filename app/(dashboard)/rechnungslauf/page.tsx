@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, Banknote, Bell, Download, Settings } from "lucide-react";
+import { AlertTriangle, Banknote, Bell, CheckCircle2, Download, Settings } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/page-header";
+import { EmptyState } from "@/components/shared/empty-state";
 import { formatDatum, formatEuro } from "@/lib/utils";
 import type { Rechnung } from "@/lib/types";
 import { mahnlaufAusfuehren } from "./actions";
@@ -126,9 +127,13 @@ export default async function RechnungslaufPage() {
             </div>
 
             {ueberfaellig.length === 0 ? (
-              <p className="rounded-md bg-surface-muted/60 px-3 py-6 text-center text-sm text-muted-foreground">
-                Keine überfälligen Rechnungen. 🎉
-              </p>
+              <EmptyState
+                variant="inline"
+                icon={CheckCircle2}
+                title="Keine überfälligen Rechnungen"
+                description="Alle Rechnungen sind innerhalb der Frist – aktuell ist kein Mahnlauf nötig."
+                className="rounded-md bg-surface-muted/60 py-8"
+              />
             ) : (
               <>
                 <div className="max-h-56 divide-y overflow-y-auto rounded-md border scrollbar-thin">

@@ -722,7 +722,7 @@ Tab-Reihenfolge: Skip-Link → Fahrschul-Umschalter → Suche → Nav-Einträge 
 
 Globale Einzeltasten (`/`, `.`) feuern nur, wenn `document.activeElement` kein `input`, `textarea`, `select` oder `contenteditable` ist und kein Dialog offen ist. Der Listener sitzt **einmal** im `SidebarProvider`, nicht verteilt.
 
-Fokusring überall: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background`. In der Sidebar stattdessen `focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sidebar-bar/70` – ein heller Ring auf Tinte wäre unsichtbar.
+Fokusring überall: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background`. Der Ring läuft mit **voller Deckkraft** – `ring-ring` erreicht 3,12:1 auf der Arbeitsfläche `#F7F7F5` und 3,35:1 auf weißen Panels und erfüllt damit die 3:1-Schwelle aus WCAG 2.2 für Nicht-Text-Indikatoren; eine abgesenkte Deckkraft (`/40`) fällt auf rund 1,6:1 und ist unzulässig. In der Sidebar stattdessen `focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sidebar-bar/70` – ein heller Ring auf Tinte wäre unsichtbar (5,08:1).
 
 ### 3.11 Mobil (< 1024 px)
 
@@ -745,7 +745,7 @@ Props unverändert (`variant`, `size`, `asChild`), zwei optionale Props kommen d
 ```
 base: inline-flex select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-md
       text-13 font-medium leading-none transition-colors duration-fast ease-soft
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
       focus-visible:ring-offset-2 focus-visible:ring-offset-background
       disabled:pointer-events-none disabled:opacity-45
       [&_svg]:pointer-events-none [&_svg]:size-[15px] [&_svg]:shrink-0
