@@ -1,3 +1,4 @@
+import { AppBar } from "@/components/shared/app-bar";
 import { Sidebar, SidebarDrawer } from "@/components/shared/sidebar";
 import { SidebarProvider } from "@/components/shared/sidebar-context";
 import { ShellOverlays } from "@/components/shared/shell-overlays";
@@ -20,9 +21,10 @@ interface DashboardShellProps {
 }
 
 /**
- * App-Rahmen v3: feste Sidebar links (256 px / eingeklappt 68 px), rechts
- * der Inhalt mit eigener 56-px-Kopfzeile je Seite. Keine Top-Bar, keine
- * Bereichs-Leiste, keine Kontext-Tabs, keine Bottom-Bar.
+ * App-Rahmen v3: feste Navigation links (256 px / eingeklappt 68 px), rechts
+ * oben die App-Leiste (Suche, „Neu", Glocke – bleibt beim Scrollen stehen)
+ * und darunter der Seiteninhalt mit eigenem Seitenkopf. Keine Bereichs-
+ * Leiste, keine Kontext-Tabs, keine Bottom-Bar.
  *
  * Gescrollt wird die SEITE, nicht `main` – dadurch funktionieren
  * `sticky top-0` am Seitenkopf und `sticky top-14` am Tabellenkopf ohne
@@ -43,10 +45,11 @@ export function DashboardShell({ children, zaehler, ...kontext }: DashboardShell
         <SidebarDrawer {...kontext} zaehler={zaehler} />
 
         <div className="transition-[padding] duration-overlay ease-soft lg:pl-[var(--sidebar-w)] print:pl-0">
+          <AppBar />
           <main
             id="inhalt"
             tabIndex={-1}
-            className="w-full px-4 pb-16 pt-4 focus-visible:outline-none md:px-6 md:pt-5 lg:px-8 print:!p-0"
+            className="w-full px-4 pb-16 pt-7 focus-visible:outline-none md:px-6 md:pt-8 lg:px-8 print:!p-0"
           >
             {children}
           </main>
