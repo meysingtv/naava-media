@@ -63,11 +63,11 @@ const CHEF_LEHRER: FahrlehrerRolle[] = ["chef", "fahrlehrer"];
 
 export const BEREICHE: Bereich[] = [
   {
-    key: "leitstand",
-    label: "Leitstand",
+    key: "dashboard",
+    label: "Dashboard",
     icon: LayoutDashboard,
     gruppe: "arbeit",
-    items: [{ href: "/dashboard", label: "Leitstand", rollen: ALLE, icon: LayoutDashboard }],
+    items: [{ href: "/dashboard", label: "Dashboard", rollen: ALLE, icon: LayoutDashboard }],
   },
   {
     key: "aufgaben",

@@ -86,7 +86,7 @@ export function ZuletztReiter({ className }: { className?: string }) {
         const vorhanden = basis.find((e) => e.href === pathname);
         let neu: Eintrag[];
         if (vorhanden) {
-          neu = basis.map((e) => (e.href === pathname ? { ...e, label, zuletzt: Date.now() } : e));
+          neu = basis.map((e) => (e.href === pathname ? { ...e, label, bereich: bereich.key, zuletzt: Date.now() } : e));
         } else {
           neu = [...basis, { href: pathname, label, bereich: bereich.key, zuletzt: Date.now() }];
           if (neu.length > MAX) {

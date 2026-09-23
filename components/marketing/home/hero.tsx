@@ -43,7 +43,7 @@ export function Hero() {
           <LaptopFrame className="max-w-[640px]">
             <AppShot
               src="/images/app/leitstand.jpg"
-              alt="FahrschulApp Leitstand: heutige Fahrstunden, offene Aufgaben, anstehende Prüfungen und Finanzstatus"
+              alt="FahrschulApp Dashboard: heutige Fahrstunden, offene Aufgaben, anstehende Prüfungen und Finanzstatus"
               priority
             />
           </LaptopFrame>

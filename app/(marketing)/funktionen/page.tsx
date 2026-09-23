@@ -24,7 +24,7 @@ export default function FunktionenPage() {
         cta
       >
         <LaptopFrame className="max-w-[560px]">
-          <AppShot src="/images/app/leitstand.jpg" alt="FahrschulApp Leitstand mit Terminen, Aufgaben, Prüfungen und Finanzstatus" priority />
+          <AppShot src="/images/app/leitstand.jpg" alt="FahrschulApp Dashboard mit Terminen, Aufgaben, Prüfungen und Finanzstatus" priority />
         </LaptopFrame>
       </PageHero>
       <Modules />

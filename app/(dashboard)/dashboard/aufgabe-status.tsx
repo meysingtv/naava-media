@@ -9,7 +9,7 @@ import { aufgabeStatusSetzen } from "../aufgaben/actions";
 /**
  * Status einer Aufgabe direkt in der Zeile ändern – ohne die Aufgabenseite
  * zu öffnen. Erledigte Aufgaben verschwinden nach dem Speichern aus dem
- * Leitstand.
+ * Dashboard.
  */
 export function AufgabeStatus({ id, status, titel }: { id: string; status: string; titel: string }) {
   const [pending, start] = useTransition();

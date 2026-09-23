@@ -100,7 +100,7 @@ export function Terminplaner({
   pruefungen = [],
 }: {
   heute: string;
-  /** Tag, der beim Öffnen gezeigt wird (z. B. aus dem Mini-Kalender im Leitstand). */
+  /** Tag, der beim Öffnen gezeigt wird (z. B. aus dem Monatskalender im Dashboard). */
   startDatum?: string;
   stunden: FahrstundeMitRelationen[];
   options: { schueler: Option[]; fahrlehrer: Option[]; fahrzeuge: Option[] };
