@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1",
+    "@opentelemetry/api": "^1.9.1",
     "@radix-ui/react-avatar": "^1.1.0",
     "@radix-ui/react-checkbox": "^1.1.1",
     "@radix-ui/react-dialog": "^1.1.1",
