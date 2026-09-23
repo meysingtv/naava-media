@@ -70,8 +70,8 @@ export async function fahrzeugSpeichern(
     fahrzeugId = data.id;
   }
 
-  revalidatePath("/fahrzeuge");
-  redirect(`/fahrzeuge?id=${fahrzeugId}`);
+  revalidatePath("/fahrzeuge", "layout");
+  redirect(`/fahrzeuge/${fahrzeugId}`);
 }
 
 /** Archiviert (aktiv=false) oder reaktiviert (aktiv=true) ein Fahrzeug. */
@@ -82,7 +82,7 @@ export async function fahrzeugAktivSetzen(formData: FormData): Promise<void> {
 
   const supabase = createClient();
   await supabase.from("fahrzeug").update({ aktiv }).eq("id", id);
-  revalidatePath("/fahrzeuge");
+  revalidatePath("/fahrzeuge", "layout");
 }
 
 export async function fahrzeugLoeschen(formData: FormData): Promise<void> {
@@ -91,6 +91,6 @@ export async function fahrzeugLoeschen(formData: FormData): Promise<void> {
 
   const supabase = createClient();
   await supabase.from("fahrzeug").delete().eq("id", id);
-  revalidatePath("/fahrzeuge");
+  revalidatePath("/fahrzeuge", "layout");
   redirect("/fahrzeuge");
 }

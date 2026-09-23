@@ -1,231 +1,264 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Archive, Car, Pencil, Plus, Search } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { Archive, ArchiveRestore, Car, Pencil } from "lucide-react";
+import { toast } from "sonner";
 
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/shared/empty-state";
-import { cn } from "@/lib/utils";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { FilterBar, FilterChip, Segmente } from "@/components/shared/filter-bar";
+import { Kennzeichen } from "@/components/shared/kennzeichen";
+import { getriebeLabel } from "@/lib/constants";
+import { fahrzeugKlassen, fahrzeugName, frist, fristText, naechsteHu } from "@/lib/fahrzeug";
+import { cn, formatDatum } from "@/lib/utils";
 import type { Fahrzeug } from "@/lib/types";
 import { fahrzeugAktivSetzen } from "./actions";
 
-function Tip({ label, children }: { label: string; children: React.ReactNode }) {
+type Segment = "aktiv" | "archiv" | "alle";
+
+/** Datum einer Frist, darunter „in 12 Tagen" oder „seit 3 Tagen fällig". */
+function FristZelle({ datum, heute, bald }: { datum: string | null; heute: string; bald: number }) {
+  const f = frist(datum, heute, bald);
+  if (!datum || !f) return <span className="text-foreground-tertiary">—</span>;
   return (
-    <span className="group relative inline-flex">
-      {children}
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs font-medium text-background opacity-0 shadow transition-opacity duration-150 group-hover:opacity-100">
-        {label}
+    <span className="block leading-tight">
+      <span className={cn("block tabular-nums", f.ton === "ueberfaellig" ? "font-medium text-destructive-text" : "text-foreground")}>
+        {formatDatum(datum)}
       </span>
+      {f.ton !== "ok" && (
+        <span className={cn("block text-xs", f.ton === "ueberfaellig" ? "text-destructive-text" : "text-warning-text")}>
+          {fristText(f.tage)}
+        </span>
+      )}
     </span>
   );
 }
 
-const toolbarBtn =
-  "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-fast hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25";
-
-type Filter = "aktiv" | "archiv" | "alle";
-
-function anzeigeName(f: Fahrzeug): string {
-  return f.name || [f.marke, f.modell].filter(Boolean).join(" ") || f.kennzeichen;
-}
-function klassenVon(f: Fahrzeug): string[] {
-  if (f.klassen?.length) return f.klassen;
-  return f.klasse ? [f.klasse] : [];
-}
-
 export function FahrzeugListe({
   fahrzeuge,
-  selectedId,
-  fahrlehrerMap,
+  kuerzelMap,
+  wocheMap,
+  heute,
 }: {
   fahrzeuge: Fahrzeug[];
-  selectedId?: string;
-  fahrlehrerMap: Record<string, string>;
+  kuerzelMap: Record<string, string>;
+  /** Fahrstunden je Fahrzeug in dieser Woche. */
+  wocheMap: Record<string, number>;
+  heute: string;
 }) {
-  const router = useRouter();
   const [suche, setSuche] = useState("");
-  const [filter, setFilter] = useState<Filter>("aktiv");
+  const [segment, setSegment] = useState<Segment>("aktiv");
+  const [klassen, setKlassen] = useState<string[]>([]);
+  const [getriebe, setGetriebe] = useState<string[]>([]);
+  const [, startTransition] = useTransition();
+
+  const klassenOptionen = useMemo(() => {
+    const set = new Set<string>();
+    for (const f of fahrzeuge) for (const k of fahrzeugKlassen(f)) set.add(k);
+    return Array.from(set)
+      .sort()
+      .map((k) => ({ value: k, label: `Klasse ${k}` }));
+  }, [fahrzeuge]);
+
+  const zaehler = {
+    aktiv: fahrzeuge.filter((f) => f.aktiv).length,
+    archiv: fahrzeuge.filter((f) => !f.aktiv).length,
+    alle: fahrzeuge.length,
+  };
 
   const gefiltert = useMemo(() => {
     const q = suche.trim().toLowerCase();
     return fahrzeuge.filter((f) => {
-      if (filter === "aktiv" && !f.aktiv) return false;
-      if (filter === "archiv" && f.aktiv) return false;
-      if (q) {
-        const text = `${anzeigeName(f)} ${f.kennzeichen}`.toLowerCase();
-        if (!text.includes(q)) return false;
-      }
-      return true;
+      if (segment === "aktiv" && !f.aktiv) return false;
+      if (segment === "archiv" && f.aktiv) return false;
+      if (klassen.length && !fahrzeugKlassen(f).some((k) => klassen.includes(k))) return false;
+      if (getriebe.length && !getriebe.includes(getriebeLabel(f.getriebeart))) return false;
+      if (!q) return true;
+      return `${fahrzeugName(f)} ${f.kennzeichen} ${f.fahrzeug_id_nr ?? ""}`.toLowerCase().includes(q);
     });
-  }, [fahrzeuge, filter, suche]);
+  }, [fahrzeuge, suche, segment, klassen, getriebe]);
 
-  const selected = selectedId ? fahrzeuge.find((f) => f.id === selectedId) : undefined;
-
-  if (fahrzeuge.length === 0) {
-    return (
-      <EmptyState
-        icon={Car}
-        title="Noch keine Fahrzeuge"
-        description="Lege dein erstes Fahrzeug an, um Klassen, Fahrlehrer und Termine zu verwalten."
-      >
-        <Link
-          href="/fahrzeuge?neu=1"
-          className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-surface"
-        >
-          <Plus className="h-4 w-4" /> Neues Fahrzeug
-        </Link>
-      </EmptyState>
-    );
+  function aktivSetzen(f: Fahrzeug) {
+    const daten = new FormData();
+    daten.set("id", f.id);
+    daten.set("aktiv", String(!f.aktiv));
+    startTransition(async () => {
+      await fahrzeugAktivSetzen(daten);
+      toast.success(f.aktiv ? `${fahrzeugName(f)} archiviert` : `${fahrzeugName(f)} ist wieder im Einsatz`);
+    });
   }
 
-  return (
-    <div>
-      <Card>
-        {/* Werkzeugleiste */}
-        <div className="flex flex-wrap items-center gap-1 border-b bg-surface/60 p-2">
-          <Tip label="Neues Fahrzeug">
-            <Link href="/fahrzeuge?neu=1" aria-label="Neues Fahrzeug" className={toolbarBtn}>
-              <Plus className="h-4 w-4" />
-            </Link>
-          </Tip>
-          <Tip label={selectedId ? "Bearbeiten" : "Erst Fahrzeug auswählen"}>
-            {selectedId ? (
-              <Link
-                href={`/fahrzeuge?id=${selectedId}&edit=1`}
-                aria-label="Fahrzeug bearbeiten"
-                className={toolbarBtn}
+  const spalten: DataTableColumn<Fahrzeug>[] = [
+    {
+      key: "name",
+      header: "Fahrzeug",
+      primary: true,
+      sortValue: (f) => fahrzeugName(f),
+      cell: (f) => (
+        <span className="flex min-w-0 items-center gap-3">
+          <span
+            aria-hidden="true"
+            className={cn(
+              "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
+              f.aktiv ? "bg-primary-soft text-primary-text" : "bg-muted text-foreground-tertiary",
+            )}
+          >
+            <Car className="h-4 w-4" strokeWidth={1.75} />
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate font-medium text-foreground">{fahrzeugName(f)}</span>
+            <span className="block truncate text-xs text-foreground-tertiary">
+              {getriebeLabel(f.getriebeart)}
+              {f.anhaenger ? " · mit Anhänger" : ""}
+              {!f.aktiv ? " · archiviert" : ""}
+            </span>
+          </span>
+        </span>
+      ),
+    },
+    {
+      key: "kennzeichen",
+      header: "Kennzeichen",
+      sortValue: (f) => f.kennzeichen,
+      cell: (f) => <Kennzeichen>{f.kennzeichen}</Kennzeichen>,
+    },
+    {
+      key: "klassen",
+      header: "Klassen",
+      sortValue: (f) => fahrzeugKlassen(f)[0] ?? "",
+      cell: (f) => <span className="text-foreground">{fahrzeugKlassen(f).join(", ") || "—"}</span>,
+    },
+    {
+      key: "lehrer",
+      header: "Fahrlehrer",
+      hideBelow: "xl",
+      cell: (f) => {
+        const kuerzel = (f.fahrlehrer_ids ?? []).map((id) => kuerzelMap[id]).filter(Boolean);
+        return kuerzel.length ? (
+          <span className="flex flex-wrap gap-1">
+            {kuerzel.map((k, i) => (
+              <span
+                key={`${k}-${i}`}
+                className="inline-flex h-5 items-center rounded-sm bg-muted px-1.5 text-2xs font-semibold text-foreground-secondary"
               >
-                <Pencil className="h-4 w-4" />
-              </Link>
-            ) : (
-              <span aria-disabled="true" className={cn(toolbarBtn, "cursor-not-allowed opacity-40")}>
-                <Pencil className="h-4 w-4" />
+                {k}
               </span>
-            )}
-          </Tip>
-          <Tip label={selected ? (selected.aktiv ? "Archivieren" : "Reaktivieren") : "Erst Fahrzeug auswählen"}>
-            {selected ? (
-              <form action={fahrzeugAktivSetzen}>
-                <input type="hidden" name="id" value={selected.id} />
-                <input type="hidden" name="aktiv" value={(!selected.aktiv).toString()} />
-                <button type="submit" aria-label="Archivieren" className={toolbarBtn}>
-                  <Archive className="h-4 w-4" />
-                </button>
-              </form>
-            ) : (
-              <span aria-disabled="true" className={cn(toolbarBtn, "cursor-not-allowed opacity-40")}>
-                <Archive className="h-4 w-4" />
-              </span>
-            )}
-          </Tip>
+            ))}
+          </span>
+        ) : (
+          <span className="text-foreground-tertiary">—</span>
+        );
+      },
+    },
+    {
+      key: "woche",
+      header: "Diese Woche",
+      numeric: true,
+      hideBelow: "md",
+      sortValue: (f) => wocheMap[f.id] ?? 0,
+      cell: (f) => {
+        const n = wocheMap[f.id] ?? 0;
+        return n ? `${n} ${n === 1 ? "Termin" : "Termine"}` : <span className="text-foreground-tertiary">—</span>;
+      },
+    },
+    {
+      key: "hu",
+      header: "Nächste HU",
+      hideBelow: "md",
+      sortValue: (f) => naechsteHu(f),
+      cell: (f) => <FristZelle datum={naechsteHu(f)} heute={heute} bald={60} />,
+    },
+    {
+      key: "wartung",
+      header: "Wartung",
+      hideBelow: "lg",
+      sortValue: (f) => f.naechste_wartung,
+      cell: (f) => <FristZelle datum={f.naechste_wartung} heute={heute} bald={30} />,
+    },
+    {
+      key: "km",
+      header: "Kilometer",
+      numeric: true,
+      hideBelow: "xl",
+      sortValue: (f) => f.km_stand,
+      cell: (f) =>
+        f.km_stand != null ? (
+          `${f.km_stand.toLocaleString("de-DE")} km`
+        ) : (
+          <span className="text-foreground-tertiary">—</span>
+        ),
+    },
+  ];
 
-          <div className="ml-auto flex items-center gap-2">
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value as Filter)}
-              className="h-8 rounded-md border border-border-strong bg-background shadow-xs px-2 text-sm focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20"
-            >
-              <option value="aktiv">Aktive Fahrzeuge</option>
-              <option value="archiv">Archivierte</option>
-              <option value="alle">Alle</option>
-            </select>
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={suche}
-                onChange={(e) => setSuche(e.target.value)}
-                placeholder="Suche …"
-                className="h-8 w-36 pl-8 sm:w-48"
-              />
+  return (
+    <div className="space-y-3">
+      <Segmente
+        optionen={[
+          { key: "aktiv", label: "Im Einsatz", anzahl: zaehler.aktiv },
+          { key: "archiv", label: "Archiviert", anzahl: zaehler.archiv },
+          { key: "alle", label: "Alle", anzahl: zaehler.alle },
+        ]}
+        wert={segment}
+        onChange={setSegment}
+      />
+      <DataTable
+        rows={gefiltert}
+        columns={spalten}
+        getRowId={(f) => f.id}
+        rowHref={(f) => `/fahrzeuge/${f.id}`}
+        defaultSort={{ key: "name", dir: "asc" }}
+        itemLabel="Fahrzeuge"
+        caption="Fahrzeuge"
+        rowActions={(f) => [
+          { label: "Bearbeiten", icon: Pencil, href: `/fahrzeuge/${f.id}/bearbeiten` },
+          {
+            label: f.aktiv ? "Archivieren" : "Wieder in Einsatz nehmen",
+            icon: f.aktiv ? Archive : ArchiveRestore,
+            onSelect: () => aktivSetzen(f),
+            separatorBefore: true,
+          },
+        ]}
+        toolbar={
+          <FilterBar
+            search={{ placeholder: "Name, Kennzeichen oder Ident-Nr.", value: suche, onChange: setSuche }}
+            filters={
+              <>
+                {klassenOptionen.length > 1 && (
+                  <FilterChip label="Klasse" options={klassenOptionen} selected={klassen} onChange={setKlassen} />
+                )}
+                <FilterChip
+                  label="Getriebe"
+                  options={[
+                    { value: "Schaltung", label: "Schaltung" },
+                    { value: "Automatik", label: "Automatik" },
+                  ]}
+                  selected={getriebe}
+                  onChange={setGetriebe}
+                />
+              </>
+            }
+          />
+        }
+        mobileCard={(f) => {
+          const hu = frist(naechsteHu(f), heute, 60);
+          return (
+            <div className="flex items-center gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-foreground">{fahrzeugName(f)}</p>
+                <p className="truncate text-13 text-foreground-secondary">
+                  Klasse {fahrzeugKlassen(f).join(", ") || "—"} · {getriebeLabel(f.getriebeart)}
+                  {hu && hu.ton !== "ok" ? ` · HU ${fristText(hu.tage)}` : ""}
+                </p>
+              </div>
+              <Kennzeichen>{f.kennzeichen}</Kennzeichen>
             </div>
-          </div>
-        </div>
-
-        {/* Tabelle */}
-        <div className="max-h-[calc(100vh-16rem)] overflow-auto">
-          <table className="w-full text-sm tabular-nums">
-            <thead className="sticky top-0 z-10 border-b bg-surface text-left text-[13px] text-muted-foreground">
-              <tr>
-                <th className="h-10 px-3 font-medium">Name</th>
-                <th className="hidden h-10 px-3 font-medium sm:table-cell">Kennzeichen</th>
-                <th className="hidden h-10 px-3 font-medium lg:table-cell">Klasse</th>
-                <th className="hidden h-10 px-3 font-medium xl:table-cell">Fahrlehrer</th>
-                <th className="h-10 px-3 font-medium">Getriebe</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {gefiltert.map((f) => {
-                const aktiv = f.id === selectedId;
-                const klassen = klassenVon(f);
-                const kuerzel = (f.fahrlehrer_ids ?? [])
-                  .map((id) => fahrlehrerMap[id])
-                  .filter(Boolean);
-                return (
-                  <tr
-                    key={f.id}
-                    onClick={() => router.push(`/fahrzeuge?id=${f.id}`)}
-                    className={cn(
-                      "cursor-pointer transition-colors",
-                      aktiv ? "bg-primary-soft/70 shadow-[inset_2px_0_0_hsl(var(--primary))]" : "hover:bg-surface",
-                      !f.aktiv && "opacity-60",
-                    )}
-                  >
-                    <td className="px-3 py-2">
-                      <p className={cn("truncate", aktiv ? "font-semibold" : "font-medium")}>
-                        {anzeigeName(f)}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground sm:hidden">
-                        {f.kennzeichen}
-                      </p>
-                    </td>
-                    <td className="hidden whitespace-nowrap px-3 py-2 text-muted-foreground sm:table-cell">
-                      {f.kennzeichen}
-                    </td>
-                    <td className="hidden px-3 py-2 lg:table-cell">
-                      {klassen.length ? (
-                        <span className="text-muted-foreground">{klassen.join(", ")}</span>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </td>
-                    <td className="hidden px-3 py-2 xl:table-cell">
-                      {kuerzel.length ? (
-                        <div className="flex flex-wrap gap-1">
-                          {kuerzel.map((k, i) => (
-                            <Badge key={`${k}-${i}`} variant="outline" className="h-5 px-1.5 text-2xs">
-                              {k}
-                            </Badge>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-xs text-muted-foreground">
-                      {f.getriebeart || "—"}
-                    </td>
-                  </tr>
-                );
-              })}
-              {gefiltert.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-3 py-8 text-center text-sm text-muted-foreground">
-                    Keine Treffer.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      <p className="mt-2 text-xs text-muted-foreground">
-        {gefiltert.length} von {fahrzeuge.length} angezeigt
-      </p>
+          );
+        }}
+        emptyState={
+          <p className="px-4 py-10 text-center text-13 text-foreground-secondary">
+            {segment === "archiv" ? "Keine archivierten Fahrzeuge." : "Keine Fahrzeuge für diese Auswahl."}
+          </p>
+        }
+      />
     </div>
   );
 }

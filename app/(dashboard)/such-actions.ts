@@ -148,7 +148,7 @@ export async function globalSuche(query: string): Promise<SuchTreffer[]> {
       id: String(f.id),
       titel: (f.name ?? f.kennzeichen) as string,
       untertitel: f.kennzeichen as string,
-      href: `/fahrzeuge?id=${f.id}`,
+      href: `/fahrzeuge/${f.id}`,
     });
   }
 

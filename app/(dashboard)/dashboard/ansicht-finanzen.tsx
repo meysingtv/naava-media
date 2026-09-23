@@ -8,7 +8,7 @@ import { Karte, KarteLeer, KartenLink } from "@/components/ui/karte";
 import { Kennzahl, KennzahlReihe } from "@/components/ui/kennzahl";
 import { AKZENT } from "@/lib/farben";
 import { formatDatum, formatEuro } from "@/lib/utils";
-import { plusTage } from "./zeit";
+import { plusTage } from "@/lib/zeit";
 
 type OffeneRow = {
   id: string;

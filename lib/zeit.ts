@@ -1,5 +1,5 @@
 /**
- * Zeit-Hilfen für das Dashboard – alles in deutscher Zeit (Europe/Berlin),
+ * Zeit-Hilfen – alles in deutscher Zeit (Europe/Berlin),
  * damit „heute" und „jetzt" auch kurz nach Mitternacht stimmen, wenn der
  * Server in UTC läuft.
  */
@@ -71,4 +71,9 @@ export function dauerText(minuten: number): string {
   const h = Math.floor(minuten / 60);
   const m = minuten % 60;
   return m ? `${h} Std. ${m} Min.` : `${h} Std.`;
+}
+
+/** Tage von `von` bis `bis` (JJJJ-MM-TT); negativ, wenn `bis` schon vorbei ist. */
+export function tageBis(bis: string, von: string): number {
+  return Math.round((Date.parse(`${bis.slice(0, 10)}T12:00:00Z`) - Date.parse(`${von.slice(0, 10)}T12:00:00Z`)) / 86_400_000);
 }

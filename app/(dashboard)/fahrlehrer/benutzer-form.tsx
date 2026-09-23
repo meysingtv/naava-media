@@ -1,43 +1,30 @@
 "use client";
 
-import { useState } from "react";
 import { useFormState } from "react-dom";
-import { Check, Lock, X } from "lucide-react";
+import { Lock } from "lucide-react";
 
 import { benutzerSpeichern, type BenutzerState } from "./actions";
-import { Button } from "@/components/ui/button";
-import { SubmitButton } from "@/components/shared/submit-button";
+import { Auswahl } from "@/components/ui/auswahl";
+import { DatumFeld } from "@/components/ui/datum-feld";
+import { Field } from "@/components/ui/field";
+import { Ankreuzfeld, FeldGitter, FormularAbschnitt, Speicherleiste } from "@/components/ui/formular";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { DetailKopf } from "@/components/shared/detail-kopf";
 import { FormMessage } from "@/components/shared/form-message";
-import { FUEHRERSCHEINKLASSEN, ROLLEN } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { KlassenAuswahl } from "@/components/shared/klassen-auswahl";
+import { ROLLEN } from "@/lib/constants";
 import type { Benutzerrolle, Fahrlehrer } from "@/lib/types";
 
 const initial: BenutzerState = {};
 
-const feld =
-  "h-9 w-full rounded-md border border-border-strong bg-background shadow-xs px-3 text-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20";
+const STANDARD_ROLLEN = [
+  { value: "chef", label: "Geschäftsführer" },
+  { value: "fahrlehrer", label: "Fahrlehrer" },
+  { value: "buero", label: "Büro" },
+];
 
-function Abschnitt({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-3">
-      <h3 className="border-b pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
-      {children}
-    </section>
-  );
-}
-
-function F({ label, children, req }: { label: string; children: React.ReactNode; req?: boolean }) {
-  return (
-    <div className="min-w-0">
-      <label className="mb-1 block text-[13px] text-foreground/70">
-        {label}
-        {req && <span className="text-destructive"> *</span>}
-      </label>
-      {children}
-    </div>
-  );
-}
-
+/** Mitarbeiter anlegen oder bearbeiten – Person, Kontakt, Zugang, Ausbildung. */
 export function BenutzerForm({
   benutzer,
   istSelbst = false,
@@ -48,15 +35,13 @@ export function BenutzerForm({
   rollen?: Benutzerrolle[];
 }) {
   const [state, action] = useFormState(benutzerSpeichern, initial);
-  const [tab, setTab] = useState<"stamm" | "ausbildung">("stamm");
-  const [klassen, setKlassen] = useState<string[]>(benutzer?.fuehrerscheinklassen ?? []);
 
   const istBearbeiten = Boolean(benutzer);
   const hatLogin = Boolean(benutzer?.user_id);
-  const titel = benutzer ? `${benutzer.vorname} ${benutzer.nachname}` : "Neuer Benutzer";
-  const abbrechenHref = benutzer ? `/fahrlehrer?id=${benutzer.id}` : "/fahrlehrer";
+  const name = benutzer ? `${benutzer.vorname} ${benutzer.nachname}` : null;
+  const zurueck = benutzer ? `/fahrlehrer?id=${benutzer.id}` : "/fahrlehrer";
 
-  // Einheitliche Rolle: eigene Rolle (UUID) hat Vorrang, sonst Standard-Enum.
+  // Einheitliche Rolle: eigene Rolle (UUID) hat Vorrang, sonst Standard-Rolle.
   const rolleDefault = benutzer?.benutzerrolle_id ?? benutzer?.rolle ?? "fahrlehrer";
   const aktuelleRolleName = benutzer?.benutzerrolle_id
     ? rollen.find((r) => r.id === benutzer.benutzerrolle_id)?.name ?? "—"
@@ -64,182 +49,123 @@ export function BenutzerForm({
       ? ROLLEN[benutzer.rolle]
       : "";
 
-  const tabCls = (aktiv: boolean) =>
-    cn(
-      "border-b-2 pb-1.5 text-sm font-medium transition-colors",
-      aktiv ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
-    );
-
   return (
     <form action={action}>
       {benutzer && <input type="hidden" name="id" value={benutzer.id} />}
-      {klassen.map((k) => (
-        <input key={k} type="hidden" name="klassen" value={k} />
-      ))}
 
-      <div className="rounded-md border bg-card">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-            <h1 className="text-sm font-semibold tracking-tight">{titel}</h1>
-            <div className="flex items-center gap-5">
-              <button type="button" onClick={() => setTab("stamm")} className={tabCls(tab === "stamm")}>
-                Stammdaten
-              </button>
-              <button type="button" onClick={() => setTab("ausbildung")} className={tabCls(tab === "ausbildung")}>
-                Ausbildung
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Button asChild variant="outline" size="sm" type="button">
-              <a href={abbrechenHref}>
-                <X className="h-4 w-4" /> Abbrechen
-              </a>
-            </Button>
-            <SubmitButton size="sm">
-              <Check className="h-4 w-4" /> Speichern
-            </SubmitButton>
-          </div>
+      <DetailKopf
+        zurueck={{ href: zurueck, label: name ?? "Team" }}
+        titel={name ? `${name} bearbeiten` : "Mitarbeiter anlegen"}
+        kurztitel={name ? `${name} bearbeiten` : "Neuer Mitarbeiter"}
+        meta={[benutzer ? aktuelleRolleName : "Pflichtfelder sind mit * markiert"]}
+      />
+
+      {state.error && (
+        <div className="mb-6">
+          <FormMessage error={state.error} />
         </div>
+      )}
 
-        {state.error && (
-          <div className="border-b px-4 py-2">
-            <FormMessage error={state.error} />
-          </div>
-        )}
-
-        {/* Stammdaten */}
-        <div className={cn("space-y-6 p-4", tab !== "stamm" && "hidden")}>
-          <Abschnitt title="Person">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <F label="Kürzel">
-                <input name="kuerzel" defaultValue={benutzer?.kuerzel ?? undefined} placeholder="z. B. NW" className={feld} />
-              </F>
-              <F label="Rolle" req>
-                {istSelbst ? (
-                  <div className={cn(feld, "flex items-center gap-2 text-muted-foreground")}>
-                    <Lock className="h-3.5 w-3.5" /> {aktuelleRolleName}
-                  </div>
-                ) : (
-                  <select name="rolle_wahl" defaultValue={rolleDefault} className={feld}>
-                    <optgroup label="Standard">
-                      <option value="chef">Geschäftsführer</option>
-                      <option value="fahrlehrer">Fahrlehrer</option>
-                      <option value="buero">Büro</option>
-                    </optgroup>
-                    {rollen.length > 0 && (
-                      <optgroup label="Eigene Rollen">
-                        {rollen.map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
-                  </select>
-                )}
-              </F>
-              <F label="Vorname" req>
-                <input name="vorname" required defaultValue={benutzer?.vorname} className={feld} />
-              </F>
-              <F label="Name" req>
-                <input name="nachname" required defaultValue={benutzer?.nachname} className={feld} />
-              </F>
-              <F label="Geburtsdatum">
-                <input name="geburtsdatum" type="date" defaultValue={benutzer?.geburtsdatum ?? undefined} className={feld} />
-              </F>
-              <F label="Geburtsort">
-                <input name="geburtsort" defaultValue={benutzer?.geburtsort ?? undefined} className={feld} />
-              </F>
-            </div>
-            {istSelbst && (
-              <p className="text-xs text-muted-foreground">Deine eigene Rolle kannst du nicht ändern.</p>
-            )}
-          </Abschnitt>
-
-          <Abschnitt title="Kontakt">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <F label="E-Mail">
-                  <input name="email" type="email" defaultValue={benutzer?.email ?? undefined} className={feld} />
-                </F>
-              </div>
-              <F label="Telefon mobil">
-                <input name="telefon" type="tel" defaultValue={benutzer?.telefon ?? undefined} className={feld} />
-              </F>
-              <F label="Telefon privat">
-                <input name="telefon_privat" type="tel" defaultValue={benutzer?.telefon_privat ?? undefined} className={feld} />
-              </F>
-              <div className="sm:col-span-2">
-                <F label="Straße &amp; Nr.">
-                  <input name="strasse" defaultValue={benutzer?.strasse ?? undefined} className={feld} />
-                </F>
-              </div>
-              <F label="PLZ">
-                <input name="plz" inputMode="numeric" defaultValue={benutzer?.plz ?? undefined} className={feld} />
-              </F>
-              <F label="Ort">
-                <input name="ort" defaultValue={benutzer?.ort ?? undefined} className={feld} />
-              </F>
-            </div>
-            <F label="Notiz">
-              <textarea name="notiz" rows={3} defaultValue={benutzer?.notiz ?? undefined} className={cn(feld, "h-auto py-2")} />
-            </F>
-          </Abschnitt>
-
-          <Abschnitt title="Login &amp; Passwort">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <F label={istBearbeiten ? "Neues Passwort" : "Passwort"}>
-                <input
-                  name="passwort"
-                  type="password"
-                  minLength={6}
-                  autoComplete="new-password"
-                  placeholder="Mind. 6 Zeichen"
-                  className={feld}
+      <div className="space-y-8">
+        <FormularAbschnitt titel="Person und Rolle" beschreibung="Die Rolle bestimmt, welche Bereiche der Mitarbeiter sieht.">
+          <FeldGitter>
+            <Field label="Vorname" required>
+              <Input name="vorname" required defaultValue={benutzer?.vorname} autoComplete="off" />
+            </Field>
+            <Field label="Nachname" required>
+              <Input name="nachname" required defaultValue={benutzer?.nachname} autoComplete="off" />
+            </Field>
+            <Field label="Rolle" required hint={istSelbst ? "Die eigene Rolle lässt sich nicht ändern." : undefined}>
+              {istSelbst ? (
+                <div className="flex h-9 items-center gap-2 rounded-md border border-input bg-surface-muted px-3 text-sm text-foreground-secondary">
+                  <Lock className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" /> {aktuelleRolleName}
+                </div>
+              ) : (
+                <Auswahl
+                  name="rolle_wahl"
+                  optionen={[]}
+                  gruppen={[
+                    { label: "Standard", optionen: STANDARD_ROLLEN },
+                    { label: "Eigene Rollen", optionen: rollen.map((r) => ({ value: r.id, label: r.name })) },
+                  ]}
+                  defaultValue={rolleDefault}
                 />
-              </F>
-            </div>
-            {istBearbeiten ? (
-              <p className="text-xs text-muted-foreground">
-                {hatLogin
-                  ? "Leer lassen, um das bestehende Passwort zu behalten."
-                  : "Dieser Benutzer hat noch keinen Login. Mit E-Mail + Passwort aktivieren."}
-              </p>
-            ) : (
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="einladen" className="h-4 w-4 rounded border-border-strong text-primary focus:ring-primary/25" />
-                Stattdessen per E-Mail einladen (Passwort wird selbst gesetzt)
-              </label>
-            )}
-          </Abschnitt>
-        </div>
+              )}
+            </Field>
+            <Field label="Kürzel" hint="Erscheint im Kalender und in Listen">
+              <Input name="kuerzel" defaultValue={benutzer?.kuerzel ?? undefined} placeholder="z. B. NW" />
+            </Field>
+            <Field label="Geburtsdatum">
+              <DatumFeld name="geburtsdatum" defaultValue={benutzer?.geburtsdatum} />
+            </Field>
+            <Field label="Geburtsort">
+              <Input name="geburtsort" defaultValue={benutzer?.geburtsort ?? undefined} />
+            </Field>
+          </FeldGitter>
+        </FormularAbschnitt>
 
-        {/* Ausbildung */}
-        <div className={cn("space-y-6 p-4", tab !== "ausbildung" && "hidden")}>
-          <Abschnitt title="Führerscheinklassen">
-            <p className="text-xs text-muted-foreground">Klassen, die dieser Benutzer als Fahrlehrer ausbildet.</p>
-            <div className="flex flex-wrap gap-1.5">
-              {FUEHRERSCHEINKLASSEN.map((k) => {
-                const aktiv = klassen.includes(k);
-                return (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => setKlassen((p) => (p.includes(k) ? p.filter((x) => x !== k) : [...p, k]))}
-                    className={cn(
-                      "rounded-md border px-2.5 py-1 text-sm font-medium transition-colors",
-                      aktiv ? "border-primary bg-primary text-primary-foreground" : "border-border-strong bg-background hover:bg-surface",
-                    )}
-                  >
-                    {k}
-                  </button>
-                );
-              })}
+        <FormularAbschnitt titel="Kontakt" beschreibung="Adresse und Telefon für Rückfragen und Dienstpläne.">
+          <FeldGitter>
+            <Field label="E-Mail" className="sm:col-span-2">
+              <Input name="email" type="email" defaultValue={benutzer?.email ?? undefined} />
+            </Field>
+            <Field label="Telefon mobil">
+              <Input name="telefon" type="tel" defaultValue={benutzer?.telefon ?? undefined} />
+            </Field>
+            <Field label="Telefon privat">
+              <Input name="telefon_privat" type="tel" defaultValue={benutzer?.telefon_privat ?? undefined} />
+            </Field>
+            <Field label="Straße und Hausnummer" className="sm:col-span-2">
+              <Input name="strasse" defaultValue={benutzer?.strasse ?? undefined} />
+            </Field>
+            <Field label="PLZ">
+              <Input name="plz" inputMode="numeric" defaultValue={benutzer?.plz ?? undefined} />
+            </Field>
+            <Field label="Ort">
+              <Input name="ort" defaultValue={benutzer?.ort ?? undefined} />
+            </Field>
+            <Field label="Notiz" className="sm:col-span-2">
+              <Textarea name="notiz" rows={3} defaultValue={benutzer?.notiz ?? undefined} placeholder="Nur intern sichtbar" />
+            </Field>
+          </FeldGitter>
+        </FormularAbschnitt>
+
+        <FormularAbschnitt
+          titel="Zugang"
+          beschreibung={
+            istBearbeiten
+              ? hatLogin
+                ? "Neues Passwort nur eintragen, wenn es geändert werden soll."
+                : "Noch kein Zugang – mit E-Mail und Passwort aktivieren."
+              : "Passwort vergeben oder eine Einladung per E-Mail schicken."
+          }
+        >
+          <FeldGitter>
+            <Field label={istBearbeiten ? "Neues Passwort" : "Passwort"} hint="Mindestens 6 Zeichen">
+              <Input name="passwort" type="password" minLength={6} autoComplete="new-password" />
+            </Field>
+          </FeldGitter>
+          {!istBearbeiten && (
+            <div className="mt-5 border-t border-border pt-5">
+              <Ankreuzfeld
+                name="einladen"
+                label="Stattdessen per E-Mail einladen"
+                hinweis="Der Mitarbeiter setzt sein Passwort dann selbst."
+              />
             </div>
-          </Abschnitt>
-        </div>
+          )}
+        </FormularAbschnitt>
+
+        <FormularAbschnitt titel="Ausbildung" beschreibung="Klassen, die der Mitarbeiter als Fahrlehrer ausbildet.">
+          <KlassenAuswahl defaultValue={benutzer?.fuehrerscheinklassen} />
+        </FormularAbschnitt>
       </div>
+
+      <Speicherleiste
+        abbrechenHref={zurueck}
+        speichernLabel={istBearbeiten ? "Änderungen speichern" : "Mitarbeiter anlegen"}
+        hinweis="Pflichtfelder sind mit * markiert"
+      />
     </form>
   );
 }

@@ -5,7 +5,7 @@ import { getKontext } from "@/lib/supabase/queries";
 import { BenutzerForm } from "../../benutzer-form";
 import type { Benutzerrolle, Fahrlehrer } from "@/lib/types";
 
-export const metadata = { title: "Benutzer bearbeiten · FahrschulApp" };
+export const metadata = { title: "Mitarbeiter bearbeiten · FahrschulApp" };
 
 export default async function BenutzerBearbeitenPage({ params }: { params: { id: string } }) {
   const kontext = await getKontext();

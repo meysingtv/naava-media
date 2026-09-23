@@ -243,3 +243,14 @@ export const AVATAR_FARBEN = [
 export function zufallsAvatarFarbe(): string {
   return AVATAR_FARBEN[Math.floor(Math.random() * AVATAR_FARBEN.length)];
 }
+
+/** Getriebeart für die Anzeige – versteht „MANUAL"/„AUTOMATIK" und Klartext. */
+export function getriebeLabel(wert: string | null | undefined): string {
+  if (!wert) return "—";
+  return /auto/i.test(wert) ? "Automatik" : "Schaltung";
+}
+
+/** Gespeicherter Wert der Getriebeart („MANUAL" oder „AUTOMATIK"). */
+export function getriebeWert(wert: string | null | undefined): "MANUAL" | "AUTOMATIK" {
+  return wert && /auto/i.test(wert) ? "AUTOMATIK" : "MANUAL";
+}

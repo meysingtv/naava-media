@@ -14,7 +14,7 @@ import { cn, formatDatum, formatUhrzeit, initialen } from "@/lib/utils";
 import type { Aufgabe, FahrlehrerRolle, FahrstundeStatus, FahrstundeTyp } from "@/lib/types";
 import { AufgabeStatus } from "./aufgabe-status";
 import { MiniKalender } from "./widgets";
-import { alsUhrzeit, dauerText, minutenVon, plusTage, stunden, wochenbeginn, wochentagKurz } from "./zeit";
+import { alsUhrzeit, dauerText, minutenVon, plusTage, stunden, wochenbeginn, wochentagKurz } from "@/lib/zeit";
 
 /** Bezugsgröße für die Auslastung: acht Fahrstunden-Stunden je Fahrlehrer und Tag. */
 const ARBEITSTAG_MIN = 8 * 60;

@@ -11,7 +11,7 @@ import { AKZENT } from "@/lib/farben";
 import { pflichtFahrtenFuer } from "@/lib/constants";
 import { formatDatum, formatUhrzeit, initialen } from "@/lib/utils";
 import type { FahrlehrerRolle } from "@/lib/types";
-import { plusTage, wochentagKurz } from "./zeit";
+import { plusTage, wochentagKurz } from "@/lib/zeit";
 
 type SchuelerRow = {
   id: string;

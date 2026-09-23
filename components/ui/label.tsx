@@ -6,7 +6,7 @@ import * as LabelPrimitive from "@radix-ui/react-label";
 import { cn } from "@/lib/utils";
 
 /**
- * Feld-Label v3: 12/500 sekundär, steht immer ÜBER dem Feld. Den Abstand
+ * Feld-Label v4: 13/500 in Textfarbe, steht immer ÜBER dem Feld. Den Abstand
  * setzt `Field` (mb-1.5) – hier bleibt er aus, damit bestehende Wrapper mit
  * eigenem `gap` nicht doppelt Luft bekommen.
  */
@@ -22,7 +22,7 @@ const Label = React.forwardRef<
   <LabelPrimitive.Root
     ref={ref}
     className={cn(
-      "block text-xs font-medium leading-4 text-foreground-secondary peer-disabled:cursor-not-allowed peer-disabled:opacity-60",
+      "block text-13 font-medium leading-5 text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-60",
       hint && "flex items-center justify-between gap-2",
       className,
     )}

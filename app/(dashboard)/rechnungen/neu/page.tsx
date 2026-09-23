@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/shared/page-header";
 import type { Leistung } from "@/lib/types";
 import { RechnungForm } from "../rechnung-form";
 
@@ -18,13 +17,5 @@ export default async function NeueRechnungPage() {
       .returns<Leistung[]>(),
   ]);
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Neue Rechnung"
-        description="Erstelle eine Rechnung mit Positionen und Mehrwertsteuer."
-      />
-      <RechnungForm schueler={schuelerRes.data ?? []} leistungen={leistungRes.data ?? []} />
-    </div>
-  );
+  return <RechnungForm schueler={schuelerRes.data ?? []} leistungen={leistungRes.data ?? []} />;
 }

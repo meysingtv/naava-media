@@ -1,497 +1,249 @@
 "use client";
 
-import { useState } from "react";
 import { useFormState } from "react-dom";
-import { Check, X } from "lucide-react";
 
 import { schuelerSpeichern, type SchuelerFormState } from "./actions";
-import { Button } from "@/components/ui/button";
-import { SubmitButton } from "@/components/shared/submit-button";
+import { Auswahl } from "@/components/ui/auswahl";
+import { DatumFeld } from "@/components/ui/datum-feld";
+import { Field } from "@/components/ui/field";
+import { Ankreuzfeld, FeldGitter, FormularAbschnitt, Speicherleiste } from "@/components/ui/formular";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { DetailKopf } from "@/components/shared/detail-kopf";
 import { FormMessage } from "@/components/shared/form-message";
+import { KlassenAuswahl } from "@/components/shared/klassen-auswahl";
 import { FUEHRERSCHEINKLASSEN } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 import type { Fahrschueler } from "@/lib/types";
 
 const initial: SchuelerFormState = {};
 
-const feld =
-  "h-9 w-full rounded-md border border-border-strong bg-background shadow-xs px-3 text-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20";
+const ANREDEN = ["Herr", "Frau", "Divers"].map((a) => ({ value: a, label: a }));
+const ERTEILUNGSARTEN = ["Ersterteilung", "Erweiterung"].map((a) => ({ value: a, label: a }));
+const ZAHLUNGSARTEN = ["Bar", "SEPA-Lastschrift", "Überweisung", "ClassicPay"].map((a) => ({ value: a, label: a }));
+const KLASSEN = FUEHRERSCHEINKLASSEN.map((k) => ({ value: k, label: k }));
 
-function Abschnitt({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-3">
-      <h3 className="border-b pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </h3>
-      {children}
-    </section>
-  );
-}
-
-function F({ label, children, req }: { label: string; children: React.ReactNode; req?: boolean }) {
-  return (
-    <div className="min-w-0">
-      <label className="mb-1 block text-[13px] text-foreground/70">
-        {label}
-        {req && <span className="text-destructive"> *</span>}
-      </label>
-      {children}
-    </div>
-  );
-}
-
-function Schalter({
-  name,
-  label,
-  defaultChecked,
-}: {
-  name: string;
-  label: string;
-  defaultChecked?: boolean;
-}) {
-  return (
-    <label className="flex items-center gap-2 text-sm">
-      <input
-        type="checkbox"
-        name={name}
-        defaultChecked={defaultChecked}
-        className="h-4 w-4 rounded border-border-strong text-primary focus:ring-primary/25"
-      />
-      {label}
-    </label>
-  );
-}
-
-export function SchuelerForm({ schueler }: { schueler?: Fahrschueler }) {
+/**
+ * Schüler anlegen und bearbeiten – ein Formular mit klaren Abschnitten statt
+ * Reitern. Zahlungsangaben erscheinen nur für Rollen mit Zugriff auf
+ * Rechnungen; die Server-Aktion lässt sie sonst unverändert.
+ */
+export function SchuelerForm({ schueler, zeigeFinanzen = true }: { schueler?: Fahrschueler; zeigeFinanzen?: boolean }) {
   const [state, action] = useFormState(schuelerSpeichern, initial);
-  const [tab, setTab] = useState<"kunde" | "preise">("kunde");
-  const [klassen, setKlassen] = useState<string[]>(schueler?.fuehrerscheinklassen ?? []);
-
-  function toggleKlasse(k: string) {
-    setKlassen((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
-  }
-
-  const titel = schueler ? `${schueler.vorname} ${schueler.nachname}` : "Neuer Schüler";
-  const abbrechenHref = schueler ? `/schueler/${schueler.id}` : "/schueler";
+  const name = schueler ? `${schueler.vorname} ${schueler.nachname}` : null;
+  const zurueck = schueler ? `/schueler/${schueler.id}` : "/schueler";
   const heute = new Date().toISOString().slice(0, 10);
-
-  const tabCls = (aktiv: boolean) =>
-    cn(
-      "border-b-2 pb-1.5 text-sm font-medium transition-colors",
-      aktiv
-        ? "border-foreground text-foreground"
-        : "border-transparent text-muted-foreground hover:text-foreground",
-    );
 
   return (
     <form action={action}>
       {schueler && <input type="hidden" name="id" value={schueler.id} />}
-      {klassen.map((k) => (
-        <input key={k} type="hidden" name="klassen" value={k} />
-      ))}
 
-      <div className="rounded-md border bg-card">
-        {/* Kopfleiste */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-            <h1 className="text-sm font-semibold tracking-tight">{titel}</h1>
-            <div className="flex items-center gap-5">
-              <button type="button" onClick={() => setTab("kunde")} className={tabCls(tab === "kunde")}>
-                Kunde Daten
-              </button>
-              <button type="button" onClick={() => setTab("preise")} className={tabCls(tab === "preise")}>
-                Add Ons | Preise
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Button asChild variant="ghost" size="sm" type="button">
-              <a href={abbrechenHref}>
-                <X className="h-4 w-4" /> Abbrechen
-              </a>
-            </Button>
-            <SubmitButton size="sm">
-              <Check className="h-4 w-4" /> Speichern
-            </SubmitButton>
-          </div>
+      <DetailKopf
+        zurueck={{ href: zurueck, label: name ?? "Schüler" }}
+        titel={schueler ? `${name} bearbeiten` : "Neuen Schüler anlegen"}
+        kurztitel={name ? `${name} bearbeiten` : "Neuer Schüler"}
+        meta={[schueler?.kundennummer != null ? `Kd.-Nr. ${schueler.kundennummer}` : "Pflichtfelder sind mit * markiert"]}
+      />
+
+      {state.error && (
+        <div className="mb-6">
+          <FormMessage error={state.error} />
         </div>
+      )}
 
-        {state.error && (
-          <div className="border-b px-4 py-2">
-            <FormMessage error={state.error} />
+      <div className="space-y-8">
+        <FormularAbschnitt titel="Person" beschreibung="Name und Geburtsdaten, wie sie im Ausweis stehen.">
+          <FeldGitter>
+            <Field label="Anrede">
+              <Auswahl name="anrede" optionen={ANREDEN} defaultValue={schueler?.anrede} leerLabel="Keine Angabe" placeholder="Keine Angabe" />
+            </Field>
+            <div className="hidden sm:block" />
+            <Field label="Vorname" required>
+              <Input name="vorname" required defaultValue={schueler?.vorname} autoComplete="off" />
+            </Field>
+            <Field label="Nachname" required>
+              <Input name="nachname" required defaultValue={schueler?.nachname} autoComplete="off" />
+            </Field>
+            <Field label="Geburtsdatum">
+              <DatumFeld name="geburtsdatum" defaultValue={schueler?.geburtsdatum} />
+            </Field>
+            <Field label="Geburtsort">
+              <Input name="geburtsort" defaultValue={schueler?.geburtsort ?? undefined} />
+            </Field>
+            <Field label="Staatsangehörigkeit" className="sm:col-span-2">
+              <Input name="staatsangehoerigkeit" defaultValue={schueler?.staatsangehoerigkeit ?? "Deutschland"} />
+            </Field>
+          </FeldGitter>
+        </FormularAbschnitt>
+
+        <FormularAbschnitt titel="Kontakt" beschreibung="Adresse und Wege, auf denen der Schüler erreichbar ist.">
+          <FeldGitter>
+            <Field label="Straße und Hausnummer" className="sm:col-span-2">
+              <Input name="strasse" defaultValue={schueler?.strasse ?? undefined} autoComplete="street-address" />
+            </Field>
+            <Field label="PLZ">
+              <Input name="plz" inputMode="numeric" defaultValue={schueler?.plz ?? undefined} autoComplete="postal-code" />
+            </Field>
+            <Field label="Ort">
+              <Input name="ort" defaultValue={schueler?.ort ?? undefined} autoComplete="address-level2" />
+            </Field>
+            <Field label="Mobil" hint="Für Terminerinnerungen per SMS">
+              <Input name="telefon" type="tel" defaultValue={schueler?.telefon ?? undefined} />
+            </Field>
+            <Field label="E-Mail">
+              <Input name="email" type="email" defaultValue={schueler?.email ?? undefined} />
+            </Field>
+            <Field label="Telefon privat">
+              <Input name="telefon_privat" type="tel" defaultValue={schueler?.telefon_privat ?? undefined} />
+            </Field>
+            <Field label="Telefon beruflich">
+              <Input name="telefon_beruflich" type="tel" defaultValue={schueler?.telefon_beruflich ?? undefined} />
+            </Field>
+          </FeldGitter>
+        </FormularAbschnitt>
+
+        <FormularAbschnitt titel="Ausbildung" beschreibung="Klassen, bisheriger Führerschein und Beginn der Ausbildung.">
+          <div className="mb-5">
+            <KlassenAuswahl defaultValue={schueler?.fuehrerscheinklassen} />
           </div>
+          <FeldGitter>
+            <Field label="Anmeldedatum" required>
+              <DatumFeld name="anmeldedatum" required defaultValue={schueler?.anmeldedatum ?? heute} />
+            </Field>
+            <Field label="Kurs">
+              <Input name="kurs" defaultValue={schueler?.kurs ?? undefined} />
+            </Field>
+            <Field label="Erteilungsart">
+              <Auswahl name="erteilungsart" optionen={ERTEILUNGSARTEN} defaultValue={schueler?.erteilungsart} leerLabel="Keine Angabe" placeholder="Keine Angabe" />
+            </Field>
+            <Field label="Schlüsselzahl">
+              <Input name="schluesselzahl" defaultValue={schueler?.schluesselzahl ?? undefined} />
+            </Field>
+            <Field label="Bisherige Klasse">
+              <Auswahl name="bisherige_klasse" optionen={KLASSEN} defaultValue={schueler?.bisherige_klasse} leerLabel="Keine" placeholder="Keine" />
+            </Field>
+            <Field label="Ausgestellt am">
+              <DatumFeld name="ausgabedatum" defaultValue={schueler?.ausgabedatum} />
+            </Field>
+            <Field label="Führerscheinnummer" className="sm:col-span-2">
+              <Input name="fuehrerscheinnummer" defaultValue={schueler?.fuehrerscheinnummer ?? undefined} />
+            </Field>
+          </FeldGitter>
+          <div className="mt-5 flex flex-col gap-3 border-t border-border pt-5">
+            <Ankreuzfeld name="bf17" label="Begleitetes Fahren ab 17" defaultChecked={schueler?.bf17} />
+          </div>
+        </FormularAbschnitt>
+
+        <FormularAbschnitt titel="Prüfungen" beschreibung="Termine und Versuche für Theorie und Praxis.">
+          <FeldGitter>
+            <Field label="Theorieprüfung am">
+              <DatumFeld name="theorie_termin" defaultValue={schueler?.theorie_termin} />
+            </Field>
+            <Field label="Versuch Theorie">
+              <Input name="theorie_versuch" type="number" min="1" defaultValue={schueler?.theorie_versuch ?? 1} />
+            </Field>
+            <Field label="Praktische Prüfung am">
+              <DatumFeld name="pruefung_termin" defaultValue={schueler?.pruefung_termin} />
+            </Field>
+            <Field label="Versuch Praxis">
+              <Input name="praxis_versuch" type="number" min="1" defaultValue={schueler?.praxis_versuch ?? 1} />
+            </Field>
+          </FeldGitter>
+          <div className="mt-5 flex flex-col gap-3 border-t border-border pt-5">
+            <Ankreuzfeld name="theorie_bestanden" label="Theorieprüfung bestanden" defaultChecked={schueler?.theorie_bestanden} />
+            <Ankreuzfeld
+              name="ausbildung_beendet"
+              label="Ausbildung abgeschlossen"
+              hinweis="Der Schüler erscheint dann unter „Abgeschlossen“."
+              defaultChecked={schueler?.ausbildung_beendet}
+            />
+          </div>
+        </FormularAbschnitt>
+
+        <FormularAbschnitt titel="Unterlagen" beschreibung="Was für den Antrag bei der Führerscheinstelle vorliegt.">
+          <FeldGitter>
+            <Field label="Sehtest am">
+              <DatumFeld name="sehtest_am" defaultValue={schueler?.sehtest_am} />
+            </Field>
+            <Field label="Erste-Hilfe-Kurs am">
+              <DatumFeld name="erste_hilfe_am" defaultValue={schueler?.erste_hilfe_am} />
+            </Field>
+            <Field label="Antrag gestellt am">
+              <DatumFeld name="antrag_gestellt_am" defaultValue={schueler?.antrag_gestellt_am} />
+            </Field>
+          </FeldGitter>
+          <div className="mt-5 flex flex-col gap-3 border-t border-border pt-5">
+            <Ankreuzfeld name="passbild_ok" label="Passbild liegt vor" defaultChecked={schueler?.passbild_ok} />
+            <Ankreuzfeld name="ausweis_ok" label="Ausweiskopie liegt vor" defaultChecked={schueler?.ausweis_ok} />
+            <Ankreuzfeld name="sehhilfe" label="Sehhilfe erforderlich" defaultChecked={schueler?.sehhilfe} />
+          </div>
+        </FormularAbschnitt>
+
+        {zeigeFinanzen && (
+          <FormularAbschnitt titel="Zahlung" beschreibung="Preisliste, Bankverbindung und ein möglicher Kostenträger.">
+            <FeldGitter>
+              <Field label="Preisliste">
+                <Input name="preisliste" defaultValue={schueler?.preisliste ?? undefined} />
+              </Field>
+              <Field label="Zahlungsart">
+                <Auswahl name="zahlungsart" optionen={ZAHLUNGSARTEN} defaultValue={schueler?.zahlungsart} leerLabel="Keine Angabe" placeholder="Keine Angabe" />
+              </Field>
+              <Field label="IBAN" className="sm:col-span-2">
+                <Input name="iban" defaultValue={schueler?.iban ?? undefined} placeholder="DE00 0000 0000 0000 0000 00" />
+              </Field>
+              <Field label="SEPA-Mandatsreferenz">
+                <Input name="sepa_mandat_ref" defaultValue={schueler?.sepa_mandat_ref ?? undefined} placeholder="z. B. M-2026-0001" />
+              </Field>
+              <Field label="Mandat erteilt am">
+                <DatumFeld name="sepa_mandat_am" defaultValue={schueler?.sepa_mandat_am} />
+              </Field>
+              <Field label="Kostenträger">
+                <Input name="kostentraeger" defaultValue={schueler?.kostentraeger ?? undefined} placeholder="z. B. Agentur für Arbeit" />
+              </Field>
+              <Field label="E-Mail des Kostenträgers">
+                <Input name="kostentraeger_email" type="email" defaultValue={schueler?.kostentraeger_email ?? undefined} />
+              </Field>
+              <Field label="Vorgangsnummer" className="sm:col-span-2">
+                <Input name="vorgangsnummer" defaultValue={schueler?.vorgangsnummer ?? undefined} />
+              </Field>
+            </FeldGitter>
+            <div className="mt-5 flex flex-col gap-3 border-t border-border pt-5">
+              <Ankreuzfeld name="intensivkurs" label="Intensivkurs" defaultChecked={schueler?.intensivkurs} />
+              <Ankreuzfeld name="zweiter_preis" label="Zweiter Preis" defaultChecked={schueler?.zweiter_preis} />
+              <Ankreuzfeld
+                name="autom_leistungspakete"
+                label="Leistungspakete automatisch berechnen"
+                defaultChecked={schueler?.autom_leistungspakete}
+              />
+            </div>
+          </FormularAbschnitt>
         )}
 
-        {/* Tab: Kunde Daten */}
-        <div className={cn("grid gap-6 p-4 lg:grid-cols-2", tab !== "kunde" && "hidden")}>
-          {/* Links: Kunde */}
-          <div className="space-y-6">
-            <Abschnitt title="Kunde">
-              <div className="grid grid-cols-2 gap-3">
-                <F label="Anrede">
-                  <select name="anrede" defaultValue={schueler?.anrede ?? ""} className={feld}>
-                    <option value="">—</option>
-                    <option value="Herr">Herr</option>
-                    <option value="Frau">Frau</option>
-                    <option value="Divers">Divers</option>
-                  </select>
-                </F>
-                <div />
-                <F label="Vorname" req>
-                  <input name="vorname" required defaultValue={schueler?.vorname} className={feld} />
-                </F>
-                <F label="Name" req>
-                  <input name="nachname" required defaultValue={schueler?.nachname} className={feld} />
-                </F>
-                <F label="Geburtsdatum">
-                  <input
-                    name="geburtsdatum"
-                    type="date"
-                    defaultValue={schueler?.geburtsdatum ?? undefined}
-                    className={feld}
-                  />
-                </F>
-                <F label="Geburtsort">
-                  <input name="geburtsort" defaultValue={schueler?.geburtsort ?? undefined} className={feld} />
-                </F>
-                <div className="col-span-2">
-                  <F label="Staatsangehörigkeit">
-                    <input
-                      name="staatsangehoerigkeit"
-                      defaultValue={schueler?.staatsangehoerigkeit ?? "Deutschland"}
-                      className={feld}
-                    />
-                  </F>
-                </div>
-              </div>
-            </Abschnitt>
-
-            <Abschnitt title="Adressdaten">
-              <div className="grid grid-cols-2 gap-3">
-                <F label="PLZ">
-                  <input name="plz" inputMode="numeric" defaultValue={schueler?.plz ?? undefined} className={feld} />
-                </F>
-                <F label="Ort">
-                  <input name="ort" defaultValue={schueler?.ort ?? undefined} className={feld} />
-                </F>
-                <div className="col-span-2">
-                  <F label="Straße &amp; Nr.">
-                    <input name="strasse" defaultValue={schueler?.strasse ?? undefined} className={feld} />
-                  </F>
-                </div>
-                <F label="Mobil">
-                  <input name="telefon" type="tel" defaultValue={schueler?.telefon ?? undefined} className={feld} />
-                </F>
-                <F label="Telefon privat">
-                  <input
-                    name="telefon_privat"
-                    type="tel"
-                    defaultValue={schueler?.telefon_privat ?? undefined}
-                    className={feld}
-                  />
-                </F>
-                <F label="Telefon beruflich">
-                  <input
-                    name="telefon_beruflich"
-                    type="tel"
-                    defaultValue={schueler?.telefon_beruflich ?? undefined}
-                    className={feld}
-                  />
-                </F>
-                <F label="E-Mail">
-                  <input name="email" type="email" defaultValue={schueler?.email ?? undefined} className={feld} />
-                </F>
-              </div>
-            </Abschnitt>
-
-            <Abschnitt title="Zusatzinfos">
-              <div className="grid grid-cols-2 gap-3">
-                <F label="Filiale">
-                  <input name="filiale" defaultValue={schueler?.filiale ?? undefined} className={feld} />
-                </F>
-                <F label="Prüfort">
-                  <input name="pruefort" defaultValue={schueler?.pruefort ?? undefined} className={feld} />
-                </F>
-                <div className="col-span-2">
-                  <F label="Prüforganisation">
-                    <input
-                      name="prueforganisation"
-                      defaultValue={schueler?.prueforganisation ?? undefined}
-                      placeholder="z. B. TÜV Süd"
-                      className={feld}
-                    />
-                  </F>
-                </div>
-              </div>
-              <Schalter name="sehhilfe" label="Sehhilfe erforderlich" defaultChecked={schueler?.sehhilfe} />
-              <F label="Info / Notizen">
-                <textarea
-                  name="notizen"
-                  rows={3}
-                  defaultValue={schueler?.notizen ?? undefined}
-                  placeholder="Interne Notizen …"
-                  className={cn(feld, "h-auto py-2")}
-                />
-              </F>
-            </Abschnitt>
-          </div>
-
-          {/* Rechts: Ausbildung */}
-          <div className="space-y-6 lg:border-l lg:pl-6">
-            <Abschnitt title="Ausbildung">
-              <div>
-                <label className="mb-1 block text-[13px] text-foreground/70">Führerscheinklassen</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {FUEHRERSCHEINKLASSEN.map((k) => {
-                    const aktiv = klassen.includes(k);
-                    return (
-                      <button
-                        key={k}
-                        type="button"
-                        onClick={() => toggleKlasse(k)}
-                        className={cn(
-                          "rounded-md border px-2.5 py-1 text-sm font-medium transition-colors",
-                          aktiv
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-border-strong bg-background hover:bg-surface",
-                        )}
-                      >
-                        {k}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <F label="Schlüsselzahl">
-                  <input name="schluesselzahl" defaultValue={schueler?.schluesselzahl ?? undefined} className={feld} />
-                </F>
-                <F label="Erteilungsart">
-                  <select name="erteilungsart" defaultValue={schueler?.erteilungsart ?? ""} className={feld}>
-                    <option value="">—</option>
-                    <option value="Ersterteilung">Ersterteilung</option>
-                    <option value="Erweiterung">Erweiterung</option>
-                  </select>
-                </F>
-                <F label="Bisherige Klasse">
-                  <select name="bisherige_klasse" defaultValue={schueler?.bisherige_klasse ?? ""} className={feld}>
-                    <option value="">—</option>
-                    {FUEHRERSCHEINKLASSEN.map((k) => (
-                      <option key={k} value={k}>
-                        {k}
-                      </option>
-                    ))}
-                  </select>
-                </F>
-                <F label="Ausgabedatum">
-                  <input
-                    name="ausgabedatum"
-                    type="date"
-                    defaultValue={schueler?.ausgabedatum ?? undefined}
-                    className={feld}
-                  />
-                </F>
-                <div className="col-span-2">
-                  <F label="Führerscheinnummer">
-                    <input
-                      name="fuehrerscheinnummer"
-                      defaultValue={schueler?.fuehrerscheinnummer ?? undefined}
-                      className={feld}
-                    />
-                  </F>
-                </div>
-                <F label="Anmeldedatum" req>
-                  <input
-                    name="anmeldedatum"
-                    type="date"
-                    required
-                    defaultValue={schueler?.anmeldedatum ?? heute}
-                    className={feld}
-                  />
-                </F>
-                <F label="Kurs">
-                  <input name="kurs" defaultValue={schueler?.kurs ?? undefined} className={feld} />
-                </F>
-              </div>
-              <div className="flex flex-wrap gap-x-6 gap-y-2">
-                <Schalter name="bf17" label="Begleitetes Fahren ab 17 (BF17)" defaultChecked={schueler?.bf17} />
-                <Schalter name="zweiter_preis" label="Zweiter Preis" defaultChecked={schueler?.zweiter_preis} />
-              </div>
-            </Abschnitt>
-
-            <Abschnitt title="Prüfung">
-              <div className="grid grid-cols-2 gap-3">
-                <F label="Theorieprüfung">
-                  <input
-                    name="theorie_termin"
-                    type="date"
-                    defaultValue={schueler?.theorie_termin ?? undefined}
-                    className={feld}
-                  />
-                </F>
-                <F label="Theorie – Versuch">
-                  <input
-                    name="theorie_versuch"
-                    type="number"
-                    min="1"
-                    defaultValue={schueler?.theorie_versuch ?? 1}
-                    className={feld}
-                  />
-                </F>
-                <F label="Praktische Prüfung">
-                  <input
-                    name="pruefung_termin"
-                    type="date"
-                    defaultValue={schueler?.pruefung_termin ?? undefined}
-                    className={feld}
-                  />
-                </F>
-                <F label="Praxis – Versuch">
-                  <input
-                    name="praxis_versuch"
-                    type="number"
-                    min="1"
-                    defaultValue={schueler?.praxis_versuch ?? 1}
-                    className={feld}
-                  />
-                </F>
-              </div>
-              <div className="flex flex-wrap gap-x-6 gap-y-2">
-                <Schalter
-                  name="theorie_bestanden"
-                  label="Theorieprüfung bestanden"
-                  defaultChecked={schueler?.theorie_bestanden}
-                />
-                <Schalter
-                  name="ausbildung_beendet"
-                  label="Ausbildung beendet"
-                  defaultChecked={schueler?.ausbildung_beendet}
-                />
-              </div>
-            </Abschnitt>
-
-            <Abschnitt title="Unterlagen & Nachweise">
-              <div className="grid grid-cols-2 gap-3">
-                <F label="Sehtest am">
-                  <input
-                    name="sehtest_am"
-                    type="date"
-                    defaultValue={schueler?.sehtest_am ?? undefined}
-                    className={feld}
-                  />
-                </F>
-                <F label="Erste-Hilfe-Kurs am">
-                  <input
-                    name="erste_hilfe_am"
-                    type="date"
-                    defaultValue={schueler?.erste_hilfe_am ?? undefined}
-                    className={feld}
-                  />
-                </F>
-                <F label="Antrag bei Behörde am">
-                  <input
-                    name="antrag_gestellt_am"
-                    type="date"
-                    defaultValue={schueler?.antrag_gestellt_am ?? undefined}
-                    className={feld}
-                  />
-                </F>
-              </div>
-              <div className="flex flex-wrap gap-x-6 gap-y-2">
-                <Schalter name="passbild_ok" label="Passbild vorhanden" defaultChecked={schueler?.passbild_ok} />
-                <Schalter name="ausweis_ok" label="Ausweiskopie vorhanden" defaultChecked={schueler?.ausweis_ok} />
-              </div>
-            </Abschnitt>
-          </div>
-        </div>
-
-        {/* Tab: Add Ons | Preise */}
-        <div className={cn("p-4", tab !== "preise" && "hidden")}>
-          <div className="max-w-2xl space-y-6">
-            <Abschnitt title="Zahlungsdaten">
-              <div className="grid grid-cols-2 gap-3">
-                <F label="Preisliste">
-                  <input name="preisliste" defaultValue={schueler?.preisliste ?? undefined} className={feld} />
-                </F>
-                <F label="Zahlungsart">
-                  <select name="zahlungsart" defaultValue={schueler?.zahlungsart ?? ""} className={feld}>
-                    <option value="">—</option>
-                    <option value="Bar">Bar</option>
-                    <option value="SEPA-Lastschrift">SEPA-Lastschrift</option>
-                    <option value="Überweisung">Überweisung</option>
-                    <option value="ClassicPay">ClassicPay</option>
-                  </select>
-                </F>
-                <div className="col-span-2">
-                  <F label="IBAN">
-                    <input name="iban" defaultValue={schueler?.iban ?? undefined} placeholder="DE…" className={feld} />
-                  </F>
-                </div>
-                <F label="SEPA-Mandatsreferenz">
-                  <input
-                    name="sepa_mandat_ref"
-                    defaultValue={schueler?.sepa_mandat_ref ?? undefined}
-                    placeholder="z. B. M-2026-0001"
-                    className={feld}
-                  />
-                </F>
-                <F label="Mandat erteilt am">
-                  <input
-                    name="sepa_mandat_am"
-                    type="date"
-                    defaultValue={schueler?.sepa_mandat_am ?? undefined}
-                    className={feld}
-                  />
-                </F>
-                <F label="Kostenträger">
-                  <input name="kostentraeger" defaultValue={schueler?.kostentraeger ?? undefined} className={feld} />
-                </F>
-                <F label="E-Mail (Kostenträger)">
-                  <input
-                    name="kostentraeger_email"
-                    type="email"
-                    defaultValue={schueler?.kostentraeger_email ?? undefined}
-                    className={feld}
-                  />
-                </F>
-                <div className="col-span-2">
-                  <F label="Vorgangsnummer">
-                    <input
-                      name="vorgangsnummer"
-                      defaultValue={schueler?.vorgangsnummer ?? undefined}
-                      className={feld}
-                    />
-                  </F>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-x-6 gap-y-2">
-                <Schalter name="intensivkurs" label="Intensivkurs" defaultChecked={schueler?.intensivkurs} />
-                <Schalter
-                  name="autom_leistungspakete"
-                  label="Autom. Leistungspakete"
-                  defaultChecked={schueler?.autom_leistungspakete}
-                />
-              </div>
-            </Abschnitt>
-
-            <Abschnitt title="Lern-App">
-              <F label="Theorie-Lernstatus (%)">
-                <input
-                  name="lernstatus"
-                  type="number"
-                  min="0"
-                  max="100"
-                  defaultValue={schueler?.lernstatus ?? 0}
-                  className={cn(feld, "max-w-[160px]")}
-                />
-              </F>
-              <p className="text-xs text-muted-foreground">
-                Aktuell manuell – oder per KI-Sammelerfassung in der Übersicht.
-              </p>
-            </Abschnitt>
-          </div>
-        </div>
+        <FormularAbschnitt titel="Weitere Angaben" beschreibung="Filiale, Prüfstelle, Lernstand und interne Notizen.">
+          <FeldGitter>
+            <Field label="Filiale">
+              <Input name="filiale" defaultValue={schueler?.filiale ?? undefined} />
+            </Field>
+            <Field label="Prüfort">
+              <Input name="pruefort" defaultValue={schueler?.pruefort ?? undefined} />
+            </Field>
+            <Field label="Prüforganisation">
+              <Input name="prueforganisation" defaultValue={schueler?.prueforganisation ?? undefined} placeholder="z. B. TÜV Süd" />
+            </Field>
+            <Field label="Lernstand Theorie-App" hint="In Prozent, 0 bis 100">
+              <Input name="lernstatus" type="number" min="0" max="100" defaultValue={schueler?.lernstatus ?? 0} trailing="%" />
+            </Field>
+            <Field label="Notizen" className="sm:col-span-2">
+              <Textarea name="notizen" rows={4} defaultValue={schueler?.notizen ?? undefined} placeholder="Nur intern sichtbar" />
+            </Field>
+          </FeldGitter>
+        </FormularAbschnitt>
       </div>
+
+      <Speicherleiste
+        abbrechenHref={zurueck}
+        speichernLabel={schueler ? "Änderungen speichern" : "Schüler anlegen"}
+        hinweis="Pflichtfelder sind mit * markiert"
+      />
     </form>
   );
 }

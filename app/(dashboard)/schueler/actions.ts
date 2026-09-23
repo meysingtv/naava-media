@@ -6,6 +6,22 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
 import { zufallsAvatarFarbe } from "@/lib/constants";
+import { darf } from "@/lib/zugriff";
+
+/** Zahlungs- und Preisangaben – nur für Rollen mit Zugriff auf Rechnungen. */
+const FINANZFELDER = [
+  "preisliste",
+  "zahlungsart",
+  "iban",
+  "sepa_mandat_ref",
+  "sepa_mandat_am",
+  "kostentraeger",
+  "kostentraeger_email",
+  "vorgangsnummer",
+  "intensivkurs",
+  "zweiter_preis",
+  "autom_leistungspakete",
+] as const;
 
 export interface SchuelerFormState {
   error?: string;
@@ -93,6 +109,12 @@ export async function schuelerSpeichern(
     zweiter_preis: formData.get("zweiter_preis") === "on",
     autom_leistungspakete: formData.get("autom_leistungspakete") === "on",
   };
+
+  // Ohne Zugriff auf Rechnungen sieht das Formular die Zahlungsangaben nicht –
+  // dann bleiben sie beim Speichern unangetastet, statt geleert zu werden.
+  if (!(await darf("/rechnungen"))) {
+    for (const feld of FINANZFELDER) delete (datensatz as Partial<typeof datensatz>)[feld];
+  }
 
   let schuelerId = id;
 

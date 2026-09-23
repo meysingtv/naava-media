@@ -2,20 +2,26 @@
 
 import { useState } from "react";
 import { useFormState } from "react-dom";
-import { Check, X } from "lucide-react";
 
 import { fahrzeugSpeichern, type FahrzeugState } from "./actions";
-import { Button } from "@/components/ui/button";
-import { SubmitButton } from "@/components/shared/submit-button";
+import { Auswahl } from "@/components/ui/auswahl";
+import { DatumFeld } from "@/components/ui/datum-feld";
+import { Field } from "@/components/ui/field";
+import { Ankreuzfeld, FeldGitter, FormularAbschnitt, Speicherleiste } from "@/components/ui/formular";
+import { Input } from "@/components/ui/input";
+import { DetailKopf } from "@/components/shared/detail-kopf";
 import { FormMessage } from "@/components/shared/form-message";
-import { FUEHRERSCHEINKLASSEN } from "@/lib/constants";
+import { KlassenAuswahl } from "@/components/shared/klassen-auswahl";
+import { getriebeWert } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { Fahrzeug } from "@/lib/types";
 
 const initial: FahrzeugState = {};
 
-const feld =
-  "h-9 w-full rounded-md border border-border-strong bg-background shadow-xs px-3 text-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20";
+const GETRIEBE = [
+  { value: "MANUAL", label: "Schaltung" },
+  { value: "AUTOMATIK", label: "Automatik" },
+];
 
 interface Option {
   id: string;
@@ -23,250 +29,124 @@ interface Option {
   name: string;
 }
 
-function Abschnitt({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-3">
-      <h3 className="border-b pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </h3>
-      {children}
-    </section>
-  );
-}
-
-function F({ label, children, req }: { label: string; children: React.ReactNode; req?: boolean }) {
-  return (
-    <div className="min-w-0">
-      <label className="mb-1 block text-[13px] text-foreground/70">
-        {label}
-        {req && <span className="text-destructive"> *</span>}
-      </label>
-      {children}
-    </div>
-  );
-}
-
-function ChipWahl({
-  werte,
-  ausgewaehlt,
-  toggle,
-  labelVon,
-  titelVon,
-}: {
-  werte: string[];
-  ausgewaehlt: string[];
-  toggle: (v: string) => void;
-  labelVon?: (v: string) => string;
-  titelVon?: (v: string) => string;
-}) {
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {werte.map((v) => {
-        const aktiv = ausgewaehlt.includes(v);
-        return (
-          <button
-            key={v}
-            type="button"
-            onClick={() => toggle(v)}
-            title={titelVon?.(v)}
-            className={cn(
-              "rounded-md border px-2.5 py-1 text-sm font-medium transition-colors",
-              aktiv
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border-strong bg-background hover:bg-surface",
-            )}
-          >
-            {labelVon ? labelVon(v) : v}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
+/** Fahrzeug anlegen oder bearbeiten – Stammdaten, Einsatz, Termine. */
 export function FahrzeugForm({ fahrzeug, options }: { fahrzeug?: Fahrzeug; options: Option[] }) {
   const [state, action] = useFormState(fahrzeugSpeichern, initial);
-  const [tab, setTab] = useState<"stamm" | "termine">("stamm");
-  const [klassen, setKlassen] = useState<string[]>(
-    fahrzeug?.klassen?.length ? fahrzeug.klassen : fahrzeug?.klasse ? [fahrzeug.klasse] : [],
-  );
   const [lehrer, setLehrer] = useState<string[]>(fahrzeug?.fahrlehrer_ids ?? []);
 
-  const titel = fahrzeug ? fahrzeug.name || fahrzeug.kennzeichen : "Neues Fahrzeug";
-  const abbrechenHref = fahrzeug ? `/fahrzeuge?id=${fahrzeug.id}` : "/fahrzeuge";
-
-  const tabCls = (aktiv: boolean) =>
-    cn(
-      "border-b-2 pb-1.5 text-sm font-medium transition-colors",
-      aktiv
-        ? "border-foreground text-foreground"
-        : "border-transparent text-muted-foreground hover:text-foreground",
-    );
+  const name = fahrzeug ? fahrzeug.name || fahrzeug.kennzeichen : null;
+  const zurueck = fahrzeug ? `/fahrzeuge/${fahrzeug.id}` : "/fahrzeuge";
+  const klassen = fahrzeug?.klassen?.length ? fahrzeug.klassen : fahrzeug?.klasse ? [fahrzeug.klasse] : [];
 
   return (
     <form action={action}>
       {fahrzeug && <input type="hidden" name="id" value={fahrzeug.id} />}
-      {klassen.map((k) => (
-        <input key={k} type="hidden" name="klassen" value={k} />
-      ))}
       {lehrer.map((id) => (
         <input key={id} type="hidden" name="fahrlehrer_ids" value={id} />
       ))}
 
-      <div className="rounded-md border bg-card">
-        {/* Kopfleiste */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-            <h1 className="text-sm font-semibold tracking-tight">{titel}</h1>
-            <div className="flex items-center gap-5">
-              <button type="button" onClick={() => setTab("stamm")} className={tabCls(tab === "stamm")}>
-                Stammdaten
-              </button>
-              <button type="button" onClick={() => setTab("termine")} className={tabCls(tab === "termine")}>
-                Termine
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Button asChild variant="ghost" size="sm" type="button">
-              <a href={abbrechenHref}>
-                <X className="h-4 w-4" /> Abbrechen
-              </a>
-            </Button>
-            <SubmitButton size="sm">
-              <Check className="h-4 w-4" /> Speichern
-            </SubmitButton>
-          </div>
+      <DetailKopf
+        zurueck={{ href: zurueck, label: name ?? "Fahrzeuge" }}
+        titel={name ? `${name} bearbeiten` : "Fahrzeug anlegen"}
+        kurztitel={name ? `${fahrzeug?.kennzeichen ?? name} bearbeiten` : "Neues Fahrzeug"}
+        meta={[fahrzeug?.nummer != null ? `Fahrzeug-Nr. ${fahrzeug.nummer}` : "Pflichtfelder sind mit * markiert"]}
+      />
+
+      {state.error && (
+        <div className="mb-6">
+          <FormMessage error={state.error} />
         </div>
+      )}
 
-        {state.error && (
-          <div className="border-b px-4 py-2">
-            <FormMessage error={state.error} />
+      <div className="space-y-8">
+        <FormularAbschnitt titel="Fahrzeug" beschreibung="Name, Kennzeichen und Getriebe, wie sie im Kalender erscheinen.">
+          <FeldGitter>
+            <Field label="Name" required hint="z. B. „Golf 8 Schalter“">
+              <Input name="name" required defaultValue={fahrzeug?.name ?? undefined} />
+            </Field>
+            <Field label="Kennzeichen" required>
+              <Input name="kennzeichen" required defaultValue={fahrzeug?.kennzeichen} className="uppercase" />
+            </Field>
+            <Field label="Getriebe">
+              <Auswahl name="getriebeart" optionen={GETRIEBE} defaultValue={getriebeWert(fahrzeug?.getriebeart)} />
+            </Field>
+            <Field label="Fahrzeug-Identnummer">
+              <Input name="fahrzeug_id_nr" defaultValue={fahrzeug?.fahrzeug_id_nr ?? undefined} />
+            </Field>
+          </FeldGitter>
+          <div className="mt-5 border-t border-border pt-5">
+            <Ankreuzfeld name="anhaenger" label="Anhänger" hinweis="Für die Ausbildung in BE und CE" defaultChecked={fahrzeug?.anhaenger} />
           </div>
-        )}
+        </FormularAbschnitt>
 
-        {/* Stammdaten */}
-        <div className={cn("space-y-6 p-4", tab !== "stamm" && "hidden")}>
-          <Abschnitt title="Fahrzeug">
-            {fahrzeug?.nummer != null && (
-              <F label="ID">
-                <input value={fahrzeug.nummer} readOnly className={cn(feld, "bg-muted text-muted-foreground")} />
-              </F>
-            )}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <F label="Name" req>
-                <input name="name" required defaultValue={fahrzeug?.name ?? undefined} className={feld} />
-              </F>
-              <F label="Kennzeichen" req>
-                <input name="kennzeichen" required defaultValue={fahrzeug?.kennzeichen} className={feld} />
-              </F>
-              <F label="Fahrzeug-ID-Nr.">
-                <input
-                  name="fahrzeug_id_nr"
-                  defaultValue={fahrzeug?.fahrzeug_id_nr ?? undefined}
-                  className={feld}
-                />
-              </F>
-              <F label="Getriebeart">
-                <select name="getriebeart" defaultValue={fahrzeug?.getriebeart ?? "MANUAL"} className={feld}>
-                  <option value="MANUAL">Manuell</option>
-                  <option value="AUTOMATIK">Automatik</option>
-                </select>
-              </F>
-            </div>
-          </Abschnitt>
-
-          <Abschnitt title="Ausbildungsklassen">
-            <ChipWahl
-              werte={[...FUEHRERSCHEINKLASSEN]}
-              ausgewaehlt={klassen}
-              toggle={(v) => setKlassen((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]))}
-            />
-          </Abschnitt>
-
-          <Abschnitt title="Fahrlehrer">
+        <FormularAbschnitt titel="Einsatz" beschreibung="Für welche Klassen und von welchen Fahrlehrern das Fahrzeug genutzt wird.">
+          <KlassenAuswahl defaultValue={klassen} label="Ausbildungsklassen" />
+          <div className="mt-5 border-t border-border pt-5">
+            <p className="mb-1.5 text-13 font-medium text-foreground">Fahrlehrer</p>
             {options.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Keine aktiven Fahrlehrer vorhanden.</p>
+              <p className="text-13 text-foreground-secondary">Keine aktiven Fahrlehrer vorhanden.</p>
             ) : (
-              <ChipWahl
-                werte={options.map((o) => o.id)}
-                ausgewaehlt={lehrer}
-                toggle={(v) => setLehrer((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]))}
-                labelVon={(id) => options.find((o) => o.id === id)?.kuerzel ?? "?"}
-                titelVon={(id) => options.find((o) => o.id === id)?.name ?? ""}
-              />
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Fahrlehrer">
+                {options.map((o) => {
+                  const aktiv = lehrer.includes(o.id);
+                  return (
+                    <button
+                      key={o.id}
+                      type="button"
+                      aria-pressed={aktiv}
+                      onClick={() => setLehrer((p) => (p.includes(o.id) ? p.filter((x) => x !== o.id) : [...p, o.id]))}
+                      className={cn(
+                        "inline-flex h-8 items-center gap-2 rounded-md border px-2.5 text-13 font-medium transition-colors",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70",
+                        aktiv
+                          ? "border-primary bg-primary-soft text-primary-text"
+                          : "border-border-strong bg-card text-foreground-secondary hover:bg-surface-muted hover:text-foreground",
+                      )}
+                    >
+                      <span className="text-xs font-semibold opacity-70">{o.kuerzel}</span>
+                      {o.name}
+                    </button>
+                  );
+                })}
+              </div>
             )}
-          </Abschnitt>
+          </div>
+        </FormularAbschnitt>
 
-          <label className="flex items-center gap-2 text-sm font-medium">
-            <input
-              type="checkbox"
-              name="anhaenger"
-              defaultChecked={fahrzeug?.anhaenger}
-              className="h-4 w-4 rounded border-border-strong text-primary focus:ring-primary/25"
-            />
-            Anhänger
-          </label>
-        </div>
+        <FormularAbschnitt titel="Termine" beschreibung="Hauptuntersuchung, Wartung und eine mögliche Saisonpause.">
+          <FeldGitter>
+            <Field label="Nächste Hauptuntersuchung">
+              <DatumFeld name="hauptuntersuchung" defaultValue={fahrzeug?.hauptuntersuchung} />
+            </Field>
+            <Field label="Nächste Wartung">
+              <DatumFeld name="naechste_wartung" defaultValue={fahrzeug?.naechste_wartung} />
+            </Field>
+            <Field label="Nicht verfügbar ab" hint="Saisonpause, z. B. für Motorräder">
+              <DatumFeld name="saison_von" defaultValue={fahrzeug?.saison_von} />
+            </Field>
+            <Field label="Wieder verfügbar ab">
+              <DatumFeld name="saison_bis" defaultValue={fahrzeug?.saison_bis} />
+            </Field>
+          </FeldGitter>
+        </FormularAbschnitt>
 
-        {/* Termine */}
-        <div className={cn("space-y-6 p-4", tab !== "termine" && "hidden")}>
-          <Abschnitt title="Saisonale Sperrung">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <F label="Von">
-                <input name="saison_von" type="date" defaultValue={fahrzeug?.saison_von ?? undefined} className={feld} />
-              </F>
-              <F label="Bis">
-                <input name="saison_bis" type="date" defaultValue={fahrzeug?.saison_bis ?? undefined} className={feld} />
-              </F>
-            </div>
-          </Abschnitt>
-
-          <Abschnitt title="Hauptuntersuchung & Wartung">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <F label="Nächste HU / TÜV">
-                <input
-                  name="hauptuntersuchung"
-                  type="date"
-                  defaultValue={fahrzeug?.hauptuntersuchung ?? undefined}
-                  className={feld}
-                />
-              </F>
-              <F label="Nächste Wartung / Inspektion">
-                <input
-                  name="naechste_wartung"
-                  type="date"
-                  defaultValue={fahrzeug?.naechste_wartung ?? undefined}
-                  className={feld}
-                />
-              </F>
-            </div>
-          </Abschnitt>
-
-          <Abschnitt title="Versicherung & Kilometerstand">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <F label="Versicherung">
-                <input
-                  name="versicherung"
-                  defaultValue={fahrzeug?.versicherung ?? undefined}
-                  placeholder="z. B. HUK-Coburg, Police 123"
-                  className={feld}
-                />
-              </F>
-              <F label="Kilometerstand">
-                <input
-                  name="km_stand"
-                  type="number"
-                  min={0}
-                  defaultValue={fahrzeug?.km_stand ?? undefined}
-                  placeholder="km"
-                  className={feld}
-                />
-              </F>
-            </div>
-          </Abschnitt>
-        </div>
+        <FormularAbschnitt titel="Versicherung und Kilometer">
+          <FeldGitter>
+            <Field label="Versicherung">
+              <Input name="versicherung" defaultValue={fahrzeug?.versicherung ?? undefined} placeholder="z. B. HUK-Coburg, Police 123" />
+            </Field>
+            <Field label="Kilometerstand">
+              <Input name="km_stand" type="number" min={0} defaultValue={fahrzeug?.km_stand ?? undefined} trailing="km" />
+            </Field>
+          </FeldGitter>
+        </FormularAbschnitt>
       </div>
+
+      <Speicherleiste
+        abbrechenHref={zurueck}
+        speichernLabel={fahrzeug ? "Änderungen speichern" : "Fahrzeug anlegen"}
+        hinweis="Pflichtfelder sind mit * markiert"
+      />
     </form>
   );
 }

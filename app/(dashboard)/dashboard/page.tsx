@@ -7,7 +7,7 @@ import { AnsichtAusbildung } from "./ansicht-ausbildung";
 import { AnsichtFinanzen } from "./ansicht-finanzen";
 import { AnsichtHeute } from "./ansicht-heute";
 import { AnsichtUmschalter, type Ansicht } from "./widgets";
-import { datumLang, gruss, heuteBerlin, jetztMinutenBerlin } from "./zeit";
+import { datumLang, gruss, heuteBerlin, jetztMinutenBerlin } from "@/lib/zeit";
 
 export const metadata = { title: "Dashboard · FahrschulApp" };
 

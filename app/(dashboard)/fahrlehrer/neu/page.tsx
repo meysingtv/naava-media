@@ -5,7 +5,7 @@ import { getKontext } from "@/lib/supabase/queries";
 import { BenutzerForm } from "../benutzer-form";
 import type { Benutzerrolle } from "@/lib/types";
 
-export const metadata = { title: "Neuer Benutzer · FahrschulApp" };
+export const metadata = { title: "Neuer Mitarbeiter · FahrschulApp" };
 
 export default async function NeuerBenutzerPage() {
   const kontext = await getKontext();
