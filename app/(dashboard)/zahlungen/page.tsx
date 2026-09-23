@@ -1,41 +1,31 @@
-import { ArrowUpRight, Trash2, Wallet } from "lucide-react";
+import { Wallet } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { PageHeader } from "@/components/shared/page-header";
-import { StatCard } from "@/components/shared/stat-card";
+import { KpiCard, KpiRow } from "@/components/ui/kpi-card";
 import { EmptyState } from "@/components/shared/empty-state";
-import { formatDatum, formatEuro } from "@/lib/utils";
-import type { Fahrschueler, Rechnung, Zahlung } from "@/lib/types";
+import { PageHeader } from "@/components/shared/page-header";
+import { formatEuro } from "@/lib/utils";
+import { heuteBerlin } from "@/lib/zeit";
+import type { Fahrschueler, Rechnung } from "@/lib/types";
 import { ZahlungNeu, type OffeneRechnung } from "./zahlung-neu";
-import { zahlungLoeschen } from "./actions";
+import { ZahlungenListe, type ZahlungRow } from "./zahlungen-liste";
 
 export const metadata = { title: "Zahlungen · FahrschulApp" };
 
-const ART: Record<string, string> = {
-  bar: "Bar",
-  ueberweisung: "Überweisung",
-  lastschrift: "Lastschrift",
-  karte: "Karte",
-};
-
-type ZahlungRow = Zahlung & {
-  fahrschueler: Pick<Fahrschueler, "vorname" | "nachname"> | null;
-  rechnung: Pick<Rechnung, "nummer"> | null;
-};
 type OffeneRow = Pick<Rechnung, "id" | "nummer" | "betrag_brutto" | "schueler_id"> & {
   fahrschueler: Pick<Fahrschueler, "vorname" | "nachname"> | null;
 };
 
 export default async function ZahlungenPage() {
   const supabase = createClient();
-  const jahr = new Date().getFullYear();
+  const heute = heuteBerlin();
+  const jahr = heute.slice(0, 4);
+  const monat = heute.slice(0, 7);
 
   const [zahlungRes, schuelerRes, offeneRes] = await Promise.all([
     supabase
       .from("zahlung")
-      .select("*, fahrschueler(vorname, nachname), rechnung(nummer)")
+      .select("*, fahrschueler(id, vorname, nachname), rechnung(id, nummer)")
       .order("datum", { ascending: false })
       .order("created_at", { ascending: false })
       .returns<ZahlungRow[]>(),
@@ -53,8 +43,10 @@ export default async function ZahlungenPage() {
   ]);
 
   const zahlungen = zahlungRes.data ?? [];
-  const dieseJahr = zahlungen.filter((z) => (z.datum ?? "").slice(0, 4) === String(jahr));
-  const summeJahr = dieseJahr.reduce((s, z) => s + Number(z.betrag ?? 0), 0);
+  const summe = (liste: ZahlungRow[]) => liste.reduce((s, z) => s + Number(z.betrag ?? 0), 0);
+  const imMonat = zahlungen.filter((z) => (z.datum ?? "").startsWith(monat));
+  const imJahr = zahlungen.filter((z) => (z.datum ?? "").startsWith(jahr));
+  const ohneRechnung = zahlungen.filter((z) => !z.rechnung_id);
 
   const offene = offeneRes.data ?? [];
   const offenerBetrag = offene.reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
@@ -67,67 +59,43 @@ export default async function ZahlungenPage() {
     schueler_id: r.schueler_id,
     schueler: r.fahrschueler ? `${r.fahrschueler.vorname} ${r.fahrschueler.nachname}` : "—",
   }));
+  const monatName = new Date(`${heute}T12:00:00Z`).toLocaleDateString("de-DE", { month: "long", timeZone: "UTC" });
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Zahlungen" description="Zahlungseingänge erfassen und Rechnungen abgleichen.">
+    <div>
+      <PageHeader title="Zahlungen">
         <ZahlungNeu schueler={schueler} offene={offeneOpts} />
       </PageHeader>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label={`Eingänge ${jahr}`} value={formatEuro(summeJahr)} icon={Wallet} iconClassName="bg-success-soft text-success" />
-        <StatCard label="Buchungen" value={dieseJahr.length} icon={Wallet} />
-        <StatCard
-          label="Noch offen"
-          value={formatEuro(offenerBetrag)}
-          icon={Wallet}
-          iconClassName={offenerBetrag > 0 ? "bg-warning-soft text-warning" : undefined}
-          hint={`${offene.length} Rechnungen`}
-        />
-      </div>
 
       {zahlungen.length === 0 ? (
         <EmptyState
           icon={Wallet}
           title="Noch keine Zahlungen erfasst"
-          description="Buche deinen ersten Zahlungseingang – ordne ihn optional direkt einer offenen Rechnung zu."
+          description="Buche den ersten Zahlungseingang und ordne ihn direkt einer offenen Rechnung zu – sie gilt dann als bezahlt."
         >
           <ZahlungNeu schueler={schueler} offene={offeneOpts} />
         </EmptyState>
       ) : (
-        <Card className="divide-y overflow-hidden">
-          {zahlungen.map((z) => (
-            <div key={z.id} className="flex items-center gap-3 px-4 py-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success-soft text-success">
-                <ArrowUpRight className="h-4 w-4" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">
-                  {z.fahrschueler ? `${z.fahrschueler.vorname} ${z.fahrschueler.nachname}` : "Ohne Schüler"}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {formatDatum(z.datum)} · {ART[z.art] ?? z.art}
-                  {z.rechnung ? ` · ${z.rechnung.nummer}` : ""}
-                  {z.notiz ? ` · ${z.notiz}` : ""}
-                </p>
-              </div>
-              {z.rechnung && <Badge variant="success">abgeglichen</Badge>}
-              <span className="shrink-0 text-sm font-semibold text-success tabular-nums">
-                +{formatEuro(Number(z.betrag))}
-              </span>
-              <form action={zahlungLoeschen}>
-                <input type="hidden" name="id" value={z.id} />
-                <button
-                  type="submit"
-                  aria-label="Löschen"
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive-soft hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </form>
-            </div>
-          ))}
-        </Card>
+        <div className="space-y-6">
+          <KpiRow>
+            <KpiCard label={`Eingänge im ${monatName}`} value={formatEuro(summe(imMonat))} sub={`${imMonat.length} Zahlungen`} />
+            <KpiCard label={`Eingänge ${jahr}`} value={formatEuro(summe(imJahr))} sub={`${imJahr.length} Zahlungen`} />
+            <KpiCard
+              label="Noch offen"
+              value={formatEuro(offenerBetrag)}
+              sub={`${offene.length} ${offene.length === 1 ? "Rechnung" : "Rechnungen"}`}
+              tone={offene.length ? "warning" : "neutral"}
+              href="/rechnungen"
+            />
+            <KpiCard
+              label="Ohne Rechnung"
+              value={ohneRechnung.length}
+              sub={ohneRechnung.length ? `${formatEuro(summe(ohneRechnung))} nicht zugeordnet` : "Alles zugeordnet"}
+            />
+          </KpiRow>
+
+          <ZahlungenListe zahlungen={zahlungen} />
+        </div>
       )}
     </div>
   );

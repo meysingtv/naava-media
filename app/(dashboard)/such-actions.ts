@@ -137,7 +137,7 @@ export async function globalSuche(query: string): Promise<SuchTreffer[]> {
       id: String(l.id),
       titel: `${l.vorname} ${l.nachname}`,
       untertitel: ROLLEN[l.rolle as FahrlehrerRolle] ?? l.rolle,
-      href: `/fahrlehrer?id=${l.id}`,
+      href: `/fahrlehrer/${l.id}`,
     });
   }
 

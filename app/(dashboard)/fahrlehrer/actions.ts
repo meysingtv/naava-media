@@ -153,8 +153,8 @@ export async function benutzerSpeichern(
     benutzerId = data.id;
   }
 
-  revalidatePath("/fahrlehrer");
-  redirect(`/fahrlehrer?id=${benutzerId}`);
+  revalidatePath("/fahrlehrer", "layout");
+  redirect(`/fahrlehrer/${benutzerId}`);
 }
 
 const PW_HINWEIS =
@@ -187,7 +187,7 @@ export async function fahrlehrerAktivSetzen(formData: FormData): Promise<void> {
 
   const supabase = createClient();
   await supabase.from("fahrlehrer").update({ aktiv }).eq("id", id);
-  revalidatePath("/fahrlehrer");
+  revalidatePath("/fahrlehrer", "layout");
 }
 
 export async function fahrlehrerLoeschen(formData: FormData): Promise<void> {
@@ -199,6 +199,6 @@ export async function fahrlehrerLoeschen(formData: FormData): Promise<void> {
 
   const supabase = createClient();
   await supabase.from("fahrlehrer").delete().eq("id", id);
-  revalidatePath("/fahrlehrer");
+  revalidatePath("/fahrlehrer", "layout");
   redirect("/fahrlehrer");
 }

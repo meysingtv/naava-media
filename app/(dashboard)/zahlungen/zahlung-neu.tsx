@@ -8,6 +8,7 @@ import { Field } from "@/components/ui/field";
 import { FeldGitter } from "@/components/ui/formular";
 import { Input } from "@/components/ui/input";
 import { FormularDialog } from "@/components/shared/formular-dialog";
+import { ZAHLARTEN } from "@/lib/constants";
 import { formatEuro } from "@/lib/utils";
 import { zahlungErfassen } from "./actions";
 
@@ -19,12 +20,7 @@ export interface OffeneRechnung {
   schueler: string;
 }
 
-const ZAHLARTEN = [
-  { value: "ueberweisung", label: "Überweisung" },
-  { value: "bar", label: "Bar" },
-  { value: "lastschrift", label: "Lastschrift" },
-  { value: "karte", label: "Karte" },
-];
+const ZAHLART_OPTIONEN = Object.entries(ZAHLARTEN).map(([value, label]) => ({ value, label }));
 
 interface Props {
   schueler: { id: string; label: string }[];
@@ -91,7 +87,7 @@ function Felder({ schueler, offene }: Props) {
         />
       </Field>
       <Field label="Zahlart">
-        <Auswahl name="art" optionen={ZAHLARTEN} defaultValue="ueberweisung" />
+        <Auswahl name="art" optionen={ZAHLART_OPTIONEN} defaultValue="ueberweisung" />
       </Field>
       <Field label="Schüler">
         <Auswahl

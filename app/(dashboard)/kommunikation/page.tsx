@@ -1,10 +1,8 @@
-import { MessageSquare } from "lucide-react";
-
 import { createClient } from "@/lib/supabase/server";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Karte, KarteLeer } from "@/components/ui/karte";
 import { PageHeader } from "@/components/shared/page-header";
 import { formatDatum } from "@/lib/utils";
+import { heuteBerlin } from "@/lib/zeit";
 import type { Fahrschueler, Nachricht, Pruefung, Rechnung } from "@/lib/types";
 import { Compose, type Segmente } from "./compose";
 
@@ -12,7 +10,7 @@ export const metadata = { title: "Kommunikation · FahrschulApp" };
 
 export default async function KommunikationPage() {
   const supabase = createClient();
-  const heute = new Date().toISOString().slice(0, 10);
+  const heute = heuteBerlin();
 
   const [schuelerRes, rechnungRes, pruefungRes, logRes] = await Promise.all([
     supabase
@@ -59,48 +57,33 @@ export default async function KommunikationPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Kommunikation"
-        description="Sammel-E-Mails an Schüler-Segmente – mit Vorlagen und Verlauf."
-      />
+    <div>
+      <PageHeader title="Nachrichten" />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Compose segmente={segmente} />
 
-        <Card className="overflow-hidden">
-          <div className="border-b bg-surface/60 px-4 py-2.5">
-            <p className="text-[13px] font-medium text-muted-foreground">Verlauf</p>
-          </div>
+        <Karte titel="Verlauf" meta={log.length ? `letzte ${log.length}` : undefined} className="lg:self-start">
           {log.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 px-4 py-14 text-center text-muted-foreground">
-              <MessageSquare className="h-7 w-7" strokeWidth={1.5} />
-              <p className="text-sm">Noch keine Nachrichten versendet.</p>
-            </div>
+            <KarteLeer>Noch keine Nachricht verschickt.</KarteLeer>
           ) : (
-            <div className="max-h-[520px] divide-y overflow-y-auto scrollbar-thin">
+            <ul className="max-h-[560px] divide-y divide-border overflow-y-auto border-t border-border scrollbar-thin">
               {log.map((n) => (
-                <div key={n.id} className="px-4 py-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {n.betreff || "(ohne Betreff)"}
-                    </p>
-                    <Badge variant="secondary">{n.anzahl}</Badge>
+                <li key={n.id} className="px-5 py-3">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <p className="truncate text-13 font-medium text-foreground">{n.betreff || "Ohne Betreff"}</p>
+                    <span className="shrink-0 text-xs tabular-nums text-foreground-tertiary">{formatDatum(n.created_at.slice(0, 10))}</span>
                   </div>
-                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                    {n.empfaenger ?? "—"} · {formatDatum(n.created_at.slice(0, 10))}
+                  <p className="mt-0.5 truncate text-xs text-foreground-secondary">
+                    {n.empfaenger ?? "Empfänger unbekannt"}
+                    {n.anzahl ? ` · ${n.anzahl} Empfänger` : ""}
                   </p>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
-        </Card>
+        </Karte>
       </div>
-
-      <p className="text-xs text-muted-foreground">
-        Hinweis: Der Versand öffnet dein E-Mail-Programm (BCC an das Segment). Ein automatischer
-        Server-Versand lässt sich später per E-Mail-Dienst (z. B. Resend/SMTP) ergänzen.
-      </p>
     </div>
   );
 }

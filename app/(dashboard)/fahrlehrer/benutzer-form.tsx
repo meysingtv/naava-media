@@ -39,7 +39,7 @@ export function BenutzerForm({
   const istBearbeiten = Boolean(benutzer);
   const hatLogin = Boolean(benutzer?.user_id);
   const name = benutzer ? `${benutzer.vorname} ${benutzer.nachname}` : null;
-  const zurueck = benutzer ? `/fahrlehrer?id=${benutzer.id}` : "/fahrlehrer";
+  const zurueck = benutzer ? `/fahrlehrer/${benutzer.id}` : "/fahrlehrer";
 
   // Einheitliche Rolle: eigene Rolle (UUID) hat Vorrang, sonst Standard-Rolle.
   const rolleDefault = benutzer?.benutzerrolle_id ?? benutzer?.rolle ?? "fahrlehrer";

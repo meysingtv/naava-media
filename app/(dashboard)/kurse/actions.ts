@@ -68,7 +68,7 @@ export async function teilnehmerHinzufuegen(formData: FormData): Promise<void> {
       { fahrschule_id: kontext.fahrschule.id, kurs_id: kursId, schueler_id: schuelerId },
       { onConflict: "kurs_id,schueler_id", ignoreDuplicates: true },
     );
-  revalidatePath(`/kurse/${kursId}`);
+  revalidatePath("/kurse", "layout");
 }
 
 export async function teilnehmerEntfernen(formData: FormData): Promise<void> {
@@ -77,5 +77,6 @@ export async function teilnehmerEntfernen(formData: FormData): Promise<void> {
   if (!id) return;
   const supabase = createClient();
   await supabase.from("kurs_teilnahme").delete().eq("id", id);
-  revalidatePath(`/kurse/${kursId}`);
+  revalidatePath(kursId ? `/kurse/${kursId}` : "/kurse");
+  revalidatePath("/kurse");
 }

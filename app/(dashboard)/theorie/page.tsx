@@ -1,122 +1,74 @@
-import Link from "next/link";
-import { BookOpen, CalendarClock, ChevronRight } from "lucide-react";
+import { BookOpen } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/shared/page-header";
-import { StatCard } from "@/components/shared/stat-card";
+import { KpiCard, KpiRow } from "@/components/ui/kpi-card";
 import { EmptyState } from "@/components/shared/empty-state";
-import { LoeschenDialog } from "@/components/shared/loeschen-dialog";
+import { PageHeader } from "@/components/shared/page-header";
 import { formatDatum, formatUhrzeit } from "@/lib/utils";
-import type { Theoriestunde } from "@/lib/types";
+import { heuteBerlin } from "@/lib/zeit";
 import { TheoriestundeDialog } from "./theoriestunde-dialog";
-import { theoriestundeLoeschen } from "./actions";
+import { TheorieListe, type StundeZeile } from "./theorie-liste";
 
 export const metadata = { title: "Theorie · FahrschulApp" };
 
-type StundeMitAnzahl = Theoriestunde & {
-  teilnahme: { count: number }[] | null;
-};
-
 export default async function TheoriePage() {
   const supabase = createClient();
-  const heute = new Date().toISOString().slice(0, 10);
+  const heute = heuteBerlin();
 
   const { data } = await supabase
     .from("theoriestunde")
-    .select("*, teilnahme:theorie_teilnahme(count)")
+    .select("*, teilnahme:theorie_teilnahme(count), kurs(id, name)")
     .order("datum", { ascending: false })
     .order("uhrzeit", { ascending: false })
-    .returns<StundeMitAnzahl[]>();
+    .returns<StundeZeile[]>();
 
   const stunden = data ?? [];
-  const anstehend = stunden.filter((t) => t.datum >= heute).length;
+  const anstehend = stunden.filter((t) => t.datum >= heute).sort((a, b) => `${a.datum}${a.uhrzeit}`.localeCompare(`${b.datum}${b.uhrzeit}`));
+  const naechste = anstehend[0];
+  const vergangen = stunden.filter((t) => t.datum < heute);
+  const imMonat = stunden.filter((t) => t.datum.startsWith(heute.slice(0, 7)));
+  const anwesend = vergangen.reduce((s, t) => s + (t.teilnahme?.[0]?.count ?? 0), 0);
+  const plaetze = vergangen.reduce((s, t) => s + (t.max_teilnehmer ?? 0), 0);
+  const schnitt = vergangen.length ? anwesend / vergangen.length : 0;
+  const monatName = new Date(`${heute}T12:00:00Z`).toLocaleDateString("de-DE", { month: "long", timeZone: "UTC" });
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Theorie"
-        description="Theorieunterricht planen und die Anwesenheit deiner Schüler erfassen."
-      >
+    <div>
+      <PageHeader title="Theorie">
         <TheoriestundeDialog />
       </PageHeader>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <StatCard label="Theoriestunden gesamt" value={stunden.length} icon={BookOpen} />
-        <StatCard
-          label="Anstehend"
-          value={anstehend}
-          icon={CalendarClock}
-          iconClassName="bg-success-soft text-success"
-          hint="Termine ab heute"
-        />
-      </div>
 
       {stunden.length === 0 ? (
         <EmptyState
           icon={BookOpen}
           title="Noch keine Theoriestunden"
-          description="Lege deinen ersten Theorie-Termin an, um die Anwesenheit zu dokumentieren."
-        />
+          description="Plane den ersten Termin für den Theorieunterricht. Die Anwesenheit trägst du danach mit einem Klick je Schüler ein."
+        >
+          <TheoriestundeDialog />
+        </EmptyState>
       ) : (
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm tabular-nums">
-              <thead className="border-b bg-surface text-left text-[13px] text-muted-foreground">
-                <tr>
-                  <th className="h-10 px-4 font-medium">Datum</th>
-                  <th className="h-10 px-4 font-medium">Uhrzeit</th>
-                  <th className="h-10 px-4 font-medium">Thema</th>
-                  <th className="h-10 px-4 font-medium">Teilnehmer</th>
-                  <th className="h-10 px-4 text-right font-medium">Aktion</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {stunden.map((t) => {
-                  const anzahl = t.teilnahme?.[0]?.count ?? 0;
-                  return (
-                    <tr key={t.id} className="transition-colors duration-fast hover:bg-surface">
-                      <td className="whitespace-nowrap px-4 py-3 font-medium text-foreground">
-                        <span className="inline-flex items-center gap-2">
-                          {formatDatum(t.datum)}
-                          {t.datum === heute && <Badge variant="solid">Heute</Badge>}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
-                        {formatUhrzeit(t.uhrzeit)} Uhr
-                      </td>
-                      <td className="px-4 py-3">{t.thema || "—"}</td>
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <Badge variant="secondary">
-                          {anzahl}
-                          {t.max_teilnehmer ? ` / ${t.max_teilnehmer}` : ""}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-2">
-                          <Button asChild variant="outline" size="sm">
-                            <Link href={`/theorie/${t.id}`}>
-                              Anwesenheit <ChevronRight className="h-3.5 w-3.5" />
-                            </Link>
-                          </Button>
-                          <LoeschenDialog
-                            action={theoriestundeLoeschen}
-                            id={t.id}
-                            titel="Theoriestunde löschen?"
-                            beschreibung="Der Termin und die erfasste Anwesenheit werden dauerhaft entfernt."
-                            buttonLabel=""
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+        <div className="space-y-6">
+          <KpiRow>
+            <KpiCard
+              label="Nächste Stunde"
+              value={naechste ? (naechste.datum === heute ? "Heute" : formatDatum(naechste.datum)) : "—"}
+              sub={naechste ? `${formatUhrzeit(naechste.uhrzeit)} Uhr${naechste.thema ? ` · ${naechste.thema}` : ""}` : "Keine geplant"}
+            />
+            <KpiCard label={`Im ${monatName}`} value={imMonat.length} sub={`${anstehend.length} noch anstehend`} />
+            <KpiCard
+              label="Ø Teilnehmer"
+              value={schnitt.toLocaleString("de-DE", { maximumFractionDigits: 1 })}
+              sub={vergangen.length ? `aus ${vergangen.length} vergangenen Stunden` : "Noch keine Stunde gehalten"}
+            />
+            <KpiCard
+              label="Auslastung"
+              value={plaetze ? `${Math.round((anwesend / plaetze) * 100)} %` : "—"}
+              sub={plaetze ? `${anwesend} von ${plaetze} Plätzen belegt` : "Keine Platzangaben"}
+            />
+          </KpiRow>
+
+          <TheorieListe stunden={stunden} heute={heute} />
+        </div>
       )}
     </div>
   );

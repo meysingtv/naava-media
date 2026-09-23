@@ -9,20 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Eigenschaft, Eigenschaften } from "@/components/ui/eigenschaften";
 import { DetailKopf } from "@/components/shared/detail-kopf";
 import { LoeschenDialog } from "@/components/shared/loeschen-dialog";
-import { RECHNUNG_STATUS } from "@/lib/constants";
+import { RECHNUNG_STATUS, ZAHLARTEN } from "@/lib/constants";
 import { formatDatum, formatEuro } from "@/lib/utils";
 import type { Fahrschueler, Rechnung, RechnungPosition, Zahlung } from "@/lib/types";
 import { mahnungErstellen, rechnungLoeschen, rechnungStatusSetzen } from "../actions";
 import { RechnungMehrMenu } from "./rechnung-mehr-menu";
 
 export const metadata = { title: "Rechnung · FahrschulApp" };
-
-const ZAHLART: Record<string, string> = {
-  bar: "Bar",
-  ueberweisung: "Überweisung",
-  lastschrift: "Lastschrift",
-  karte: "Karte",
-};
 
 export default async function RechnungDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
@@ -261,7 +254,7 @@ export default async function RechnungDetailPage({ params }: { params: { id: str
                   <li key={z.id} className="flex items-center justify-between gap-3 text-13">
                     <span className="min-w-0">
                       <span className="block tabular-nums text-foreground">{formatDatum(z.datum)}</span>
-                      <span className="block text-xs text-foreground-secondary">{ZAHLART[z.art] ?? z.art}</span>
+                      <span className="block text-xs text-foreground-secondary">{ZAHLARTEN[z.art] ?? z.art}</span>
                     </span>
                     <span className="shrink-0 font-medium tabular-nums text-foreground">{formatEuro(Number(z.betrag))}</span>
                   </li>

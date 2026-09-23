@@ -2,15 +2,13 @@ import { headers } from "next/headers";
 
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
+import { KpiCard, KpiRow } from "@/components/ui/kpi-card";
 import { PageHeader } from "@/components/shared/page-header";
+import { heuteBerlin, plusTage } from "@/lib/zeit";
 import type { Fahrschueler, Fahrstunde } from "@/lib/types";
 import { ErinnerungenListe, type ErinnerungItem } from "./erinnerungen-liste";
 
 export const metadata = { title: "Erinnerungen · FahrschulApp" };
-
-function iso(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
 
 type Row = Pick<
   Fahrstunde,
@@ -22,9 +20,7 @@ type Row = Pick<
 export default async function ErinnerungenPage() {
   const supabase = createClient();
   const kontext = await getKontext();
-  const heute = new Date();
-  const bis = new Date();
-  bis.setDate(bis.getDate() + 3);
+  const heute = heuteBerlin();
 
   const { data } = await supabase
     .from("fahrstunde")
@@ -32,8 +28,8 @@ export default async function ErinnerungenPage() {
       "id, datum, uhrzeit, dauer_minuten, typ, bestaetigung_token, bestaetigt_am, abgesagt_am, erinnerung_gesendet_am, fahrschueler(vorname, nachname, telefon, email)",
     )
     .eq("status", "geplant")
-    .gte("datum", iso(heute))
-    .lte("datum", iso(bis))
+    .gte("datum", heute)
+    .lte("datum", plusTage(heute, 3))
     .order("datum", { ascending: true })
     .order("uhrzeit", { ascending: true })
     .returns<Row[]>();
@@ -54,7 +50,10 @@ export default async function ErinnerungenPage() {
     email: r.fahrschueler?.email ?? null,
   }));
 
-  const offen = items.filter((i) => !i.bestaetigt && !i.abgesagt).length;
+  const zugesagt = items.filter((i) => i.bestaetigt).length;
+  const abgesagt = items.filter((i) => i.abgesagt).length;
+  const offen = items.filter((i) => !i.bestaetigt && !i.abgesagt);
+  const erinnert = offen.filter((i) => i.erinnerungGesendet).length;
 
   const h = headers();
   const host = h.get("host") ?? "";
@@ -62,18 +61,28 @@ export default async function ErinnerungenPage() {
   const origin = host ? `${proto}://${host}` : "";
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        eyebrow="Termine"
-        title="Erinnerungen"
-        description="Ausfälle vermeiden: Termine der nächsten 3 Tage – ein Klick sendet die Erinnerung mit Zusage-/Absage-Link."
-      />
-      <ErinnerungenListe
-        items={items}
-        fahrschule={kontext?.fahrschule?.name ?? "deiner Fahrschule"}
-        offen={offen}
-        origin={origin}
-      />
+    <div>
+      <PageHeader title="Terminerinnerungen" />
+
+      <div className="space-y-6">
+        <KpiRow>
+          <KpiCard label="Termine in 3 Tagen" value={items.length} sub="geplante Fahrstunden ab heute" />
+          <KpiCard
+            label="Zugesagt"
+            value={zugesagt}
+            sub={items.length ? `${Math.round((zugesagt / items.length) * 100)} % der Termine` : "Noch keine Termine"}
+          />
+          <KpiCard
+            label="Noch offen"
+            value={offen.length}
+            sub={offen.length ? `${erinnert} davon schon erinnert` : "Alles bestätigt"}
+            tone={offen.length - erinnert > 0 ? "warning" : "neutral"}
+          />
+          <KpiCard label="Abgesagt" value={abgesagt} sub={abgesagt ? "Termine neu vergeben" : "Keine Absagen"} tone={abgesagt ? "destructive" : "neutral"} />
+        </KpiRow>
+
+        <ErinnerungenListe items={items} fahrschule={kontext?.fahrschule?.name ?? "deiner Fahrschule"} origin={origin} heute={heute} />
+      </div>
     </div>
   );
 }

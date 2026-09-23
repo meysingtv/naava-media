@@ -1,34 +1,29 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Plus, ShieldCheck, UserCog } from "lucide-react";
+import { redirect } from "next/navigation";
+import { Plus } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
-import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { KpiCard, KpiRow } from "@/components/ui/kpi-card";
+import { PageHeader } from "@/components/shared/page-header";
+import { heuteBerlin, plusTage, stunden, wochenbeginn } from "@/lib/zeit";
 import type { Benutzerrolle, Fahrlehrer, Fahrstunde, Fahrzeug } from "@/lib/types";
-import { TeamGrid, type TeamKennzahl } from "./team-grid";
-import { BenutzerAkte } from "./benutzer-akte";
+import { TAGESKAPAZITAET } from "@/lib/team";
+import { TeamListe, type TeamKennzahl } from "./team-liste";
 
-export const metadata = { title: "Fahrlehrer · FahrschulApp" };
+export const metadata = { title: "Team · FahrschulApp" };
 
-function iso(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+const LEER: TeamKennzahl = { heuteMinuten: 0, heuteAnzahl: 0, wocheMinuten: 0, wocheAnzahl: 0, schueler: 0, fahrzeuge: [] };
 
-export default async function FahrlehrerPage({ searchParams }: { searchParams: { id?: string } }) {
+export default async function TeamPage({ searchParams }: { searchParams: { id?: string } }) {
+  // Alte Links (/fahrlehrer?id=…) führen auf die eigene Seite der Person.
+  if (searchParams.id) redirect(`/fahrlehrer/${searchParams.id}`);
+
   const kontext = await getKontext();
-  if (kontext?.fahrlehrer?.rolle !== "chef") redirect("/dashboard");
-
-  const heuteD = new Date();
-  const heute = iso(heuteD);
-  const montag = new Date(heuteD);
-  montag.setDate(heuteD.getDate() - ((heuteD.getDay() + 6) % 7));
-  const sonntag = new Date(montag);
-  sonntag.setDate(montag.getDate() + 6);
-  const vor60 = new Date(heuteD);
-  vor60.setDate(heuteD.getDate() - 60);
+  const heute = heuteBerlin();
+  const montag = wochenbeginn(heute);
+  const sonntag = plusTage(montag, 6);
 
   const supabase = createClient();
   const [benutzerRes, rollenRes, stundenRes, fahrzeugRes] = await Promise.all([
@@ -37,74 +32,73 @@ export default async function FahrlehrerPage({ searchParams }: { searchParams: {
     supabase
       .from("fahrstunde")
       .select("fahrlehrer_id, schueler_id, datum, dauer_minuten, status")
-      .gte("datum", iso(vor60))
-      .lte("datum", iso(sonntag))
+      .gte("datum", plusTage(heute, -60))
+      .lte("datum", sonntag)
       .neq("status", "ausgefallen")
       .returns<Pick<Fahrstunde, "fahrlehrer_id" | "schueler_id" | "datum" | "dauer_minuten" | "status">[]>(),
-    supabase.from("fahrzeug").select("id, kennzeichen, fahrlehrer_ids").eq("aktiv", true).returns<Pick<Fahrzeug, "id" | "kennzeichen" | "fahrlehrer_ids">[]>(),
+    supabase
+      .from("fahrzeug")
+      .select("id, kennzeichen, fahrlehrer_ids")
+      .eq("aktiv", true)
+      .returns<Pick<Fahrzeug, "id" | "kennzeichen" | "fahrlehrer_ids">[]>(),
   ]);
 
   const benutzer = (benutzerRes.data ?? []) as Fahrlehrer[];
   const rollenMap: Record<string, string> = {};
   for (const r of (rollenRes.data ?? []) as Pick<Benutzerrolle, "id" | "name">[]) rollenMap[r.id] = r.name;
 
-  const wochenStart = iso(montag);
-  const wochenEnde = iso(sonntag);
+  // Kennzahlen je Person: heute, diese Woche, Schüler der letzten 60 Tage, Fahrzeuge
   const kennzahlen: Record<string, TeamKennzahl> = {};
   const schuelerSets: Record<string, Set<string>> = {};
+  const k = (id: string) => (kennzahlen[id] ??= { ...LEER, fahrzeuge: [] });
   for (const f of stundenRes.data ?? []) {
     if (!f.fahrlehrer_id) continue;
-    const k = (kennzahlen[f.fahrlehrer_id] ??= { heuteMinuten: 0, heuteAnzahl: 0, wocheMinuten: 0, wocheAnzahl: 0, schueler: 0, fahrzeuge: [] });
+    const z = k(f.fahrlehrer_id);
     const min = f.dauer_minuten ?? 45;
     if (f.datum === heute) {
-      k.heuteMinuten += min;
-      k.heuteAnzahl += 1;
+      z.heuteMinuten += min;
+      z.heuteAnzahl += 1;
     }
-    if (f.datum >= wochenStart && f.datum <= wochenEnde) {
-      k.wocheMinuten += min;
-      k.wocheAnzahl += 1;
+    if (f.datum >= montag && f.datum <= sonntag) {
+      z.wocheMinuten += min;
+      z.wocheAnzahl += 1;
     }
-    if (f.schueler_id) (schuelerSets[f.fahrlehrer_id] ??= new Set()).add(f.schueler_id);
+    if (f.schueler_id && f.datum <= heute) (schuelerSets[f.fahrlehrer_id] ??= new Set()).add(f.schueler_id);
   }
-  for (const [id, set] of Object.entries(schuelerSets)) (kennzahlen[id] ??= { heuteMinuten: 0, heuteAnzahl: 0, wocheMinuten: 0, wocheAnzahl: 0, schueler: 0, fahrzeuge: [] }).schueler = set.size;
+  for (const [id, set] of Object.entries(schuelerSets)) k(id).schueler = set.size;
   for (const v of fahrzeugRes.data ?? []) {
-    for (const lid of v.fahrlehrer_ids ?? []) {
-      (kennzahlen[lid] ??= { heuteMinuten: 0, heuteAnzahl: 0, wocheMinuten: 0, wocheAnzahl: 0, schueler: 0, fahrzeuge: [] }).fahrzeuge.push(v.kennzeichen);
-    }
+    for (const lid of v.fahrlehrer_ids ?? []) k(lid).fahrzeuge.push({ id: v.id, kennzeichen: v.kennzeichen });
   }
 
-  const selectedId = searchParams.id;
-  const selected = selectedId ? benutzer.find((b) => b.id === selectedId) : undefined;
+  const aktive = benutzer.filter((b) => b.aktiv);
+  const lehrend = aktive.filter((b) => b.rolle !== "buero");
+  const summe = (feld: keyof Omit<TeamKennzahl, "fahrzeuge">) => lehrend.reduce((s, b) => s + (kennzahlen[b.id]?.[feld] ?? 0), 0);
+  const imEinsatz = lehrend.filter((b) => (kennzahlen[b.id]?.heuteAnzahl ?? 0) > 0).length;
+  const auslastung = lehrend.length ? Math.round((summe("heuteMinuten") / (lehrend.length * TAGESKAPAZITAET)) * 100) : 0;
 
   return (
-    <div className="space-y-5">
-      <PageHeader eyebrow="Ausbildung" title="Fahrlehrer & Team" description="Auslastung, Zuständigkeiten und Stammdaten.">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/fahrlehrer/rollen">
-            <ShieldCheck /> Rollen & Rechte
-          </Link>
-        </Button>
+    <div>
+      <PageHeader title="Team">
         <Button asChild size="sm">
           <Link href="/fahrlehrer/neu">
-            <Plus /> Neuer Benutzer
+            <Plus /> Mitarbeiter anlegen
           </Link>
         </Button>
       </PageHeader>
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-        <div className={cn(selected && "hidden xl:block")}>
-          <TeamGrid benutzer={benutzer} selectedId={selectedId} rollenMap={rollenMap} kennzahlen={kennzahlen} />
-        </div>
-        <div className={cn(!selected && "hidden xl:block")}>
-          {selected ? (
-            <BenutzerAkte benutzer={selected} selfUserId={kontext.userId} rollenMap={rollenMap} />
-          ) : (
-            <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-xl bg-surface-muted/60 text-center">
-              <UserCog className="mb-2 h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
-              <p className="text-[13px] text-muted-foreground">Person auswählen, um Details zu sehen.</p>
-            </div>
-          )}
-        </div>
+      <div className="space-y-6">
+        <KpiRow>
+          <KpiCard label="Mitarbeiter" value={aktive.length} sub={`${lehrend.length} unterrichten · ${aktive.length - lehrend.length} Büro`} />
+          <KpiCard label="Fahrstunden heute" value={summe("heuteAnzahl")} sub={`${imEinsatz} von ${lehrend.length} Fahrlehrern im Einsatz`} href="/kalender" />
+          <KpiCard
+            label="Stunden diese Woche"
+            value={stunden(summe("wocheMinuten"))}
+            sub={lehrend.length ? `Ø ${stunden(summe("wocheMinuten") / lehrend.length)} je Fahrlehrer` : undefined}
+          />
+          <KpiCard label="Auslastung heute" value={`${auslastung} %`} sub="bei 8 Std. je Fahrlehrer" />
+        </KpiRow>
+
+        <TeamListe benutzer={benutzer} rollenMap={rollenMap} kennzahlen={kennzahlen} selbstUserId={kontext?.userId ?? null} />
       </div>
     </div>
   );

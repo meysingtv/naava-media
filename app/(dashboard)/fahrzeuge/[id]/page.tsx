@@ -239,7 +239,7 @@ export default async function FahrzeugDetailPage({ params }: { params: { id: str
                   const [vorname, ...rest] = l.name.split(" ");
                   return (
                     <li key={l.id}>
-                      <Link href={`/fahrlehrer?id=${l.id}`} className="flex items-center gap-2.5 text-13 text-foreground hover:underline">
+                      <Link href={`/fahrlehrer/${l.id}`} className="flex items-center gap-2.5 text-13 text-foreground hover:underline">
                         <SchuelerAvatar vorname={vorname} nachname={rest.join(" ")} className="h-6 w-6 text-2xs" />
                         {l.name}
                       </Link>

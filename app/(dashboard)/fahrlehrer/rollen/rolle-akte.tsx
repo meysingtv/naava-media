@@ -22,7 +22,7 @@ export function RolleAkte({ mitglieder }: { mitglieder: Fahrlehrer[] }) {
             {mitglieder.map((b) => (
               <li key={b.id}>
                 <Link
-                  href={`/fahrlehrer?id=${b.id}`}
+                  href={`/fahrlehrer/${b.id}`}
                   className="block rounded-md py-2.5 text-center text-sm font-medium transition-colors hover:bg-surface"
                 >
                   {b.vorname} {b.nachname}

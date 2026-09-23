@@ -1,11 +1,15 @@
 "use client";
 
-import { useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Clock, Mail, MessageCircle, Phone, X } from "lucide-react";
+import { Mail, MessageCircle, Phone } from "lucide-react";
 
-import { FAHRSTUNDE_TYPEN } from "@/lib/constants";
+import { StatusDot } from "@/components/ui/badge";
+import { Panel } from "@/components/ui/panel";
+import { Segmente } from "@/components/shared/filter-bar";
+import { FAHRSTUNDE_FARBE, FAHRSTUNDE_TYPEN } from "@/lib/constants";
 import { cn, formatDatum, formatUhrzeit } from "@/lib/utils";
+import { plusTage, wochentagKurz } from "@/lib/zeit";
 import type { FahrstundeTyp } from "@/lib/types";
 import { erinnerungGesendet } from "./actions";
 
@@ -25,6 +29,8 @@ export interface ErinnerungItem {
   email: string | null;
 }
 
+type Segment = "offen" | "zugesagt" | "abgesagt" | "alle";
+
 function telInternational(tel: string): string {
   let d = tel.replace(/[^\d+]/g, "");
   if (d.startsWith("+")) d = d.slice(1);
@@ -43,19 +49,29 @@ function nachricht(item: ErinnerungItem, fahrschule: string, origin: string): st
   );
 }
 
+function tagLabel(datum: string, heute: string): string {
+  if (datum === heute) return "Heute";
+  if (datum === plusTage(heute, 1)) return "Morgen";
+  return `${wochentagKurz(datum)}, ${formatDatum(datum).slice(0, 6)}`;
+}
+
+const kanal =
+  "inline-flex h-7 w-7 items-center justify-center rounded-md border border-border-strong bg-card text-foreground-secondary transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70";
+
 export function ErinnerungenListe({
   items,
   fahrschule,
-  offen,
   origin,
+  heute,
 }: {
   items: ErinnerungItem[];
   fahrschule: string;
-  offen: number;
   origin: string;
+  heute: string;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
+  const [segment, setSegment] = useState<Segment>("offen");
 
   function markiere(id: string) {
     startTransition(async () => {
@@ -64,111 +80,106 @@ export function ErinnerungenListe({
     });
   }
 
-  if (items.length === 0) {
-    return (
-      <div className="rounded-xl bg-card shadow-panel px-4 py-10 text-center text-[13px] text-muted-foreground">
-        Keine geplanten Termine in den nächsten 3 Tagen.
-      </div>
-    );
-  }
+  const passt = (i: ErinnerungItem, s: Segment) =>
+    s === "offen" ? !i.bestaetigt && !i.abgesagt : s === "zugesagt" ? i.bestaetigt : s === "abgesagt" ? i.abgesagt : true;
+
+  const tage = useMemo(() => {
+    const map = new Map<string, ErinnerungItem[]>();
+    for (const i of items) if (passt(i, segment)) map.set(i.datum, [...(map.get(i.datum) ?? []), i]);
+    return Array.from(map.entries());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, segment]);
 
   return (
     <div className="space-y-3">
-      <p className="text-[13px] text-foreground-secondary">
-        <span className="font-semibold text-foreground">{items.length}</span> Termine ·{" "}
-        <span className={cn("font-semibold", offen > 0 ? "text-warning" : "text-success")}>{offen}</span> noch offen
-      </p>
+      <Segmente
+        optionen={[
+          { key: "offen", label: "Offen", anzahl: items.filter((i) => passt(i, "offen")).length },
+          { key: "zugesagt", label: "Zugesagt", anzahl: items.filter((i) => passt(i, "zugesagt")).length },
+          { key: "abgesagt", label: "Abgesagt", anzahl: items.filter((i) => passt(i, "abgesagt")).length },
+          { key: "alle", label: "Alle", anzahl: items.length },
+        ]}
+        wert={segment}
+        onChange={setSegment}
+      />
 
-      <ul className="divide-y overflow-hidden rounded-xl bg-card shadow-panel">
-        {items.map((item) => {
-          const typ = FAHRSTUNDE_TYPEN[item.typ];
-          const text = nachricht(item, fahrschule, origin);
-          const waHref = item.telefon ? `https://wa.me/${telInternational(item.telefon)}?text=${encodeURIComponent(text)}` : null;
-          const smsHref = item.telefon ? `sms:${item.telefon.replace(/\s/g, "")}?body=${encodeURIComponent(text)}` : null;
-          const mailHref = item.email
-            ? `mailto:${item.email}?subject=${encodeURIComponent("Erinnerung: Deine Fahrstunde")}&body=${encodeURIComponent(text)}`
-            : null;
+      <Panel padding="none">
+        {tage.length === 0 ? (
+          <p className="px-4 py-12 text-center text-13 text-foreground-secondary">
+            {items.length === 0
+              ? "Keine geplanten Termine in den nächsten drei Tagen."
+              : segment === "offen"
+                ? "Alle Termine sind zu- oder abgesagt."
+                : "Keine Termine für diese Auswahl."}
+          </p>
+        ) : (
+          tage.map(([datum, liste]) => (
+            <section key={datum} aria-label={tagLabel(datum, heute)}>
+              <h3 className="flex items-center gap-2 border-b border-border bg-surface-muted/60 px-4 py-1.5 text-xs font-semibold text-foreground-secondary">
+                {tagLabel(datum, heute)}
+                <span className="font-medium tabular-nums text-foreground-tertiary">{liste.length}</span>
+              </h3>
+              <ul className="divide-y divide-border border-b border-border last:border-b-0">
+                {liste.map((item) => {
+                  const typ = FAHRSTUNDE_TYPEN[item.typ];
+                  const text = nachricht(item, fahrschule, origin);
+                  const waHref = item.telefon ? `https://wa.me/${telInternational(item.telefon)}?text=${encodeURIComponent(text)}` : null;
+                  const smsHref = item.telefon ? `sms:${item.telefon.replace(/\s/g, "")}?body=${encodeURIComponent(text)}` : null;
+                  const mailHref = item.email
+                    ? `mailto:${item.email}?subject=${encodeURIComponent("Erinnerung: Deine Fahrstunde")}&body=${encodeURIComponent(text)}`
+                    : null;
+                  const offen = !item.bestaetigt && !item.abgesagt;
 
-          return (
-            <li key={item.id} className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 items-start gap-3">
-                <div className="w-16 shrink-0">
-                  <p className="text-[13px] font-semibold tabular-nums text-foreground">{formatDatum(item.datum).slice(0, 6)}</p>
-                  <p className="text-xs tabular-nums text-muted-foreground">{formatUhrzeit(item.uhrzeit)}</p>
-                </div>
-                <span className={cn("mt-1 h-2.5 w-2.5 shrink-0 rounded-full", typ.dot)} />
-                <div className="min-w-0">
-                  <p className="truncate text-[13px] font-medium text-foreground">{item.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {typ.kurz} · {item.dauer_minuten} Min
-                    {item.telefon ? ` · ${item.telefon}` : ""}
-                  </p>
-                </div>
-              </div>
+                  return (
+                    <li key={item.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:flex-nowrap">
+                      <span className="w-12 shrink-0 text-13 font-medium tabular-nums text-foreground">{formatUhrzeit(item.uhrzeit)}</span>
+                      <span aria-hidden="true" className="h-8 w-[3px] shrink-0 rounded-full" style={{ background: FAHRSTUNDE_FARBE[item.typ] }} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-13 font-medium text-foreground">{item.name}</span>
+                        <span className="block truncate text-xs text-foreground-secondary">
+                          {typ.kurz} · {item.dauer_minuten} Min.
+                          {item.telefon ? ` · ${item.telefon}` : ""}
+                        </span>
+                      </span>
 
-              <div className="flex shrink-0 items-center gap-1.5 pl-[76px] sm:pl-0">
-                {/* Status */}
-                {item.bestaetigt ? (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-success-soft px-2 py-1 text-xs font-medium text-success">
-                    <Check className="h-3.5 w-3.5" /> Zugesagt
-                  </span>
-                ) : item.abgesagt ? (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-destructive-soft px-2 py-1 text-xs font-medium text-destructive">
-                    <X className="h-3.5 w-3.5" /> Abgesagt
-                  </span>
-                ) : item.erinnerungGesendet ? (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-surface-muted px-2 py-1 text-xs font-medium text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5" /> Gesendet
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-warning-soft px-2 py-1 text-xs font-medium text-warning">
-                    Offen
-                  </span>
-                )}
+                      <span className="w-[112px] shrink-0">
+                        {item.bestaetigt ? (
+                          <StatusDot ton="success">Zugesagt</StatusDot>
+                        ) : item.abgesagt ? (
+                          <StatusDot ton="destructive">Abgesagt</StatusDot>
+                        ) : item.erinnerungGesendet ? (
+                          <StatusDot ton="neutral">Erinnert</StatusDot>
+                        ) : (
+                          <StatusDot ton="warning">Offen</StatusDot>
+                        )}
+                      </span>
 
-                {/* Kanäle */}
-                {!item.bestaetigt && !item.abgesagt && (
-                  <div className="flex items-center gap-1">
-                    {waHref && (
-                      <a
-                        href={waHref}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => markiere(item.id)}
-                        title="Per WhatsApp erinnern"
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border-strong bg-card text-foreground-secondary transition-colors hover:border-primary hover:text-primary"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                      </a>
-                    )}
-                    {smsHref && (
-                      <a
-                        href={smsHref}
-                        onClick={() => markiere(item.id)}
-                        title="Per SMS erinnern"
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border-strong bg-card text-foreground-secondary transition-colors hover:border-primary hover:text-primary"
-                      >
-                        <Phone className="h-4 w-4" />
-                      </a>
-                    )}
-                    {mailHref && (
-                      <a
-                        href={mailHref}
-                        onClick={() => markiere(item.id)}
-                        title="Per E-Mail erinnern"
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border-strong bg-card text-foreground-secondary transition-colors hover:border-primary hover:text-primary"
-                      >
-                        <Mail className="h-4 w-4" />
-                      </a>
-                    )}
-                    {!item.telefon && !item.email && <span className="text-xs text-muted-foreground">Kein Kontakt</span>}
-                  </div>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+                      <span className={cn("flex w-[100px] shrink-0 items-center justify-end gap-1", !offen && "invisible")}>
+                        {waHref && (
+                          <a href={waHref} target="_blank" rel="noopener noreferrer" onClick={() => markiere(item.id)} title="Per WhatsApp erinnern" aria-label={`${item.name} per WhatsApp erinnern`} className={kanal}>
+                            <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.75} />
+                          </a>
+                        )}
+                        {smsHref && (
+                          <a href={smsHref} onClick={() => markiere(item.id)} title="Per SMS erinnern" aria-label={`${item.name} per SMS erinnern`} className={kanal}>
+                            <Phone className="h-3.5 w-3.5" strokeWidth={1.75} />
+                          </a>
+                        )}
+                        {mailHref && (
+                          <a href={mailHref} onClick={() => markiere(item.id)} title="Per E-Mail erinnern" aria-label={`${item.name} per E-Mail erinnern`} className={kanal}>
+                            <Mail className="h-3.5 w-3.5" strokeWidth={1.75} />
+                          </a>
+                        )}
+                        {!item.telefon && !item.email && <span className="text-xs text-foreground-tertiary">Kein Kontakt</span>}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))
+        )}
+      </Panel>
     </div>
   );
 }

@@ -186,6 +186,21 @@ export const RECHNUNG_STATUS: Record<RechnungStatus, { label: string; badge: str
 
 export const STEUERSAETZE = [19, 7, 0] as const;
 
+/** Status eines Theoriekurses mit Farbe des Status-Punkts. */
+export const KURS_STATUS: Record<string, { label: string; ton: "primary" | "warning" | "neutral" }> = {
+  laufend: { label: "Läuft", ton: "primary" },
+  geplant: { label: "Geplant", ton: "warning" },
+  beendet: { label: "Beendet", ton: "neutral" },
+};
+
+/** Zahlarten für Zahlungseingänge. */
+export const ZAHLARTEN: Record<string, string> = {
+  ueberweisung: "Überweisung",
+  bar: "Bar",
+  lastschrift: "Lastschrift",
+  karte: "Karte",
+};
+
 // ---------------------------------------------------------------------
 // Theorieunterricht
 // ---------------------------------------------------------------------
