@@ -59,8 +59,6 @@ export default async function ZahlungenPage() {
     schueler_id: r.schueler_id,
     schueler: r.fahrschueler ? `${r.fahrschueler.vorname} ${r.fahrschueler.nachname}` : "—",
   }));
-  const monatName = new Date(`${heute}T12:00:00Z`).toLocaleDateString("de-DE", { month: "long", timeZone: "UTC" });
-
   return (
     <div>
       <PageHeader title="Zahlungen">
@@ -78,7 +76,7 @@ export default async function ZahlungenPage() {
       ) : (
         <div className="space-y-6">
           <KpiRow>
-            <KpiCard label={`Eingänge im ${monatName}`} value={formatEuro(summe(imMonat))} sub={`${imMonat.length} Zahlungen`} />
+            <KpiCard label="Eingänge diesen Monat" value={formatEuro(summe(imMonat))} sub={`${imMonat.length} Zahlungen`} />
             <KpiCard label={`Eingänge ${jahr}`} value={formatEuro(summe(imJahr))} sub={`${imJahr.length} Zahlungen`} />
             <KpiCard
               label="Noch offen"

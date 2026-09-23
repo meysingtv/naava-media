@@ -47,6 +47,7 @@ export function KurseListe({ kurse }: { kurse: KursZeile[] }) {
       key: "klasse",
       header: "Klasse",
       width: "80px",
+      hideBelow: "xl",
       sortValue: (k) => k.klasse ?? "",
       cell: (k) => <span className="text-foreground">{k.klasse || "—"}</span>,
     },

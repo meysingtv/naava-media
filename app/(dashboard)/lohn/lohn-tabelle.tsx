@@ -65,7 +65,7 @@ function Zeile({ z }: { z: LohnZeile }) {
             if (geaendert) speichern();
           }}
         >
-          <div className="w-[104px] shrink-0">
+          <div className="w-[96px] shrink-0">
             <Input
               inputSize="sm"
               inputMode="decimal"
@@ -77,7 +77,7 @@ function Zeile({ z }: { z: LohnZeile }) {
               className="text-right tabular-nums"
             />
           </div>
-          <div className="w-[104px] shrink-0">
+          <div className="w-[96px] shrink-0">
             <Input
               inputSize="sm"
               inputMode="decimal"
@@ -97,7 +97,7 @@ function Zeile({ z }: { z: LohnZeile }) {
             className={cn("transition-opacity", geaendert ? "opacity-100" : "pointer-events-none opacity-0")}
             tabIndex={geaendert ? 0 : -1}
           >
-            <Check /> Speichern
+            <Check /> <span className="sr-only xl:not-sr-only">Speichern</span>
           </Button>
         </form>
       </td>
@@ -119,8 +119,8 @@ export function LohnTabelle({ zeilen }: { zeilen: LohnZeile[] }) {
               <th className="h-10 px-4 text-right font-medium">Fahrstunden</th>
               <th className="hidden h-10 px-4 text-right font-medium sm:table-cell">Stunden</th>
               <th className="h-10 px-4 font-medium">
-                <span className="inline-flex w-[104px] justify-end">je Fahrstunde</span>
-                <span className="ml-2 inline-flex w-[104px] justify-end">je Stunde</span>
+                <span className="inline-flex w-[96px] justify-end">je Fahrstunde</span>
+                <span className="ml-2 inline-flex w-[96px] justify-end">je Stunde</span>
               </th>
               <th className="h-10 px-4 text-right font-medium">Lohn</th>
             </tr>

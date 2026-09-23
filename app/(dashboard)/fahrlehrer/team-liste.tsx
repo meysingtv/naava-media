@@ -145,7 +145,7 @@ export function TeamListe({
     {
       key: "klassen",
       header: "Klassen",
-      hideBelow: "lg",
+      hideBelow: "xl",
       cell: (b) => <span className="whitespace-nowrap text-foreground-secondary">{b.fuehrerscheinklassen?.join(", ") || "—"}</span>,
     },
     {
@@ -189,7 +189,7 @@ export function TeamListe({
     {
       key: "zugang",
       header: "Zugang",
-      hideBelow: "lg",
+      hideBelow: "xl",
       sortValue: (b) => (b.user_id ? 0 : 1),
       cell: (b) =>
         b.user_id ? <StatusDot ton="primary">Login aktiv</StatusDot> : <StatusDot ton="neutral">Kein Login</StatusDot>,

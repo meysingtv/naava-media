@@ -170,7 +170,7 @@ export function FahrzeugListe({
     {
       key: "wartung",
       header: "Wartung",
-      hideBelow: "lg",
+      hideBelow: "xl",
       sortValue: (f) => f.naechste_wartung,
       cell: (f) => <FristZelle datum={f.naechste_wartung} heute={heute} bald={30} />,
     },

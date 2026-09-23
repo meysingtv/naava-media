@@ -118,7 +118,8 @@ export default async function AusbildungsnachweisPage({ params }: { params: { id
         </div>
 
         {/* Fahrstunden-Tabelle */}
-        <table className="mt-6 w-full text-sm">
+        <div className="mt-6 overflow-x-auto scrollbar-thin print:overflow-visible">
+        <table className="w-full min-w-[640px] text-sm print:min-w-0">
           <thead>
             <tr className="border-b text-left text-foreground-secondary">
               <th className="py-2 pr-2 font-medium">Nr.</th>
@@ -172,6 +173,7 @@ export default async function AusbildungsnachweisPage({ params }: { params: { id
             )}
           </tbody>
         </table>
+        </div>
 
         <p className="mt-8 text-xs text-foreground-secondary">
           Dieser Nachweis dokumentiert die absolvierten Ausbildungsfahrten gemäß Fahrschüler-Ausbildungsordnung.

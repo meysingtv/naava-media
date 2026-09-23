@@ -69,8 +69,15 @@ export function Monatsverlauf({ monate, hoehe = 240 }: { monate: MonatsWert[]; h
           className={cn("grid text-center text-xs text-foreground-tertiary", viele ? "gap-1.5" : "gap-3")}
           style={{ gridTemplateColumns: `repeat(${monate.length}, minmax(0, 1fr))` }}
         >
-          {monate.map((m) => (
-            <span key={m.schluessel} className={m.schluessel === aktuell ? "font-semibold text-foreground" : undefined}>
+          {monate.map((m, i) => (
+            <span
+              key={m.schluessel}
+              className={cn(
+                m.schluessel === aktuell && "font-semibold text-foreground",
+                // Bei vielen Monaten auf schmalen Bildschirmen nur jeden zweiten beschriften.
+                viele && (monate.length - 1 - i) % 2 === 1 && "invisible sm:visible",
+              )}
+            >
               {m.label}
             </span>
           ))}

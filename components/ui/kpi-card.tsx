@@ -111,7 +111,7 @@ export function KpiCard({
   const inhalt = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-13 font-medium text-foreground-secondary">{label}</p>
+        <p className="line-clamp-2 text-13 font-medium text-foreground-secondary sm:line-clamp-1">{label}</p>
         {icon ? (
           <span
             aria-hidden="true"
@@ -147,7 +147,7 @@ export function KpiCard({
       </div>
 
       {(sub || delta) && (
-        <p className="mt-1 flex min-w-0 items-center gap-1.5 truncate text-13 text-foreground-secondary">
+        <p className="mt-1 flex min-w-0 items-center gap-1.5 text-13 text-foreground-secondary">
           {delta && (
             <span
               className={cn(
@@ -166,7 +166,7 @@ export function KpiCard({
           )}
           {delta?.label && <span className="truncate">{delta.label}</span>}
           {sub && (
-            <span className={cn("truncate", tone === "warning" && "text-warning-text")}>
+            <span className={cn("line-clamp-2 sm:line-clamp-1", tone === "warning" && "text-warning-text")}>
               {delta ? "· " : ""}
               {sub}
             </span>

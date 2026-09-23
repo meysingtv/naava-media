@@ -180,7 +180,7 @@ export function RechnungForm({
                   onChange={(id) => id && leistungHinzufuegen(id)}
                   placeholder="Aus Preisliste übernehmen"
                   inputSize="sm"
-                  className="w-[240px]"
+                  className="w-[176px] sm:w-[240px]"
                 />
               ) : undefined
             }

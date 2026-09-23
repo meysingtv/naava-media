@@ -285,7 +285,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
 
         {/* ---------------- Übersicht ---------------- */}
         <TabsContent value="uebersicht" className="mt-6">
-          <div className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="grid gap-x-6 gap-y-8 lg:grid-cols-[minmax(0,1fr)_280px] xl:gap-x-10">
             <div className="min-w-0 space-y-8">
               <Abschnitt titel="Ausbildungsstand" meta={`Klasse ${primaerKlasse}`} rahmen>
                 <div className="px-4 py-2">
@@ -299,7 +299,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
                   {[
                     { label: "Übungsstunden", wert: String(zaehle("normal")) },
                     { label: "Fehlstunden", wert: String(fehlstunden) },
-                    { label: "Lernstand Theorie-App", wert: `${s.lernstatus ?? 0} %` },
+                    { label: "Theorie-App", wert: `${s.lernstatus ?? 0} %` },
                   ].map((k, i) => (
                     <div key={k.label} className={cn("px-4 py-3", i > 0 && "border-l border-border")}>
                       <dt className="truncate text-xs text-foreground-secondary">{k.label}</dt>
@@ -325,14 +325,16 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
                           <span className="block text-xs text-foreground-secondary">{formatUhrzeit(f.uhrzeit)} Uhr</span>
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-13 font-medium text-foreground">{FAHRSTUNDE_TYPEN[f.typ].label}</span>
+                          <span className="block truncate text-13 font-medium text-foreground">
+                            {FAHRSTUNDE_TYPEN[f.typ].label}
+                            <span className="font-normal tabular-nums text-foreground-secondary"> · {f.dauer_minuten} Min.</span>
+                          </span>
                           <span className="block truncate text-xs text-foreground-secondary">
                             {f.fahrlehrer ? `${f.fahrlehrer.vorname} ${f.fahrlehrer.nachname}` : "Kein Fahrlehrer"}
                             {f.fahrzeug ? ` · ${f.fahrzeug.kennzeichen}` : ""}
                           </span>
                         </span>
-                        <span className="shrink-0 text-13 tabular-nums text-foreground-secondary">{f.dauer_minuten} Min.</span>
-                        <span className="w-28 shrink-0 text-right">
+                        <span className="shrink-0 text-right">
                           {f.bestaetigt_am ? (
                             <StatusDot ton="success">Bestätigt</StatusDot>
                           ) : (

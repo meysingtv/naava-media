@@ -497,14 +497,14 @@ export async function AnsichtHeute({
             <KarteLeer>Keine offenen Aufgaben.</KarteLeer>
           ) : (
             <div className="overflow-x-auto scrollbar-thin">
-              <table className="w-full min-w-[600px] text-13">
+              <table className="w-full text-13 sm:min-w-[600px]">
                 <thead>
                   <tr className="border-b border-border text-left text-xs text-foreground-secondary">
-                    <th className="px-5 pb-2 font-medium">Aufgabe</th>
-                    <th className="px-3 pb-2 font-medium">Schüler</th>
+                    <th className="px-4 pb-2 font-medium sm:px-5">Aufgabe</th>
+                    <th className="hidden px-3 pb-2 font-medium sm:table-cell">Schüler</th>
                     <th className="px-3 pb-2 font-medium">Fällig</th>
-                    <th className="px-3 pb-2 font-medium">Priorität</th>
-                    <th className="px-5 pb-2 font-medium">Status</th>
+                    <th className="hidden px-3 pb-2 font-medium sm:table-cell">Priorität</th>
+                    <th className="px-4 pb-2 font-medium sm:px-5">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -513,10 +513,15 @@ export async function AnsichtHeute({
                     const heuteFaellig = a.faellig_am === heute;
                     return (
                       <tr key={a.id} className="transition-colors hover:bg-surface-muted">
-                        <td className="max-w-[260px] px-5 py-2.5">
+                        <td className="max-w-[260px] px-4 py-2.5 sm:px-5">
                           <span className="block truncate font-medium text-foreground">{a.titel}</span>
+                          {a.fahrschueler && (
+                            <span className="block truncate text-xs text-foreground-secondary sm:hidden">
+                              {a.fahrschueler.vorname} {a.fahrschueler.nachname}
+                            </span>
+                          )}
                         </td>
-                        <td className="px-3 py-2.5 text-foreground-secondary">
+                        <td className="hidden px-3 py-2.5 text-foreground-secondary sm:table-cell">
                           {a.fahrschueler ? `${a.fahrschueler.vorname} ${a.fahrschueler.nachname}` : "—"}
                         </td>
                         <td
@@ -527,7 +532,7 @@ export async function AnsichtHeute({
                         >
                           {a.faellig_am ? (heuteFaellig ? "Heute" : formatDatum(a.faellig_am)) : "—"}
                         </td>
-                        <td className="px-3 py-2.5">
+                        <td className="hidden px-3 py-2.5 sm:table-cell">
                           <span className="inline-flex items-center gap-2 text-foreground-secondary">
                             <i
                               aria-hidden="true"
@@ -539,7 +544,7 @@ export async function AnsichtHeute({
                             {a.prioritaet === "hoch" ? "Hoch" : a.prioritaet === "mittel" ? "Mittel" : "Niedrig"}
                           </span>
                         </td>
-                        <td className="px-5 py-2">
+                        <td className="px-4 py-2 sm:px-5">
                           <AufgabeStatus id={a.id} status={a.status} titel={a.titel} />
                         </td>
                       </tr>

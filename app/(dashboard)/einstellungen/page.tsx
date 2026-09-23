@@ -45,9 +45,9 @@ export default async function EinstellungenPage({ searchParams }: { searchParams
     <div>
       <PageHeader title="Einstellungen">{bereich === "preisliste" ? <LeistungNeu /> : null}</PageHeader>
 
-      <div className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <nav aria-label="Einstellungen" className="lg:sticky lg:top-20 lg:self-start">
-          <ul className="flex gap-1 overflow-x-auto lg:flex-col [scrollbar-width:none]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-8">
+        <nav aria-label="Einstellungen" className="min-w-0 xl:sticky xl:top-20 xl:self-start">
+          <ul className="flex gap-1 overflow-x-auto xl:flex-col [scrollbar-width:none]">
             {BEREICHE.map((b) => {
               const aktiv = b.key === bereich;
               return (
@@ -66,14 +66,14 @@ export default async function EinstellungenPage({ searchParams }: { searchParams
                 </li>
               );
             })}
-            <li className="shrink-0 lg:mt-3 lg:border-t lg:border-border lg:pt-3">
+            <li className="shrink-0 xl:mt-3 xl:border-t xl:border-border xl:pt-3">
               <Link
                 href="/fahrlehrer/rollen"
                 className="flex h-9 items-center gap-2.5 rounded-lg px-3 text-13 font-medium text-foreground-secondary transition-colors hover:bg-card/60 hover:text-foreground"
               >
                 <ShieldCheck className="h-4 w-4 text-foreground-tertiary" strokeWidth={1.75} aria-hidden="true" />
                 Rollen und Rechte
-                <ChevronRight className="ml-auto hidden h-3.5 w-3.5 text-foreground-tertiary lg:block" strokeWidth={1.75} aria-hidden="true" />
+                <ChevronRight className="ml-auto hidden h-3.5 w-3.5 text-foreground-tertiary xl:block" strokeWidth={1.75} aria-hidden="true" />
               </Link>
             </li>
           </ul>

@@ -273,7 +273,7 @@ export function AufgabenListe({ aufgaben, heute }: { aufgaben: AufgabeMitSchuele
 
                       <span
                         className={cn(
-                          "min-w-0 flex-1 truncate text-sm",
+                          "min-w-0 flex-1 text-sm line-clamp-2 sm:line-clamp-1",
                           erledigt ? "text-foreground-tertiary line-through" : "font-medium text-foreground",
                         )}
                       >
@@ -291,7 +291,7 @@ export function AufgabenListe({ aufgaben, heute }: { aufgaben: AufgabeMitSchuele
 
                       <span
                         className={cn(
-                          "w-[92px] shrink-0 text-right text-13 tabular-nums",
+                          "w-[76px] shrink-0 text-right text-13 tabular-nums sm:w-[92px]",
                           ueberfaellig ? "font-medium text-destructive-text" : "text-foreground-secondary",
                         )}
                       >

@@ -352,7 +352,7 @@ function TagSpalten({
 }) {
   const istHeute = anker === heute;
   const scrollRef = useRef<HTMLDivElement>(null);
-  const spalten = `56px repeat(${Math.max(1, lanes.length)}, minmax(148px, 1fr))`;
+  const spalten = `56px repeat(${Math.max(1, lanes.length)}, minmax(128px, 1fr))`;
 
   // Beim Öffnen und beim Tageswechsel zur passenden Uhrzeit scrollen.
   useLayoutEffect(() => {

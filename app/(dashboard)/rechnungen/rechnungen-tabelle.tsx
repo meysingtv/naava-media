@@ -121,7 +121,7 @@ export function RechnungenTabelle({
             <span className="text-destructive-text">
               {formatDatum(r.faelligkeitsdatum)}
               {tage > 0 && (
-                <span className="ml-1.5 text-xs">
+                <span className="ml-1.5 whitespace-nowrap text-xs">
                   seit {tage} {tage === 1 ? "Tag" : "Tagen"}
                 </span>
               )}
@@ -138,7 +138,7 @@ export function RechnungenTabelle({
     {
       key: "mahnstufe",
       header: "Mahnstufe",
-      hideBelow: "lg",
+      hideBelow: "xl",
       sortValue: (r) => r.mahnstufe ?? 0,
       cell: (r) =>
         r.mahnstufe > 0 ? (

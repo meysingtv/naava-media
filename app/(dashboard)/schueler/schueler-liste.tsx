@@ -218,7 +218,7 @@ export function SchuelerListe({
     {
       key: "unterlagen",
       header: "Unterlagen",
-      hideBelow: "lg",
+      hideBelow: "xl",
       sortValue: (s) => fortschrittMap[s.id]?.unterlagenFehlen ?? 0,
       cell: (s) => {
         const fehlen = fortschrittMap[s.id]?.unterlagenFehlen ?? 0;

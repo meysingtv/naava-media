@@ -69,8 +69,16 @@ export function Saeulen({
       </div>
       <span />
       <div className="grid gap-1.5 text-center text-xs text-foreground-tertiary" style={{ gridTemplateColumns: `repeat(${werte.length}, minmax(0, 1fr))` }}>
-        {werte.map((w) => (
-          <span key={w.schluessel} className={cn("truncate", w.schluessel === letzter && "font-semibold text-foreground")}>
+        {werte.map((w, i) => (
+          <span
+            key={w.schluessel}
+            className={cn(
+              "truncate",
+              w.schluessel === letzter && "font-semibold text-foreground",
+              // Bei vielen Säulen auf schmalen Bildschirmen nur jede zweite beschriften.
+              werte.length > 8 && w.schluessel !== letzter && (werte.length - 1 - i) % 2 === 1 && "invisible sm:visible",
+            )}
+          >
             {w.label}
           </span>
         ))}
