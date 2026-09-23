@@ -12,8 +12,9 @@ const Tabs = TabsPrimitive.Root;
 const TabsVarianteContext = React.createContext<"underline" | "pills">("underline");
 
 /**
- * Reiter v3: Unterstrich-Reiter für Inhaltsebenen, `pills` als helle
- * Segment-Steuerung (Tag/Woche, Zeiträume). Segmente sind nie schwarz gefüllt.
+ * Reiter v4: Unterstrich-Reiter für Inhaltsebenen (aktiv = dunkle Schrift +
+ * dunkler 2-px-Strich), `pills` als helle Segment-Steuerung (Tag/Woche,
+ * Zeiträume). Blau kommt in Reitern nicht vor.
  */
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
@@ -24,8 +25,8 @@ const TabsList = React.forwardRef<
       ref={ref}
       className={cn(
         variant === "pills"
-          ? "inline-flex h-8 w-auto items-center gap-0.5 rounded-md border-0 bg-surface-muted p-0.5"
-          : "flex h-10 w-full items-end gap-5 overflow-x-auto border-b border-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          ? "inline-flex h-8 w-auto items-center gap-0.5 rounded-md border-0 bg-muted p-0.5"
+          : "flex h-10 w-full items-end gap-6 overflow-x-auto border-b border-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         className,
       )}
       {...props}
@@ -46,11 +47,11 @@ const TabsTrigger = React.forwardRef<
         "group relative inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap font-medium transition-colors duration-fast",
         "focus-visible:text-foreground focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
         variant === "pills"
-          ? "h-7 rounded-sm px-2.5 text-xs text-muted-foreground hover:text-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs"
+          ? "h-7 rounded-[5px] px-2.5 text-13 text-muted-foreground hover:text-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-[0_1px_2px_rgba(16,24,40,0.08),0_0_0_1px_hsl(var(--border))]"
           : cn(
-              "-mb-px h-10 px-0.5 text-13 text-muted-foreground hover:text-foreground",
-              "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-transparent after:transition-colors",
-              "data-[state=active]:text-foreground data-[state=active]:after:bg-primary",
+              "-mb-px h-10 px-0.5 text-sm text-muted-foreground hover:text-foreground",
+              "after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-transparent after:transition-colors",
+              "data-[state=active]:text-foreground data-[state=active]:after:bg-foreground",
             ),
         className,
       )}
@@ -58,7 +59,7 @@ const TabsTrigger = React.forwardRef<
     >
       {children}
       {count != null && (
-        <span className="rounded-full bg-surface-muted px-1.5 text-2xs tabular-nums text-foreground-secondary group-data-[state=active]:bg-primary-soft group-data-[state=active]:text-primary-text">
+        <span className="rounded-sm bg-muted px-1.5 text-2xs font-medium tabular-nums text-foreground-secondary group-data-[state=active]:text-foreground">
           {count}
         </span>
       )}

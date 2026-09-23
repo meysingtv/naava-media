@@ -21,7 +21,7 @@ interface DashboardShellProps {
 }
 
 /**
- * App-Rahmen v3: feste Navigation links (256 px / eingeklappt 68 px), rechts
+ * App-Rahmen v4: feste Navigation links (240 px / eingeklappt 64 px), rechts
  * oben die App-Leiste (Suche, „Neu", Glocke – bleibt beim Scrollen stehen)
  * und darunter der Seiteninhalt mit eigenem Seitenkopf. Keine Bereichs-
  * Leiste, keine Kontext-Tabs, keine Bottom-Bar.

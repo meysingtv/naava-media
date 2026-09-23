@@ -1,6 +1,7 @@
-import { redirect } from "next/navigation";
+import { SchuelerAkte } from "../schueler-akte";
 
-// Die Einzelseite ist in die geteilte Übersicht (Liste + Akte) umgezogen.
-export default function SchuelerDetailRedirect({ params }: { params: { id: string } }) {
-  redirect(`/schueler?id=${params.id}`);
+export const metadata = { title: "Schülerakte · FahrschulApp" };
+
+export default function SchuelerDetailPage({ params }: { params: { id: string } }) {
+  return <SchuelerAkte schuelerId={params.id} />;
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import Link from "next/link";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
@@ -72,9 +74,14 @@ function Sparkline({ werte, tone, gross }: { werte: number[]; tone: KpiCardProps
   );
 }
 
+/** Innerhalb einer `KpiRow` rendert eine Kennzahl als Zelle ohne eigene Kante. */
+const ImStreifen = React.createContext(false);
+
 /**
- * Kennzahl v3: Label, große tabellarische Zahl, Kontextzeile und optional
- * Delta-Pille plus Sparkline. Keine bunten Kacheln, kein Icon.
+ * Kennzahl v4: Label, große tabellarische Zahl (24 px), darunter Kontext
+ * oder Veränderung als schlichter farbiger Text – keine Pille, kein Icon,
+ * keine Kachel. In einer `KpiRow` stehen die Kennzahlen als EIN Streifen
+ * mit Trennlinien; einzeln sind sie ein flacher Container mit Kante.
  *
  * Pflichtregel: Jede Geldsumme und jede nackte Zahl braucht `sub` ODER `delta`.
  */
@@ -90,35 +97,16 @@ export function KpiCard({
   loading,
   className,
 }: KpiCardProps) {
+  const imStreifen = React.useContext(ImStreifen);
   const gross = size === "lg";
   const gut = delta ? (delta.invert ? delta.value < 0 : delta.value > 0) : null;
   const neutralesDelta = delta?.value === 0;
 
   const inhalt = (
     <>
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        {delta && (
-          <span
-            className={cn(
-              "inline-flex h-5 shrink-0 items-center gap-0.5 rounded-full px-1.5 text-xs font-medium tabular-nums",
-              neutralesDelta
-                ? "bg-surface-muted text-foreground-secondary"
-                : gut
-                  ? "bg-success-soft text-success-text"
-                  : "bg-destructive-soft text-destructive-text",
-            )}
-          >
-            {!neutralesDelta &&
-              (delta.value > 0 ? (
-                <ArrowUpRight className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
-              ) : (
-                <ArrowDownRight className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
-              ))}
-            {formatDelta(delta)}
-          </span>
-        )}
-        {href && !delta && (
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate text-13 font-medium text-foreground-secondary">{label}</p>
+        {href && (
           <ArrowUpRight
             className="h-3.5 w-3.5 shrink-0 text-foreground-tertiary opacity-0 transition-opacity group-hover:opacity-100"
             strokeWidth={1.75}
@@ -127,44 +115,68 @@ export function KpiCard({
         )}
       </div>
 
-      {loading ? (
-        <div className={cn("mt-1 animate-soft-pulse rounded-md bg-surface-muted", gross ? "h-8 w-28" : "h-7 w-24")} />
-      ) : (
-        <p
-          className={cn(
-            "mt-1 font-semibold tabular-nums",
-            gross ? "text-kpi-lg" : "text-kpi",
-            tone === "warning"
-              ? "text-warning-text"
-              : tone === "destructive"
-                ? "text-destructive-text"
-                : "text-foreground",
-          )}
-        >
-          {value}
-        </p>
-      )}
-
-      <div className="mt-auto flex items-end justify-between gap-3 pt-2">
-        <p className="min-w-0 truncate text-xs text-muted-foreground">
-          {sub}
-          {delta?.label && <span className="ml-1 text-foreground-tertiary">{delta.label}</span>}
-        </p>
+      <div className="mt-1.5 flex items-end justify-between gap-3">
+        {loading ? (
+          <div className={cn("animate-soft-pulse rounded-md bg-muted", gross ? "h-9 w-28" : "h-8 w-24")} />
+        ) : (
+          <p
+            className={cn(
+              "truncate font-semibold tabular-nums",
+              gross ? "text-kpi-lg" : "text-kpi",
+              tone === "destructive" ? "text-destructive-text" : "text-foreground",
+            )}
+          >
+            {value}
+          </p>
+        )}
         {trend && trend.length > 1 && <Sparkline werte={trend} tone={tone} gross={gross} />}
       </div>
+
+      {(sub || delta) && (
+        <p className="mt-1 flex min-w-0 items-center gap-1.5 truncate text-13 text-foreground-secondary">
+          {delta && (
+            <span
+              className={cn(
+                "inline-flex shrink-0 items-center gap-0.5 font-medium tabular-nums",
+                neutralesDelta ? "text-foreground-secondary" : gut ? "text-success-text" : "text-destructive-text",
+              )}
+            >
+              {!neutralesDelta &&
+                (delta.value > 0 ? (
+                  <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+                ) : (
+                  <ArrowDownRight className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+                ))}
+              {formatDelta(delta)}
+            </span>
+          )}
+          {delta?.label && <span className="truncate">{delta.label}</span>}
+          {sub && (
+            <span className={cn("truncate", tone === "warning" && "text-warning-text")}>
+              {delta ? "· " : ""}
+              {sub}
+            </span>
+          )}
+        </p>
+      )}
     </>
   );
 
   const klassen = cn(
-    "group flex flex-col rounded-xl bg-card p-4 shadow-panel print:shadow-none print:ring-1 print:ring-border",
-    gross ? "min-h-[128px]" : "min-h-[104px]",
-    href && "transition-shadow duration-fast ease-soft hover:shadow-md",
+    "group flex min-w-0 flex-col",
+    imStreifen
+      ? "px-5 py-4 shadow-[-1px_0_0_0_hsl(var(--border)),0_-1px_0_0_hsl(var(--border))]"
+      : "rounded-lg bg-card p-4 shadow-panel print:shadow-none print:ring-1 print:ring-border",
+    href && "transition-colors duration-fast ease-soft hover:bg-surface-muted",
     className,
   );
 
   if (href) {
     return (
-      <Link href={href} className={cn(klassen, "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background")}>
+      <Link
+        href={href}
+        className={cn(klassen, "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring")}
+      >
         {inhalt}
       </Link>
     );
@@ -173,7 +185,10 @@ export function KpiCard({
   return <div className={klassen}>{inhalt}</div>;
 }
 
-/** KPI-Zeile – maximal vier Karten je Sichtbereich. */
+/**
+ * Kennzahlen-Streifen: EIN Container mit Kante, die Kennzahlen darin durch
+ * 1-px-Linien getrennt. Auf schmalen Bildschirmen zwei Spalten.
+ */
 export function KpiRow({
   children,
   cols,
@@ -185,14 +200,16 @@ export function KpiRow({
 }) {
   const anzahl = cols ?? React.Children.count(children);
   return (
-    <div
-      className={cn(
-        "grid grid-cols-2 gap-4",
-        anzahl === 3 ? "lg:grid-cols-3" : anzahl >= 6 ? "lg:grid-cols-3 xl:grid-cols-6" : "lg:grid-cols-4",
-        className,
-      )}
-    >
-      {children}
-    </div>
+    <ImStreifen.Provider value={true}>
+      <div
+        className={cn(
+          "grid grid-cols-2 overflow-hidden rounded-lg bg-card shadow-panel print:shadow-none print:ring-1 print:ring-border",
+          anzahl === 3 ? "lg:grid-cols-3" : anzahl >= 6 ? "lg:grid-cols-3 xl:grid-cols-6" : anzahl === 2 ? "" : "lg:grid-cols-4",
+          className,
+        )}
+      >
+        {children}
+      </div>
+    </ImStreifen.Provider>
   );
 }

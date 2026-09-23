@@ -118,6 +118,6 @@ export async function lernfortschrittSpeichern(
     await supabase.from("fahrschueler").update({ lernstatus: neu }).eq("id", u.id);
   }
 
-  revalidatePath("/schueler");
+  revalidatePath("/schueler", "layout");
   return { ok: true };
 }

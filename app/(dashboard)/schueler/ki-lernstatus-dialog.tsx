@@ -88,8 +88,8 @@ export function KiLernstatusDialog() {
         if (!o) reset();
       }}
     >
-      <Button variant="outline" onClick={() => setOpen(true)}>
-        <Sparkles /> KI-Lernstatus
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+        <Sparkles /> Lernstand aktualisieren
       </Button>
       <DialogContent>
         <DialogHeader>

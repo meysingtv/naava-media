@@ -3,9 +3,9 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Panel-Fläche v3: weiß auf der warmen Arbeitsfläche, 10-px-Radius,
- * weicher Schatten mit 1-px-Ring – KEINE Haarlinie mehr. `border` und
- * `divide-y` bleiben nur noch INNERHALB von Panels erlaubt.
+ * Container v4: weiß, 8-px-Radius, 1-px-Kante (über `shadow-panel`), keine
+ * Höhe. Interaktive Karten bekommen beim Überfahren eine kräftigere Kante
+ * statt eines Schattens.
  */
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   padding?: "none" | "dense" | "default";
@@ -22,7 +22,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         padding === "dense" && "p-3",
         padding === "default" && "p-4",
         interactive &&
-          "transition-shadow duration-fast ease-soft hover:shadow-md focus-within:shadow-md",
+          "transition-shadow duration-fast ease-soft hover:shadow-[0_0_0_1px_hsl(var(--border-hover))] focus-within:shadow-[0_0_0_1px_hsl(var(--border-hover))]",
         className,
       )}
       {...props}

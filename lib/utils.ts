@@ -1,5 +1,17 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
+
+// Eigene Schriftgrößen und Schatten aus tailwind.config.ts bekannt machen.
+// Ohne das hält tailwind-merge z. B. `text-kpi` für eine Textfarbe und
+// wirft sie weg, sobald daneben `text-foreground` steht.
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      "font-size": [{ text: ["2xs", "13", "title", "kpi", "kpi-lg"] }],
+      shadow: [{ shadow: ["panel", "card", "lift", "cta"] }],
+    },
+  },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

@@ -36,7 +36,7 @@ export async function dokumentHochladen(input: {
   });
   if (error) return { error: error.message };
   revalidatePath(`/schueler/${input.schuelerId}`);
-  revalidatePath("/schueler");
+  revalidatePath("/schueler", "layout");
   return { ok: true };
 }
 
@@ -45,7 +45,7 @@ export async function dokumentLoeschen(formData: FormData): Promise<void> {
   if (!id) return;
   const supabase = createClient();
   await supabase.from("dokument").delete().eq("id", id);
-  revalidatePath("/schueler");
+  revalidatePath("/schueler", "layout");
 }
 
 // --- Ratenzahlung ----------------------------------------------------
@@ -86,7 +86,7 @@ export async function ratenplanErstellen(_prev: RatenState, formData: FormData):
   const { error } = await supabase.from("rate").insert(rows);
   if (error) return { error: error.message };
   revalidatePath(`/schueler/${schuelerId}`);
-  revalidatePath("/schueler");
+  revalidatePath("/schueler", "layout");
   return { ok: true };
 }
 
@@ -96,7 +96,7 @@ export async function rateBezahltSetzen(formData: FormData): Promise<void> {
   if (!id) return;
   const supabase = createClient();
   await supabase.from("rate").update({ bezahlt }).eq("id", id);
-  revalidatePath("/schueler");
+  revalidatePath("/schueler", "layout");
 }
 
 export async function rateLoeschen(formData: FormData): Promise<void> {
@@ -104,5 +104,5 @@ export async function rateLoeschen(formData: FormData): Promise<void> {
   if (!id) return;
   const supabase = createClient();
   await supabase.from("rate").delete().eq("id", id);
-  revalidatePath("/schueler");
+  revalidatePath("/schueler", "layout");
 }

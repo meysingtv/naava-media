@@ -25,6 +25,11 @@ interface SidebarKontext {
 
 const Kontext = React.createContext<SidebarKontext | null>(null);
 
+/** Wie `useSidebar`, aber ohne Fehler außerhalb des Providers. */
+export function useSidebarOptional(): SidebarKontext | null {
+  return React.useContext(Kontext);
+}
+
 export function useSidebar(): SidebarKontext {
   const ctx = React.useContext(Kontext);
   if (!ctx) throw new Error("useSidebar muss innerhalb von SidebarProvider verwendet werden.");

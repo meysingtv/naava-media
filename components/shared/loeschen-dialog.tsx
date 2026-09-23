@@ -17,8 +17,8 @@ import {
 const HINWEIS = "Das lässt sich nicht rückgängig machen.";
 
 /**
- * Löschen mit Rückfrage v3: Trigger als weicher Danger-Button (keine
- * rot eingefärbte Outline mehr), Dialog in `size="sm"`. Fehlt der Hinweis
+ * Löschen mit Rückfrage v4: Auslöser als neutraler Rahmen-Knopf, der erst
+ * beim Überfahren rot wird; Dialog in `size="sm"`. Fehlt der Hinweis
  * „nicht rückgängig", wird er angehängt.
  */
 export function LoeschenDialog({
@@ -44,8 +44,9 @@ export function LoeschenDialog({
     <>
       <Button
         type="button"
-        variant="danger-soft"
+        variant="outline"
         size={nurIcon ? "icon-sm" : "sm"}
+        className="text-foreground-secondary hover:bg-destructive-soft hover:text-destructive-text"
         aria-label={nurIcon ? "Löschen" : undefined}
         onClick={() => setOpen(true)}
       >

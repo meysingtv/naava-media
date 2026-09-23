@@ -1,32 +1,22 @@
-import { Suspense } from "react";
-import { Users } from "lucide-react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Plus } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/page-header";
-import { Skeleton } from "@/components/ui/skeleton";
 import { pflichtFahrtenFuer } from "@/lib/constants";
-import { cn, initialen } from "@/lib/utils";
+import { initialen } from "@/lib/utils";
 import type { Fahrschueler } from "@/lib/types";
 import { SchuelerListe, type Fortschritt } from "./schueler-liste";
-import { SchuelerAkte } from "./schueler-akte";
 import { KiLernstatusDialog } from "./ki-lernstatus-dialog";
 
 export const metadata = { title: "Schüler · FahrschulApp" };
 
-function AkteSkeleton() {
-  return (
-    <div className="space-y-3" aria-busy="true">
-      <Skeleton className="h-24 rounded-xl" />
-      <Skeleton className="h-10 rounded-xl" />
-      <div className="grid gap-3 xl:grid-cols-2">
-        <Skeleton className="h-48 rounded-xl" />
-        <Skeleton className="h-48 rounded-xl" />
-      </div>
-    </div>
-  );
-}
-
 export default async function SchuelerPage({ searchParams }: { searchParams: { id?: string } }) {
+  // Alte Links (/schueler?id=…) führen auf die eigene Akte-Seite.
+  if (searchParams.id) redirect(`/schueler/${searchParams.id}`);
+
   const supabase = createClient();
 
   const [schuelerRes, rechnungRes, lessonsRes] = await Promise.all([
@@ -42,12 +32,11 @@ export default async function SchuelerPage({ searchParams }: { searchParams: { i
 
   const schueler = (schuelerRes.data ?? []) as Fahrschueler[];
 
-  // Saldo je Schüler (offene Rechnungen negativ)
-  const saldoMap: Record<string, number> = {};
+  // Offener Rechnungsbetrag je Schüler
+  const offenMap: Record<string, number> = {};
   for (const r of (rechnungRes.data ?? []) as { schueler_id: string | null; betrag_brutto: number | null; status: string }[]) {
-    if (!r.schueler_id) continue;
-    const brutto = Number(r.betrag_brutto ?? 0);
-    saldoMap[r.schueler_id] = (saldoMap[r.schueler_id] ?? 0) + (r.status === "bezahlt" ? 0 : -brutto);
+    if (!r.schueler_id || r.status === "bezahlt") continue;
+    offenMap[r.schueler_id] = (offenMap[r.schueler_id] ?? 0) + Number(r.betrag_brutto ?? 0);
   }
 
   // Fahrlehrer-Kürzel + Ausbildungsfortschritt je Schüler
@@ -79,42 +68,24 @@ export default async function SchuelerPage({ searchParams }: { searchParams: { i
       fahrstunden: z.gesamt,
       pruefungsreif: Boolean(s.theorie_bestanden && sonderOk),
       unterlagenFehlen: [!s.sehtest_am, !s.erste_hilfe_am, !s.passbild_ok].filter(Boolean).length,
+      sonderIst:
+        Math.min(z.ueberland, pflicht.ueberland) + Math.min(z.autobahn, pflicht.autobahn) + Math.min(z.nacht, pflicht.nacht),
+      sonderSoll: pflicht.ueberland + pflicht.autobahn + pflicht.nacht,
     };
   }
 
-  const selectedId = searchParams.id;
-  const selected = selectedId ? schueler.find((s) => s.id === selectedId) : undefined;
-
   return (
-    <div className="space-y-5">
-      <PageHeader eyebrow="Ausbildung" title="Schüler" description={`${schueler.length} in Ausbildung`}>
+    <div>
+      <PageHeader title="Schüler">
         <KiLernstatusDialog />
+        <Button asChild size="sm">
+          <Link href="/schueler/neu">
+            <Plus /> Schüler anlegen
+          </Link>
+        </Button>
       </PageHeader>
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div className={cn(selected && "hidden xl:block")}>
-          <SchuelerListe
-            schueler={schueler}
-            selectedId={selectedId}
-            saldoMap={saldoMap}
-            lehrerMap={lehrerMap}
-            fortschrittMap={fortschrittMap}
-          />
-        </div>
-
-        <div className={cn(!selected && "hidden xl:block")}>
-          {selected ? (
-            <Suspense key={selected.id} fallback={<AkteSkeleton />}>
-              <SchuelerAkte schuelerId={selected.id} />
-            </Suspense>
-          ) : (
-            <div className="flex h-full min-h-[320px] flex-col items-center justify-center rounded-xl bg-surface-muted/60 text-center">
-              <Users className="mb-2 h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
-              <p className="text-[13px] text-muted-foreground">Schüler auswählen, um den Ausbildungsprozess zu sehen.</p>
-            </div>
-          )}
-        </div>
-      </div>
+      <SchuelerListe schueler={schueler} offenMap={offenMap} lehrerMap={lehrerMap} fortschrittMap={fortschrittMap} />
     </div>
   );
 }

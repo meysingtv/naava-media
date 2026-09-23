@@ -1,16 +1,14 @@
 import Link from "next/link";
-import { FileText, Plus, Receipt } from "lucide-react";
+import { Plus, Receipt } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { KpiCard, KpiRow } from "@/components/ui/kpi-card";
 import { PageHeader } from "@/components/shared/page-header";
-import { StatCard } from "@/components/shared/stat-card";
 import { EmptyState } from "@/components/shared/empty-state";
-import { RECHNUNG_STATUS } from "@/lib/constants";
-import { formatDatum, formatEuro } from "@/lib/utils";
+import { formatEuro } from "@/lib/utils";
 import type { RechnungMitSchueler } from "@/lib/types";
+import { RechnungenTabelle } from "./rechnungen-tabelle";
 
 export const metadata = { title: "Rechnungen · FahrschulApp" };
 
@@ -23,84 +21,53 @@ export default async function RechnungenPage() {
     .returns<RechnungMitSchueler[]>();
 
   const rechnungen = data ?? [];
-  const offen = rechnungen.filter((r) => r.status === "offen" || r.status === "ueberfaellig");
-  const offenerBetrag = offen.reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
+  const heute = new Date().toISOString().slice(0, 10);
+  const monatsbeginn = `${heute.slice(0, 7)}-01`;
+  const summe = (liste: RechnungMitSchueler[]) => liste.reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
+
+  const offen = rechnungen.filter((r) => r.status !== "bezahlt");
+  const ueberfaellig = offen.filter((r) => r.status === "ueberfaellig" || (r.faelligkeitsdatum && r.faelligkeitsdatum < heute));
+  const bezahltMonat = rechnungen.filter((r) => r.status === "bezahlt" && (r.bezahlt_am ?? "") >= monatsbeginn);
+  const gestelltMonat = rechnungen.filter((r) => r.rechnungsdatum >= monatsbeginn);
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Rechnungen" description="Erstelle und verwalte Rechnungen.">
-        <Button asChild>
+    <div>
+      <PageHeader title="Rechnungen">
+        <Button asChild size="sm">
           <Link href="/rechnungen/neu">
-            <Plus /> Neue Rechnung
+            <Plus /> Rechnung schreiben
           </Link>
         </Button>
       </PageHeader>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard
-          label="Offener Betrag"
-          value={formatEuro(offenerBetrag)}
-          icon={Receipt}
-          iconClassName={offenerBetrag > 0 ? "bg-warning-soft text-warning" : undefined}
-        />
-        <StatCard label="Offene Rechnungen" value={offen.length} icon={FileText} />
-        <StatCard
-          label="Rechnungen gesamt"
-          value={rechnungen.length}
-          icon={FileText}
-          iconClassName="bg-success-soft text-success"
-        />
-      </div>
 
       {rechnungen.length === 0 ? (
         <EmptyState
           icon={Receipt}
           title="Noch keine Rechnungen"
-          description="Erstelle deine erste Rechnung mit Positionen und Mehrwertsteuer."
+          description="Schreib die erste Rechnung mit Positionen und Mehrwertsteuer."
         >
-          <Button asChild>
+          <Button asChild size="sm">
             <Link href="/rechnungen/neu">
-              <Plus /> Neue Rechnung
+              <Plus /> Rechnung schreiben
             </Link>
           </Button>
         </EmptyState>
       ) : (
-        <Card className="overflow-hidden">
-          <CardContent className="p-0">
-            <ul className="divide-y">
-              {rechnungen.map((r) => {
-                const status = RECHNUNG_STATUS[r.status];
-                return (
-                  <li key={r.id}>
-                    <Link
-                      href={`/rechnungen/${r.id}`}
-                      className="flex items-center gap-4 px-5 py-3 transition-colors duration-fast hover:bg-surface focus-visible:bg-surface focus-visible:outline-none"
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary">
-                        <FileText className="h-4 w-4" strokeWidth={1.75} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">{r.nummer}</p>
-                        <p className="truncate text-[13px] text-muted-foreground">
-                          {r.fahrschueler
-                            ? `${r.fahrschueler.vorname} ${r.fahrschueler.nachname}`
-                            : "Ohne Schüler"}{" "}
-                          · {formatDatum(r.rechnungsdatum)}
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-sm font-semibold text-foreground tabular-nums">
-                        {formatEuro(Number(r.betrag_brutto))}
-                      </span>
-                      <Badge variant="outline" className={status.badge}>
-                        {status.label}
-                      </Badge>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <KpiRow>
+            <KpiCard label="Offen" value={formatEuro(summe(offen))} sub={`${offen.length} Rechnungen`} />
+            <KpiCard
+              label="Überfällig"
+              value={formatEuro(summe(ueberfaellig))}
+              sub={`${ueberfaellig.length} Rechnungen`}
+              tone={ueberfaellig.length > 0 ? "destructive" : "neutral"}
+            />
+            <KpiCard label="Bezahlt diesen Monat" value={formatEuro(summe(bezahltMonat))} sub={`${bezahltMonat.length} Rechnungen`} />
+            <KpiCard label="Gestellt diesen Monat" value={formatEuro(summe(gestelltMonat))} sub={`${gestelltMonat.length} Rechnungen`} />
+          </KpiRow>
+
+          <RechnungenTabelle rechnungen={rechnungen} heute={heute} />
+        </div>
       )}
     </div>
   );

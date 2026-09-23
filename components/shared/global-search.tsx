@@ -53,14 +53,14 @@ export function GlobalSearch({
       type="button"
       onClick={() => setPaletteOffen(true)}
       className={cn(
-        "flex h-8 w-full items-center gap-2 rounded-md border border-border bg-card px-3 text-13 text-muted-foreground",
-        "transition-colors duration-fast hover:border-border-hover hover:text-foreground",
+        "flex h-8 w-full items-center gap-2 rounded-md bg-muted px-3 text-13 text-foreground-tertiary",
+        "transition-colors duration-fast hover:bg-border/70 hover:text-foreground-secondary",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70",
         className,
       )}
     >
       <Search className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-      <span className="truncate">Suchen …</span>
+      <span className="truncate">Schüler, Rechnungen, Seiten suchen …</span>
     </button>
   );
 }

@@ -10,9 +10,8 @@ import { cn } from "@/lib/utils";
 import type { BereichItem } from "@/components/shared/bereiche";
 
 /**
- * Ein Sidebar-Eintrag: 32 px, Icon 16 px, Label 13/500. Aktiv = hellere
- * Fläche PLUS 3-px-Balken links PLUS weißer Text – die Fläche allein trägt
- * nur 1,19:1 und reicht nicht.
+ * Ein Navigationseintrag: 32 px, Icon 16 px, Label 14/500. Aktiv = hellgraue
+ * Fläche, dunkle Schrift und blaues Icon – kein Balken, keine Farbfläche.
  *
  * Tooltips erscheinen ausschließlich im eingeklappten Desktop-Zustand,
  * sonst läse ein Screenreader jedes Label doppelt.
@@ -43,22 +42,19 @@ export function SidebarItem({
       data-active={aktiv}
       data-aktiv-eintrag={aktiv ? "true" : undefined}
       className={cn(
-        "group relative flex items-center rounded-md text-13 font-medium text-sidebar-foreground/85",
-        "hover:bg-sidebar-hover hover:text-sidebar-foreground",
-        "data-[active=true]:bg-sidebar-active data-[active=true]:font-semibold data-[active=true]:text-sidebar-active-foreground",
-        "data-[active=true]:before:absolute data-[active=true]:before:-left-3 data-[active=true]:before:top-1/2",
-        "data-[active=true]:before:h-5 data-[active=true]:before:w-[3px] data-[active=true]:before:-translate-y-1/2",
-        "data-[active=true]:before:rounded-r-full data-[active=true]:before:bg-sidebar-bar",
+        "group relative flex items-center rounded-md text-sm font-medium text-sidebar-foreground",
+        "hover:bg-sidebar-hover hover:text-foreground",
+        "data-[active=true]:bg-sidebar-active data-[active=true]:text-sidebar-active-foreground",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/70",
-        eingeklappt ? "mx-auto h-10 w-10 justify-center px-0" : imDrawer ? "h-10 gap-2.5 px-2" : "h-8 gap-2.5 px-2",
+        eingeklappt ? "mx-auto h-9 w-9 justify-center px-0" : imDrawer ? "h-10 gap-2.5 px-2.5" : "h-8 gap-2.5 px-2.5",
       )}
     >
       <Icon
         className={cn(
-          "shrink-0 text-sidebar-muted transition-colors group-hover:text-sidebar-foreground group-data-[active=true]:text-sidebar-active-foreground",
+          "shrink-0 text-sidebar-muted transition-colors group-hover:text-foreground group-data-[active=true]:text-primary",
           eingeklappt || imDrawer ? "h-[18px] w-[18px]" : "h-4 w-4",
         )}
-        strokeWidth={aktiv ? 2 : 1.75}
+        strokeWidth={1.75}
         aria-hidden="true"
       />
       <span className={cn("truncate", eingeklappt && "sr-only")}>{item.label}</span>
@@ -67,14 +63,14 @@ export function SidebarItem({
         (eingeklappt ? (
           <span
             data-tone={ton}
-            className="absolute right-1 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-sidebar-badge px-1 text-[10px] font-semibold tabular-nums text-sidebar-foreground data-[tone=danger]:bg-destructive data-[tone=danger]:text-white"
+            className="absolute right-0.5 top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-sm bg-sidebar-badge px-1 text-[10px] font-semibold tabular-nums text-foreground-secondary data-[tone=danger]:bg-destructive-soft data-[tone=danger]:text-destructive-text"
           >
             {badge > 99 ? "99+" : badge}
           </span>
         ) : (
           <span
             data-tone={ton}
-            className="ml-auto inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-sidebar-badge px-1.5 text-2xs font-semibold tabular-nums text-sidebar-foreground data-[tone=danger]:bg-destructive data-[tone=danger]:text-white"
+            className="ml-auto inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-sm px-1 text-xs font-medium tabular-nums text-foreground-tertiary data-[tone=danger]:bg-destructive-soft data-[tone=danger]:text-destructive-text"
           >
             {badge > 99 ? "99+" : badge}
           </span>
@@ -126,10 +122,10 @@ export function SidebarButton({
       data-state={offen ? "open" : "closed"}
       aria-label={eingeklappt ? label : undefined}
       className={cn(
-        "group relative flex w-full items-center rounded-md text-13 font-medium text-sidebar-foreground/85",
-        "hover:bg-sidebar-hover hover:text-sidebar-foreground data-[state=open]:bg-sidebar-hover",
+        "group relative flex w-full items-center rounded-md text-sm font-medium text-sidebar-foreground",
+        "hover:bg-sidebar-hover hover:text-foreground data-[state=open]:bg-sidebar-hover",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/70",
-        eingeklappt ? "mx-auto h-10 w-10 justify-center px-0" : "h-8 gap-2.5 px-2",
+        eingeklappt ? "mx-auto h-9 w-9 justify-center px-0" : "h-8 gap-2.5 px-2.5",
         className,
       )}
     >

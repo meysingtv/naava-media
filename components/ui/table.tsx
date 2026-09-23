@@ -4,8 +4,8 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Datentabelle v3: 44-px-Zeilen, klebender Kopf in Satzschrift (keine
- * Versalien), Haarlinien nur INNERHALB des Panels, Zahlen tabellarisch.
+ * Tabelle v4: 44-px-Zeilen, 13 px, klebender Kopf in Satzschrift auf
+ * hellgrauem Grund, 1-px-Linien, Zahlen tabellarisch und rechtsbündig.
  */
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
@@ -50,8 +50,8 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
     <tr
       ref={ref}
       className={cn(
-        "h-11 border-b border-border transition-colors duration-fast hover:bg-surface-muted/70",
-        "data-[state=selected]:bg-primary-soft/60 data-[state=selected]:shadow-[inset_3px_0_0_hsl(var(--primary))]",
+        "h-11 border-b border-border transition-colors duration-fast hover:bg-surface-muted",
+        "data-[state=selected]:bg-primary-soft",
         className,
       )}
       {...props}
@@ -79,7 +79,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
       ref={ref}
       aria-sort={sortable ? (sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : "none") : undefined}
       className={cn(
-        "h-10 whitespace-nowrap px-3 align-middle text-xs font-medium text-foreground-secondary first:pl-4 last:pr-4",
+        "h-9 whitespace-nowrap px-3 align-middle text-xs font-medium text-foreground-secondary first:pl-4 last:pr-4",
         "[&:has([role=checkbox])]:w-10 [&:has([role=checkbox])]:pr-0",
         ausrichtung[align],
         className,

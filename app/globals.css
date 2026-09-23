@@ -3,112 +3,109 @@
 @tailwind utilities;
 
 /* ---------------------------------------------------------------------
-   Designsystem v3 – „Werkbank"
-   Warm-helle Arbeitsfläche (#F7F7F5), weiße Panels mit weichem Schatten
-   statt Haarlinien, Tinte-Sidebar links, Markengrün nur für Aktion,
-   aktive Zustände und Links. Vier Statusfarben, sonst Tinte/Grau/Weiß.
-   Jede Farbe existiert in drei Rollen: Fläche, Soft-Fläche, Text.
+   Designsystem v4 – „Arbeitswerkzeug"
+   Eine weiße Fläche für Navigation und Inhalt. Getrennt wird mit feinen
+   1-px-Linien, nicht mit Schatten und nicht mit grauen Hintergründen.
+   Kühle Graustufen tragen die Hierarchie; Kobaltblau erscheint nur beim
+   Hauptknopf, an Links und beim Fokus. Statusfarben sind gedämpft und
+   stehen meist nur im Punkt, nicht in der Fläche.
+   Schatten gibt es ausschließlich für schwebende Ebenen (Menü, Dialog).
    --------------------------------------------------------------------- */
 @layer base {
   :root {
     /* Flächen */
-    --canvas: 60 11% 96%; /* #F7F7F5 – Arbeitsfläche */
-    --background: 60 11% 96%; /* = canvas (Seite) */
-    --foreground: 163 17% 8%; /* #111816 – Tinte */
+    --canvas: 0 0% 100%; /* #FFFFFF – eine Fläche für alles */
+    --background: 0 0% 100%;
+    --foreground: 225 14% 10%; /* #16181D */
 
-    --card: 0 0% 100%; /* Panels */
-    --card-foreground: 163 17% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 225 14% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 163 17% 8%;
+    --popover-foreground: 225 14% 10%;
 
-    --surface: 0 0% 100%; /* Alias Weiß */
-    --surface-muted: 90 8% 95%; /* #F2F3F1 – Tabellenkopf, Zeilen-Hover, Zonen */
+    --surface: 0 0% 100%;
+    --surface-muted: 220 20% 97.5%; /* #F8F9FA – Tabellenkopf, Zeilen-Hover */
 
     /* Text-Stufen */
-    --text-secondary: 150 8% 39%; /* #5B6B63 – 5,6:1 auf Weiß */
-    --text-tertiary: 145 5% 56%; /* #8A968F – nur Icons, Platzhalter, Trenner, kbd */
-    --muted: 90 8% 95%;
-    --muted-foreground: 150 8% 39%; /* bewusst = Sekundär (über 170 Fließtext-Stellen) */
-    --text-disabled: 144 6% 68%; /* #A9B3AD */
+    --text-secondary: 222 9% 40%; /* #5D6370 – 6,1:1 auf Weiß */
+    --text-tertiary: 220 8% 57%; /* #8A909C – Icons, Platzhalter, Trenner */
+    --muted: 220 14% 96%; /* #F3F4F6 */
+    --muted-foreground: 222 9% 40%;
+    --text-disabled: 220 9% 73%; /* #B3B8C1 */
 
-    /* Marke: Markengrün */
-    --primary: 225 79% 54%; /* #2B59E6 – Kobaltblau */
+    /* Marke: Kobaltblau – sparsam */
+    --primary: 225 79% 54%; /* #2B59E6 */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 226 70% 45%; /* #2249C4 */
-    --primary-pressed: 225 71% 37%; /* #1B3CA0 */
-    --primary-soft: 224 85% 96%; /* #EBF0FE */
-    --primary-soft-strong: 222 87% 87%; /* #C2D2FB */
-    --primary-soft-border: 224 83% 79%; /* #9BB4F6 */
-    --primary-text: 225 71% 37%; /* #1B3CA0 – jeder blaue Text, 9,1:1 */
-    --accent-bright: 224 100% 65%; /* #4C7BFF – Balken am aktiven Eintrag */
+    --primary-hover: 226 70% 47%; /* #244DCC */
+    --primary-pressed: 225 71% 40%; /* #1E40AE */
+    --primary-soft: 224 90% 97%; /* #F0F4FE */
+    --primary-soft-strong: 223 88% 90%; /* #CFDCFB */
+    --primary-soft-border: 224 83% 82%;
+    --primary-text: 225 71% 42%; /* #1F44B6 – 7,4:1 */
+    --accent-bright: 224 100% 65%;
 
-    --secondary: 90 8% 95%; /* neutraler Grau-Button */
-    --secondary-foreground: 163 17% 8%;
-    --accent: 90 8% 95%; /* Radix-Konvention: Hover in Menüs */
-    --accent-foreground: 163 17% 8%;
+    --secondary: 220 14% 96%; /* neutraler Grau-Knopf */
+    --secondary-foreground: 225 14% 10%;
+    --accent: 220 14% 96%; /* Hover in Menüs */
+    --accent-foreground: 225 14% 10%;
 
-    /* Status – je Fläche, Soft-Fläche, Text */
-    --success: 152 65% 34%; /* #1E8E5A */
+    /* Status – Punkt/Fläche, helle Fläche, lesbarer Text */
+    --success: 142 64% 38%; /* #239B53 */
     --success-foreground: 0 0% 100%;
-    --success-soft: 144 43% 93%; /* #E6F5EC */
-    --success-text: 154 66% 27%; /* #17724A – 5,9:1 */
+    --success-soft: 140 60% 96%; /* #EEFAF2 */
+    --success-text: 144 64% 26%; /* #186C3D – 6,6:1 */
 
-    --warning: 38 89% 44%; /* #D48A0C */
+    --warning: 33 90% 46%; /* #DF7F0C */
     --warning-foreground: 0 0% 100%;
-    --warning-soft: 39 78% 93%; /* #FBF1DE */
-    --warning-text: 38 89% 29%; /* #8A5A08 – 5,9:1 */
+    --warning-soft: 42 90% 95%; /* #FDF6E4 */
+    --warning-text: 28 80% 32%; /* #93520F – 6,0:1 */
 
-    --destructive: 3 67% 55%; /* #D9463D */
+    --destructive: 0 70% 52%; /* #DB2F2F */
     --destructive-foreground: 0 0% 100%;
-    --destructive-soft: 3 76% 95%; /* #FCEAE9 */
-    --destructive-text: 3 62% 43%; /* #B3312A – 6,2:1 */
+    --destructive-soft: 0 80% 97%; /* #FDF1F1 */
+    --destructive-text: 0 66% 41%; /* #AE2424 – 6,9:1 */
 
-    /* Info bewusst türkis, damit es sich vom blauen Markenton abhebt */
-    --info: 192 91% 36%; /* #0891B2 */
+    --info: 199 80% 42%; /* #1588BD */
     --info-foreground: 0 0% 100%;
-    --info-soft: 191 62% 92%; /* #E0F4F8 */
-    --info-text: 193 82% 31%; /* #0E7490 – 5,4:1 */
+    --info-soft: 200 80% 96%;
+    --info-text: 201 80% 30%; /* #0F5E8A */
 
-    /* Linien & Fokus – Linien nur noch INNERHALB von Panels */
-    --border: 100 6% 90%; /* #E6E8E5 */
-    --border-strong: 132 5% 82%; /* #CFD4D0 */
-    --border-hover: 132 5% 73%; /* #B7BEB8 */
-    --input: 132 5% 82%;
+    /* Linien & Fokus */
+    --border: 220 13% 91%; /* #E5E7EB */
+    --border-strong: 216 12% 84%; /* #D1D5DB */
+    --border-hover: 218 10% 72%; /* #ADB3BD */
+    --input: 216 12% 84%;
     --ring: 225 79% 54%;
 
-    /* Sidebar – KEINE eigene Fläche: exakt die Arbeitsfläche, keine Linie,
-       kein Schatten. Die Navigation steht frei auf der Seite. */
+    /* Navigation – KEINE eigene Fläche, keine Linie: exakt die Seite. */
     --sidebar: var(--canvas);
-    --sidebar-foreground: 163 17% 8%; /* #111816 – Haupttext */
-    --sidebar-muted: 154 8% 39%; /* #5B6B63 Gruppentitel und Icons – 6,1:1 */
-    --sidebar-hover: 80 7% 92%; /* #EBEDE7 – leichte Abhebung beim Überfahren */
-    --sidebar-active: 224 85% 96%; /* #EBF0FE – helle Blaufläche */
-    --sidebar-active-foreground: 225 71% 37%; /* #1B3CA0 – 8,3:1 auf Blau */
-    --sidebar-bar: 225 79% 54%; /* #2B59E6 – Balken am aktiven Eintrag */
-    --sidebar-border: 100 6% 90%; /* #E6E8E5 – nur noch im Mobil-Drawer */
-    --sidebar-badge: 90 8% 92%; /* #EBEDE9 */
+    --sidebar-foreground: 222 12% 24%; /* #363B46 */
+    --sidebar-muted: 220 8% 50%; /* Icons */
+    --sidebar-hover: 220 14% 96%; /* #F3F4F6 */
+    --sidebar-active: 220 14% 94%; /* #EDEEF1 */
+    --sidebar-active-foreground: 225 14% 10%;
+    --sidebar-bar: 225 79% 54%;
+    --sidebar-border: 220 13% 91%; /* nur im Mobil-Drawer */
+    --sidebar-badge: 220 14% 93%;
 
     /* Maße */
-    --sidebar-w: 256px;
+    --sidebar-w: 240px;
     --header-h: 56px;
-    --radius: 0.5rem; /* 8 px = Controls */
-    --radius-control: 0.5rem; /* 8 px */
-    --radius-panel: 0.625rem; /* 10 px */
-    --radius-dialog: 0.875rem; /* 14 px */
+    --radius: 0.375rem; /* 6 px */
+    --radius-control: 0.375rem; /* 6 px – Knöpfe, Felder */
+    --radius-panel: 0.5rem; /* 8 px – Container */
+    --radius-dialog: 0.75rem; /* 12 px – Dialoge */
 
-    /* Schatten – 1-px-Ring als Kante, weicher Schatten als Höhe */
-    --shadow-panel: 0 0 0 1px rgba(15, 26, 21, 0.04), 0 1px 2px rgba(15, 26, 21, 0.06),
-      0 8px 24px -12px rgba(15, 26, 21, 0.12);
-    --shadow-control: 0 1px 2px rgba(15, 26, 21, 0.06);
-    --shadow-popover: 0 0 0 1px rgba(15, 26, 21, 0.05), 0 4px 12px -2px rgba(15, 26, 21, 0.1),
-      0 12px 32px -8px rgba(15, 26, 21, 0.16);
-    --shadow-overlay: 0 0 0 1px rgba(15, 26, 21, 0.05), 0 8px 24px -8px rgba(15, 26, 21, 0.12),
-      0 24px 64px -16px rgba(15, 26, 21, 0.28);
+    /* Kanten statt Schatten: „panel" ist eine 1-px-Linie, keine Höhe. */
+    --shadow-panel: 0 0 0 1px hsl(var(--border));
+    --shadow-control: 0 1px 2px rgba(16, 24, 40, 0.05);
+    --shadow-popover: 0 0 0 1px hsl(var(--border)), 0 8px 24px -6px rgba(16, 24, 40, 0.14);
+    --shadow-overlay: 0 0 0 1px rgba(16, 24, 40, 0.06), 0 24px 56px -16px rgba(16, 24, 40, 0.28);
   }
 
-  /* Eingeklappte Sidebar – gesetzt vom Inline-Script vor dem ersten Paint */
+  /* Eingeklappte Navigation – gesetzt vom Inline-Script vor dem ersten Paint */
   html[data-sidebar="collapsed"] {
-    --sidebar-w: 68px;
+    --sidebar-w: 64px;
   }
 }
 
@@ -121,7 +118,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 20px;
     font-variant-numeric: tabular-nums; /* Business-App: Zahlen immer tabellarisch */
     font-feature-settings: "calt" 1, "liga" 1, "cv11" 1; /* Inter: einstöckiges a */
@@ -132,7 +129,7 @@
   h2,
   h3 {
     font-weight: 600;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.011em;
   }
   a,
   button,
@@ -206,14 +203,14 @@
     color: hsl(var(--muted-foreground));
   }
 
-  /* Sidebar-Gruppentitel – die einzige Versalien-Stelle im System */
+  /* Gruppentitel in der Navigation – Satzschrift, keine Versalien */
   .nav-group {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 16px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: hsl(var(--sidebar-muted));
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: hsl(var(--text-tertiary));
   }
 
   .kbd {

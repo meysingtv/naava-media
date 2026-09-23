@@ -43,14 +43,14 @@ export function NeuMenu({ rolle: rolleProp, className }: { rolle?: FahrlehrerRol
       <DropdownMenuTrigger
         aria-label="Neu anlegen"
         className={cn(
-          "flex h-8 items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-13 font-medium text-foreground",
-          "outline-none transition-colors duration-fast hover:border-border-hover hover:bg-accent",
-          "data-[state=open]:border-border-hover data-[state=open]:bg-accent",
+          "flex h-8 items-center gap-1.5 rounded-md border border-border-strong bg-card px-2.5 text-13 font-medium text-foreground shadow-xs",
+          "outline-none transition-colors duration-fast hover:bg-surface-muted",
+          "data-[state=open]:bg-muted",
           "focus-visible:ring-2 focus-visible:ring-ring/70",
           className,
         )}
       >
-        <Plus className="h-4 w-4 shrink-0 text-primary" strokeWidth={2} aria-hidden="true" />
+        <Plus className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
         <span className="hidden sm:inline">Neu</span>
         <ChevronDown
           className="hidden h-3.5 w-3.5 shrink-0 text-muted-foreground sm:inline"

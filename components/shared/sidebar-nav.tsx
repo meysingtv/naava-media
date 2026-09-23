@@ -3,64 +3,79 @@
 import * as React from "react";
 import { usePathname } from "next/navigation";
 
-import { aktiverBereich, bereicheFuer, type Zaehler } from "@/components/shared/bereiche";
+import { aktiverBereich, bereicheFuer, type Bereich, type Zaehler } from "@/components/shared/bereiche";
 import { SidebarItem } from "@/components/shared/sidebar-item";
 import { useSidebar } from "@/components/shared/sidebar-context";
 import { cn } from "@/lib/utils";
 import type { FahrlehrerRolle } from "@/lib/types";
 
+/** Summe der Zähler aller Seiten eines Bereichs (z. B. überfällige Rechnungen → Finanzen). */
+function bereichsZaehler(b: Bereich, zaehler?: Zaehler): number | undefined {
+  let summe = 0;
+  let gefunden = false;
+  for (const i of b.items) {
+    if (i.badgeKey && zaehler?.[i.badgeKey] != null) {
+      summe += zaehler[i.badgeKey] ?? 0;
+      gefunden = true;
+    }
+  }
+  return gefunden && summe > 0 ? summe : undefined;
+}
+
 /**
- * Navigation in Gruppen – die Rollen-Sichtbarkeit kommt ausschließlich aus
- * `bereicheFuer(rolle)`. Aktiv-Erkennung über `aktiverBereich`: der längste
- * Präfix gewinnt, deshalb markiert `/fahrlehrer/rollen` „Rollen & Rechte"
- * und nicht „Fahrlehrer".
+ * Navigation v4: ein Eintrag je Bereich, keine Gruppentitel – die Gruppen
+ * trennt nur ein Abstand. Der Eintrag führt auf die erste Seite des Bereichs,
+ * die die Rolle sehen darf; die übrigen Seiten stehen als Reiter im
+ * Seitenkopf. Rollen-Sichtbarkeit ausschließlich über `bereicheFuer(rolle)`.
  *
- * Eingeklappt werden die Gruppentitel zu feinen Trennlinien – die
- * Gruppierung bleibt sichtbar.
+ * `teil="haupt"` rendert die Arbeitsbereiche, `teil="fuss"` Hilfe und
+ * Einstellungen unten in der Navigation.
  */
 export function SidebarNav({
   rolle,
   zaehler,
   imDrawer,
+  teil = "haupt",
 }: {
   rolle: FahrlehrerRolle;
   zaehler?: Zaehler;
   imDrawer?: boolean;
+  teil?: "haupt" | "fuss";
 }) {
   const pathname = usePathname();
   const { collapsed } = useSidebar();
   const eingeklappt = collapsed && !imDrawer;
   const bereiche = React.useMemo(() => bereicheFuer(rolle), [rolle]);
-  const { item: aktivItem } = aktiverBereich(bereiche, pathname);
-  const navRef = React.useRef<HTMLElement>(null);
+  const { bereich: aktiv } = aktiverBereich(bereiche, pathname);
 
-  // Aktiven Eintrag nach dem Mounten in den sichtbaren Bereich holen.
-  React.useEffect(() => {
-    navRef.current?.querySelector("[data-aktiv-eintrag]")?.scrollIntoView({ block: "nearest" });
-  }, [pathname]);
+  const sichtbar = bereiche.filter((b) => (teil === "fuss" ? b.gruppe === "fuss" : b.gruppe !== "fuss"));
+  const gruppen: Bereich[][] = [];
+  for (const b of sichtbar) {
+    const letzte = gruppen[gruppen.length - 1];
+    if (letzte && letzte[0].gruppe === b.gruppe) letzte.push(b);
+    else gruppen.push([b]);
+  }
+
+  if (sichtbar.length === 0) return null;
 
   return (
-    <nav ref={navRef} className="flex-1 overflow-y-auto scrollbar-sidebar px-3 pb-2 pt-1">
-      {bereiche.map((gruppe, gi) => (
-        <div key={gruppe.key}>
-          {eingeklappt ? (
-            gi > 0 && <div className="mx-3 my-2 h-px bg-sidebar-border" aria-hidden="true" />
-          ) : (
-            <p className={cn("nav-group px-2 pb-1 pt-4", gi === 0 && "pt-2")}>{gruppe.label.toUpperCase()}</p>
-          )}
-          <ul className="space-y-0.5">
-            {gruppe.items.map((item) => (
-              <SidebarItem
-                key={item.href}
-                item={item}
-                aktiv={aktivItem?.href === item.href}
-                badge={item.badgeKey ? zaehler?.[item.badgeKey] : undefined}
-                ton={item.badgeKey === "rechnungen_ueberfaellig" ? "danger" : "neutral"}
-                imDrawer={imDrawer}
-              />
-            ))}
-          </ul>
-        </div>
+    <nav
+      aria-label={teil === "fuss" ? "Hilfe und Einstellungen" : undefined}
+      className={cn(teil === "haupt" ? "flex-1 overflow-y-auto scrollbar-sidebar px-3 pb-2 pt-2" : "")}
+    >
+      {gruppen.map((gruppe, gi) => (
+        <ul key={gruppe[0].key} className={cn("space-y-px", gi > 0 && (eingeklappt ? "mt-3 border-t border-border pt-3" : "mt-5"))}>
+          {gruppe.map((b) => (
+            <SidebarItem
+              key={b.key}
+              item={{ href: b.items[0].href, label: b.label, icon: b.icon, rollen: b.items[0].rollen }}
+              aktiv={aktiv?.key === b.key}
+              badge={bereichsZaehler(b, zaehler)}
+              ton={b.key === "finanzen" ? "danger" : "neutral"}
+              imDrawer={imDrawer}
+            />
+          ))}
+        </ul>
       ))}
     </nav>
   );

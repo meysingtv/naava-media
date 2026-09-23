@@ -118,14 +118,14 @@ const config: Config = {
         },
       },
       borderRadius: {
-        sm: "0.375rem", // 6px – Checkbox, Menü-Items
-        md: "var(--radius-control)", // 8px – Buttons, Inputs, Chips
-        lg: "var(--radius-panel)", // 10px – Panels, Popover
-        xl: "var(--radius-panel)", // 10px – Panels (Alias)
-        "2xl": "var(--radius-dialog)", // 14px – Dialog, Kommandopalette
+        sm: "0.25rem", // 4px – Checkbox, Menü-Items, Punkte-Chips
+        md: "var(--radius-control)", // 6px – Knöpfe, Felder
+        lg: "var(--radius-panel)", // 8px – Container, Popover
+        xl: "var(--radius-panel)", // 8px – Container (Alias, Bestand)
+        "2xl": "var(--radius-dialog)", // 12px – Dialog, Kommandopalette
       },
       boxShadow: {
-        // v3: der 1-px-Ring gibt die Kante, der weiche Schatten die Höhe
+        // v4: „panel" ist eine 1-px-Kante ohne Höhe; Höhe nur für Schwebendes
         xs: "var(--shadow-control)",
         sm: "var(--shadow-control)",
         DEFAULT: "var(--shadow-panel)",
@@ -146,9 +146,10 @@ const config: Config = {
       fontSize: {
         // Tailwind-Standardgrößen bleiben (Marketing + Portal nutzen sie).
         "2xs": ["0.6875rem", { lineHeight: "1rem" }], // 11
-        "13": ["0.8125rem", { lineHeight: "1.25rem" }], // 13 – Body der App
-        kpi: ["1.375rem", { lineHeight: "1.75rem" }], // 22 – KPI-Wert
-        "kpi-lg": ["1.75rem", { lineHeight: "2.125rem" }], // 28 – KPI hervorgehoben
+        "13": ["0.8125rem", { lineHeight: "1.25rem" }], // 13 – Tabellen, dichte Listen
+        title: ["1.25rem", { lineHeight: "1.75rem", letterSpacing: "-0.014em" }], // 20 – Seitentitel
+        kpi: ["1.5rem", { lineHeight: "2rem", letterSpacing: "-0.02em" }], // 24 – Kennzahl
+        "kpi-lg": ["1.875rem", { lineHeight: "2.25rem", letterSpacing: "-0.02em" }], // 30
       },
       spacing: {
         "9.5": "2.375rem", // 38 px – Inputs, Button size="lg"

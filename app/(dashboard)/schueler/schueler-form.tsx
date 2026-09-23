@@ -72,7 +72,7 @@ export function SchuelerForm({ schueler }: { schueler?: Fahrschueler }) {
   }
 
   const titel = schueler ? `${schueler.vorname} ${schueler.nachname}` : "Neuer Schüler";
-  const abbrechenHref = schueler ? `/schueler?id=${schueler.id}` : "/schueler";
+  const abbrechenHref = schueler ? `/schueler/${schueler.id}` : "/schueler";
   const heute = new Date().toISOString().slice(0, 10);
 
   const tabCls = (aktiv: boolean) =>

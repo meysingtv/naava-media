@@ -58,16 +58,16 @@ export function FahrschulSwitcher({
       className={cn(
         "flex items-center rounded-md outline-none transition-colors duration-fast",
         "hover:bg-sidebar-hover data-[state=open]:bg-sidebar-hover",
-        "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sidebar-bar/70",
-        eingeklappt ? "h-11 w-11 justify-center" : "h-10 w-full gap-2.5 px-2",
+        "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/70",
+        eingeklappt ? "h-10 w-10 justify-center" : "h-10 w-full gap-2.5 px-2",
       )}
     >
       {marke}
       {!eingeklappt && (
         <>
           <span className="min-w-0 flex-1 text-left">
-            <span className="block truncate text-13 font-semibold text-sidebar-foreground">{fahrschuleName}</span>
-            {ort && <span className="block truncate text-2xs text-sidebar-muted">{ort}</span>}
+            <span className="block truncate text-sm font-semibold text-foreground">{fahrschuleName}</span>
+            {ort && <span className="block truncate text-xs text-foreground-tertiary">{ort}</span>}
           </span>
           <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-sidebar-muted" strokeWidth={1.75} aria-hidden="true" />
         </>

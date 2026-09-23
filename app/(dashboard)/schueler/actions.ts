@@ -126,9 +126,9 @@ export async function schuelerSpeichern(
       .upsert(rows, { onConflict: "schueler_id,klasse", ignoreDuplicates: true });
   }
 
-  revalidatePath("/schueler");
+  revalidatePath("/schueler", "layout");
   if (schuelerId) revalidatePath(`/schueler/${schuelerId}`);
-  redirect(`/schueler?id=${schuelerId}`);
+  redirect(`/schueler/${schuelerId}`);
 }
 
 /** Aktiviert den Portal-Zugang und erzeugt einen Zugangscode. */
@@ -138,7 +138,7 @@ export async function portalZugangAktivieren(formData: FormData): Promise<void> 
   const code = Math.random().toString(36).slice(2, 8).toUpperCase();
   const supabase = createClient();
   await supabase.from("fahrschueler").update({ portal_aktiv: true, portal_code: code }).eq("id", id);
-  revalidatePath(`/schueler`);
+  revalidatePath("/schueler", "layout");
 }
 
 /** Sperrt den Portal-Zugang und trennt die Verknüpfung zum Konto. */
@@ -147,7 +147,7 @@ export async function portalZugangSperren(formData: FormData): Promise<void> {
   if (!id) return;
   const supabase = createClient();
   await supabase.from("fahrschueler").update({ portal_aktiv: false, user_id: null }).eq("id", id);
-  revalidatePath(`/schueler`);
+  revalidatePath("/schueler", "layout");
 }
 
 /** Löscht einen Schüler vollständig (DSGVO – inkl. abhängiger Datensätze per Cascade). */
@@ -158,6 +158,6 @@ export async function schuelerLoeschen(formData: FormData): Promise<void> {
   const supabase = createClient();
   await supabase.from("fahrschueler").delete().eq("id", id);
 
-  revalidatePath("/schueler");
+  revalidatePath("/schueler", "layout");
   redirect("/schueler");
 }

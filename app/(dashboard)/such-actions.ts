@@ -100,7 +100,7 @@ export async function globalSuche(query: string): Promise<SuchTreffer[]> {
       id: String(s.id),
       titel: `${s.vorname} ${s.nachname}`,
       untertitel,
-      href: `/schueler?id=${s.id}`,
+      href: `/schueler/${s.id}`,
     });
   }
 
@@ -124,7 +124,7 @@ export async function globalSuche(query: string): Promise<SuchTreffer[]> {
         id: String(s.id),
         titel: `${s.vorname} ${s.nachname}`,
         untertitel: s.ort ?? klassen,
-        href: `/schueler?id=${s.id}`,
+        href: `/schueler/${s.id}`,
       });
     }
   }

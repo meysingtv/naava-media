@@ -57,7 +57,7 @@ export default async function AusbildungsnachweisPage({ params }: { params: { id
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <Button asChild variant="ghost" size="sm">
-          <Link href={`/schueler?id=${s.id}`}>
+          <Link href={`/schueler/${s.id}`}>
             <ArrowLeft className="h-4 w-4" /> Zurück
           </Link>
         </Button>

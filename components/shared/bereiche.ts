@@ -6,7 +6,6 @@ import {
   BookMarked,
   BookOpen,
   Building,
-  Building2,
   CalendarDays,
   Car,
   CheckSquare,
@@ -29,10 +28,14 @@ import {
 import type { FahrlehrerRolle } from "@/lib/types";
 
 /**
- * Navigation v3: sechs Gruppen in der linken Sidebar. `BEREICHE`,
- * `bereicheFuer` und `aktiverBereich` bleiben die einzige Quelle für
- * Einträge und Rollen-Sichtbarkeit – die Rollen sind gegenüber v2
- * unverändert.
+ * Navigation v4: zehn Bereiche in der linken Navigation, darunter Hilfe und
+ * Einstellungen. Hat ein Bereich mehrere Seiten, stehen sie als Reiter im
+ * Seitenkopf (`bereich-reiter.tsx`) – die Navigation bleibt kurz und passt
+ * ohne Scrollen auf den Bildschirm.
+ *
+ * `BEREICHE`, `bereicheFuer` und `aktiverBereich` bleiben die einzige
+ * Quelle für Einträge und Rollen-Sichtbarkeit. Alle Adressen sind dieselben
+ * wie vorher.
  */
 export interface BereichItem {
   href: string;
@@ -47,8 +50,10 @@ export interface BereichItem {
 export interface Bereich {
   key: string;
   label: string;
-  /** Gruppen-Icon – bleibt im Typ, wird von der Sidebar nicht gerendert. */
+  /** Icon des Bereichs in der Navigation. */
   icon: LucideIcon;
+  /** Optische Gruppe in der Navigation (Abstand statt Überschrift). */
+  gruppe: "arbeit" | "betrieb" | "geschaeft" | "fuss";
   items: BereichItem[];
 }
 
@@ -58,40 +63,76 @@ const CHEF_LEHRER: FahrlehrerRolle[] = ["chef", "fahrlehrer"];
 
 export const BEREICHE: Bereich[] = [
   {
-    key: "uebersicht",
-    label: "Übersicht",
+    key: "leitstand",
+    label: "Leitstand",
     icon: LayoutDashboard,
+    gruppe: "arbeit",
+    items: [{ href: "/dashboard", label: "Leitstand", rollen: ALLE, icon: LayoutDashboard }],
+  },
+  {
+    key: "aufgaben",
+    label: "Aufgaben",
+    icon: CheckSquare,
+    gruppe: "arbeit",
+    items: [{ href: "/aufgaben", label: "Aufgaben", rollen: ALLE, icon: CheckSquare, badgeKey: "aufgaben" }],
+  },
+  {
+    key: "kalender",
+    label: "Kalender",
+    icon: CalendarDays,
+    gruppe: "arbeit",
+    items: [{ href: "/kalender", label: "Kalender", rollen: CHEF_LEHRER, icon: CalendarDays }],
+  },
+  {
+    key: "kommunikation",
+    label: "Kommunikation",
+    icon: MessageSquare,
+    gruppe: "arbeit",
     items: [
-      { href: "/dashboard", label: "Leitstand", rollen: ALLE, icon: LayoutDashboard },
-      { href: "/aufgaben", label: "Aufgaben", rollen: ALLE, icon: CheckSquare, badgeKey: "aufgaben" },
-      { href: "/kommunikation", label: "Kommunikation", rollen: ALLE, icon: MessageSquare },
+      { href: "/kommunikation", label: "Nachrichten", rollen: ALLE, icon: MessageSquare },
+      { href: "/erinnerungen", label: "Terminerinnerungen", rollen: ALLE, icon: Bell },
     ],
+  },
+  {
+    key: "schueler",
+    label: "Schüler",
+    icon: Users,
+    gruppe: "betrieb",
+    items: [{ href: "/schueler", label: "Schüler", rollen: ALLE, icon: Users }],
   },
   {
     key: "ausbildung",
     label: "Ausbildung",
     icon: GraduationCap,
+    gruppe: "betrieb",
     items: [
-      { href: "/schueler", label: "Schüler", rollen: ALLE, icon: Users },
-      { href: "/fahrlehrer", label: "Fahrlehrer", rollen: ["chef"], icon: Contact },
       { href: "/theorie", label: "Theorie", rollen: ALLE, icon: BookOpen },
       { href: "/kurse", label: "Kurse", rollen: ALLE, icon: GraduationCap },
       { href: "/pruefungen", label: "Prüfungen", rollen: CHEF_LEHRER, icon: ClipboardCheck },
     ],
   },
   {
-    key: "termine",
-    label: "Termine",
-    icon: CalendarDays,
+    key: "team",
+    label: "Team",
+    icon: Contact,
+    gruppe: "betrieb",
     items: [
-      { href: "/kalender", label: "Kalender", rollen: CHEF_LEHRER, icon: CalendarDays },
-      { href: "/erinnerungen", label: "Erinnerungen", rollen: ALLE, icon: Bell },
+      { href: "/fahrlehrer", label: "Mitarbeiter", rollen: ["chef"], icon: Contact },
+      { href: "/fahrlehrer/rollen", label: "Rollen und Rechte", rollen: ["chef"], icon: ShieldCheck },
     ],
+  },
+  {
+    key: "fahrzeuge",
+    label: "Fahrzeuge",
+    icon: Car,
+    gruppe: "betrieb",
+    items: [{ href: "/fahrzeuge", label: "Fahrzeuge", rollen: CHEF_BUERO, icon: Car }],
   },
   {
     key: "finanzen",
     label: "Finanzen",
     icon: Wallet,
+    gruppe: "geschaeft",
     items: [
       { href: "/finanzen", label: "Übersicht", rollen: CHEF_BUERO, icon: Wallet },
       {
@@ -109,24 +150,28 @@ export const BEREICHE: Bereich[] = [
     ],
   },
   {
-    key: "betrieb",
-    label: "Betrieb",
-    icon: Building2,
-    items: [
-      { href: "/fahrzeuge", label: "Fahrzeuge", rollen: CHEF_BUERO, icon: Car },
-      { href: "/fahrlehrer/rollen", label: "Rollen & Rechte", rollen: ["chef"], icon: ShieldCheck },
-      { href: "/einstellungen", label: "Einstellungen", rollen: ["chef"], icon: Settings },
-      { href: "/hilfe", label: "Hilfe", rollen: ALLE, icon: LifeBuoy },
-    ],
-  },
-  {
     key: "auswertung",
     label: "Auswertung",
     icon: BarChart3,
+    gruppe: "geschaeft",
     items: [
-      { href: "/cockpit", label: "Cockpit", rollen: CHEF_BUERO, icon: Gauge },
       { href: "/berichte", label: "Berichte", rollen: CHEF_BUERO, icon: BarChart3 },
+      { href: "/cockpit", label: "Cockpit", rollen: CHEF_BUERO, icon: Gauge },
     ],
+  },
+  {
+    key: "einstellungen",
+    label: "Einstellungen",
+    icon: Settings,
+    gruppe: "fuss",
+    items: [{ href: "/einstellungen", label: "Einstellungen", rollen: ["chef"], icon: Settings }],
+  },
+  {
+    key: "hilfe",
+    label: "Hilfe",
+    icon: LifeBuoy,
+    gruppe: "fuss",
+    items: [{ href: "/hilfe", label: "Hilfe", rollen: ALLE, icon: LifeBuoy }],
   },
 ];
 
@@ -149,5 +194,22 @@ export function aktiverBereich(bereiche: Bereich[], pathname: string): { bereich
   return best ?? { bereich: null, item: null };
 }
 
-/** Zähler an Sidebar-Einträgen – nur gesetzt, wenn die Zahl ohne Extrakosten anfällt. */
+/**
+ * Reiter für den Seitenkopf: nur auf den Startseiten eines Bereichs mit
+ * mehreren Seiten (nicht auf Detail- oder Formularseiten).
+ */
+export function bereichsReiter(
+  bereiche: Bereich[],
+  pathname: string,
+): { bereich: Bereich; aktiv: BereichItem } | null {
+  const pfad = pathname.replace(/\/+$/, "") || "/";
+  for (const b of bereiche) {
+    if (b.items.length < 2) continue;
+    const aktiv = b.items.find((i) => i.href === pfad);
+    if (aktiv) return { bereich: b, aktiv };
+  }
+  return null;
+}
+
+/** Zähler an Navigationseinträgen – nur gesetzt, wenn die Zahl ohne Extrakosten anfällt. */
 export type Zaehler = Partial<Record<NonNullable<BereichItem["badgeKey"]>, number>>;

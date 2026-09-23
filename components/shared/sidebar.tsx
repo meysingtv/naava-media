@@ -29,8 +29,8 @@ export interface SidebarProps {
 /**
  * Gemeinsames Innenleben von fester Sidebar und Mobil-Drawer.
  *
- * Die Sidebar trägt ausschließlich NAVIGATION. Suche und „Neu" sitzen in der
- * Kopfzeile der Seite (`page-topbar.tsx` → `header-tools.tsx`).
+ * Die Navigation trägt ausschließlich Navigation. Suche, „Neu" und Glocke
+ * sitzen in der App-Leiste oben (`app-bar.tsx`).
  */
 function SidebarInhalt({ imDrawer, ...props }: SidebarProps & { imDrawer?: boolean }) {
   const { collapsed, umschalten, setAssistentOffen } = useSidebar();
@@ -51,12 +51,12 @@ function SidebarInhalt({ imDrawer, ...props }: SidebarProps & { imDrawer?: boole
       {/* B – Navigation */}
       <SidebarNav rolle={props.rolle} zaehler={props.zaehler} imDrawer={imDrawer} />
 
-      {/* C – Fuß */}
-      <div className="mt-auto space-y-1 p-3 pt-4">
+      {/* C – Fuß: Hilfe, Einstellungen, Assistent, Konto */}
+      <div className="mt-auto space-y-px px-3 pb-3 pt-4">
+        <SidebarNav rolle={props.rolle} imDrawer={imDrawer} teil="fuss" />
         <SidebarButton
           icon={Sparkles}
           label="Assistent"
-          iconClassName="text-primary"
           onClick={() => setAssistentOffen(true)}
           imDrawer={imDrawer}
         />
@@ -83,7 +83,7 @@ function SidebarInhalt({ imDrawer, ...props }: SidebarProps & { imDrawer?: boole
 }
 
 /**
- * Feste Sidebar (≥ 1024 px): 256 px, eingeklappt 68 px. Die Breite kommt
+ * Feste Navigation (≥ 1024 px): 240 px, eingeklappt 64 px. Die Breite kommt
  * ausschließlich aus CSS (`--sidebar-w`), nie aus React-State.
  */
 export function Sidebar(props: SidebarProps) {

@@ -1,14 +1,20 @@
 import Link from "next/link";
-import { Check, ChevronLeft, FileSignature, FileText, Mail, MapPin, Pencil, Phone, Smartphone } from "lucide-react";
+import { notFound } from "next/navigation";
+import { Check, FileSignature, FileText, Pencil, Smartphone } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
-import { Badge } from "@/components/ui/badge";
+import { Abschnitt, AbschnittLeer, AbschnittLink } from "@/components/ui/abschnitt";
+import { Badge, StatusDot } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Eigenschaft, Eigenschaften } from "@/components/ui/eigenschaften";
+import { KpiCard, KpiRow } from "@/components/ui/kpi-card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SchuelerAvatar } from "@/components/shared/schueler-avatar";
+import { DetailKopf } from "@/components/shared/detail-kopf";
 import { LoeschenDialog } from "@/components/shared/loeschen-dialog";
+import { SchuelerAvatar } from "@/components/shared/schueler-avatar";
 import { FAHRSTUNDE_TYPEN, RECHNUNG_STATUS, THEORIE_GRUNDSTOFF, pflichtFahrtenFuer, theoriePflichtFuer } from "@/lib/constants";
-import { cn, formatDatum, formatEuro, formatUhrzeit, initialen } from "@/lib/utils";
+import { cn, formatDatum, formatEuro, formatUhrzeit } from "@/lib/utils";
 import type { Dokument, Fahrschueler, Fahrstunde, Rate, Rechnung } from "@/lib/types";
 import { portalZugangAktivieren, portalZugangSperren, schuelerLoeschen } from "./actions";
 import { DokumenteBox } from "./dokumente-box";
@@ -30,40 +36,36 @@ function alterVon(geb: string | null): number | null {
   return a;
 }
 
-/** Kompakte Datenzeile: Label links, Wert rechts. */
-function Zeile({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between gap-3 py-1.5 text-[13px]">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-right font-medium text-foreground">{children}</span>
-    </div>
-  );
+function kurzDatum(iso: string): string {
+  const d = new Date(`${iso}T12:00:00`);
+  return d.toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" });
 }
 
-/** Fortschrittsbalken mit Soll/Ist. */
-function Balken({ label, ist, soll }: { label: string; ist: number; soll: number }) {
+/** Fortschrittszeile: Bezeichnung, Balken, „4 von 5". */
+function Fortschritt({ label, ist, soll }: { label: string; ist: number; soll: number }) {
   const prozent = soll > 0 ? Math.min(100, Math.round((ist / soll) * 100)) : 100;
-  const fertig = ist >= soll;
+  const fertig = soll > 0 && ist >= soll;
   return (
-    <div className="py-1.5">
-      <div className="mb-1 flex items-center justify-between text-[13px]">
-        <span className="text-foreground">{label}</span>
-        <span className={cn("tabular-nums", fertig ? "font-semibold text-success" : "text-muted-foreground")}>
-          {ist} / {soll}
-        </span>
-      </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-surface-muted">
-        <div className={cn("h-full rounded-full", fertig ? "bg-success" : "bg-primary")} style={{ width: `${prozent}%` }} />
-      </div>
+    <div className="grid grid-cols-[minmax(0,160px)_minmax(0,1fr)_72px] items-center gap-4 py-2">
+      <span className="truncate text-13 text-foreground">{label}</span>
+      <span className="h-1.5 overflow-hidden rounded-full bg-muted">
+        <span
+          className={cn("block h-full rounded-full", fertig ? "bg-success" : "bg-foreground/75")}
+          style={{ width: `${prozent}%` }}
+        />
+      </span>
+      <span className={cn("text-right text-13 tabular-nums", fertig ? "text-success-text" : "text-foreground-secondary")}>
+        {ist} von {soll}
+      </span>
     </div>
   );
 }
 
-/** Panel-Abschnitt in der Akte. */
-function Block({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
+/** Abschnitt der rechten Eigenschaftsspalte – ohne Kasten, getrennt durch Linien. */
+function Seitenblock({ titel, children }: { titel: string; children: React.ReactNode }) {
   return (
-    <section className={cn("rounded-xl bg-card shadow-panel px-4 py-3", className)}>
-      <h3 className="label-caps mb-1.5">{title}</h3>
+    <section className="py-5 first:pt-0">
+      <h2 className="mb-2 text-13 font-semibold text-foreground">{titel}</h2>
       {children}
     </section>
   );
@@ -73,9 +75,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
   const supabase = createClient();
 
   const { data: schueler } = await supabase.from("fahrschueler").select("*").eq("id", schuelerId).maybeSingle();
-  if (!schueler) {
-    return <div className="rounded-xl bg-card shadow-panel p-6 text-[13px] text-muted-foreground">Schüler nicht gefunden.</div>;
-  }
+  if (!schueler) notFound();
   const s = schueler as Fahrschueler;
 
   const [fahrstundenRes, rechnungenRes, theorieRes, dokumentRes, ratenRes] = await Promise.all([
@@ -107,12 +107,17 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
   const dokumente = dokumentRes.data ?? [];
   const raten = ratenRes.data ?? [];
 
+  const heute = new Date().toISOString().slice(0, 10);
   const abgeschlossen = fahrstunden.filter((f) => f.status === "abgeschlossen");
   const zaehle = (typ: Fahrstunde["typ"]) => abgeschlossen.filter((f) => f.typ === typ).length;
   const ueberland = zaehle("ueberland");
   const autobahn = zaehle("autobahn");
   const nacht = zaehle("nacht");
   const fehlstunden = fahrstunden.filter((f) => f.status === "ausgefallen").length;
+  const kommende = fahrstunden
+    .filter((f) => f.status === "geplant" && f.datum >= heute)
+    .sort((a, b) => (a.datum + a.uhrzeit).localeCompare(b.datum + b.uhrzeit))
+    .slice(0, 5);
 
   const primaerKlasse = s.fuehrerscheinklassen?.[0] ?? "B";
   const pflicht = pflichtFahrtenFuer(primaerKlasse);
@@ -123,51 +128,43 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
 
   const gesamt = rechnungen.reduce((sum, r) => sum + Number(r.betrag_brutto ?? 0), 0);
   const bezahlt = rechnungen.filter((r) => r.status === "bezahlt").reduce((sum, r) => sum + Number(r.betrag_brutto ?? 0), 0);
-  const saldo = bezahlt - gesamt;
+  const offen = gesamt - bezahlt;
 
-  const lehrerMap = new Map<string, string>();
-  for (const f of fahrstunden) {
-    if (f.fahrlehrer) lehrerMap.set(`${f.fahrlehrer.vorname} ${f.fahrlehrer.nachname}`, initialen(f.fahrlehrer.vorname, f.fahrlehrer.nachname));
-  }
-  const lehrerKuerzel = Array.from(lehrerMap.entries());
+  const lehrerNamen = Array.from(
+    new Set(fahrstunden.filter((f) => f.fahrlehrer).map((f) => `${f.fahrlehrer!.vorname} ${f.fahrlehrer!.nachname}`)),
+  );
   const alter = alterVon(s.geburtsdatum);
 
   // Ausbildungsprozess: Stufen mit Status
   type Stufe = { key: string; label: string; sub: string; status: "done" | "current" | "todo" };
-  const stufen: Stufe[] = [];
-  stufen.push({ key: "anmeldung", label: "Anmeldung", sub: formatDatum(s.anmeldedatum), status: "done" });
-  const theorieDone = s.theorie_bestanden;
-  stufen.push({
-    key: "theorie",
-    label: "Theorie",
-    sub: theorieDone ? "bestanden" : `${theorieBesucht}/${THEORIE_GRUNDSTOFF} Einheiten`,
-    status: theorieDone ? "done" : "current",
-  });
-  stufen.push({
-    key: "sonder",
-    label: "Sonderfahrten",
-    sub: `${ueberland + autobahn + nacht}/${pflicht.ueberland + pflicht.autobahn + pflicht.nacht}`,
-    status: sonderfahrtenOk ? "done" : theorieDone ? "current" : "todo",
-  });
-  stufen.push({
-    key: "reif",
-    label: "Prüfungsreif",
-    sub: pruefungsreif ? "ja" : "noch nicht",
-    status: pruefungsreif ? "done" : "todo",
-  });
-  stufen.push({
-    key: "praxis",
-    label: "Praxisprüfung",
-    sub: s.ausbildung_beendet ? "bestanden" : s.pruefung_termin ? formatDatum(s.pruefung_termin) : "kein Termin",
-    status: s.ausbildung_beendet ? "done" : pruefungsreif ? "current" : "todo",
-  });
-  stufen.push({
-    key: "fertig",
-    label: "Führerschein",
-    sub: s.ausbildung_beendet ? "abgeschlossen" : "offen",
-    status: s.ausbildung_beendet ? "done" : "todo",
-  });
-  // Erste "current" ermitteln, falls keine gesetzt
+  const stufen: Stufe[] = [
+    { key: "anmeldung", label: "Anmeldung", sub: formatDatum(s.anmeldedatum), status: "done" },
+    {
+      key: "theorie",
+      label: "Theorie",
+      sub: s.theorie_bestanden ? "Bestanden" : `${theorieBesucht} von ${THEORIE_GRUNDSTOFF} Lektionen`,
+      status: s.theorie_bestanden ? "done" : "current",
+    },
+    {
+      key: "sonder",
+      label: "Sonderfahrten",
+      sub: `${Math.min(ueberland, pflicht.ueberland) + Math.min(autobahn, pflicht.autobahn) + Math.min(nacht, pflicht.nacht)} von ${pflicht.ueberland + pflicht.autobahn + pflicht.nacht}`,
+      status: sonderfahrtenOk ? "done" : s.theorie_bestanden ? "current" : "todo",
+    },
+    { key: "reif", label: "Prüfungsreif", sub: pruefungsreif ? "Ja" : "Noch nicht", status: pruefungsreif ? "done" : "todo" },
+    {
+      key: "praxis",
+      label: "Praxisprüfung",
+      sub: s.ausbildung_beendet ? "Bestanden" : s.pruefung_termin ? formatDatum(s.pruefung_termin) : "Kein Termin",
+      status: s.ausbildung_beendet ? "done" : pruefungsreif ? "current" : "todo",
+    },
+    {
+      key: "fertig",
+      label: "Führerschein",
+      sub: s.ausbildung_beendet ? "Ausgehändigt" : "Offen",
+      status: s.ausbildung_beendet ? "done" : "todo",
+    },
+  ];
   if (!stufen.some((x) => x.status === "current")) {
     const idx = stufen.findIndex((x) => x.status === "todo");
     if (idx >= 0) stufen[idx].status = "current";
@@ -178,43 +175,33 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
     { label: "Erste-Hilfe-Kurs", ok: Boolean(s.erste_hilfe_am), datum: s.erste_hilfe_am },
     { label: "Passbild", ok: s.passbild_ok, datum: null },
     { label: "Ausweiskopie", ok: s.ausweis_ok, datum: null },
-    { label: "Antrag Behörde", ok: Boolean(s.antrag_gestellt_am), datum: s.antrag_gestellt_am },
+    { label: "Antrag bei der Behörde", ok: Boolean(s.antrag_gestellt_am), datum: s.antrag_gestellt_am },
   ];
 
   return (
-    <div className="space-y-3">
-      <Link href="/schueler" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground xl:hidden">
-        <ChevronLeft className="h-3.5 w-3.5" /> Zurück zur Liste
-      </Link>
-
-      {/* Kopf */}
-      <div className="rounded-xl bg-card shadow-panel">
-        <div className="flex flex-col gap-3 px-4 pb-3 pt-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <SchuelerAvatar vorname={s.vorname} nachname={s.nachname} farbe={s.avatar_farbe} className="h-11 w-11 text-sm" />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <h2 className="text-[17px] font-semibold leading-6 tracking-[-0.01em] text-foreground">
-                  {s.vorname} {s.nachname}
-                </h2>
-                {s.ausbildung_beendet ? (
-                  <Badge variant="secondary">Abgeschlossen</Badge>
-                ) : pruefungsreif ? (
-                  <Badge variant="success">Prüfungsreif</Badge>
-                ) : (
-                  <Badge variant="default">In Ausbildung</Badge>
-                )}
-              </div>
-              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-                <span>Klasse {s.fuehrerscheinklassen?.join(", ") || "—"}</span>
-                {s.kundennummer != null && <span>· #{s.kundennummer}</span>}
-                {s.geburtsdatum && <span>· {formatDatum(s.geburtsdatum)}{alter != null ? ` (${alter})` : ""}</span>}
-                {s.filiale && <span>· {s.filiale}</span>}
-                {lehrerKuerzel.length > 0 && <span>· Fahrlehrer {lehrerKuerzel.map(([, k]) => k).join(", ")}</span>}
-              </p>
-            </div>
-          </div>
-          <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+    <div>
+      <DetailKopf
+        zurueck={{ href: "/schueler", label: "Schüler" }}
+        bild={<SchuelerAvatar vorname={s.vorname} nachname={s.nachname} className="h-11 w-11 text-sm" />}
+        titel={`${s.vorname} ${s.nachname}`}
+        status={
+          s.ausbildung_beendet ? (
+            <Badge variant="secondary">Abgeschlossen</Badge>
+          ) : pruefungsreif ? (
+            <Badge variant="success">Prüfungsreif</Badge>
+          ) : (
+            <Badge variant="default">In Ausbildung</Badge>
+          )
+        }
+        meta={[
+          `Klasse ${s.fuehrerscheinklassen?.join(", ") || "—"}`,
+          s.kundennummer != null ? `Kd.-Nr. ${s.kundennummer}` : null,
+          alter != null ? `${alter} Jahre` : null,
+          s.filiale,
+          `Angemeldet am ${formatDatum(s.anmeldedatum)}`,
+        ]}
+        aktionen={
+          <>
             <Button asChild variant="outline" size="sm">
               <Link href={`/schueler/${s.id}/bearbeiten`}>
                 <Pencil /> Bearbeiten
@@ -227,257 +214,400 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
               beschreibung="Der Schüler und alle zugehörigen Daten werden dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden."
               buttonLabel=""
             />
-          </div>
-        </div>
-
-        {/* Ausbildungsprozess */}
-        <ol className="grid grid-cols-3 gap-px border-t bg-border sm:grid-cols-6">
+          </>
+        }
+      >
+        {/* Ausbildungsweg – sechs Stufen als geteilte Leiste */}
+        <ol className="mt-6 grid grid-cols-2 overflow-hidden rounded-lg bg-card shadow-panel sm:grid-cols-3 xl:grid-cols-6">
           {stufen.map((st) => (
-            <li key={st.key} className="bg-card px-3 py-2.5">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={cn(
-                    "flex h-4 w-4 items-center justify-center rounded-full border text-[9px]",
-                    st.status === "done" && "border-success bg-success text-white",
-                    st.status === "current" && "border-primary bg-primary-soft text-primary",
-                    st.status === "todo" && "border-border-strong text-transparent",
-                  )}
-                >
-                  {st.status === "done" ? <Check className="h-2.5 w-2.5" strokeWidth={3} /> : st.status === "current" ? "●" : ""}
-                </span>
-                <span className={cn("truncate text-xs font-medium", st.status === "todo" ? "text-muted-foreground" : "text-foreground")}>
+            <li
+              key={st.key}
+              className="relative px-4 pb-3 pt-4 shadow-[-1px_0_0_0_hsl(var(--border)),0_-1px_0_0_hsl(var(--border))]"
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "absolute inset-x-0 top-0 h-0.5",
+                  st.status === "done" ? "bg-success" : st.status === "current" ? "bg-primary" : "bg-transparent",
+                )}
+              />
+              <div className="flex items-center gap-2">
+                {st.status === "done" ? (
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-success text-white">
+                    <Check className="h-2.5 w-2.5" strokeWidth={3} aria-hidden="true" />
+                  </span>
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "h-4 w-4 shrink-0 rounded-full border-[1.5px]",
+                      st.status === "current" ? "border-primary bg-primary-soft" : "border-border-strong",
+                    )}
+                  />
+                )}
+                <span className={cn("truncate text-13 font-medium", st.status === "todo" ? "text-foreground-secondary" : "text-foreground")}>
                   {st.label}
                 </span>
+                <span className="sr-only">
+                  {st.status === "done" ? "erledigt" : st.status === "current" ? "aktuell" : "offen"}
+                </span>
               </div>
-              <p className="mt-0.5 truncate pl-[22px] text-[11px] tabular-nums text-muted-foreground">{st.sub}</p>
+              <p className="mt-1 truncate pl-6 text-xs tabular-nums text-foreground-tertiary">{st.sub}</p>
             </li>
           ))}
         </ol>
-      </div>
+      </DetailKopf>
 
-      {/* Reiter */}
       <Tabs defaultValue="uebersicht">
-        <TabsList className="w-full gap-5 px-1">
+        <TabsList>
           <TabsTrigger value="uebersicht">Übersicht</TabsTrigger>
-          <TabsTrigger value="fahrstunden">Fahrstunden ({fahrstunden.length})</TabsTrigger>
-          <TabsTrigger value="dokumente">Dokumente</TabsTrigger>
-          <TabsTrigger value="finanzen">Finanzen</TabsTrigger>
+          <TabsTrigger value="fahrstunden" count={fahrstunden.length}>
+            Fahrstunden
+          </TabsTrigger>
+          <TabsTrigger value="rechnungen" count={rechnungen.length}>
+            Rechnungen
+          </TabsTrigger>
+          <TabsTrigger value="dokumente" count={dokumente.length}>
+            Dokumente
+          </TabsTrigger>
           <TabsTrigger value="portal">Portal</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="uebersicht" className="mt-3 grid gap-3 xl:grid-cols-2">
-          <Block title={`Ausbildung · Klasse ${primaerKlasse}`}>
-            <Balken label="Theorie – Grundstoff" ist={theorieBesucht} soll={THEORIE_GRUNDSTOFF} />
-            {zusatzSoll > 0 && <Balken label="Theorie – Zusatzstoff" ist={0} soll={zusatzSoll} />}
-            <Balken label="Überlandfahrten" ist={ueberland} soll={pflicht.ueberland} />
-            <Balken label="Autobahnfahrten" ist={autobahn} soll={pflicht.autobahn} />
-            <Balken label="Nachtfahrten" ist={nacht} soll={pflicht.nacht} />
-            <div className="mt-1 border-t pt-1">
-              <Zeile label="Übungsstunden (normal)">{zaehle("normal")}</Zeile>
-              <Zeile label="Fehlstunden">{fehlstunden}</Zeile>
-              <Zeile label="Lernstand Theorie-App">{s.lernstatus ?? 0}%</Zeile>
+        {/* ---------------- Übersicht ---------------- */}
+        <TabsContent value="uebersicht" className="mt-6">
+          <div className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+            <div className="min-w-0 space-y-8">
+              <Abschnitt titel="Ausbildungsstand" meta={`Klasse ${primaerKlasse}`} rahmen>
+                <div className="px-4 py-2">
+                  <Fortschritt label="Theorie · Grundstoff" ist={theorieBesucht} soll={THEORIE_GRUNDSTOFF} />
+                  {zusatzSoll > 0 && <Fortschritt label="Theorie · Zusatzstoff" ist={0} soll={zusatzSoll} />}
+                  <Fortschritt label="Überlandfahrten" ist={ueberland} soll={pflicht.ueberland} />
+                  <Fortschritt label="Autobahnfahrten" ist={autobahn} soll={pflicht.autobahn} />
+                  <Fortschritt label="Nachtfahrten" ist={nacht} soll={pflicht.nacht} />
+                </div>
+                <dl className="grid grid-cols-3 border-t border-border">
+                  {[
+                    { label: "Übungsstunden", wert: String(zaehle("normal")) },
+                    { label: "Fehlstunden", wert: String(fehlstunden) },
+                    { label: "Lernstand Theorie-App", wert: `${s.lernstatus ?? 0} %` },
+                  ].map((k, i) => (
+                    <div key={k.label} className={cn("px-4 py-3", i > 0 && "border-l border-border")}>
+                      <dt className="truncate text-xs text-foreground-secondary">{k.label}</dt>
+                      <dd className="mt-0.5 text-base font-semibold tabular-nums text-foreground">{k.wert}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </Abschnitt>
+
+              <Abschnitt titel="Nächste Fahrstunden" aktion={<AbschnittLink href="/kalender">Kalender öffnen</AbschnittLink>} rahmen>
+                {kommende.length === 0 ? (
+                  <AbschnittLeer>Keine Fahrstunden geplant.</AbschnittLeer>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {kommende.map((f) => (
+                      <li key={f.id} className="flex items-center gap-4 px-4 py-3">
+                        <span className="w-24 shrink-0 tabular-nums">
+                          <span className="block text-13 font-medium text-foreground">{kurzDatum(f.datum)}</span>
+                          <span className="block text-xs text-foreground-secondary">{formatUhrzeit(f.uhrzeit)} Uhr</span>
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-13 font-medium text-foreground">{FAHRSTUNDE_TYPEN[f.typ].label}</span>
+                          <span className="block truncate text-xs text-foreground-secondary">
+                            {f.fahrlehrer ? `${f.fahrlehrer.vorname} ${f.fahrlehrer.nachname}` : "Kein Fahrlehrer"}
+                            {f.fahrzeug ? ` · ${f.fahrzeug.kennzeichen}` : ""}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-13 tabular-nums text-foreground-secondary">{f.dauer_minuten} Min.</span>
+                        <span className="w-24 shrink-0 text-right">
+                          {f.bestaetigt_am ? (
+                            <StatusDot ton="success">Bestätigt</StatusDot>
+                          ) : (
+                            <StatusDot ton="warning">Offen</StatusDot>
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Abschnitt>
+
+              {s.notizen && (
+                <Abschnitt titel="Notizen" rahmen>
+                  <p className="whitespace-pre-wrap px-4 py-3 text-13 text-foreground">{s.notizen}</p>
+                </Abschnitt>
+              )}
             </div>
-          </Block>
 
-          <div className="space-y-3">
-            <Block title="Prüfungen">
-              <Zeile label="Theorieprüfung">
-                {s.theorie_bestanden ? (
-                  <Badge variant="success">bestanden</Badge>
-                ) : s.theorie_termin ? (
-                  `${formatDatum(s.theorie_termin)} · ${s.theorie_versuch ?? 1}. Versuch`
-                ) : (
-                  "—"
-                )}
-              </Zeile>
-              <Zeile label="Praktische Prüfung">
-                {s.ausbildung_beendet ? (
-                  <Badge variant="success">bestanden</Badge>
-                ) : s.pruefung_termin ? (
-                  `${formatDatum(s.pruefung_termin)} · ${s.praxis_versuch ?? 1}. Versuch`
-                ) : (
-                  "—"
-                )}
-              </Zeile>
-              <Zeile label="Prüforganisation">{s.prueforganisation || "—"}</Zeile>
-            </Block>
-
-            <Block title="Unterlagen">
-              <ul className="divide-y">
-                {unterlagen.map((u) => (
-                  <li key={u.label} className="flex items-center justify-between gap-2 py-1.5 text-[13px]">
-                    <span className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          "flex h-3.5 w-3.5 items-center justify-center rounded-full border",
-                          u.ok ? "border-success bg-success text-white" : "border-border-strong",
-                        )}
-                      >
-                        {u.ok && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+            {/* Eigenschaftsspalte */}
+            <aside className="min-w-0 divide-y divide-border lg:border-l lg:border-border lg:pl-8">
+              <Seitenblock titel="Kontakt">
+                <Eigenschaften breite="schmal">
+                  <Eigenschaft label="Telefon">
+                    {s.telefon && (
+                      <a href={`tel:${s.telefon.replace(/\s/g, "")}`} className="hover:underline">
+                        {s.telefon}
+                      </a>
+                    )}
+                  </Eigenschaft>
+                  <Eigenschaft label="E-Mail">
+                    {s.email && (
+                      <a href={`mailto:${s.email}`} className="block truncate hover:underline">
+                        {s.email}
+                      </a>
+                    )}
+                  </Eigenschaft>
+                  <Eigenschaft label="Adresse">
+                    {(s.strasse || s.ort) && (
+                      <span>
+                        {s.strasse}
+                        {s.strasse && <br />}
+                        {[s.plz, s.ort].filter(Boolean).join(" ")}
                       </span>
-                      <span className={u.ok ? "text-foreground" : "text-muted-foreground"}>{u.label}</span>
-                    </span>
-                    <span className="text-xs tabular-nums text-muted-foreground">
-                      {u.datum ? formatDatum(u.datum) : u.ok ? "vorhanden" : "offen"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </Block>
+                    )}
+                  </Eigenschaft>
+                  <Eigenschaft label="Geburtstag">{s.geburtsdatum ? formatDatum(s.geburtsdatum) : null}</Eigenschaft>
+                </Eigenschaften>
+              </Seitenblock>
 
-            <Block title="Kontakt">
-              <div className="space-y-1.5 text-[13px]">
-                {s.telefon && (
-                  <p className="flex items-center gap-2">
-                    <Phone className="h-3.5 w-3.5 text-muted-foreground" /> {s.telefon}
-                  </p>
-                )}
-                {s.email && (
-                  <p className="flex items-center gap-2">
-                    <Mail className="h-3.5 w-3.5 text-muted-foreground" /> <span className="truncate">{s.email}</span>
-                  </p>
-                )}
-                {(s.strasse || s.ort) && (
-                  <p className="flex items-start gap-2">
-                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span>
-                      {s.strasse}
-                      {s.strasse ? ", " : ""}
-                      {[s.plz, s.ort].filter(Boolean).join(" ")}
-                    </span>
-                  </p>
-                )}
-                {!s.telefon && !s.email && !s.strasse && <p className="text-muted-foreground">Keine Kontaktdaten hinterlegt.</p>}
-              </div>
-              <div className="mt-2 border-t pt-1">
-                <Zeile label="Kostenträger">{s.kostentraeger || "—"}</Zeile>
-                <Zeile label="Preisliste">{s.preisliste || "—"}</Zeile>
-              </div>
-            </Block>
+              <Seitenblock titel="Ausbildung">
+                <Eigenschaften breite="schmal">
+                  <Eigenschaft label="Fahrlehrer">{lehrerNamen.length ? lehrerNamen.join(", ") : null}</Eigenschaft>
+                  <Eigenschaft label="Prüfstelle">{s.prueforganisation}</Eigenschaft>
+                  <Eigenschaft label="Theorie">
+                    {s.theorie_bestanden
+                      ? "Bestanden"
+                      : s.theorie_termin
+                        ? `${formatDatum(s.theorie_termin)} · ${s.theorie_versuch ?? 1}. Versuch`
+                        : null}
+                  </Eigenschaft>
+                  <Eigenschaft label="Praxis">
+                    {s.ausbildung_beendet
+                      ? "Bestanden"
+                      : s.pruefung_termin
+                        ? `${formatDatum(s.pruefung_termin)} · ${s.praxis_versuch ?? 1}. Versuch`
+                        : null}
+                  </Eigenschaft>
+                  <Eigenschaft label="Preisliste">{s.preisliste}</Eigenschaft>
+                  <Eigenschaft label="Kostenträger">{s.kostentraeger}</Eigenschaft>
+                </Eigenschaften>
+              </Seitenblock>
+
+              <Seitenblock titel="Unterlagen">
+                <ul className="space-y-0.5">
+                  {unterlagen.map((u) => (
+                    <li key={u.label} className="flex items-center justify-between gap-3 py-1 text-13">
+                      <span className="flex min-w-0 items-center gap-2">
+                        {u.ok ? (
+                          <Check className="h-3.5 w-3.5 shrink-0 text-success" strokeWidth={2.5} aria-label="vorhanden" />
+                        ) : (
+                          <span aria-label="fehlt" className="mx-[3px] h-2 w-2 shrink-0 rounded-full border-[1.5px] border-warning" />
+                        )}
+                        <span className={cn("truncate", u.ok ? "text-foreground" : "text-foreground-secondary")}>{u.label}</span>
+                      </span>
+                      <span className={cn("shrink-0 text-xs tabular-nums", u.ok ? "text-foreground-tertiary" : "text-warning-text")}>
+                        {u.datum ? formatDatum(u.datum) : u.ok ? "Liegt vor" : "Fehlt"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </Seitenblock>
+
+              <Seitenblock titel="Konto">
+                <Eigenschaften breite="schmal">
+                  <Eigenschaft label="Berechnet" className="tabular-nums">{formatEuro(gesamt)}</Eigenschaft>
+                  <Eigenschaft label="Bezahlt" className="tabular-nums">{formatEuro(bezahlt)}</Eigenschaft>
+                  <Eigenschaft label="Offen" className={cn("font-semibold tabular-nums", offen > 0 && "text-foreground")}>
+                    {formatEuro(offen)}
+                  </Eigenschaft>
+                </Eigenschaften>
+              </Seitenblock>
+            </aside>
           </div>
+        </TabsContent>
 
-          {s.notizen && (
-            <Block title="Notizen" className="xl:col-span-2">
-              <p className="whitespace-pre-wrap text-[13px] text-foreground-secondary">{s.notizen}</p>
-            </Block>
+        {/* ---------------- Fahrstunden ---------------- */}
+        <TabsContent value="fahrstunden" className="mt-6">
+          {fahrstunden.length === 0 ? (
+            <div className="rounded-lg shadow-panel">
+              <AbschnittLeer>Noch keine Fahrstunden. Termine legst du im Kalender an.</AbschnittLeer>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-lg bg-card shadow-panel">
+              <Table>
+                <TableHeader className="static">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>Datum</TableHead>
+                    <TableHead>Uhrzeit</TableHead>
+                    <TableHead>Art</TableHead>
+                    <TableHead className="hidden md:table-cell">Fahrlehrer</TableHead>
+                    <TableHead className="hidden lg:table-cell">Fahrzeug</TableHead>
+                    <TableHead align="right">Dauer</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="hidden sm:table-cell">Unterschrift</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {fahrstunden.map((f) => (
+                    <TableRow key={f.id}>
+                      <TableCell className="font-medium">{formatDatum(f.datum)}</TableCell>
+                      <TableCell muted>{formatUhrzeit(f.uhrzeit)}</TableCell>
+                      <TableCell>{FAHRSTUNDE_TYPEN[f.typ].label}</TableCell>
+                      <TableCell muted className="hidden md:table-cell">
+                        {f.fahrlehrer ? `${f.fahrlehrer.vorname} ${f.fahrlehrer.nachname}` : "—"}
+                      </TableCell>
+                      <TableCell muted className="hidden lg:table-cell">
+                        {f.fahrzeug?.kennzeichen ?? "—"}
+                      </TableCell>
+                      <TableCell numeric muted>
+                        {f.dauer_minuten} Min.
+                      </TableCell>
+                      <TableCell>
+                        {f.status === "abgeschlossen" ? (
+                          <StatusDot ton="success">Gefahren</StatusDot>
+                        ) : f.status === "ausgefallen" ? (
+                          <StatusDot ton="neutral">Ausgefallen</StatusDot>
+                        ) : (
+                          <StatusDot ton="primary">Geplant</StatusDot>
+                        )}
+                      </TableCell>
+                      <TableCell muted className="hidden sm:table-cell">
+                        {f.unterschrift ? "Liegt vor" : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </TabsContent>
 
-        <TabsContent value="fahrstunden" className="mt-3">
-          <div className="rounded-xl bg-card shadow-panel">
-            {fahrstunden.length === 0 ? (
-              <p className="px-4 py-8 text-center text-[13px] text-muted-foreground">Noch keine Fahrstunden – im Kalender eintragen.</p>
+        {/* ---------------- Rechnungen ---------------- */}
+        <TabsContent value="rechnungen" className="mt-6 space-y-8">
+          <KpiRow cols={3}>
+            <KpiCard label="Berechnet" value={formatEuro(gesamt)} sub={`${rechnungen.length} Rechnungen`} />
+            <KpiCard label="Bezahlt" value={formatEuro(bezahlt)} sub={`${rechnungen.filter((r) => r.status === "bezahlt").length} Rechnungen`} />
+            <KpiCard
+              label="Offen"
+              value={formatEuro(offen)}
+              sub={`${rechnungen.filter((r) => r.status !== "bezahlt").length} Rechnungen`}
+              tone={rechnungen.some((r) => r.status === "ueberfaellig") ? "destructive" : "neutral"}
+            />
+          </KpiRow>
+
+          <Abschnitt
+            titel="Rechnungen"
+            aktion={
+              <Button asChild variant="outline" size="sm">
+                <Link href="/rechnungen/neu">Rechnung schreiben</Link>
+              </Button>
+            }
+            rahmen
+          >
+            {rechnungen.length === 0 ? (
+              <AbschnittLeer>Noch keine Rechnungen für diesen Schüler.</AbschnittLeer>
             ) : (
-              <ul className="divide-y">
-                {fahrstunden.map((f) => {
-                  const typ = FAHRSTUNDE_TYPEN[f.typ];
-                  return (
-                    <li key={f.id} className="flex items-center gap-3 px-4 py-2 text-[13px]">
-                      <span className="w-[76px] shrink-0 tabular-nums">
-                        <span className="block font-medium text-foreground">{formatDatum(f.datum)}</span>
-                        <span className="block text-xs text-muted-foreground">{formatUhrzeit(f.uhrzeit)}</span>
-                      </span>
-                      <span className={cn("h-7 w-0.5 shrink-0 rounded-full", f.status === "ausgefallen" ? "bg-border-strong" : typ.dot)} />
-                      <span className="min-w-0 flex-1">
-                        <span className={cn("block truncate font-medium text-foreground", f.status === "ausgefallen" && "line-through text-muted-foreground")}>
-                          {typ.label}
-                        </span>
-                        <span className="block truncate text-xs text-muted-foreground">
-                          {f.fahrlehrer ? `${f.fahrlehrer.vorname} ${f.fahrlehrer.nachname}` : "Kein Lehrer"}
-                          {f.fahrzeug ? ` · ${f.fahrzeug.kennzeichen}` : ""}
-                        </span>
-                      </span>
-                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{f.dauer_minuten} Min</span>
-                      {f.unterschrift && <Check className="h-3.5 w-3.5 shrink-0 text-success" strokeWidth={2.5} aria-label="unterschrieben" />}
-                    </li>
-                  );
-                })}
-              </ul>
+              <Table>
+                <TableHeader className="static">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>Nummer</TableHead>
+                    <TableHead>Datum</TableHead>
+                    <TableHead className="hidden sm:table-cell">Fällig</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead align="right">Betrag</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rechnungen.map((r) => {
+                    const status = RECHNUNG_STATUS[r.status];
+                    return (
+                      <TableRow key={r.id}>
+                        <TableCell className="font-medium">
+                          <Link href={`/rechnungen/${r.id}`} className="hover:underline">
+                            {r.nummer}
+                          </Link>
+                        </TableCell>
+                        <TableCell muted>{formatDatum(r.rechnungsdatum)}</TableCell>
+                        <TableCell muted className="hidden sm:table-cell">
+                          {formatDatum(r.faelligkeitsdatum)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={status.variant}>{status.label}</Badge>
+                        </TableCell>
+                        <TableCell numeric className="font-medium">
+                          {formatEuro(Number(r.betrag_brutto))}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             )}
-          </div>
+          </Abschnitt>
+
+          <RatenBox schuelerId={s.id} raten={raten} />
         </TabsContent>
 
-        <TabsContent value="dokumente" className="mt-3 space-y-3">
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/schueler/${s.id}/ausbildungsnachweis`}>
-                <FileText /> Ausbildungsnachweis
+        {/* ---------------- Dokumente ---------------- */}
+        <TabsContent value="dokumente" className="mt-6 space-y-8">
+          <Abschnitt titel="Nachweise und Verträge">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Link
+                href={`/schueler/${s.id}/ausbildungsnachweis`}
+                className="flex items-center gap-3 rounded-lg bg-card p-4 shadow-panel transition-shadow hover:shadow-[0_0_0_1px_hsl(var(--border-hover))]"
+              >
+                <FileText className="h-5 w-5 shrink-0 text-foreground-tertiary" strokeWidth={1.5} />
+                <span className="min-w-0">
+                  <span className="block text-13 font-medium text-foreground">Ausbildungsnachweis</span>
+                  <span className="block text-xs text-foreground-secondary">Alle Fahrstunden mit Unterschrift</span>
+                </span>
               </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/schueler/${s.id}/vertrag`}>
-                <FileSignature /> Ausbildungsvertrag{s.vertrag_am ? " · unterschrieben" : ""}
+              <Link
+                href={`/schueler/${s.id}/vertrag`}
+                className="flex items-center gap-3 rounded-lg bg-card p-4 shadow-panel transition-shadow hover:shadow-[0_0_0_1px_hsl(var(--border-hover))]"
+              >
+                <FileSignature className="h-5 w-5 shrink-0 text-foreground-tertiary" strokeWidth={1.5} />
+                <span className="min-w-0">
+                  <span className="block text-13 font-medium text-foreground">Ausbildungsvertrag</span>
+                  <span className="block text-xs text-foreground-secondary">
+                    {s.vertrag_am ? `Unterschrieben am ${formatDatum(s.vertrag_am)}` : "Noch nicht unterschrieben"}
+                  </span>
+                </span>
               </Link>
-            </Button>
-          </div>
+            </div>
+          </Abschnitt>
           <DokumenteBox schuelerId={s.id} dokumente={dokumente} />
         </TabsContent>
 
-        <TabsContent value="finanzen" className="mt-3 grid gap-3 xl:grid-cols-2">
-          <div className="space-y-3">
-            <Block title="Konto">
-              <Zeile label="Rechnungen gesamt">{formatEuro(gesamt)}</Zeile>
-              <Zeile label="Bezahlt">{formatEuro(bezahlt)}</Zeile>
-              <div className="mt-1 flex items-center justify-between border-t pt-2">
-                <span className="text-[13px] font-medium">Saldo</span>
-                <span className={cn("text-[17px] font-semibold tabular-nums", saldo < 0 ? "text-destructive" : "text-success")}>
-                  {formatEuro(saldo)}
-                </span>
-              </div>
-            </Block>
-            <RatenBox schuelerId={s.id} raten={raten} />
-          </div>
-          <Block title="Rechnungen">
-            {rechnungen.length === 0 ? (
-              <p className="py-4 text-[13px] text-muted-foreground">Noch keine Rechnungen.</p>
-            ) : (
-              <ul className="divide-y">
-                {rechnungen.map((r) => {
-                  const status = RECHNUNG_STATUS[r.status];
-                  return (
-                    <li key={r.id}>
-                      <Link href={`/rechnungen/${r.id}`} className="flex items-center gap-3 py-2 text-[13px] hover:text-primary">
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate font-medium">{r.nummer}</span>
-                          <span className="block text-xs text-muted-foreground">{formatDatum(r.rechnungsdatum)}</span>
-                        </span>
-                        <span className="tabular-nums font-medium text-foreground">{formatEuro(Number(r.betrag_brutto))}</span>
-                        <Badge variant="outline" className={status.badge}>
-                          {status.label}
-                        </Badge>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </Block>
-        </TabsContent>
-
-        <TabsContent value="portal" className="mt-3">
-          <Block title="Schüler-Portal">
+        {/* ---------------- Portal ---------------- */}
+        <TabsContent value="portal" className="mt-6">
+          <Abschnitt titel="Schülerportal" rahmen className="max-w-2xl">
             {s.portal_aktiv ? (
-              <div className="space-y-3 text-[13px]">
-                <Zeile label="Status">
-                  {s.user_id ? <Badge variant="success">verbunden</Badge> : <Badge variant="warning">wartet auf Anmeldung</Badge>}
-                </Zeile>
-                {s.portal_code && (
-                  <div className="rounded-md border bg-surface-muted px-3 py-2">
-                    <p className="text-xs text-muted-foreground">Zugangscode</p>
-                    <p className="font-mono text-lg font-semibold tracking-[0.2em] text-foreground">{s.portal_code}</p>
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">Der Schüler meldet sich auf der Portal-Domain mit E-Mail, Passwort und diesem Code an.</p>
+              <div className="space-y-4 p-4">
+                <Eigenschaften>
+                  <Eigenschaft label="Status">
+                    {s.user_id ? <Badge variant="success">Verbunden</Badge> : <Badge variant="warning">Wartet auf Anmeldung</Badge>}
+                  </Eigenschaft>
+                  <Eigenschaft label="Zugangscode">
+                    {s.portal_code && (
+                      <span className="font-mono text-sm font-semibold tracking-[0.2em] text-foreground">{s.portal_code}</span>
+                    )}
+                  </Eigenschaft>
+                </Eigenschaften>
+                <p className="text-13 text-foreground-secondary">
+                  Der Schüler meldet sich im Portal mit E-Mail, Passwort und diesem Code an.
+                </p>
                 <form action={portalZugangSperren}>
                   <input type="hidden" name="id" value={s.id} />
-                  <Button type="submit" variant="outline" size="sm" className="text-destructive hover:bg-destructive-soft hover:text-destructive">
+                  <Button type="submit" variant="outline" size="sm" className="text-destructive-text">
                     Zugang sperren
                   </Button>
                 </form>
               </div>
             ) : (
-              <div className="space-y-3 text-[13px]">
-                <p className="text-muted-foreground">Gib dem Schüler Zugriff auf Termine, Fortschritt und Rechnungen im eigenen Portal.</p>
+              <div className="space-y-4 p-4">
+                <p className="text-13 text-foreground-secondary">
+                  Mit dem Portal sieht der Schüler seine Termine, seinen Fortschritt und seine Rechnungen.
+                </p>
                 <form action={portalZugangAktivieren}>
                   <input type="hidden" name="id" value={s.id} />
                   <Button type="submit" size="sm">
@@ -486,7 +616,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
                 </form>
               </div>
             )}
-          </Block>
+          </Abschnitt>
         </TabsContent>
       </Tabs>
     </div>

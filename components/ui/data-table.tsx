@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, MoreHorizontal, type LucideIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,8 @@ export interface DataTableProps<T> {
   onSortChange?: (s: { key: string; dir: "asc" | "desc" }) => void;
   defaultSort?: { key: string; dir: "asc" | "desc" };
 
+  /** Bezeichnung der Zeilen im Fuß („Schüler", „Rechnungen"). */
+  itemLabel?: string;
   /** Default 25; `false` schaltet die Pagination ab. */
   pageSize?: number | false;
   page?: number;
@@ -83,7 +86,7 @@ export interface DataTableProps<T> {
   mobileCard?: (row: T) => React.ReactNode;
   emptyState?: React.ReactNode;
   loading?: boolean;
-  /** Abstand des klebenden Kopfs von oben – 56 unter der Seiten-Kopfzeile. */
+  /** Abstand des klebenden Kopfs von oben (nur mit `maxHeight` wirksam). */
   stickyHeaderOffset?: number;
   maxHeight?: string;
   density?: "default" | "compact";
@@ -131,13 +134,15 @@ export function DataTable<T>({
   mobileCard,
   emptyState,
   loading,
-  stickyHeaderOffset = 56,
+  stickyHeaderOffset = 0,
   maxHeight,
   density = "default",
   footer,
   caption,
   className,
+  itemLabel = "Einträge",
 }: DataTableProps<T>) {
+  const router = useRouter();
   // Sortierung: von außen gesteuert oder intern gehalten.
   const [internSort, setInternSort] = React.useState(defaultSort);
   const aktuelleSortierung = sort ?? internSort;
@@ -238,7 +243,7 @@ export function DataTable<T>({
     <Panel padding="none" className={className}>
       {/* 1 – Filterleiste bzw. Bulk-Leiste */}
       {auswahl.size > 0 && bulkActions ? (
-        <div className="flex h-12 items-center gap-3 border-b border-border bg-primary-soft/60 px-3 text-13">
+        <div className="flex min-h-12 items-center gap-3 border-b border-border bg-primary-soft px-4 text-13">
           <span className="font-medium text-foreground">{auswahl.size} ausgewählt</span>
           {bulkActions(Array.from(auswahl))}
           <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setzeAuswahl(new Set())}>
@@ -336,13 +341,21 @@ export function DataTable<T>({
                   <TableRow
                     key={id}
                     data-state={gewaehlt ? "selected" : undefined}
-                    onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    onClick={
+                      onRowClick
+                        ? () => onRowClick(row)
+                        : href
+                          ? (e) => {
+                              if (e.metaKey || e.ctrlKey) window.open(href, "_blank");
+                              else router.push(href);
+                            }
+                          : undefined
+                    }
                     className={cn(
                       "group",
                       zeilenhoehe,
-                      onRowClick && "cursor-pointer",
-                      aktiv &&
-                        "bg-primary-soft/60 font-medium shadow-[inset_3px_0_0_hsl(var(--primary))] hover:bg-primary-soft/60",
+                      (onRowClick || href) && "cursor-pointer",
+                      aktiv && "bg-primary-soft hover:bg-primary-soft",
                     )}
                   >
                     {selectable && (
@@ -367,11 +380,11 @@ export function DataTable<T>({
                         className={cn(
                           zeilenhoehe,
                           c.hideBelow && versteckt[c.hideBelow],
-                          c.primary && "sticky left-0 bg-card group-hover:bg-surface-muted/70 md:static md:bg-transparent",
+                          c.primary && "sticky left-0 bg-card group-hover:bg-surface-muted md:static md:bg-transparent",
                         )}
                       >
                         {href && c.primary ? (
-                          <Link href={href} className="block truncate hover:underline" onClick={(e) => e.stopPropagation()}>
+                          <Link href={href} className="block min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70" onClick={(e) => e.stopPropagation()}>
                             {c.cell(row)}
                           </Link>
                         ) : (
@@ -439,35 +452,34 @@ export function DataTable<T>({
         </Table>
       </div>
 
-      {/* 4 – Pagination */}
-      {pageSize !== false && gesamt > proSeite && (
-        <div className="flex h-11 items-center justify-between border-t border-border px-3 text-xs text-muted-foreground">
+      {/* 4 – Fuß: Anzahl und Blättern */}
+      {!loading && gesamt > 0 && (
+        <div className="flex h-10 items-center justify-between border-t border-border px-4 text-13 text-foreground-secondary">
           <span className="tabular-nums">
-            {(aktuelleSeite - 1) * proSeite + 1}–{Math.min(aktuelleSeite * proSeite, gesamt)} von {gesamt}
+            {pageSize !== false && gesamt > proSeite
+              ? `${(aktuelleSeite - 1) * proSeite + 1}–${Math.min(aktuelleSeite * proSeite, gesamt)} von ${gesamt} ${itemLabel}`
+              : `${gesamt} ${itemLabel}`}
           </span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              aria-label="Vorherige Seite"
-              disabled={aktuelleSeite <= 1}
-              onClick={() => blaettere(aktuelleSeite - 1)}
-            >
-              <ChevronLeft />
-            </Button>
-            <span className="px-1 tabular-nums">
-              {aktuelleSeite} / {seiten}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              aria-label="Nächste Seite"
-              disabled={aktuelleSeite >= seiten}
-              onClick={() => blaettere(aktuelleSeite + 1)}
-            >
-              <ChevronRight />
-            </Button>
-          </div>
+          {pageSize !== false && gesamt > proSeite && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="xs"
+                disabled={aktuelleSeite <= 1}
+                onClick={() => blaettere(aktuelleSeite - 1)}
+              >
+                <ChevronLeft /> Zurück
+              </Button>
+              <Button
+                variant="outline"
+                size="xs"
+                disabled={aktuelleSeite >= seiten}
+                onClick={() => blaettere(aktuelleSeite + 1)}
+              >
+                Weiter <ChevronRight />
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </Panel>

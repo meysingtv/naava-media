@@ -10,7 +10,7 @@ const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
 const SelectValue = SelectPrimitive.Value;
 
-/** Auswahl v3: Trigger identisch zum Input (38 px), `sm` für Filterleisten. */
+/** Auswahl v4: Trigger identisch zum Eingabefeld (36 px), `sm` (32 px) für Werkzeugleisten. */
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & { triggerSize?: "sm" | "default" }
@@ -18,9 +18,9 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex w-full items-center justify-between gap-2 rounded-md border border-input bg-card text-13 text-foreground transition-[border-color,box-shadow] duration-fast ease-soft",
-      triggerSize === "sm" ? "h-8 px-2.5" : "h-9.5 px-3",
-      "hover:border-border-hover data-[placeholder]:text-foreground-disabled",
+      "flex w-full items-center justify-between gap-2 rounded-md border border-input bg-card text-foreground shadow-xs transition-[border-color,box-shadow] duration-fast ease-soft",
+      triggerSize === "sm" ? "h-8 px-2.5 text-13" : "h-9 px-3 text-sm",
+      "hover:border-border-hover data-[placeholder]:text-foreground-tertiary",
       "focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/20",
       "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-foreground-disabled disabled:shadow-none [&>span]:line-clamp-1",
       className,

@@ -8,20 +8,20 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   leadingIcon?: LucideIcon;
   /** Einheit oder Aktion rechts im Feld („€", „Min"). */
   trailing?: React.ReactNode;
-  /** `sm` = 32 px für Filterleisten, sonst 38 px. */
+  /** `sm` = 32 px für Werkzeugleisten, sonst 36 px. */
   inputSize?: "sm" | "default";
 }
 
-/** Eingabefeld v3: 38 px, 8-px-Radius, Rahmen bleibt Rahmen (kein Ring-Wechsel). */
+/** Eingabefeld v4: 36 px (sm 32), 6-px-Radius, feine Kante, blauer Fokusring. */
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, leadingIcon: Leading, trailing, inputSize = "default", ...props }, ref) => {
     const feld = (
       <input
         type={type}
         className={cn(
-          "flex w-full rounded-md border border-input bg-card text-13 text-foreground transition-[border-color,box-shadow] duration-fast ease-soft",
-          inputSize === "sm" ? "h-8 px-2.5" : "h-9.5 px-3",
-          "file:border-0 file:bg-transparent file:text-13 file:font-medium placeholder:text-foreground-disabled",
+          "flex w-full rounded-md border border-input bg-card text-foreground shadow-xs transition-[border-color,box-shadow] duration-fast ease-soft",
+          inputSize === "sm" ? "h-8 px-2.5 text-13" : "h-9 px-3 text-sm",
+          "file:border-0 file:bg-transparent file:text-13 file:font-medium placeholder:text-foreground-tertiary",
           "hover:border-border-hover",
           "focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20",
           "aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-[3px] aria-[invalid=true]:ring-destructive/15",

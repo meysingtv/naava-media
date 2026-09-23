@@ -43,7 +43,7 @@ export function NutzerMenu({
   const avatar = (
     <span
       aria-hidden="true"
-      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sidebar-badge text-2xs font-semibold text-sidebar-foreground"
+      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-foreground-secondary"
     >
       {initialen(vorname, nachname)}
     </span>
@@ -55,18 +55,18 @@ export function NutzerMenu({
       className={cn(
         "flex items-center rounded-md outline-none transition-colors duration-fast",
         "hover:bg-sidebar-hover data-[state=open]:bg-sidebar-hover",
-        "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sidebar-bar/70",
-        eingeklappt ? "mx-auto h-10 w-10 justify-center" : "h-11 w-full gap-2.5 px-2",
+        "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/70",
+        eingeklappt ? "mx-auto h-9 w-9 justify-center" : "h-10 w-full gap-2.5 px-2",
       )}
     >
       {avatar}
       {!eingeklappt && (
         <>
           <span className="min-w-0 flex-1 text-left">
-            <span className="block truncate text-13 font-medium text-sidebar-active-foreground">
+            <span className="block truncate text-13 font-medium text-foreground">
               {vorname} {nachname}
             </span>
-            <span className="block truncate text-2xs text-sidebar-muted">{ROLLEN[rolle]}</span>
+            <span className="block truncate text-xs text-foreground-tertiary">{ROLLEN[rolle]}</span>
           </span>
           <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-sidebar-muted" strokeWidth={1.75} aria-hidden="true" />
         </>

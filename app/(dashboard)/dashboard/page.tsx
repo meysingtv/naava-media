@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, Check, ClipboardCheck, ListChecks } from "lucide-react";
+import { ArrowRight, CalendarDays, Check } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
-import { Badge } from "@/components/ui/badge";
+import { Abschnitt, AbschnittLeer, AbschnittLink } from "@/components/ui/abschnitt";
+import { Badge, StatusDot } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { KpiCard, KpiRow } from "@/components/ui/kpi-card";
 import { PageHeader } from "@/components/shared/page-header";
@@ -22,40 +23,23 @@ function inTagen(n: number): string {
   return iso(d);
 }
 function wochentag(): string {
-  return new Date().toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+  return new Date().toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+}
+function kurzTag(datum: string): { tag: string; datum: string } {
+  const d = new Date(`${datum}T12:00:00`);
+  return {
+    tag: d.toLocaleDateString("de-DE", { weekday: "short" }).replace(".", ""),
+    datum: d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
+  };
+}
+function endeUhrzeit(uhrzeit: string, minuten: number): string {
+  const [h, m] = uhrzeit.split(":").map(Number);
+  const ende = h * 60 + m + minuten;
+  return `${String(Math.floor(ende / 60) % 24).padStart(2, "0")}:${String(ende % 60).padStart(2, "0")}`;
 }
 
 type AufgabeRow = Aufgabe & { fahrschueler: Pick<Fahrschueler, "vorname" | "nachname"> | null };
 type PruefungRow = Pruefung & { fahrschueler: Pick<Fahrschueler, "id" | "vorname" | "nachname"> | null };
-
-/** Abschnitts-Titel im Leitstand: Versalien-Label + optionaler Link rechts. */
-function Abschnitt({
-  label,
-  href,
-  hrefLabel,
-  children,
-  className,
-}: {
-  label: string;
-  href?: string;
-  hrefLabel?: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section className={cn("min-w-0", className)}>
-      <div className="mb-2 flex items-center justify-between">
-        <h2 className="label-caps">{label}</h2>
-        {href && (
-          <Link href={href} className="inline-flex items-center gap-1 text-xs font-medium text-primary-text hover:underline">
-            {hrefLabel ?? "Alle"} <ArrowRight className="h-3 w-3" />
-          </Link>
-        )}
-      </div>
-      {children}
-    </section>
-  );
-}
 
 export default async function LeitstandPage() {
   const supabase = createClient();
@@ -63,7 +47,7 @@ export default async function LeitstandPage() {
   const inSieben = inTagen(7);
   const jetztMin = new Date().getHours() * 60 + new Date().getMinutes();
 
-  const [heuteRes, offeneRes, aufgabenRes, pruefungRes, schuelerRes, zahlungMonatRes] = await Promise.all([
+  const [heuteRes, offeneRes, aufgabenRes, pruefungRes, schuelerRes, zahlungMonatRes, bestaetigungRes] = await Promise.all([
     supabase
       .from("fahrstunde")
       .select("*, fahrschueler(id, vorname, nachname, avatar_farbe), fahrlehrer(id, vorname, nachname), fahrzeug(id, kennzeichen)")
@@ -107,6 +91,13 @@ export default async function LeitstandPage() {
       .eq("status", "bezahlt")
       .gte("bezahlt_am", heute.slice(0, 7) + "-01")
       .returns<Pick<Rechnung, "betrag_brutto" | "bezahlt_am">[]>(),
+    supabase
+      .from("fahrstunde")
+      .select("id, bestaetigt_am, abgesagt_am")
+      .eq("status", "geplant")
+      .gt("datum", heute)
+      .lte("datum", inTagen(3))
+      .returns<{ id: string; bestaetigt_am: string | null; abgesagt_am: string | null }[]>(),
   ]);
 
   const termine = heuteRes.data ?? [];
@@ -115,6 +106,8 @@ export default async function LeitstandPage() {
   const pruefungen = pruefungRes.data ?? [];
   const schueler = schuelerRes.data ?? [];
   const eingaengeMonat = (zahlungMonatRes.data ?? []).reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
+  const kommende = bestaetigungRes.data ?? [];
+  const bestaetigt = kommende.filter((t) => t.bestaetigt_am).length;
 
   const offenerBetrag = offene.reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
   const ueberfaellig = offene.filter((r) => r.status === "ueberfaellig" || (r.faelligkeitsdatum && r.faelligkeitsdatum < heute));
@@ -128,7 +121,7 @@ export default async function LeitstandPage() {
         gruende.push("Praxisprüfung ohne bestandene Theorie");
       if (s.theorie_termin && s.theorie_termin >= heute && s.theorie_termin <= inSieben) gruende.push("Theorieprüfung diese Woche");
       if (!s.sehtest_am) gruende.push("Sehtest fehlt");
-      if (!s.erste_hilfe_am) gruende.push("Erste-Hilfe fehlt");
+      if (!s.erste_hilfe_am) gruende.push("Erste Hilfe fehlt");
       if (!s.passbild_ok) gruende.push("Passbild fehlt");
       return { s, gruende };
     })
@@ -136,120 +129,178 @@ export default async function LeitstandPage() {
     .sort((a, b) => b.gruende.length - a.gruende.length)
     .slice(0, 6);
 
-  const naechster = termine.find((t) => {
+  const aktiveTermine = termine.filter((t) => t.status !== "ausgefallen");
+  const naechster = aktiveTermine.find((t) => {
     const [h, m] = t.uhrzeit.split(":").map(Number);
-    return t.status !== "ausgefallen" && h * 60 + m >= jetztMin;
+    return h * 60 + m >= jetztMin;
   });
-
+  const fahrMinuten = aktiveTermine.reduce((s, t) => s + (t.dauer_minuten ?? 0), 0);
   const ueberfaelligeAufgaben = aufgaben.filter((a) => a.faellig_am && a.faellig_am < heute).length;
+  const naechstePruefung = pruefungen[0];
 
   return (
-    <div className="space-y-6">
-      {/* Kopfzeile (56 px) + Kennzahlen – keine Begrüßung, kein Vorname im Inhalt */}
-      <PageHeader
-        title="Leitstand"
-        description={wochentag()}
-        actions={
-          <Button asChild variant="outline" size="sm">
-            <Link href="/kalender">Kalender</Link>
-          </Button>
-        }
-      />
+    <div>
+      <PageHeader title="Leitstand" description={wochentag()}>
+        <Button asChild variant="outline" size="sm">
+          <Link href="/kalender">
+            <CalendarDays /> Kalender
+          </Link>
+        </Button>
+      </PageHeader>
 
       <KpiRow>
         <KpiCard
-          label="Termine heute"
-          value={termine.length}
-          sub={naechster ? `Nächster ${formatUhrzeit(naechster.uhrzeit)}` : "Keine weiteren"}
+          label="Fahrstunden heute"
+          value={aktiveTermine.length}
+          sub={
+            naechster
+              ? `Nächste um ${formatUhrzeit(naechster.uhrzeit)} · ${(fahrMinuten / 60).toLocaleString("de-DE", { maximumFractionDigits: 1 })} Std. gesamt`
+              : aktiveTermine.length > 0
+                ? "Alle erledigt"
+                : "Keine geplant"
+          }
           href="/kalender"
         />
         <KpiCard
-          label="Prüfungen · 7 Tage"
+          label="Prüfungen in 7 Tagen"
           value={pruefungen.length}
-          sub={pruefungen.length === 1 ? "1 Termin" : `${pruefungen.length} Termine`}
+          sub={naechstePruefung ? `Nächste am ${formatDatum(naechstePruefung.datum).slice(0, 6)}` : "Keine angesetzt"}
           href="/pruefungen"
         />
         <KpiCard
           label="Offene Aufgaben"
           value={aufgaben.length}
-          sub={`${ueberfaelligeAufgaben} überfällig`}
+          sub={ueberfaelligeAufgaben > 0 ? `${ueberfaelligeAufgaben} überfällig` : "Keine überfällig"}
           tone={ueberfaelligeAufgaben > 0 ? "warning" : "neutral"}
           href="/aufgaben"
         />
         <KpiCard
-          label="Offene Beträge"
+          label="Offene Rechnungen"
           value={formatEuro(offenerBetrag)}
-          sub={`${ueberfaellig.length} überfällig`}
-          tone={ueberfaellig.length > 0 ? "destructive" : "neutral"}
-          href="/finanzen"
+          sub={ueberfaellig.length > 0 ? `${formatEuro(ueberfaelligBetrag)} überfällig` : `${offene.length} Rechnungen`}
+          tone={ueberfaellig.length > 0 ? "warning" : "neutral"}
+          href="/rechnungen"
         />
       </KpiRow>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-        {/* Linke Spalte: Heute als Zeitachse */}
-        <div className="space-y-6">
-          <Abschnitt label="Heute" href="/kalender" hrefLabel="Kalender">
-            <div className="rounded-xl bg-card shadow-panel">
-              {termine.length === 0 ? (
-                <p className="px-4 py-10 text-center text-[13px] text-muted-foreground">Heute sind keine Termine geplant.</p>
-              ) : (
-                <ol className="divide-y">
-                  {termine.map((t) => {
-                    const typ = FAHRSTUNDE_TYPEN[t.typ];
-                    const ausgefallen = t.status === "ausgefallen";
-                    const istNaechster = naechster?.id === t.id;
-                    const name = t.fahrschueler ? `${t.fahrschueler.vorname} ${t.fahrschueler.nachname}` : typ.label;
-                    return (
-                      <li key={t.id} className={cn("flex items-stretch gap-3 px-4", istNaechster && "bg-primary-soft/40")}>
-                        <div className="w-12 shrink-0 py-3 text-[13px] font-semibold tabular-nums text-foreground">
+      <div className="mt-8 grid grid-cols-1 gap-x-8 gap-y-8 xl:grid-cols-[minmax(0,1fr)_360px]">
+        {/* ------------------------------------------------ Linke Spalte */}
+        <div className="min-w-0 space-y-8">
+          <Abschnitt
+            titel="Heute"
+            meta={aktiveTermine.length > 0 ? `${aktiveTermine.length} Fahrstunden` : undefined}
+            aktion={<AbschnittLink href="/kalender">Zum Kalender</AbschnittLink>}
+            rahmen
+          >
+            {termine.length === 0 ? (
+              <AbschnittLeer>Heute sind keine Fahrstunden geplant.</AbschnittLeer>
+            ) : (
+              <ol className="divide-y divide-border">
+                {termine.map((t) => {
+                  const typ = FAHRSTUNDE_TYPEN[t.typ];
+                  const ausgefallen = t.status === "ausgefallen";
+                  const [h, m] = t.uhrzeit.split(":").map(Number);
+                  const beginn = h * 60 + m;
+                  const vorbei = !ausgefallen && beginn + (t.dauer_minuten ?? 45) <= jetztMin;
+                  const laeuft = !ausgefallen && beginn <= jetztMin && beginn + (t.dauer_minuten ?? 45) > jetztMin;
+                  const istNaechster = naechster?.id === t.id && !laeuft;
+                  const name = t.fahrschueler ? `${t.fahrschueler.vorname} ${t.fahrschueler.nachname}` : typ.label;
+                  return (
+                    <li
+                      key={t.id}
+                      className={cn(
+                        "grid grid-cols-[88px_minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 sm:grid-cols-[88px_minmax(0,1fr)_170px_auto]",
+                        (vorbei || ausgefallen) && "text-foreground-secondary",
+                      )}
+                    >
+                      <span className="tabular-nums">
+                        <span className={cn("block text-13 font-semibold", vorbei || ausgefallen ? "text-foreground-secondary" : "text-foreground")}>
                           {formatUhrzeit(t.uhrzeit)}
-                        </div>
-                        <div className={cn("my-2.5 w-0.5 shrink-0 rounded-full", ausgefallen ? "bg-border-strong" : typ.dot)} />
-                        <div className="min-w-0 flex-1 py-3">
-                          <div className="flex items-center gap-2">
-                            <p className={cn("truncate text-[13px] font-medium text-foreground", ausgefallen && "line-through text-muted-foreground")}>
+                        </span>
+                        <span className="block text-xs text-foreground-tertiary">
+                          bis {endeUhrzeit(t.uhrzeit, t.dauer_minuten ?? 45)}
+                        </span>
+                      </span>
+                      <span className="min-w-0">
+                        <span className="flex min-w-0 items-center gap-2">
+                          {t.fahrschueler ? (
+                            <Link
+                              href={`/schueler/${t.fahrschueler.id}`}
+                              className={cn(
+                                "truncate text-13 font-medium hover:underline",
+                                ausgefallen ? "text-foreground-secondary line-through" : vorbei ? "text-foreground-secondary" : "text-foreground",
+                              )}
+                            >
                               {name}
-                            </p>
-                            {istNaechster && (
-                              <Badge variant="default">
-                                als Nächstes
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {typ.kurz} · {t.dauer_minuten} Min
-                            {t.fahrlehrer ? ` · ${t.fahrlehrer.vorname} ${t.fahrlehrer.nachname}` : ""}
-                            {t.fahrzeug ? ` · ${t.fahrzeug.kennzeichen}` : ""}
-                          </p>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ol>
-              )}
-            </div>
+                            </Link>
+                          ) : (
+                            <span className="truncate text-13 font-medium text-foreground">{name}</span>
+                          )}
+                          {istNaechster && (
+                            <Badge variant="default" className="hidden shrink-0 sm:inline-flex">
+                              Als Nächstes
+                            </Badge>
+                          )}
+                        </span>
+                        <span className="block truncate text-xs text-foreground-secondary">
+                          {typ.kurz} · {t.dauer_minuten} Min.
+                          {t.fahrzeug ? ` · ${t.fahrzeug.kennzeichen}` : ""}
+                        </span>
+                      </span>
+                      <span className="hidden truncate text-13 text-foreground-secondary sm:block">
+                        {t.fahrlehrer ? `${t.fahrlehrer.vorname} ${t.fahrlehrer.nachname}` : "—"}
+                      </span>
+                      <span className="w-28 text-right">
+                        {ausgefallen ? (
+                          <StatusDot ton="neutral">Ausgefallen</StatusDot>
+                        ) : t.status === "abgeschlossen" || vorbei ? (
+                          <StatusDot ton="success">Gefahren</StatusDot>
+                        ) : laeuft ? (
+                          <StatusDot ton="primary">Läuft gerade</StatusDot>
+                        ) : t.bestaetigt_am ? (
+                          <StatusDot ton="neutral">Bestätigt</StatusDot>
+                        ) : (
+                          <StatusDot ton="warning">Unbestätigt</StatusDot>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
           </Abschnitt>
 
-          <Abschnitt label="Schüler mit Handlungsbedarf" href="/schueler" hrefLabel="Alle Schüler">
+          <Abschnitt
+            titel="Braucht Aufmerksamkeit"
+            meta={handlungsbedarf.length > 0 ? `${handlungsbedarf.length} Schüler` : undefined}
+            aktion={<AbschnittLink href="/schueler">Alle Schüler</AbschnittLink>}
+            rahmen
+          >
             {handlungsbedarf.length === 0 ? (
-              <p className="rounded-xl bg-card shadow-panel px-4 py-8 text-center text-[13px] text-muted-foreground">
-                Alles im grünen Bereich – kein Schüler braucht gerade Aufmerksamkeit.
-              </p>
+              <AbschnittLeer>Bei keinem Schüler fehlt gerade etwas.</AbschnittLeer>
             ) : (
-              <ul className="divide-y rounded-xl bg-card shadow-panel">
+              <ul className="divide-y divide-border">
                 {handlungsbedarf.map(({ s, gruende }) => (
                   <li key={s.id}>
-                    <Link href={`/schueler?id=${s.id}`} className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-surface-muted">
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] font-medium text-foreground">
-                          {s.vorname} {s.nachname}
-                        </span>
-                        <span className="block truncate text-xs text-muted-foreground">{gruende.join(" · ")}</span>
+                    <Link
+                      href={`/schueler/${s.id}`}
+                      className="group flex items-center gap-4 px-4 py-3 transition-colors hover:bg-surface-muted"
+                    >
+                      <span className="w-40 shrink-0 truncate text-13 font-medium text-foreground">
+                        {s.vorname} {s.nachname}
                       </span>
-                      <span className={cn("shrink-0 text-xs font-medium tabular-nums", gruende.length >= 3 ? "text-destructive" : "text-warning")}>
-                        {gruende.length} {gruende.length === 1 ? "Punkt" : "Punkte"}
+                      <span className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                        {gruende.map((g) => (
+                          <Badge key={g} variant={g.startsWith("Praxisprüfung") ? "destructive" : "secondary"}>
+                            {g}
+                          </Badge>
+                        ))}
                       </span>
-                      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <ArrowRight
+                        className="h-4 w-4 shrink-0 text-foreground-tertiary transition-transform group-hover:translate-x-0.5"
+                        strokeWidth={1.75}
+                        aria-hidden="true"
+                      />
                     </Link>
                   </li>
                 ))}
@@ -258,40 +309,48 @@ export default async function LeitstandPage() {
           </Abschnitt>
         </div>
 
-        {/* Rechte Spalte */}
-        <div className="space-y-6">
-          <Abschnitt label="Aufgaben" href="/aufgaben">
+        {/* ------------------------------------------------ Rechte Spalte */}
+        <div className="min-w-0 space-y-8">
+          <Abschnitt
+            titel="Aufgaben"
+            meta={aufgaben.length > 0 ? `${aufgaben.length} offen` : undefined}
+            aktion={<AbschnittLink href="/aufgaben">Alle</AbschnittLink>}
+            rahmen
+          >
             {aufgaben.length === 0 ? (
-              <p className="rounded-xl bg-card shadow-panel px-4 py-8 text-center text-[13px] text-muted-foreground">Keine offenen Aufgaben.</p>
+              <AbschnittLeer>Keine offenen Aufgaben.</AbschnittLeer>
             ) : (
-              <ul className="divide-y rounded-xl bg-card shadow-panel">
+              <ul className="divide-y divide-border">
                 {aufgaben.map((a) => {
                   const ueberf = a.faellig_am != null && a.faellig_am < heute;
+                  const heuteFaellig = a.faellig_am === heute;
                   return (
-                    <li key={a.id} className="flex items-center gap-3 px-3 py-2">
+                    <li key={a.id} className="flex items-center gap-3 px-4 py-2.5">
                       <form action={aufgabeStatusSetzen}>
                         <input type="hidden" name="id" value={a.id} />
                         <input type="hidden" name="status" value="erledigt" />
                         <button
                           type="submit"
-                          aria-label="Erledigt"
-                          className="flex h-4 w-4 items-center justify-center rounded-[4px] border border-border-strong bg-card text-transparent transition-colors hover:border-primary hover:text-primary"
+                          aria-label={`„${a.titel}" erledigt`}
+                          className="flex h-4 w-4 items-center justify-center rounded-sm border border-border-strong bg-card text-transparent transition-colors hover:border-foreground-tertiary hover:text-foreground-secondary"
                         >
                           <Check className="h-3 w-3" strokeWidth={3} />
                         </button>
                       </form>
-                      <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">{a.titel}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-13 text-foreground">{a.titel}</span>
+                        {a.prioritaet === "hoch" && <span className="block text-xs text-destructive-text">Hohe Priorität</span>}
+                      </span>
                       {a.faellig_am && (
-                        <span className={cn("shrink-0 text-xs tabular-nums", ueberf ? "font-medium text-destructive" : "text-muted-foreground")}>
-                          {formatDatum(a.faellig_am)}
+                        <span
+                          className={cn(
+                            "shrink-0 text-xs tabular-nums",
+                            ueberf ? "font-medium text-destructive-text" : heuteFaellig ? "font-medium text-foreground" : "text-foreground-secondary",
+                          )}
+                        >
+                          {heuteFaellig ? "Heute" : formatDatum(a.faellig_am).slice(0, 6)}
                         </span>
                       )}
-                      <span
-                        className={cn(
-                          "h-1.5 w-1.5 shrink-0 rounded-full",
-                          a.prioritaet === "hoch" ? "bg-destructive" : a.prioritaet === "mittel" ? "bg-warning" : "bg-border-strong",
-                        )}
-                      />
                     </li>
                   );
                 })}
@@ -299,55 +358,84 @@ export default async function LeitstandPage() {
             )}
           </Abschnitt>
 
-          <Abschnitt label="Prüfungen · nächste 7 Tage" href="/pruefungen">
+          <Abschnitt titel="Prüfungen" meta="nächste 7 Tage" aktion={<AbschnittLink href="/pruefungen">Alle</AbschnittLink>} rahmen>
             {pruefungen.length === 0 ? (
-              <p className="rounded-xl bg-card shadow-panel px-4 py-6 text-center text-[13px] text-muted-foreground">
-                <ClipboardCheck className="mx-auto mb-1 h-4 w-4" strokeWidth={1.75} />
-                Keine Prüfungen in den nächsten 7 Tagen.
-              </p>
+              <AbschnittLeer>Keine Prüfungen in den nächsten 7 Tagen.</AbschnittLeer>
             ) : (
-              <ul className="divide-y rounded-xl bg-card shadow-panel">
-                {pruefungen.map((p) => (
-                  <li key={p.id} className="flex items-center gap-3 px-4 py-2.5 text-[13px]">
-                    <span className="w-14 shrink-0 font-semibold tabular-nums">{formatDatum(p.datum).slice(0, 5)}</span>
-                    <span className="min-w-0 flex-1 truncate">
-                      {p.fahrschueler ? `${p.fahrschueler.vorname} ${p.fahrschueler.nachname}` : "—"}
-                      <span className="text-muted-foreground"> · {p.art === "praxis" ? "Praxis" : "Theorie"}</span>
-                    </span>
-                    {p.pruefstelle && <span className="shrink-0 text-xs text-muted-foreground">{p.pruefstelle}</span>}
-                  </li>
-                ))}
+              <ul className="divide-y divide-border">
+                {pruefungen.map((p) => {
+                  const t = kurzTag(p.datum);
+                  return (
+                    <li key={p.id} className="flex items-center gap-3 px-4 py-2.5">
+                      <span className="w-12 shrink-0 text-center tabular-nums">
+                        <span className="block text-xs text-foreground-tertiary">{t.tag}</span>
+                        <span className="block text-13 font-semibold text-foreground">{t.datum}</span>
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-13 font-medium text-foreground">
+                          {p.fahrschueler ? `${p.fahrschueler.vorname} ${p.fahrschueler.nachname}` : "—"}
+                        </span>
+                        <span className="block truncate text-xs text-foreground-secondary">
+                          {p.art === "praxis" ? "Praxis" : "Theorie"}
+                          {p.uhrzeit ? ` · ${formatUhrzeit(p.uhrzeit)} Uhr` : ""}
+                          {p.pruefstelle ? ` · ${p.pruefstelle}` : ""}
+                        </span>
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </Abschnitt>
 
-          <Abschnitt label="Finanzstatus" href="/finanzen" hrefLabel="Finanzen">
-            <div className="rounded-xl bg-card shadow-panel px-4 py-3">
-              <dl className="grid grid-cols-3 divide-x">
-                <div className="pr-3">
-                  <dt className="text-xs text-muted-foreground">Offen</dt>
-                  <dd className="text-[15px] font-semibold tabular-nums text-foreground">{formatEuro(offenerBetrag)}</dd>
-                  <dd className="text-xs text-muted-foreground">{offene.length} Rechnungen</dd>
+          <Abschnitt titel="Terminbestätigungen" meta="nächste 3 Tage" aktion={<AbschnittLink href="/erinnerungen">Öffnen</AbschnittLink>} rahmen>
+            {kommende.length === 0 ? (
+              <AbschnittLeer>In den nächsten drei Tagen sind keine Fahrstunden geplant.</AbschnittLeer>
+            ) : (
+              <div className="p-4">
+                <div className="flex items-baseline justify-between">
+                  <p className="text-13 text-foreground">
+                    <span className="text-base font-semibold tabular-nums">{bestaetigt}</span>
+                    <span className="text-foreground-secondary"> von {kommende.length} bestätigt</span>
+                  </p>
+                  <p className="text-13 tabular-nums text-foreground-secondary">{Math.round((bestaetigt / kommende.length) * 100)} %</p>
                 </div>
-                <div className="px-3">
-                  <dt className="text-xs text-muted-foreground">Überfällig</dt>
-                  <dd className={cn("text-[15px] font-semibold tabular-nums", ueberfaellig.length > 0 ? "text-destructive" : "text-foreground")}>
-                    {formatEuro(ueberfaelligBetrag)}
-                  </dd>
-                  <dd className="text-xs text-muted-foreground">{ueberfaellig.length} Rechnungen</dd>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div className="h-full rounded-full bg-success" style={{ width: `${(bestaetigt / kommende.length) * 100}%` }} />
                 </div>
-                <div className="pl-3">
-                  <dt className="text-xs text-muted-foreground">Eingänge Monat</dt>
-                  <dd className="text-[15px] font-semibold tabular-nums text-success">{formatEuro(eingaengeMonat)}</dd>
-                  <dd className="text-xs text-muted-foreground">bezahlt</dd>
-                </div>
-              </dl>
-              {ueberfaellig.length > 0 && (
-                <Link href="/rechnungslauf" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-text hover:underline">
-                  <ListChecks className="h-3.5 w-3.5" /> Mahnlauf starten
+                {kommende.length - bestaetigt > 0 && (
+                  <p className="mt-2 text-xs text-foreground-secondary">
+                    {kommende.length - bestaetigt} Schüler haben noch nicht zugesagt.
+                  </p>
+                )}
+              </div>
+            )}
+          </Abschnitt>
+
+          <Abschnitt titel="Finanzen" aktion={<AbschnittLink href="/finanzen">Übersicht</AbschnittLink>} rahmen>
+            <dl className="divide-y divide-border text-13">
+              <div className="flex items-center justify-between px-4 py-2.5">
+                <dt className="text-foreground-secondary">Offen</dt>
+                <dd className="font-medium tabular-nums text-foreground">{formatEuro(offenerBetrag)}</dd>
+              </div>
+              <div className="flex items-center justify-between px-4 py-2.5">
+                <dt className="text-foreground-secondary">Überfällig</dt>
+                <dd className={cn("font-medium tabular-nums", ueberfaellig.length > 0 ? "text-destructive-text" : "text-foreground")}>
+                  {formatEuro(ueberfaelligBetrag)}
+                </dd>
+              </div>
+              <div className="flex items-center justify-between px-4 py-2.5">
+                <dt className="text-foreground-secondary">Eingänge diesen Monat</dt>
+                <dd className="font-medium tabular-nums text-foreground">{formatEuro(eingaengeMonat)}</dd>
+              </div>
+            </dl>
+            {ueberfaellig.length > 0 && (
+              <div className="border-t border-border px-4 py-2.5">
+                <Link href="/rechnungslauf" className="inline-flex items-center gap-1.5 text-13 font-medium text-primary-text hover:underline">
+                  Mahnlauf starten <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
                 </Link>
-              )}
-            </div>
+              </div>
+            )}
           </Abschnitt>
         </div>
       </div>

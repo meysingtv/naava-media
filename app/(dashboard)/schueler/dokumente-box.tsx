@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Download, FileText, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Abschnitt, AbschnittLeer } from "@/components/ui/abschnitt";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { dokumentHochladen, dokumentLoeschen } from "./akte-actions";
 
@@ -61,66 +62,63 @@ export function DokumenteBox({ schuelerId, dokumente }: { schuelerId: string; do
   }
 
   return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0 p-4 pb-2">
-        <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Dokumente
-        </CardTitle>
-        <FileText className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent className="space-y-3 p-4 pt-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <input
+    <Abschnitt
+      titel="Dateien"
+      meta={dokumente.length ? `${dokumente.length}` : undefined}
+      aktion={
+        <div className="flex items-center gap-2">
+          <Input
+            inputSize="sm"
             value={kategorie}
             onChange={(e) => setKategorie(e.target.value)}
-            placeholder="Kategorie (z. B. Sehtest)"
-            className="h-9 flex-1 rounded-md border border-border-strong bg-background px-3 text-sm shadow-xs focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20"
+            placeholder="Kategorie, z. B. Sehtest"
+            aria-label="Kategorie"
+            className="w-48"
           />
           <input ref={inputRef} type="file" onChange={onFile} className="hidden" />
-          <Button type="button" size="sm" disabled={pending} onClick={() => inputRef.current?.click()}>
+          <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => inputRef.current?.click()}>
             <Upload /> {pending ? "Lädt …" : "Hochladen"}
           </Button>
         </div>
-
-        {dokumente.length === 0 ? (
-          <p className="rounded-md bg-surface-muted/60 py-6 text-center text-sm text-muted-foreground">
-            Noch keine Dokumente. Sehtest, Passbild &amp; Co. hier ablegen.
-          </p>
-        ) : (
-          <div className="divide-y rounded-md border">
-            {dokumente.map((d) => (
-              <div key={d.id} className="flex items-center gap-2.5 px-3 py-2">
-                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">{d.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {d.kategorie ? `${d.kategorie} · ` : ""}
-                    {groesseText(d.groesse)}
-                  </p>
-                </div>
-                <a
-                  href={d.datei}
-                  download={d.name}
-                  aria-label="Herunterladen"
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
-                >
-                  <Download className="h-4 w-4" />
-                </a>
-                <form action={dokumentLoeschen}>
-                  <input type="hidden" name="id" value={d.id} />
-                  <button
-                    type="submit"
-                    aria-label="Löschen"
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive-soft hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </form>
+      }
+      rahmen
+    >
+      {dokumente.length === 0 ? (
+        <AbschnittLeer>Noch keine Dateien. Sehtest, Passbild und andere Nachweise hier ablegen.</AbschnittLeer>
+      ) : (
+        <ul className="divide-y divide-border">
+          {dokumente.map((d) => (
+            <li key={d.id} className="flex items-center gap-3 px-4 py-2.5">
+              <FileText className="h-4 w-4 shrink-0 text-foreground-tertiary" strokeWidth={1.75} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-13 font-medium text-foreground">{d.name}</p>
+                <p className="truncate text-xs text-foreground-secondary">
+                  {d.kategorie ? `${d.kategorie} · ` : ""}
+                  {groesseText(d.groesse)}
+                </p>
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <a
+                href={d.datei}
+                download={d.name}
+                aria-label="Herunterladen"
+                className="flex h-7 w-7 items-center justify-center rounded-md text-foreground-tertiary transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <Download className="h-4 w-4" strokeWidth={1.75} />
+              </a>
+              <form action={dokumentLoeschen}>
+                <input type="hidden" name="id" value={d.id} />
+                <button
+                  type="submit"
+                  aria-label="Löschen"
+                  className="flex h-7 w-7 items-center justify-center rounded-md text-foreground-tertiary transition-colors hover:bg-destructive-soft hover:text-destructive-text"
+                >
+                  <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+                </button>
+              </form>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Abschnitt>
   );
 }

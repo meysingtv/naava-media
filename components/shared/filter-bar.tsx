@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, X } from "lucide-react";
+import { CirclePlus, CircleX, Search, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,9 @@ export interface FilterBarProps {
 }
 
 /**
- * Filterleiste v3 über einer Datentabelle: Suche links, Segmente und Filter
- * daneben, rechts Ergebniszahl, Export und Primäraktion. `/` fokussiert die
- * Suche, solange kein Feld den Fokus hat.
+ * Werkzeugleiste v4 über einer Tabelle: Suche links, Segmente und Filter-
+ * Chips daneben, rechts Ergebniszahl und Aktionen. `/` fokussiert die Suche,
+ * solange kein Feld den Fokus hat.
  */
 export function FilterBar({
   search,
@@ -61,24 +61,25 @@ export function FilterBar({
 
   return (
     <div className={cn("border-b border-border", className)}>
-      <div className="flex h-12 items-center gap-2 px-3">
+      <div className="flex min-h-12 flex-wrap items-center gap-2 px-3 py-2">
         {search && (
-          <Input
-            ref={sucheRef}
-            inputSize="sm"
-            leadingIcon={Search}
-            type="search"
-            placeholder={search.placeholder ?? "Suchen …"}
-            value={search.value}
-            onChange={(e) => search.onChange?.(e.target.value)}
-            className="w-[220px] shrink-0 md:w-[240px]"
-            aria-label={search.placeholder ?? "Suchen"}
-          />
+          <div className="w-full shrink-0 sm:w-[280px]">
+            <Input
+              ref={sucheRef}
+              inputSize="sm"
+              leadingIcon={Search}
+              type="search"
+              placeholder={search.placeholder ?? "Suchen …"}
+              value={search.value}
+              onChange={(e) => search.onChange?.(e.target.value)}
+              aria-label={search.placeholder ?? "Suchen"}
+            />
+          </div>
         )}
         {segments}
         {filters}
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          {count && <span className="hidden text-xs text-foreground-tertiary sm:block">{count}</span>}
+          {count && <span className="hidden text-13 text-foreground-tertiary sm:block">{count}</span>}
           {actions}
         </div>
       </div>
@@ -111,7 +112,8 @@ export interface FilterChipOption {
 }
 
 /**
- * Filter-Chip mit Mehrfachauswahl – 32 px hohe Pille, aktiv in Soft-Grün.
+ * Filter-Chip mit Mehrfachauswahl: inaktiv eine gestrichelte Pille
+ * „⊕ Status", aktiv eine durchgezogene Pille „⊗ Status | Offen, Bezahlt".
  * Ab acht Optionen erscheint ein Suchfeld im Popover.
  */
 export function FilterChip({
@@ -132,6 +134,7 @@ export function FilterChip({
   const gefiltert = suche
     ? options.filter((o) => o.label.toLowerCase().includes(suche.toLowerCase()))
     : options;
+  const gewaehlteLabels = options.filter((o) => selected.includes(o.value)).map((o) => o.label);
 
   function umschalten(wert: string) {
     onChange(selected.includes(wert) ? selected.filter((v) => v !== wert) : [...selected, wert]);
@@ -143,17 +146,15 @@ export function FilterChip({
         <button
           type="button"
           className={cn(
-            "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium transition-colors duration-fast",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-13 font-medium transition-colors duration-fast",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70",
             aktiv
-              ? "border-primary-soft-border bg-primary-soft text-primary-text"
-              : "border-border-strong text-foreground-secondary hover:border-border-hover hover:text-foreground",
+              ? "border-border-strong bg-card text-foreground hover:bg-surface-muted"
+              : "border-dashed border-border-strong text-foreground-secondary hover:bg-surface-muted hover:text-foreground",
             className,
           )}
         >
-          {label}
-          {aktiv && <span className="tabular-nums">· {selected.length}</span>}
-          {aktiv && (
+          {aktiv ? (
             <span
               role="button"
               tabIndex={-1}
@@ -162,10 +163,21 @@ export function FilterChip({
                 e.stopPropagation();
                 onChange([]);
               }}
-              className="rounded-full"
+              className="-ml-0.5 text-foreground-tertiary hover:text-foreground"
             >
-              <X className="h-3 w-3" strokeWidth={1.75} />
+              <CircleX className="h-3.5 w-3.5" strokeWidth={1.75} />
             </span>
+          ) : (
+            <CirclePlus className="-ml-0.5 h-3.5 w-3.5 text-foreground-tertiary" strokeWidth={1.75} aria-hidden="true" />
+          )}
+          {label}
+          {aktiv && (
+            <>
+              <span aria-hidden="true" className="h-3.5 w-px bg-border-strong" />
+              <span className="max-w-[180px] truncate text-primary-text">
+                {gewaehlteLabels.length <= 2 ? gewaehlteLabels.join(", ") : `${gewaehlteLabels.length} gewählt`}
+              </span>
+            </>
           )}
         </button>
       </PopoverTrigger>
@@ -203,5 +215,62 @@ export function FilterChip({
         )}
       </PopoverContent>
     </Popover>
+  );
+}
+
+/**
+ * Segment-Steuerung für Listen („Alle · Offen · Überfällig") mit Zahl je
+ * Segment – eine graue Schiene, das aktive Segment als weißes Feld.
+ * Seiten-Navigation bleibt den Unterstrich-Reitern vorbehalten.
+ */
+export function Segmente<K extends string>({
+  optionen,
+  wert,
+  onChange,
+  label = "Ansicht",
+  className,
+}: {
+  optionen: { key: K; label: string; anzahl?: number }[];
+  wert: K;
+  onChange: (k: K) => void;
+  label?: string;
+  className?: string;
+}) {
+  return (
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className={cn(
+        "inline-flex h-8 max-w-full shrink-0 items-center gap-0.5 overflow-x-auto rounded-md bg-muted p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        className,
+      )}
+    >
+      {optionen.map((o) => {
+        const aktiv = o.key === wert;
+        return (
+          <button
+            key={o.key}
+            type="button"
+            role="radio"
+            aria-checked={aktiv}
+            onClick={() => onChange(o.key)}
+            className={cn(
+              "inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[5px] px-2.5 text-13 font-medium transition-colors duration-fast",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/70",
+              aktiv
+                ? "bg-card text-foreground shadow-[0_1px_2px_rgba(16,24,40,0.08),0_0_0_1px_hsl(var(--border))]"
+                : "text-foreground-secondary hover:text-foreground",
+            )}
+          >
+            {o.label}
+            {o.anzahl != null && (
+              <span className={cn("tabular-nums", aktiv ? "text-foreground-secondary" : "text-foreground-tertiary")}>
+                {o.anzahl}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
   );
 }
