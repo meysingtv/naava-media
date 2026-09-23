@@ -1,20 +1,25 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { vorgangAbgleichen } from "@/lib/zahlung/buchung";
+
 export const dynamic = "force-dynamic";
 
 /** Erlaubte Rücksprünge in die Schüler-App (eigenes Schema oder Expo Go). */
 const APP_RUECKSPRUNG = /^(fahrbar-schueler|exps?):\/\//i;
 
 /**
- * Rücksprung von der Stripe-Bezahlseite. Kommt der Schüler aus der App,
- * geht es direkt zurück in die App (das Bezahlfenster schließt sich dabei);
- * sonst zeigt eine kleine Seite das Ergebnis.
+ * Rücksprung von der Stripe-Bezahlseite. Nach erfolgreicher Zahlung holt der
+ * Server den Stand bei Stripe ab und verbucht sie sofort. Kommt der Schüler
+ * aus der App, geht es direkt zurück in die App (das Bezahlfenster schließt
+ * sich dabei); sonst zeigt eine kleine Seite das Ergebnis.
  */
-export function GET(request: NextRequest) {
+export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const ergebnis = params.get("ergebnis") === "erfolg" ? "erfolg" : "abbruch";
   const vorgang = (params.get("vorgang") ?? "").replace(/[^0-9a-f-]/gi, "");
   const ziel = params.get("ziel");
+
+  if (ergebnis === "erfolg" && vorgang) await vorgangAbgleichen(vorgang).catch(() => null);
 
   if (ziel && APP_RUECKSPRUNG.test(ziel)) {
     const trenner = ziel.includes("?") ? "&" : "?";

@@ -65,6 +65,21 @@ export async function ladeZahlungen(): Promise<{ data: Zahlungsvorgang[]; error:
   return { data: error ? [] : (data ?? []), error: null };
 }
 
+/** Server holt den Stand direkt bei Stripe ab und verbucht die Zahlung, falls sie durch ist. */
+async function beiStripeNachfragen(vorgangId: string, token: string): Promise<ZahlungStatus | null> {
+  try {
+    const antwort = await fetch(`${API}/api/zahlung/bestaetigen`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ vorgang_id: vorgangId }),
+    });
+    const json = (await antwort.json().catch(() => null)) as { status?: ZahlungStatus | null } | null;
+    return json?.status ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function aufBestaetigungWarten(vorgangId: string, versuche: number): Promise<ZahlungStatus | null> {
   for (let i = 0; i < versuche; i++) {
     const { data } = await supabase.from("zahlungsvorgang").select("status").eq("id", vorgangId).maybeSingle<{ status: ZahlungStatus }>();
@@ -102,7 +117,11 @@ export async function bezahlen(rechnungIds: string[]): Promise<BezahlErgebnis> {
   const fenster = await WebBrowser.openAuthSessionAsync(start.url, rueckkehr, { preferEphemeralSession: true });
   const abgeschlossen = fenster.type === "success" && /ergebnis=erfolg/.test(fenster.url);
 
-  const status = await aufBestaetigungWarten(start.vorgang_id, abgeschlossen ? 10 : 1);
+  // Auch nach „Schließen“ nachfragen – vielleicht wurde vorher schon bezahlt.
+  let status = await beiStripeNachfragen(start.vorgang_id, session.access_token);
+  if (status !== "bezahlt" && status !== "in_pruefung" && abgeschlossen) {
+    status = await aufBestaetigungWarten(start.vorgang_id, 8);
+  }
   if (status === "bezahlt") return { art: "bezahlt" };
   if (status === "in_pruefung") return { art: "in_pruefung" };
   return { art: abgeschlossen ? "wartet" : "abgebrochen" };

@@ -73,7 +73,8 @@ export function OnlineZahlung({ status, hinweis, grund }: { status: StripeStatus
         )}
         {status.serverBereit && !status.webhookBereit && (
           <Hinweis ton="warnung">
-            Der Stripe-Webhook fehlt (STRIPE_WEBHOOK_SECRET) – ohne ihn werden Zahlungen nicht automatisch als bezahlt gebucht.
+            Der Stripe-Webhook fehlt (STRIPE_WEBHOOK_SECRET). Kartenzahlungen werden trotzdem sofort gebucht, Lastschriften
+            aber erst mit Webhook bestätigt – für den Livebetrieb bitte einrichten.
           </Hinweis>
         )}
         {hinweis === "zurueck" &&

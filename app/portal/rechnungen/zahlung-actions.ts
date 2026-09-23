@@ -24,7 +24,7 @@ export async function portalBezahlen(formData: FormData): Promise<void> {
     userId: user.id,
     email: user.email ?? null,
     rechnungIds: [rechnungId],
-    erfolgUrl: () => `${rechnungUrl}?zahlung=erfolg`,
+    erfolgUrl: (vorgang) => `${rechnungUrl}?zahlung=erfolg&vorgang=${vorgang}`,
     abbruchUrl: () => `${rechnungUrl}?zahlung=abbruch`,
   });
   if ("fehler" in ergebnis) {

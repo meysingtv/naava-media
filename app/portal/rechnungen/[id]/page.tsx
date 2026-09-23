@@ -11,6 +11,7 @@ import { RECHNUNG_STATUS } from "@/lib/constants";
 import { formatDatum, formatEuro } from "@/lib/utils";
 import type { Rechnung, RechnungPosition } from "@/lib/types";
 import { SubmitButton } from "@/components/shared/submit-button";
+import { vorgangAbgleichen } from "@/lib/zahlung/buchung";
 import { getSchuelerKontext } from "../../kontext";
 import { PortalShell } from "../../portal-shell";
 import { portalBezahlen } from "../zahlung-actions";
@@ -22,8 +23,13 @@ export default async function PortalRechnungDetailPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { zahlung?: string; grund?: string };
+  searchParams: { zahlung?: string; grund?: string; vorgang?: string };
 }) {
+  // Zurück von Stripe: Zahlung sofort bei Stripe abholen und verbuchen.
+  if (searchParams.zahlung === "erfolg" && searchParams.vorgang) {
+    await vorgangAbgleichen(searchParams.vorgang).catch(() => null);
+  }
+
   const { schueler, schule } = await getSchuelerKontext();
   const schuleName = schule?.name ?? "Fahrschule";
 

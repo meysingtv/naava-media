@@ -2,7 +2,10 @@ import "server-only";
 import type Stripe from "stripe";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { zahlartText } from "@/lib/stripe";
+import { getStripe, zahlartText } from "@/lib/stripe";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Vorgang = {
   id: string;
@@ -121,6 +124,44 @@ async function statusSetzen(
   if (!vorgang || vorgang.status === "bezahlt") return;
   if (nurAus && !nurAus.includes(vorgang.status)) return;
   await admin.from("zahlungsvorgang").update({ status, stripe_session_id: sitzung.id }).eq("id", vorgang.id).neq("status", "bezahlt");
+}
+
+/**
+ * Fragt den Stand eines Vorgangs direkt bei Stripe ab und verbucht ihn – beim
+ * Rücksprung von der Bezahlseite. So ist die Rechnung sofort bezahlt, auch wenn
+ * der Webhook noch unterwegs oder (lokal) nicht eingerichtet ist. Gebucht wird
+ * nur, was Stripe selbst als bezahlt meldet. Gibt den aktuellen Status zurück.
+ */
+export async function vorgangAbgleichen(vorgangId: string): Promise<string | null> {
+  const stripe = getStripe();
+  const admin = createAdminClient();
+  if (!stripe || !admin || !UUID.test(vorgangId)) return null;
+
+  const { data: vorgang } = await admin
+    .from("zahlungsvorgang")
+    .select("id, fahrschule_id, status, stripe_session_id")
+    .eq("id", vorgangId)
+    .maybeSingle<{ id: string; fahrschule_id: string; status: string; stripe_session_id: string | null }>();
+  if (!vorgang) return null;
+  if (vorgang.status === "bezahlt" || !vorgang.stripe_session_id) return vorgang.status;
+
+  const { data: schule } = await admin.from("fahrschule").select("stripe_konto_id").eq("id", vorgang.fahrschule_id).maybeSingle();
+  const konto: string | null = schule?.stripe_konto_id ?? null;
+  if (!konto) return vorgang.status;
+
+  try {
+    const sitzung = await stripe.checkout.sessions.retrieve(vorgang.stripe_session_id, undefined, { stripeAccount: konto });
+    if (sitzung.status !== "complete") return vorgang.status;
+    if (sitzung.payment_status === "paid") {
+      await verbuchen(stripe, admin, sitzung, konto);
+      return "bezahlt";
+    }
+    await statusSetzen(admin, sitzung, konto, "in_pruefung");
+    return "in_pruefung";
+  } catch (e) {
+    console.error("[zahlung] Abgleich fehlgeschlagen:", e instanceof Error ? e.message : e);
+    return vorgang.status;
+  }
 }
 
 /** Verarbeitet ein geprüftes Stripe-Ereignis. Wirft bei Datenbankfehlern (Stripe versucht es dann erneut). */

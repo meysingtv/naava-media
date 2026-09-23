@@ -3,7 +3,7 @@ import type Stripe from "stripe";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
-import { stripeEreignisVerarbeiten } from "@/lib/zahlung/webhook";
+import { stripeEreignisVerarbeiten } from "@/lib/zahlung/buchung";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
