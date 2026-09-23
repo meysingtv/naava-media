@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Rechnung } from "@/lib/types";
+import { darf } from "@/lib/zugriff";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ function csvFeld(v: string | number): string {
 }
 
 export async function GET(request: Request) {
+  if (!(await darf("/buchhaltung"))) return new Response("Kein Zugriff", { status: 403 });
   const url = new URL(request.url);
   const jahr = url.searchParams.get("jahr") ?? String(new Date().getFullYear());
 

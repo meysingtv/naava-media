@@ -5,6 +5,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { ROLLEN } from "@/lib/constants";
 import type { FahrlehrerRolle } from "@/lib/types";
+import { aktuelleRolle, rollenFuer } from "@/lib/zugriff";
 
 // ---------------------------------------------------------------------------
 // Typen
@@ -161,8 +162,18 @@ export async function globalSuche(query: string): Promise<SuchTreffer[]> {
     });
   }
 
+  // Nur Treffer, deren Seite die Rolle auch öffnen darf (wie in der Navigation).
+  const rolle = await aktuelleRolle();
+  const seite: Record<SuchTreffer["typ"], string> = {
+    schueler: "/schueler",
+    benutzer: "/fahrlehrer",
+    fahrzeug: "/fahrzeuge",
+    rechnung: "/rechnungen",
+  };
+  const erlaubt = treffer.filter((t) => (rollenFuer(seite[t.typ]) ?? [rolle]).includes(rolle));
+
   // Maximal ~16 Treffer zurückgeben
-  return treffer.slice(0, 16);
+  return erlaubt.slice(0, 16);
 }
 
 // ---------------------------------------------------------------------------

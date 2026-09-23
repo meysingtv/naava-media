@@ -4,11 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
 import { rechnungPdfBuffer } from "../../rechnung-pdf";
 import type { Fahrschueler, Rechnung, RechnungPosition } from "@/lib/types";
+import { darf } from "@/lib/zugriff";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
+  if (!(await darf("/rechnungen"))) return new Response("Kein Zugriff", { status: 403 });
   const supabase = createClient();
   const kontext = await getKontext();
 

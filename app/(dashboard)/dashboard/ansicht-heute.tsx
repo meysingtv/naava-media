@@ -5,15 +5,17 @@ import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eigenschaft, Eigenschaften } from "@/components/ui/eigenschaften";
+import { Balken } from "@/components/ui/fortschritt";
+import { Karte, KarteLeer, KartenLink } from "@/components/ui/karte";
+import { Kennzahl, KennzahlReihe } from "@/components/ui/kennzahl";
+import { AKZENT, PERSONEN_FARBEN } from "@/lib/farben";
 import { FAHRSTUNDE_FARBE, FAHRSTUNDE_TYPEN } from "@/lib/constants";
 import { cn, formatDatum, formatUhrzeit, initialen } from "@/lib/utils";
 import type { Aufgabe, FahrlehrerRolle, FahrstundeStatus, FahrstundeTyp } from "@/lib/types";
 import { AufgabeStatus } from "./aufgabe-status";
-import { AKZENT, Balken, Karte, KarteLeer, KartenLink, Kennzahl, KennzahlReihe, MiniKalender } from "./widgets";
+import { MiniKalender } from "./widgets";
 import { alsUhrzeit, dauerText, minutenVon, plusTage, stunden, wochenbeginn, wochentagKurz } from "./zeit";
 
-/** Farben für Personen – dieselbe Familie wie die Fahrstunden-Arten. */
-const PERSONEN_FARBEN = [AKZENT.blau, AKZENT.smaragd, AKZENT.violett, AKZENT.orange, AKZENT.rot, AKZENT.nacht];
 /** Bezugsgröße für die Auslastung: acht Fahrstunden-Stunden je Fahrlehrer und Tag. */
 const ARBEITSTAG_MIN = 8 * 60;
 

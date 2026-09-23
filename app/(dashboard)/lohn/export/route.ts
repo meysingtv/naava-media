@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Fahrlehrer, Fahrstunde } from "@/lib/types";
+import { darf } from "@/lib/zugriff";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ function csvFeld(v: string | number): string {
 }
 
 export async function GET(request: Request) {
+  if (!(await darf("/lohn"))) return new Response("Kein Zugriff", { status: 403 });
   const monat =
     new URL(request.url).searchParams.get("monat") ??
     `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;

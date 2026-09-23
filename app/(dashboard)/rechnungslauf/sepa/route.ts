@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
 import type { Rechnung } from "@/lib/types";
+import { darf } from "@/lib/zugriff";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,7 @@ function ibanClean(s: string | null): string {
 }
 
 export async function GET() {
+  if (!(await darf("/rechnungslauf"))) return new Response("Kein Zugriff", { status: 403 });
   const supabase = createClient();
   const kontext = await getKontext();
   const fs = kontext?.fahrschule;

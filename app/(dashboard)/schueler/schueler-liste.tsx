@@ -81,12 +81,15 @@ export function SchuelerListe({
   offenMap,
   lehrerMap,
   fortschrittMap,
+  zeigeFinanzen = true,
 }: {
   schueler: Fahrschueler[];
   /** Offener Rechnungsbetrag je Schüler (positiv = offen). */
   offenMap: Record<string, number>;
   lehrerMap: Record<string, string[]>;
   fortschrittMap: Record<string, Fortschritt>;
+  /** Spalte „Offen" und Beträge nur für Rollen mit Zugriff auf Rechnungen. */
+  zeigeFinanzen?: boolean;
 }) {
   const [suche, setSuche] = useState("");
   const [segment, setSegment] = useState<Segment>("aktiv");
@@ -135,14 +138,14 @@ export function SchuelerListe({
   }, [schueler, suche, segment, klassen, lehrer, fortschrittMap, offenMap, lehrerMap]);
 
   function exportCsv() {
-    const kopf = ["Kundennr.", "Name", "Klassen", "Theorie", "Fahrstunden", "Offen"];
+    const kopf = ["Kundennr.", "Name", "Klassen", "Theorie", "Fahrstunden", ...(zeigeFinanzen ? ["Offen"] : [])];
     const zeilen = gefiltert.map((s) => [
       s.kundennummer ?? "",
       `${s.vorname} ${s.nachname}`,
       s.fuehrerscheinklassen?.join(" ") ?? "",
       s.theorie_bestanden ? "bestanden" : `${s.lernstatus ?? 0}%`,
       String(fortschrittMap[s.id]?.fahrstunden ?? 0),
-      String(offenMap[s.id] ?? 0),
+      ...(zeigeFinanzen ? [String(offenMap[s.id] ?? 0)] : []),
     ]);
     const csv = [kopf, ...zeilen].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";")).join("\n");
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
@@ -155,7 +158,7 @@ export function SchuelerListe({
     toast.success("CSV exportiert");
   }
 
-  const spalten: DataTableColumn<Fahrschueler>[] = [
+  const alleSpalten: DataTableColumn<Fahrschueler>[] = [
     {
       key: "name",
       header: "Name",
@@ -266,6 +269,8 @@ export function SchuelerListe({
     },
   ];
 
+  const spalten = zeigeFinanzen ? alleSpalten : alleSpalten.filter((c) => c.key !== "offen");
+
   if (schueler.length === 0) {
     return (
       <EmptyState
@@ -333,7 +338,9 @@ export function SchuelerListe({
                   {f.unterlagenFehlen > 0 ? ` · ${f.unterlagenFehlen} Unterlagen fehlen` : ""}
                 </p>
               </div>
-              {offen > 0 && <span className="shrink-0 text-13 font-medium tabular-nums">{formatEuro(offen)}</span>}
+              {zeigeFinanzen && offen > 0 && (
+                <span className="shrink-0 text-13 font-medium tabular-nums">{formatEuro(offen)}</span>
+              )}
             </div>
           );
         }}

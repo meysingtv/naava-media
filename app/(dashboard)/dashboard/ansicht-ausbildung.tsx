@@ -3,10 +3,14 @@ import { ArrowRight, BadgeCheck, ClipboardCheck, FileWarning, Users } from "luci
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
+import { DatumKachel } from "@/components/ui/datum-kachel";
+import { Balken, Ring } from "@/components/ui/fortschritt";
+import { Karte, KarteLeer, KartenLink } from "@/components/ui/karte";
+import { Kennzahl, KennzahlReihe } from "@/components/ui/kennzahl";
+import { AKZENT } from "@/lib/farben";
 import { pflichtFahrtenFuer } from "@/lib/constants";
 import { formatDatum, formatUhrzeit, initialen } from "@/lib/utils";
 import type { FahrlehrerRolle } from "@/lib/types";
-import { AKZENT, Balken, DatumKachel, Karte, KarteLeer, KartenLink, Kennzahl, KennzahlReihe, Ring } from "./widgets";
 import { plusTage, wochentagKurz } from "./zeit";
 
 type SchuelerRow = {

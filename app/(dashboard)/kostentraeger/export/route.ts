@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Fahrschueler, Rechnung } from "@/lib/types";
+import { darf } from "@/lib/zugriff";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ function slug(s: string): string {
 }
 
 export async function GET(request: Request) {
+  if (!(await darf("/kostentraeger"))) return new Response("Kein Zugriff", { status: 403 });
   const traeger = new URL(request.url).searchParams.get("traeger") ?? "";
   const supabase = createClient();
 

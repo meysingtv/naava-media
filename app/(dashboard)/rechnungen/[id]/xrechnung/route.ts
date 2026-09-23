@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
 import type { RechnungPosition } from "@/lib/types";
+import { darf } from "@/lib/zugriff";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ function n2(v: number): string {
 }
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
+  if (!(await darf("/rechnungen"))) return new Response("Kein Zugriff", { status: 403 });
   const supabase = createClient();
   const kontext = await getKontext();
 

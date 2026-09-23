@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { pflichtFahrtenFuer } from "@/lib/constants";
 import { initialen } from "@/lib/utils";
 import type { Fahrschueler } from "@/lib/types";
+import { darf } from "@/lib/zugriff";
 import { SchuelerListe, type Fortschritt } from "./schueler-liste";
 import { KiLernstatusDialog } from "./ki-lernstatus-dialog";
 
@@ -18,10 +19,14 @@ export default async function SchuelerPage({ searchParams }: { searchParams: { i
   if (searchParams.id) redirect(`/schueler/${searchParams.id}`);
 
   const supabase = createClient();
+  // Beträge sieht nur, wer auch die Rechnungen sehen darf (nicht Fahrlehrer).
+  const zeigeFinanzen = await darf("/rechnungen");
 
   const [schuelerRes, rechnungRes, lessonsRes] = await Promise.all([
     supabase.from("fahrschueler").select("*").order("nachname", { ascending: true }).order("vorname", { ascending: true }),
-    supabase.from("rechnung").select("schueler_id, betrag_brutto, status"),
+    zeigeFinanzen
+      ? supabase.from("rechnung").select("schueler_id, betrag_brutto, status")
+      : Promise.resolve({ data: [] as { schueler_id: string | null; betrag_brutto: number | null; status: string }[] }),
     supabase
       .from("fahrstunde")
       .select("schueler_id, typ, status, fahrlehrer(vorname, nachname)")
@@ -85,7 +90,13 @@ export default async function SchuelerPage({ searchParams }: { searchParams: { i
         </Button>
       </PageHeader>
 
-      <SchuelerListe schueler={schueler} offenMap={offenMap} lehrerMap={lehrerMap} fortschrittMap={fortschrittMap} />
+      <SchuelerListe
+        schueler={schueler}
+        offenMap={offenMap}
+        lehrerMap={lehrerMap}
+        fortschrittMap={fortschrittMap}
+        zeigeFinanzen={zeigeFinanzen}
+      />
     </div>
   );
 }

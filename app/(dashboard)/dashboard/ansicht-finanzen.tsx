@@ -4,8 +4,10 @@ import { AlertTriangle, Banknote, BellRing, CalendarClock, Clock3, FileText, Lis
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Karte, KarteLeer, KartenLink } from "@/components/ui/karte";
+import { Kennzahl, KennzahlReihe } from "@/components/ui/kennzahl";
+import { AKZENT } from "@/lib/farben";
 import { formatDatum, formatEuro } from "@/lib/utils";
-import { AKZENT, Karte, KarteLeer, KartenLink, Kennzahl, KennzahlReihe } from "./widgets";
 import { plusTage } from "./zeit";
 
 type OffeneRow = {

@@ -16,6 +16,7 @@ import { SchuelerAvatar } from "@/components/shared/schueler-avatar";
 import { FAHRSTUNDE_TYPEN, RECHNUNG_STATUS, THEORIE_GRUNDSTOFF, pflichtFahrtenFuer, theoriePflichtFuer } from "@/lib/constants";
 import { cn, formatDatum, formatEuro, formatUhrzeit } from "@/lib/utils";
 import type { Dokument, Fahrschueler, Fahrstunde, Rate, Rechnung } from "@/lib/types";
+import { darf } from "@/lib/zugriff";
 import { portalZugangAktivieren, portalZugangSperren, schuelerLoeschen } from "./actions";
 import { DokumenteBox } from "./dokumente-box";
 import { RatenBox } from "./raten-box";
@@ -73,6 +74,9 @@ function Seitenblock({ titel, children }: { titel: string; children: React.React
 
 export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
   const supabase = createClient();
+  // Rechnungen, Raten und Kontostand nur für Rollen mit Zugriff auf Rechnungen.
+  const zeigeFinanzen = await darf("/rechnungen");
+  const zeigeKalender = await darf("/kalender");
 
   const { data: schueler } = await supabase.from("fahrschueler").select("*").eq("id", schuelerId).maybeSingle();
   if (!schueler) notFound();
@@ -86,7 +90,9 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
       .order("datum", { ascending: false })
       .order("uhrzeit", { ascending: false })
       .returns<FahrstundeDetail[]>(),
-    supabase.from("rechnung").select("*").eq("schueler_id", s.id).order("rechnungsdatum", { ascending: false }),
+    zeigeFinanzen
+      ? supabase.from("rechnung").select("*").eq("schueler_id", s.id).order("rechnungsdatum", { ascending: false })
+      : Promise.resolve({ data: [] as Rechnung[] }),
     supabase.from("theorie_teilnahme").select("id", { count: "exact", head: true }).eq("schueler_id", s.id).eq("anwesend", true),
     supabase
       .from("dokument")
@@ -94,12 +100,14 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
       .eq("schueler_id", s.id)
       .order("created_at", { ascending: false })
       .returns<Pick<Dokument, "id" | "name" | "kategorie" | "mime" | "groesse" | "datei">[]>(),
-    supabase
-      .from("rate")
-      .select("id, betrag, faellig_am, bezahlt, notiz")
-      .eq("schueler_id", s.id)
-      .order("faellig_am", { ascending: true, nullsFirst: false })
-      .returns<Pick<Rate, "id" | "betrag" | "faellig_am" | "bezahlt" | "notiz">[]>(),
+    zeigeFinanzen
+      ? supabase
+          .from("rate")
+          .select("id, betrag, faellig_am, bezahlt, notiz")
+          .eq("schueler_id", s.id)
+          .order("faellig_am", { ascending: true, nullsFirst: false })
+          .returns<Pick<Rate, "id" | "betrag" | "faellig_am" | "bezahlt" | "notiz">[]>()
+      : Promise.resolve({ data: [] as Pick<Rate, "id" | "betrag" | "faellig_am" | "bezahlt" | "notiz">[] }),
   ]);
 
   const fahrstunden = fahrstundenRes.data ?? [];
@@ -264,9 +272,11 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
           <TabsTrigger value="fahrstunden" count={fahrstunden.length}>
             Fahrstunden
           </TabsTrigger>
-          <TabsTrigger value="rechnungen" count={rechnungen.length}>
-            Rechnungen
-          </TabsTrigger>
+          {zeigeFinanzen && (
+            <TabsTrigger value="rechnungen" count={rechnungen.length}>
+              Rechnungen
+            </TabsTrigger>
+          )}
           <TabsTrigger value="dokumente" count={dokumente.length}>
             Dokumente
           </TabsTrigger>
@@ -299,7 +309,11 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
                 </dl>
               </Abschnitt>
 
-              <Abschnitt titel="Nächste Fahrstunden" aktion={<AbschnittLink href="/kalender">Kalender öffnen</AbschnittLink>} rahmen>
+              <Abschnitt
+                titel="Nächste Fahrstunden"
+                aktion={zeigeKalender ? <AbschnittLink href="/kalender">Kalender öffnen</AbschnittLink> : undefined}
+                rahmen
+              >
                 {kommende.length === 0 ? (
                   <AbschnittLeer>Keine Fahrstunden geplant.</AbschnittLeer>
                 ) : (
@@ -387,8 +401,8 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
                         ? `${formatDatum(s.pruefung_termin)} · ${s.praxis_versuch ?? 1}. Versuch`
                         : null}
                   </Eigenschaft>
-                  <Eigenschaft label="Preisliste">{s.preisliste}</Eigenschaft>
-                  <Eigenschaft label="Kostenträger">{s.kostentraeger}</Eigenschaft>
+                  {zeigeFinanzen && <Eigenschaft label="Preisliste">{s.preisliste}</Eigenschaft>}
+                  {zeigeFinanzen && <Eigenschaft label="Kostenträger">{s.kostentraeger}</Eigenschaft>}
                 </Eigenschaften>
               </Seitenblock>
 
@@ -412,15 +426,17 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
                 </ul>
               </Seitenblock>
 
-              <Seitenblock titel="Konto">
-                <Eigenschaften breite="schmal">
-                  <Eigenschaft label="Berechnet" className="tabular-nums">{formatEuro(gesamt)}</Eigenschaft>
-                  <Eigenschaft label="Bezahlt" className="tabular-nums">{formatEuro(bezahlt)}</Eigenschaft>
-                  <Eigenschaft label="Offen" className={cn("font-semibold tabular-nums", offen > 0 && "text-foreground")}>
-                    {formatEuro(offen)}
-                  </Eigenschaft>
-                </Eigenschaften>
-              </Seitenblock>
+              {zeigeFinanzen && (
+                <Seitenblock titel="Konto">
+                  <Eigenschaften breite="schmal">
+                    <Eigenschaft label="Berechnet" className="tabular-nums">{formatEuro(gesamt)}</Eigenschaft>
+                    <Eigenschaft label="Bezahlt" className="tabular-nums">{formatEuro(bezahlt)}</Eigenschaft>
+                    <Eigenschaft label="Offen" className={cn("font-semibold tabular-nums", offen > 0 && "text-foreground")}>
+                      {formatEuro(offen)}
+                    </Eigenschaft>
+                  </Eigenschaften>
+                </Seitenblock>
+              )}
             </aside>
           </div>
         </TabsContent>
@@ -482,70 +498,72 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
         </TabsContent>
 
         {/* ---------------- Rechnungen ---------------- */}
-        <TabsContent value="rechnungen" className="mt-6 space-y-8">
-          <KpiRow cols={3}>
-            <KpiCard label="Berechnet" value={formatEuro(gesamt)} sub={`${rechnungen.length} Rechnungen`} />
-            <KpiCard label="Bezahlt" value={formatEuro(bezahlt)} sub={`${rechnungen.filter((r) => r.status === "bezahlt").length} Rechnungen`} />
-            <KpiCard
-              label="Offen"
-              value={formatEuro(offen)}
-              sub={`${rechnungen.filter((r) => r.status !== "bezahlt").length} Rechnungen`}
-              tone={rechnungen.some((r) => r.status === "ueberfaellig") ? "destructive" : "neutral"}
-            />
-          </KpiRow>
+        {zeigeFinanzen && (
+          <TabsContent value="rechnungen" className="mt-6 space-y-8">
+            <KpiRow cols={3}>
+              <KpiCard label="Berechnet" value={formatEuro(gesamt)} sub={`${rechnungen.length} Rechnungen`} />
+              <KpiCard label="Bezahlt" value={formatEuro(bezahlt)} sub={`${rechnungen.filter((r) => r.status === "bezahlt").length} Rechnungen`} />
+              <KpiCard
+                label="Offen"
+                value={formatEuro(offen)}
+                sub={`${rechnungen.filter((r) => r.status !== "bezahlt").length} Rechnungen`}
+                tone={rechnungen.some((r) => r.status === "ueberfaellig") ? "destructive" : "neutral"}
+              />
+            </KpiRow>
 
-          <Abschnitt
-            titel="Rechnungen"
-            aktion={
-              <Button asChild variant="outline" size="sm">
-                <Link href="/rechnungen/neu">Rechnung schreiben</Link>
-              </Button>
-            }
-            rahmen
-          >
-            {rechnungen.length === 0 ? (
-              <AbschnittLeer>Noch keine Rechnungen für diesen Schüler.</AbschnittLeer>
-            ) : (
-              <Table>
-                <TableHeader className="static">
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead>Nummer</TableHead>
-                    <TableHead>Datum</TableHead>
-                    <TableHead className="hidden sm:table-cell">Fällig</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead align="right">Betrag</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rechnungen.map((r) => {
-                    const status = RECHNUNG_STATUS[r.status];
-                    return (
-                      <TableRow key={r.id}>
-                        <TableCell className="font-medium">
-                          <Link href={`/rechnungen/${r.id}`} className="hover:underline">
-                            {r.nummer}
-                          </Link>
-                        </TableCell>
-                        <TableCell muted>{formatDatum(r.rechnungsdatum)}</TableCell>
-                        <TableCell muted className="hidden sm:table-cell">
-                          {formatDatum(r.faelligkeitsdatum)}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={status.variant}>{status.label}</Badge>
-                        </TableCell>
-                        <TableCell numeric className="font-medium">
-                          {formatEuro(Number(r.betrag_brutto))}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </Abschnitt>
+            <Abschnitt
+              titel="Rechnungen"
+              aktion={
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/rechnungen/neu">Rechnung schreiben</Link>
+                </Button>
+              }
+              rahmen
+            >
+              {rechnungen.length === 0 ? (
+                <AbschnittLeer>Noch keine Rechnungen für diesen Schüler.</AbschnittLeer>
+              ) : (
+                <Table>
+                  <TableHeader className="static">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead>Nummer</TableHead>
+                      <TableHead>Datum</TableHead>
+                      <TableHead className="hidden sm:table-cell">Fällig</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead align="right">Betrag</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rechnungen.map((r) => {
+                      const status = RECHNUNG_STATUS[r.status];
+                      return (
+                        <TableRow key={r.id}>
+                          <TableCell className="font-medium">
+                            <Link href={`/rechnungen/${r.id}`} className="hover:underline">
+                              {r.nummer}
+                            </Link>
+                          </TableCell>
+                          <TableCell muted>{formatDatum(r.rechnungsdatum)}</TableCell>
+                          <TableCell muted className="hidden sm:table-cell">
+                            {formatDatum(r.faelligkeitsdatum)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={status.variant}>{status.label}</Badge>
+                          </TableCell>
+                          <TableCell numeric className="font-medium">
+                            {formatEuro(Number(r.betrag_brutto))}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </Abschnitt>
 
-          <RatenBox schuelerId={s.id} raten={raten} />
-        </TabsContent>
+            <RatenBox schuelerId={s.id} raten={raten} />
+          </TabsContent>
+        )}
 
         {/* ---------------- Dokumente ---------------- */}
         <TabsContent value="dokumente" className="mt-6 space-y-8">
