@@ -126,8 +126,11 @@ export function ZahlungForm({ fahrschule }: { fahrschule: Fahrschule }) {
         </Field>
       </EinstellungsKarte>
 
-      <EinstellungsKarte titel="Online bezahlen" beschreibung="Im Schülerportal erscheint dann ein Knopf „Online bezahlen“. Ohne Link zeigt das Portal die Überweisungsdaten.">
-        <Field label="Zahlungslink" hint="z. B. ein Stripe-Zahlungslink oder paypal.me/deinefahrschule">
+      <EinstellungsKarte
+        titel="Eigener Zahlungslink"
+        beschreibung="Nur nötig ohne Stripe-Verbindung: Portal und App zeigen dann „Online bezahlen“ mit diesem Link. Ohne Link erscheinen die Überweisungsdaten."
+      >
+        <Field label="Zahlungslink" hint="Optional, z. B. paypal.me/deinefahrschule">
           <Input name="zahlungslink" placeholder="https://" defaultValue={fahrschule.zahlungslink ?? undefined} />
         </Field>
       </EinstellungsKarte>

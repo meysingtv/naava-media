@@ -72,6 +72,14 @@ export function formatDatum(iso: string | null | undefined): string {
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
 }
 
+/** Zeitstempel mit Uhrzeit (z. B. created_at) → "TT.MM.JJJJ" in Ortszeit. */
+export function formatZeitpunkt(zeitpunkt: string | null | undefined): string {
+  if (!zeitpunkt) return "—";
+  const d = new Date(zeitpunkt);
+  if (Number.isNaN(d.getTime())) return "—";
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+}
+
 const MONATE_KURZ = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
 
 /** Bausteine für einen Datums-Block: 25 · Do · Sep */

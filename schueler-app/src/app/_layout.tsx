@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -20,6 +20,10 @@ function RootNavigator() {
   const { session, verknuepft, laedt } = useAuth();
   const { colors, schema } = useTheme();
   const drin = Boolean(session) && verknuepft;
+  // Weiße Statusleiste über den blauen Köpfen (Tabs, Anmeldung, Modal),
+  // dunkle auf den hellen Unterseiten.
+  const [seite, setSeite] = useState("index");
+  const helleSeite = seite === "profil" || seite === "rechnung/[id]";
 
   useEffect(() => {
     if (drin) planeErinnerungen();
@@ -37,8 +41,9 @@ function RootNavigator() {
 
   return (
     <>
-      <StatusBar style={schema === "dark" ? "light" : "dark"} />
+      <StatusBar style={helleSeite && schema !== "dark" ? "dark" : "light"} />
       <Stack
+        screenListeners={({ route }) => ({ focus: () => setSeite(route.name) })}
         screenOptions={{
           headerStyle: { backgroundColor: colors.bg },
           headerTitleStyle: { color: colors.text },
@@ -62,6 +67,7 @@ function RootNavigator() {
           />
           <Stack.Screen name="rechnung/[id]" options={{ title: "Rechnung" }} />
           <Stack.Screen name="profil" options={{ title: "Profil" }} />
+          <Stack.Screen name="zahlung" options={{ headerShown: false, animation: "none" }} />
         </Stack.Protected>
       </Stack>
     </>

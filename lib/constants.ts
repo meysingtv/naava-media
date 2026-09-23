@@ -199,6 +199,7 @@ export const ZAHLARTEN: Record<string, string> = {
   bar: "Bar",
   lastschrift: "Lastschrift",
   karte: "Karte",
+  online: "Online (Stripe)",
 };
 
 // ---------------------------------------------------------------------

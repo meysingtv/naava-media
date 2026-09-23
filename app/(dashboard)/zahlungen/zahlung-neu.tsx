@@ -20,7 +20,10 @@ export interface OffeneRechnung {
   schueler: string;
 }
 
-const ZAHLART_OPTIONEN = Object.entries(ZAHLARTEN).map(([value, label]) => ({ value, label }));
+// „Online (Stripe)“ bucht nur der Stripe-Webhook – nicht von Hand erfassbar.
+const ZAHLART_OPTIONEN = Object.entries(ZAHLARTEN)
+  .filter(([value]) => value !== "online")
+  .map(([value, label]) => ({ value, label }));
 
 interface Props {
   schueler: { id: string; label: string }[];

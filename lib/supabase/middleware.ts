@@ -83,6 +83,12 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
+  // Online-Zahlung: Stripe-Webhook, Bezahl-API der App (eigenes Token) und
+  // Rücksprung von der Stripe-Bezahlseite – ohne Cookie-Login, auf jedem Host.
+  if (path.startsWith("/api/stripe/") || path.startsWith("/api/zahlung/") || path.startsWith("/zahlung/")) {
+    return supabaseResponse;
+  }
+
   // Auf der Portal-Domain werden alle Wurzelpfade intern unter /portal bedient
   // (der Schüler sieht saubere URLs wie mein.fahrschule.de/termine).
   let effektiv = path;

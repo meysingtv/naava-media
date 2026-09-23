@@ -1,15 +1,18 @@
-import type { ReactNode } from "react";
-import { Image, Text, View } from "react-native";
+import { useRef, type ReactNode } from "react";
+import { Animated, Image, RefreshControl, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useTabPlatz } from "@/components/tab-leiste";
+import { useZiehen } from "@/lib/use-loader";
 import { useTheme } from "@/lib/theme-context";
 import { space } from "@/lib/theme";
 
 /**
- * Farbiger Kopf mit Verlauf (Blau → Türkis) und zwei weichen Kreisen als
- * Hintergrund-Deko. Unten abgerundet; Inhalte darunter dürfen per negativem
- * Abstand in den Kopf hineinragen.
+ * Farbiger Kopf mit Verlauf (oben Blau, unten Türkis) und zwei weichen
+ * Kreisen als Deko. Unten abgerundet; Inhalte darunter dürfen per negativem
+ * Abstand in den Kopf hineinragen. Die Oberkante ist durchgehend einfarbig,
+ * damit der Kopf beim Herunterziehen nahtlos „wächst“.
  */
 export function GradientKopf({
   titel,
@@ -33,9 +36,10 @@ export function GradientKopf({
 
   return (
     <LinearGradient
-      colors={[colors.heroVon, colors.heroBis]}
+      colors={[colors.heroVon, colors.heroVon, colors.heroBis]}
+      locations={[0, 0.3, 1]}
       start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+      end={{ x: 0, y: 1 }}
       style={{
         paddingTop: insets.top + space(2),
         paddingHorizontal: space(5),
@@ -45,10 +49,10 @@ export function GradientKopf({
         overflow: "hidden",
       }}
     >
-      {/* Deko */}
+      {/* Deko – berührt die Oberkante nicht, sonst entstünde beim Ziehen eine Kante. */}
       <View
         pointerEvents="none"
-        style={{ position: "absolute", width: 240, height: 240, borderRadius: 120, backgroundColor: "rgba(255,255,255,0.08)", top: -80, right: -70 }}
+        style={{ position: "absolute", width: 240, height: 240, borderRadius: 120, backgroundColor: "rgba(255,255,255,0.08)", top: space(6), right: -90 }}
       />
       <View
         pointerEvents="none"
@@ -67,9 +71,60 @@ export function GradientKopf({
           {titel}
         </Text>
       ) : null}
-      {untertitel ? <Text style={{ fontSize: 15, color: "rgba(255,255,255,0.85)", marginTop: 4 }}>{untertitel}</Text> : null}
+      {untertitel ? <Text style={{ fontSize: 15, color: "rgba(255,255,255,0.88)", marginTop: 4 }}>{untertitel}</Text> : null}
       {children}
     </LinearGradient>
+  );
+}
+
+const nichts = async () => {};
+
+/**
+ * Scroll-Seite mit Verlaufskopf. Oben bleibt es beim Herunterziehen blau
+ * (weißer Lade-Kreisel), unten federt der Seitenhintergrund nach. Scrollt der
+ * Kopf weg, blendet ein Streifen in Kopffarbe hinter der Statusleiste ein.
+ */
+export function KopfSeite({
+  kopf,
+  children,
+  onRefresh,
+}: {
+  kopf: ReactNode;
+  children: ReactNode;
+  onRefresh?: () => Promise<unknown>;
+}) {
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const platz = useTabPlatz();
+  const ziehen = useZiehen(onRefresh ?? nichts);
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const streifen = scrollY.interpolate({ inputRange: [0, space(8)], outputRange: [0, 1], extrapolate: "clamp" });
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <Animated.ScrollView
+        style={{ flex: 1, backgroundColor: colors.heroVon }}
+        contentContainerStyle={{ flexGrow: 1, backgroundColor: colors.bg, paddingBottom: platz }}
+        scrollEventThrottle={16}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+        refreshControl={
+          onRefresh ? <RefreshControl refreshing={ziehen.refreshing} onRefresh={ziehen.onRefresh} tintColor="#FFFFFF" /> : undefined
+        }
+      >
+        {kopf}
+        {children}
+        {/* Unter dem Inhalt: Seitenhintergrund statt Blau, wenn es unten nachfedert. */}
+        <View
+          pointerEvents="none"
+          style={{ position: "absolute", left: 0, right: 0, top: "100%", height: 1000, backgroundColor: colors.bg }}
+        />
+      </Animated.ScrollView>
+
+      <Animated.View
+        pointerEvents="none"
+        style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top, backgroundColor: colors.heroVon, opacity: streifen }}
+      />
+    </View>
   );
 }
 

@@ -7,9 +7,11 @@ import { getKontext } from "@/lib/supabase/queries";
 import { PageHeader } from "@/components/shared/page-header";
 import { cn } from "@/lib/utils";
 import type { Leistung } from "@/lib/types";
+import { stripeStatusLaden } from "@/lib/zahlung/status";
 import { FahrschuleForm, ZahlungForm } from "./einstellungen-form";
 import { LeistungNeu, Preisliste } from "./preisliste";
 import { AnfragenEinstellungen, type AnfrageSchueler } from "./anfragen-einstellungen";
+import { OnlineZahlung } from "./online-zahlung";
 
 export const metadata = { title: "Einstellungen · FahrschulApp" };
 
@@ -22,7 +24,11 @@ const BEREICHE = [
 
 type Bereich = (typeof BEREICHE)[number]["key"];
 
-export default async function EinstellungenPage({ searchParams }: { searchParams: { bereich?: string } }) {
+export default async function EinstellungenPage({
+  searchParams,
+}: {
+  searchParams: { bereich?: string; stripe?: string; grund?: string };
+}) {
   const kontext = await getKontext();
   if (!kontext?.fahrschule) redirect("/auth/login");
   // Nur die Geschäftsführung darf das Profil der Fahrschule bearbeiten.
@@ -42,6 +48,8 @@ export default async function EinstellungenPage({ searchParams }: { searchParams
             .returns<Leistung[]>()
         ).data ?? []
       : [];
+
+  const stripeStatus = bereich === "zahlung" ? await stripeStatusLaden(kontext.fahrschule) : null;
 
   // Schülerportal: Online-Anfragen – Schüler in Ausbildung mit ihrer Freigabe.
   let anfrageSchueler: AnfrageSchueler[] = [];
@@ -107,7 +115,12 @@ export default async function EinstellungenPage({ searchParams }: { searchParams
 
         <div className="min-w-0 max-w-3xl">
           {bereich === "fahrschule" && <FahrschuleForm fahrschule={kontext.fahrschule} />}
-          {bereich === "zahlung" && <ZahlungForm fahrschule={kontext.fahrschule} />}
+          {bereich === "zahlung" && (
+            <div className="space-y-6">
+              {stripeStatus && <OnlineZahlung status={stripeStatus} hinweis={searchParams.stripe} grund={searchParams.grund} />}
+              <ZahlungForm fahrschule={kontext.fahrschule} />
+            </div>
+          )}
           {bereich === "preisliste" && <Preisliste leistungen={leistungen} />}
           {bereich === "portal" && (
             <AnfragenEinstellungen

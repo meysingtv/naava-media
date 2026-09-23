@@ -39,7 +39,7 @@ export async function ladeSchule(): Promise<Ergebnis<Schule>> {
 export function ladeSchueler() {
   return supabase
     .from("fahrschueler")
-    .select("id, vorname, nachname, email, fuehrerscheinklassen, theorie_bestanden, lernstatus, anmeldedatum")
+    .select("id, vorname, nachname, email, fuehrerscheinklassen, theorie_bestanden, lernstatus, anmeldedatum, sepa_mandat_ref")
     .maybeSingle<Schueler>();
 }
 

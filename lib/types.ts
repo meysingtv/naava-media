@@ -33,6 +33,10 @@ export type Fahrschule = {
   anfragen_aktiv?: boolean;
   anfragen_vorlauf_stunden?: number;
   anfragen_max_offen?: number;
+  // Online-Zahlung mit Stripe Connect (Migration 0021) – fehlen, solange sie nicht eingespielt ist
+  stripe_konto_id?: string | null;
+  stripe_bereit?: boolean;
+  online_zahlung_aktiv?: boolean;
   created_at: string;
 };
 
@@ -274,9 +278,11 @@ export type Zahlung = {
   rechnung_id: string | null;
   betrag: number;
   datum: string;
-  art: string; // bar | ueberweisung | lastschrift | karte
+  art: string; // bar | ueberweisung | lastschrift | karte | online
   notiz: string | null;
   created_at: string;
+  // Stripe-Bezahlvorgang, falls online bezahlt (Migration 0021)
+  zahlungsvorgang_id?: string | null;
 };
 
 export type Rate = {

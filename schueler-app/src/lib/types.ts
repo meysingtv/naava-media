@@ -11,6 +11,8 @@ export type Schueler = {
   theorie_bestanden: boolean;
   lernstatus: number | null;
   anmeldedatum: string;
+  /** Gesetzt, wenn die Fahrschule per SEPA-Lastschrift einzieht. */
+  sepa_mandat_ref: string | null;
 };
 
 export type Schule = {

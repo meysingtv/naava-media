@@ -5,11 +5,12 @@ import { useRouter } from "expo-router";
 
 import { Badge, Button, IconKachel, Screen, Segmented } from "@/components/ui";
 import { GradientKopf } from "@/components/kopf";
+import { useTabPlatz } from "@/components/tab-leiste";
 import { DatumBlock, TerminKarte } from "@/components/termin-karte";
 import { istAnstehend } from "@/lib/constants";
 import { anfrageZurueckziehen, ladeAnfragen, ladeFahrstunden, ladeLehrer, ladeRegeln } from "@/lib/daten";
 import { endUhrzeit, formatDatumLang, formatUhrzeit } from "@/lib/format";
-import { useLoader } from "@/lib/use-loader";
+import { useLoader, useZiehen } from "@/lib/use-loader";
 import { useRealtime } from "@/lib/use-realtime";
 import { useTheme } from "@/lib/theme-context";
 import { karte, space } from "@/lib/theme";
@@ -125,10 +126,10 @@ export default function TermineScreen() {
   }, [anfragen.data]);
 
   function neu() {
-    stunden.refresh();
-    anfragen.refresh();
-    regeln.refresh();
+    return Promise.all([stunden.refresh(), anfragen.refresh(), regeln.refresh()]);
   }
+  const ziehen = useZiehen(neu);
+  const platz = useTabPlatz();
 
   return (
     <Screen>
@@ -170,8 +171,8 @@ export default function TermineScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: space(4), paddingBottom: space(10), gap: space(3) }}
-        refreshControl={<RefreshControl refreshing={stunden.refreshing} onRefresh={neu} tintColor={colors.accent} />}
+        contentContainerStyle={{ paddingHorizontal: space(4), paddingBottom: platz, gap: space(3) }}
+        refreshControl={<RefreshControl refreshing={ziehen.refreshing} onRefresh={ziehen.onRefresh} tintColor={colors.accent} />}
       >
         {ansicht === "anstehend" ? (
           anstehend.length === 0 ? (

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Banknote, CheckCircle2, ExternalLink } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Banknote, CheckCircle2, ExternalLink, Lock } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,24 +10,35 @@ import { CopyButton } from "@/components/shared/copy-button";
 import { RECHNUNG_STATUS } from "@/lib/constants";
 import { formatDatum, formatEuro } from "@/lib/utils";
 import type { Rechnung, RechnungPosition } from "@/lib/types";
+import { SubmitButton } from "@/components/shared/submit-button";
 import { getSchuelerKontext } from "../../kontext";
 import { PortalShell } from "../../portal-shell";
+import { portalBezahlen } from "../zahlung-actions";
 
 export const metadata = { title: "Rechnung" };
 
-export default async function PortalRechnungDetailPage({ params }: { params: { id: string } }) {
+export default async function PortalRechnungDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams: { zahlung?: string; grund?: string };
+}) {
   const { schueler, schule } = await getSchuelerKontext();
   const schuleName = schule?.name ?? "Fahrschule";
 
   const supabase = createClient();
-  const [{ data: rechnungData }, { data: posData }] = await Promise.all([
+  const [{ data: rechnungData }, { data: posData }, { data: onlineData }] = await Promise.all([
     supabase.from("rechnung").select("*").eq("id", params.id).maybeSingle(),
     supabase
       .from("rechnung_position")
       .select("*")
       .eq("rechnung_id", params.id)
       .returns<RechnungPosition[]>(),
+    // Online-Zahlung mit Stripe (Update 0021) – ohne Update einfach aus.
+    supabase.rpc("portal_online_zahlung"),
   ]);
+  const onlineZahlung = onlineData === true;
 
   if (!rechnungData) notFound();
   const r = rechnungData as Rechnung;
@@ -85,6 +96,24 @@ export default async function PortalRechnungDetailPage({ params }: { params: { i
           </CardContent>
         </Card>
 
+        {/* Rückmeldung von der Stripe-Bezahlseite */}
+        {!bezahlt && searchParams.zahlung === "erfolg" && (
+          <Card className="border-success/30 bg-success-soft">
+            <CardContent className="flex items-center gap-2 p-4 text-success">
+              <CheckCircle2 className="h-5 w-5 shrink-0" />
+              <span className="text-sm font-medium">Danke! Deine Zahlung wird bestätigt – das dauert meist nur einen Moment.</span>
+            </CardContent>
+          </Card>
+        )}
+        {!bezahlt && searchParams.zahlung === "fehler" && (
+          <Card className="border-warning/30 bg-warning-soft">
+            <CardContent className="flex items-center gap-2 p-4 text-warning-text">
+              <AlertTriangle className="h-5 w-5 shrink-0" />
+              <span className="text-sm font-medium">{searchParams.grund || "Die Zahlung konnte nicht gestartet werden."}</span>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Bezahlen */}
         {bezahlt ? (
           <Card className="border-success/30 bg-success-soft">
@@ -109,7 +138,19 @@ export default async function PortalRechnungDetailPage({ params }: { params: { i
             <CardContent className="space-y-4 p-4">
               <p className="text-sm font-medium text-foreground">Bezahlen</p>
 
-              {schule?.zahlungslink && (
+              {onlineZahlung && (
+                <form action={portalBezahlen} className="space-y-2">
+                  <input type="hidden" name="rechnung_id" value={r.id} />
+                  <SubmitButton className="w-full">
+                    <Lock className="h-4 w-4" /> Jetzt bezahlen · {formatEuro(Number(r.betrag_brutto))}
+                  </SubmitButton>
+                  <p className="text-center text-xs text-muted-foreground">
+                    Sicher über Stripe – z. B. mit Apple Pay, Karte oder Lastschrift.
+                  </p>
+                </form>
+              )}
+
+              {!onlineZahlung && schule?.zahlungslink && (
                 <Button asChild className="w-full">
                   <a href={schule.zahlungslink} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4" /> Online bezahlen
@@ -139,7 +180,7 @@ export default async function PortalRechnungDetailPage({ params }: { params: { i
                 </div>
               )}
 
-              {!schule?.zahlungslink && !schule?.iban && (
+              {!onlineZahlung && !schule?.zahlungslink && !schule?.iban && (
                 <p className="text-sm text-muted-foreground">
                   Zahlungsinfos folgen – bitte wende dich an deine Fahrschule.
                 </p>

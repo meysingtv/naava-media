@@ -4,6 +4,7 @@ function hinweis(meldung: string): string {
     return " (Update 0019_terminbestaetigung.sql einspielen)";
   }
   if (/anfrage|anfragen_/i.test(meldung)) return " (Update 0020_fahrstunden_anfragen.sql einspielen)";
+  if (/stripe_|online_zahlung|zahlungsvorgang/i.test(meldung)) return " (Update 0021_online_zahlung.sql einspielen)";
   return "";
 }
 
