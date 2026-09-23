@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useFormState } from "react-dom";
 
 import { passwortVergessen, type FormState } from "@/app/auth/actions";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { SubmitButton } from "@/components/shared/submit-button";
 import { FormMessage } from "@/components/shared/form-message";
+import { SubmitButton } from "@/components/shared/submit-button";
+import { AuthKopf } from "../auth-kopf";
 
 const initial: FormState = {};
 
@@ -16,39 +16,28 @@ export default function PasswortVergessenPage() {
   const [state, action] = useFormState(passwortVergessen, initial);
 
   return (
-    <Card>
-      <CardHeader className="px-6 pb-3 pt-6 sm:px-7 sm:pt-7">
-        <CardTitle className="text-xl font-semibold tracking-[-0.01em]">Passwort vergessen?</CardTitle>
-        <CardDescription>
-          Gib deine E-Mail-Adresse ein – wir senden dir einen Link zum Zurücksetzen.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4 px-6 pb-6 pt-0 sm:px-7 sm:pb-7">
-        {state.message ? (
-          <FormMessage message={state.message} />
-        ) : (
-          <form action={action} className="space-y-4">
+    <>
+      <AuthKopf titel="Passwort vergessen?" text="Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort festlegst." />
+      {state.message ? (
+        <FormMessage message={state.message} />
+      ) : (
+        <form action={action}>
+          <div className="space-y-5">
             <FormMessage error={state.error} />
-            <div className="space-y-2">
-              <Label htmlFor="email">E-Mail</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                placeholder="name@fahrschule.de"
-              />
-            </div>
-            <SubmitButton className="w-full">Link anfordern</SubmitButton>
-          </form>
-        )}
-        <p className="text-center text-sm text-muted-foreground">
-          <Link href="/auth/login" className="font-medium text-primary hover:underline">
-            Zurück zur Anmeldung
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
+            <Field label="E-Mail">
+              <Input name="email" type="email" autoComplete="email" required placeholder="name@fahrschule.de" />
+            </Field>
+            <SubmitButton size="lg" className="h-10 w-full">
+              Link anfordern
+            </SubmitButton>
+          </div>
+        </form>
+      )}
+      <p className="mt-8 text-13 text-foreground-secondary">
+        <Link href="/auth/login" className="font-medium text-primary-text hover:underline">
+          Zurück zur Anmeldung
+        </Link>
+      </p>
+    </>
   );
 }

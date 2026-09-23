@@ -56,6 +56,7 @@ export interface DatumFeldProps {
   className?: string;
   "aria-invalid"?: boolean;
   "aria-describedby"?: string;
+  "aria-label"?: string;
 }
 
 /**

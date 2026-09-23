@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getKontext } from "@/lib/supabase/queries";
+import { AuthKopf } from "../auth-kopf";
 import { SetupForm } from "./setup-form";
 
 export const metadata = { title: "Fahrschule einrichten · FahrschulApp" };
@@ -18,17 +18,9 @@ export default async function SetupPage() {
   }
 
   return (
-    <Card>
-      <CardHeader className="px-6 pb-3 pt-6 sm:px-7 sm:pt-7">
-        <CardTitle className="text-xl font-semibold tracking-[-0.01em]">Fahrschule einrichten</CardTitle>
-        <CardDescription>
-          Nur noch ein Schritt: Lege deinen Betrieb an. Du bist damit automatisch als
-          Geschäftsführer eingetragen.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="px-6 pb-6 pt-0 sm:px-7 sm:pb-7">
-        <SetupForm defaultEmail={kontext.email ?? undefined} />
-      </CardContent>
-    </Card>
+    <>
+      <AuthKopf titel="Fahrschule einrichten" text="Noch ein Schritt: Lege deine Fahrschule an. Du bist dann automatisch als Geschäftsführer eingetragen." />
+      <SetupForm defaultEmail={kontext.email ?? undefined} />
+    </>
   );
 }

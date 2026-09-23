@@ -1,11 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { DetailKopf } from "@/components/shared/detail-kopf";
 import { formatDatum, formatEuro } from "@/lib/utils";
 import type { Fahrschueler, Rechnung } from "@/lib/types";
 import { PrintButton } from "../print-button";
@@ -56,27 +53,32 @@ export default async function MahnungPage({ params }: { params: { id: string } }
     : null;
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <Button asChild variant="ghost" size="sm">
-          <Link href={`/rechnungen/${r.id}`}>
-            <ArrowLeft className="h-4 w-4" /> Zurück
-          </Link>
-        </Button>
-        <PrintButton />
+    <div>
+      <div className="print:hidden">
+        <DetailKopf
+          zurueck={{ href: `/rechnungen/${r.id}`, label: `Rechnung ${r.nummer}` }}
+          titel={info.titel}
+          kurztitel={`Mahnung ${r.nummer}`}
+          meta={[
+            r.fahrschueler ? `${r.fahrschueler.vorname} ${r.fahrschueler.nachname}` : "Ohne Schüler",
+            `Rechnung ${r.nummer}`,
+            `zu zahlen ${formatEuro(gesamt)}`,
+          ]}
+          aktionen={<PrintButton />}
+        />
       </div>
 
-      <Card className="mx-auto max-w-3xl p-8 sm:p-12 print:border-0 print:shadow-none">
+      <article className="mx-auto max-w-3xl rounded-xl bg-card px-8 py-10 text-foreground shadow-panel sm:px-12 print:max-w-none print:p-0 print:shadow-none">
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-xl font-semibold">{fs?.name ?? "Fahrschule"}</h1>
-            <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
+            <p className="mt-1 whitespace-pre-line text-sm text-foreground-secondary">
               {[fs?.strasse, [fs?.plz, fs?.ort].filter(Boolean).join(" ")].filter(Boolean).join("\n")}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-lg font-semibold text-destructive">{info.titel}</p>
-            <p className="text-xs text-muted-foreground">vom {formatDatum(heute)}</p>
+            <p className="text-lg font-semibold text-foreground">{info.titel}</p>
+            <p className="text-xs text-foreground-secondary">vom {formatDatum(heute)}</p>
           </div>
         </div>
 
@@ -85,7 +87,7 @@ export default async function MahnungPage({ params }: { params: { id: string } }
             <p className="font-medium">
               {r.fahrschueler.vorname} {r.fahrschueler.nachname}
             </p>
-            <p className="whitespace-pre-line text-muted-foreground">
+            <p className="whitespace-pre-line text-foreground-secondary">
               {[r.fahrschueler.strasse, [r.fahrschueler.plz, r.fahrschueler.ort].filter(Boolean).join(" ")]
                 .filter(Boolean)
                 .join("\n")}
@@ -100,7 +102,7 @@ export default async function MahnungPage({ params }: { params: { id: string } }
 
         <table className="mt-8 w-full text-sm">
           <thead>
-            <tr className="border-b text-left text-muted-foreground">
+            <tr className="border-b text-left text-foreground-secondary">
               <th className="py-2 font-medium">Rechnung</th>
               <th className="py-2 font-medium">Datum</th>
               <th className="py-2 font-medium">Fällig</th>
@@ -114,7 +116,7 @@ export default async function MahnungPage({ params }: { params: { id: string } }
               <td className="py-2.5">
                 {r.faelligkeitsdatum ? formatDatum(r.faelligkeitsdatum) : "—"}
                 {tageOffen != null && tageOffen > 0 && (
-                  <span className="ml-1 text-destructive">({tageOffen} T. überfällig)</span>
+                  <span className="ml-1 text-destructive-text">({tageOffen} T. überfällig)</span>
                 )}
               </td>
               <td className="py-2.5 text-right">{formatEuro(brutto)}</td>
@@ -124,12 +126,12 @@ export default async function MahnungPage({ params }: { params: { id: string } }
 
         <div className="mt-4 flex justify-end">
           <div className="w-full max-w-xs space-y-1 text-sm">
-            <div className="flex justify-between text-muted-foreground">
+            <div className="flex justify-between text-foreground-secondary">
               <span>Offener Rechnungsbetrag</span>
               <span>{formatEuro(brutto)}</span>
             </div>
             {info.gebuehr > 0 && (
-              <div className="flex justify-between text-muted-foreground">
+              <div className="flex justify-between text-foreground-secondary">
                 <span>Mahngebühr</span>
                 <span>{formatEuro(info.gebuehr)}</span>
               </div>
@@ -142,13 +144,13 @@ export default async function MahnungPage({ params }: { params: { id: string } }
         </div>
 
         {(fs?.iban || fs?.kontoinhaber) && (
-          <p className="mt-8 border-t pt-4 text-xs text-muted-foreground">
+          <p className="mt-8 border-t pt-4 text-xs text-foreground-secondary">
             Bitte überweisen Sie auf: {fs?.kontoinhaber ? `${fs.kontoinhaber}, ` : ""}
             {fs?.iban ? `IBAN ${fs.iban}` : ""}
             {fs?.bic ? `, BIC ${fs.bic}` : ""} · Verwendungszweck: {r.nummer}
           </p>
         )}
-      </Card>
+      </article>
     </div>
   );
 }

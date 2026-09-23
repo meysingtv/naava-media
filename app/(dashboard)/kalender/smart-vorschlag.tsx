@@ -2,11 +2,15 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarPlus, RotateCcw, Sparkles, Wand2 } from "lucide-react";
+import { CalendarPlus, RotateCcw, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { Auswahl } from "@/components/ui/auswahl";
+import { Balken } from "@/components/ui/fortschritt";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -14,73 +18,66 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { FAHRSTUNDE_TYPEN } from "@/lib/constants";
-import { cn } from "@/lib/utils";
-import { smartVorschlagBerechnen, terminAusVorschlag, type DispoVorschlag } from "./actions";
+import { Field } from "@/components/ui/field";
+import { FormMessage } from "@/components/shared/form-message";
+import { AKZENT } from "@/lib/farben";
+import { FAHRSTUNDE_FARBE, FAHRSTUNDE_TYPEN } from "@/lib/constants";
+import { terminAusVorschlag, smartVorschlagBerechnen, type DispoVorschlag } from "./actions";
 import type { Option } from "./fahrstunde-panel";
 
 function formatSlot(datum: string, uhrzeit: string): string {
   const d = new Date(`${datum}T${uhrzeit}:00`);
-  const tag = d.toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" });
-  return `${tag} · ${uhrzeit} Uhr`;
+  return `${d.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" })}, ${uhrzeit} Uhr`;
 }
 
-function FortschrittReihe({ label, done, soll }: { label: string; done: number; soll: number }) {
-  const quote = soll > 0 ? Math.min(100, Math.round((done / soll) * 100)) : 100;
-  const fertig = done >= soll;
+function Sonderfahrt({ label, erledigt, soll }: { label: string; erledigt: number; soll: number }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="w-16 shrink-0 text-xs text-muted-foreground">{label}</span>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border">
-        <div className={cn("h-full rounded-full", fertig ? "bg-success" : "bg-primary")} style={{ width: `${quote}%` }} />
-      </div>
-      <span className="w-9 shrink-0 text-right text-xs font-medium tabular-nums text-foreground">
-        {done}/{soll}
+    <div className="grid grid-cols-[72px_minmax(0,1fr)_40px] items-center gap-3 text-13">
+      <span className="text-foreground-secondary">{label}</span>
+      <Balken anteil={soll > 0 ? erledigt / soll : 1} farbe={erledigt >= soll ? AKZENT.smaragd : AKZENT.blau} />
+      <span className="text-right font-medium tabular-nums text-foreground">
+        {erledigt}/{soll}
       </span>
     </div>
   );
 }
 
-export function VorschlagKarte({ v }: { v: DispoVorschlag }) {
+function Vorschlag({ v }: { v: DispoVorschlag }) {
   const typ = FAHRSTUNDE_TYPEN[v.typ];
   return (
-    <div className="space-y-3 rounded-lg border bg-surface-muted p-3">
-      <div className="flex items-center gap-2">
-        <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", typ.dot)} />
-        <span className="text-[13px] font-semibold text-foreground">{typ.label}</span>
-        <span className="ml-auto text-xs text-muted-foreground">Klasse {v.klasse}</span>
-      </div>
-      <p className="text-xs text-foreground-secondary">{v.begruendung}</p>
-
-      <div className="rounded-md border bg-card px-3 py-2">
-        <p className="text-[13px] font-semibold text-foreground">{formatSlot(v.datum, v.uhrzeit)}</p>
-        <p className="text-xs text-muted-foreground">
-          {v.dauer_minuten} Min · {v.fahrlehrerName ?? "Fahrlehrer offen"} · {v.fahrzeugKennzeichen ?? "Fahrzeug offen"}
+    <div className="space-y-4">
+      <div className="rounded-lg p-4" style={{ background: `${FAHRSTUNDE_FARBE[v.typ]}14`, boxShadow: `inset 3px 0 0 ${FAHRSTUNDE_FARBE[v.typ]}` }}>
+        <p className="text-13 font-semibold text-foreground">{typ.label}</p>
+        <p className="mt-1 text-sm font-semibold text-foreground">{formatSlot(v.datum, v.uhrzeit)}</p>
+        <p className="mt-0.5 text-13 text-foreground-secondary">
+          {v.dauer_minuten} Min. · {v.fahrlehrerName ?? "Fahrlehrer offen"} · {v.fahrzeugKennzeichen ?? "Fahrzeug offen"}
         </p>
       </div>
-
-      <div className="space-y-1.5">
-        <p className="label-caps">Pflicht-Sonderfahrten</p>
-        <FortschrittReihe label="Überland" done={v.fortschritt.ueberland[0]} soll={v.fortschritt.ueberland[1]} />
-        <FortschrittReihe label="Autobahn" done={v.fortschritt.autobahn[0]} soll={v.fortschritt.autobahn[1]} />
-        <FortschrittReihe label="Nacht" done={v.fortschritt.nacht[0]} soll={v.fortschritt.nacht[1]} />
+      <p className="text-13 text-foreground-secondary">{v.begruendung}</p>
+      <div className="space-y-2.5 border-t border-border pt-4">
+        <p className="text-13 font-medium text-foreground">Sonderfahrten Klasse {v.klasse}</p>
+        <Sonderfahrt label="Überland" erledigt={v.fortschritt.ueberland[0]} soll={v.fortschritt.ueberland[1]} />
+        <Sonderfahrt label="Autobahn" erledigt={v.fortschritt.autobahn[0]} soll={v.fortschritt.autobahn[1]} />
+        <Sonderfahrt label="Nacht" erledigt={v.fortschritt.nacht[0]} soll={v.fortschritt.nacht[1]} />
       </div>
     </div>
   );
 }
 
-export function SmartVorschlag({ schueler }: { schueler: Option[] }) {
+/**
+ * Schlägt für einen Schüler die nächste sinnvolle Fahrstunde vor – Art nach
+ * offenen Sonderfahrten, freier Termin, passender Fahrlehrer und Fahrzeug.
+ */
+export function TerminVorschlag({ schueler }: { schueler: Option[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [schuelerId, setSchuelerId] = useState("");
   const [vorschlag, setVorschlag] = useState<DispoVorschlag | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
-  const [berechnePending, startBerechnen] = useTransition();
-  const [anlegenPending, startAnlegen] = useTransition();
+  const [berechnet, startBerechnen] = useTransition();
+  const [legtAn, startAnlegen] = useTransition();
 
-  function reset() {
+  function zuruecksetzen() {
     setVorschlag(null);
     setFehler(null);
     setSchuelerId("");
@@ -111,12 +108,12 @@ export function SmartVorschlag({ schueler }: { schueler: Option[] }) {
         typ: vorschlag.typ,
       });
       if (res.ok) {
-        toast.success("Termin angelegt");
+        toast.success("Termin eingetragen");
         setOpen(false);
-        reset();
+        zuruecksetzen();
         router.refresh();
       } else {
-        toast.error(res.error ?? "Termin konnte nicht angelegt werden.");
+        toast.error(res.error ?? "Der Termin konnte nicht angelegt werden.");
       }
     });
   }
@@ -126,64 +123,47 @@ export function SmartVorschlag({ schueler }: { schueler: Option[] }) {
       open={open}
       onOpenChange={(o) => {
         setOpen(o);
-        if (!o) reset();
+        if (!o) zuruecksetzen();
       }}
     >
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <Sparkles className="h-4 w-4 text-primary" /> Smart-Vorschlag
+          <Wand2 /> Termin vorschlagen
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Smart-Vorschlag</DialogTitle>
-          <DialogDescription>
-            Nächste sinnvolle Fahrstunde automatisch planen – passender Termin, Fahrlehrer und Fahrzeug.
-          </DialogDescription>
+          <DialogTitle>Nächste Fahrstunde vorschlagen</DialogTitle>
+          <DialogDescription>Die App sucht einen freien Termin mit passendem Fahrlehrer und Fahrzeug – mit Blick auf offene Sonderfahrten.</DialogDescription>
         </DialogHeader>
-
-        <div className="space-y-3">
-          <div>
-            <label className="mb-1 block text-[13px] text-foreground/70">Schüler</label>
-            <Select
+        <DialogBody>
+          <FormMessage error={fehler ?? undefined} />
+          <Field label="Schüler">
+            <Auswahl
+              optionen={schueler.map((s) => ({ value: s.id, label: s.label }))}
               value={schuelerId}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 setSchuelerId(v);
                 setVorschlag(null);
                 setFehler(null);
               }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Schüler wählen …" />
-              </SelectTrigger>
-              <SelectContent>
-                {schueler.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {fehler && <p className="text-xs text-destructive">{fehler}</p>}
-          {vorschlag && <VorschlagKarte v={vorschlag} />}
-        </div>
-
+              placeholder="Schüler wählen"
+            />
+          </Field>
+          {vorschlag && <Vorschlag v={vorschlag} />}
+        </DialogBody>
         <DialogFooter>
           {!vorschlag ? (
-            <Button onClick={berechnen} disabled={!schuelerId || berechnePending}>
-              <Wand2 className="h-4 w-4" />
-              {berechnePending ? "Berechne …" : "Vorschlag berechnen"}
+            <Button size="sm" onClick={berechnen} disabled={!schuelerId} loading={berechnet} data-primary>
+              <Wand2 /> Vorschlag berechnen
             </Button>
           ) : (
             <>
-              <Button variant="outline" onClick={() => setVorschlag(null)}>
-                <RotateCcw className="h-4 w-4" /> Neu
+              <Button variant="outline" size="sm" onClick={() => setVorschlag(null)}>
+                <RotateCcw /> Anderer Schüler
               </Button>
-              <Button onClick={anlegen} disabled={anlegenPending}>
-                <CalendarPlus className="h-4 w-4" />
-                {anlegenPending ? "Lege an …" : "Termin anlegen"}
+              <Button size="sm" onClick={anlegen} loading={legtAn} data-primary>
+                <CalendarPlus /> Termin eintragen
               </Button>
             </>
           )}

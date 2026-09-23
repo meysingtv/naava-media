@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -101,26 +103,30 @@ export function KiLernstatusDialog() {
         </DialogHeader>
 
         {!vorschlaege ? (
-          <div className="space-y-3">
-            <Textarea
-              rows={7}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={"z. B.\nBerta 45 %\nTom Schmidt 60\nLena 80"}
-            />
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <>
+            <DialogBody>
+              <Textarea
+                rows={7}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                aria-label="Lernstand der Schüler"
+                placeholder={"z. B.\nBerta 45 %\nTom Schmidt 60\nLena 80"}
+              />
+            </DialogBody>
+            <DialogFooter>
+              <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>
                 Abbrechen
               </Button>
-              <Button type="button" onClick={auswerten} disabled={busy || !text.trim()}>
-                {busy && <Loader2 className="h-4 w-4 animate-spin" />} Auswerten
+              <Button type="button" size="sm" onClick={auswerten} disabled={!text.trim()} loading={busy} data-primary>
+                Auswerten
               </Button>
-            </div>
-          </div>
+            </DialogFooter>
+          </>
         ) : (
-          <div className="space-y-3">
+          <>
+          <DialogBody>
             {vorschlaege.length === 0 ? (
-              <p className="rounded-md bg-surface-muted/60 px-3 py-6 text-center text-sm text-muted-foreground">
+              <p className="rounded-md bg-surface-muted/60 px-3 py-6 text-center text-13 text-foreground-secondary">
                 Keine eindeutigen Zuordnungen gefunden.
               </p>
             ) : (
@@ -144,7 +150,7 @@ export function KiLernstatusDialog() {
             )}
 
             {hinweise.length > 0 && (
-              <div className="rounded-md border border-warning/25 bg-warning-soft p-2.5 text-xs text-warning">
+              <div className="rounded-md bg-warning-soft p-3 text-xs text-warning-text">
                 <p className="mb-1 font-medium">Bitte prüfen:</p>
                 <ul className="list-disc space-y-0.5 pl-4">
                   {hinweise.map((h, i) => (
@@ -154,19 +160,16 @@ export function KiLernstatusDialog() {
               </div>
             )}
 
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setVorschlaege(null)}>
-                Zurück
-              </Button>
-              <Button
-                type="button"
-                onClick={uebernehmen}
-                disabled={busy || ausgewaehlt.size === 0}
-              >
-                {busy && <Loader2 className="h-4 w-4 animate-spin" />} {ausgewaehlt.size} übernehmen
-              </Button>
-            </div>
-          </div>
+          </DialogBody>
+          <DialogFooter>
+            <Button type="button" variant="outline" size="sm" onClick={() => setVorschlaege(null)}>
+              Zurück
+            </Button>
+            <Button type="button" size="sm" onClick={uebernehmen} disabled={ausgewaehlt.size === 0} loading={busy} data-primary>
+              {ausgewaehlt.size} übernehmen
+            </Button>
+          </DialogFooter>
+          </>
         )}
       </DialogContent>
     </Dialog>

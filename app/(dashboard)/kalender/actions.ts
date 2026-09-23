@@ -285,7 +285,7 @@ export async function smartVorschlagBerechnen(schuelerId: string): Promise<Vorsc
   };
 }
 
-/** Legt einen per Smart-Vorschlag ermittelten Termin an. */
+/** Legt einen vorgeschlagenen Termin an. */
 export async function terminAusVorschlag(input: {
   schueler_id: string;
   fahrlehrer_id: string | null;

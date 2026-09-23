@@ -1,12 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { Plus, ShieldCheck } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { ROLLEN, ROLLEN_BESCHREIBUNG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { Benutzerrolle, Fahrlehrer } from "@/lib/types";
@@ -14,7 +13,7 @@ import { RollenListe, type RolleEintrag } from "./rollen-liste";
 import { RolleEditor } from "./rolle-editor";
 import { RolleAkte } from "./rolle-akte";
 
-export const metadata = { title: "Rollen & Berechtigungen · FahrschulApp" };
+export const metadata = { title: "Rollen und Rechte · FahrschulApp" };
 
 export default async function RollenPage({
   searchParams,
@@ -61,47 +60,43 @@ export default async function RollenPage({
   const editorModus = neu || Boolean(selectedCustom && edit);
   const panel = neu || Boolean(selectedEintrag);
 
-  // Mitarbeiter der ausgewählten Rolle (nur für die Lese-Ansicht laden).
-  let mitglieder: Fahrlehrer[] = [];
-  if (selectedEintrag && !editorModus) {
-    const { data: alle } = await supabase
-      .from("fahrlehrer")
-      .select("*")
-      .order("nachname", { ascending: true })
-      .order("vorname", { ascending: true });
-    const list = (alle ?? []) as Fahrlehrer[];
-    mitglieder = selectedEintrag.system
-      ? list.filter((f) => f.rolle === selectedEintrag.key && !f.benutzerrolle_id)
-      : list.filter((f) => f.benutzerrolle_id === selectedEintrag.id);
-  }
+  // Mitarbeiter je Rolle (für die Liste) und die der gewählten Rolle
+  const { data: alle } = await supabase
+    .from("fahrlehrer")
+    .select("*")
+    .order("nachname", { ascending: true })
+    .order("vorname", { ascending: true });
+  const team = (alle ?? []) as Fahrlehrer[];
+  const schluesselVon = (f: Fahrlehrer) => f.benutzerrolle_id ?? f.rolle;
+  const anzahl: Record<string, number> = {};
+  for (const f of team) if (f.aktiv) anzahl[schluesselVon(f)] = (anzahl[schluesselVon(f)] ?? 0) + 1;
+  const mitglieder = selectedEintrag ? team.filter((f) => schluesselVon(f) === selectedEintrag.key) : [];
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Rollen & Berechtigungen" description="Lege Rollen an und steuere, wer was darf.">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/fahrlehrer">
-            <ArrowLeft className="h-4 w-4" /> Zurück zu Benutzer
+    <div>
+      <PageHeader title="Rollen und Rechte">
+        <Button asChild size="sm">
+          <Link href="/fahrlehrer/rollen?neu=1">
+            <Plus /> Rolle anlegen
           </Link>
         </Button>
       </PageHeader>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-start">
         <div className={cn(panel && "hidden lg:block")}>
-          <RollenListe eintraege={eintraege} selectedKey={selectedKey} />
+          <RollenListe eintraege={eintraege} selectedKey={neu ? undefined : selectedKey} anzahl={anzahl} />
         </div>
 
         <div className={cn(!panel && "hidden lg:block")}>
           {editorModus ? (
-            <RolleEditor key={selectedCustom?.id ?? "neu"} rolle={selectedCustom} />
+            <RolleEditor key={selectedCustom?.id ?? "neu"} rolle={neu ? undefined : selectedCustom} />
           ) : selectedEintrag ? (
-            <RolleAkte mitglieder={mitglieder} />
+            <RolleAkte eintrag={selectedEintrag} rolle={selectedCustom} mitglieder={mitglieder} />
           ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center gap-2 py-24 text-center text-muted-foreground">
-                <ShieldCheck className="h-8 w-8" />
-                <p className="text-sm">Wähle links eine Rolle aus oder lege eine neue an.</p>
-              </CardContent>
-            </Card>
+            <div className="flex min-h-[240px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border-strong px-6 text-center">
+              <ShieldCheck className="h-6 w-6 text-foreground-tertiary" strokeWidth={1.5} aria-hidden="true" />
+              <p className="text-13 text-foreground-secondary">Wähle links eine Rolle, um Zugang, Bereiche und Mitarbeiter zu sehen.</p>
+            </div>
           )}
         </div>
       </div>

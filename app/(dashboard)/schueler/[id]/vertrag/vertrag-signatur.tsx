@@ -36,7 +36,7 @@ export function VertragSignatur({ schuelerId }: { schuelerId: string }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button onClick={() => setOpen(true)}>
+      <Button size="sm" onClick={() => setOpen(true)}>
         <PenLine /> Jetzt unterschreiben
       </Button>
       <DialogContent>

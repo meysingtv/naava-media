@@ -1,19 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
+import { heuteBerlin, plusTage } from "@/lib/zeit";
 import { PageHeader } from "@/components/shared/page-header";
 import type { Fahrlehrer, Fahrschueler, FahrstundeMitRelationen, Fahrzeug, Pruefung } from "@/lib/types";
 import { Terminplaner } from "./terminplaner";
-import { SmartVorschlag } from "./smart-vorschlag";
+import { TerminVorschlag } from "./smart-vorschlag";
 
-export const metadata = { title: "Disposition · FahrschulApp" };
+export const metadata = { title: "Kalender · FahrschulApp" };
 
-function iso(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-function addTage(n: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + n);
-  return iso(d);
-}
 
 type PruefRow = Pick<Pruefung, "id" | "datum" | "uhrzeit" | "art" | "pruefstelle"> & {
   fahrschueler: Pick<Fahrschueler, "vorname" | "nachname"> | null;
@@ -21,10 +14,10 @@ type PruefRow = Pick<Pruefung, "id" | "datum" | "uhrzeit" | "art" | "pruefstelle
 
 export default async function DispositionPage({ searchParams }: { searchParams: { datum?: string } }) {
   const supabase = createClient();
-  const heute = iso(new Date());
+  const heute = heuteBerlin();
   const startDatum = /^\d{4}-\d{2}-\d{2}$/.test(searchParams.datum ?? "") ? searchParams.datum : undefined;
-  const von = addTage(-21);
-  const bis = addTage(60);
+  const von = plusTage(heute, -21);
+  const bis = plusTage(heute, 60);
 
   const selectStunden =
     "*, fahrschueler(id, vorname, nachname, avatar_farbe), fahrlehrer(id, vorname, nachname), fahrzeug(id, kennzeichen)";
@@ -64,9 +57,9 @@ export default async function DispositionPage({ searchParams }: { searchParams: 
   }));
 
   return (
-    <div className="space-y-4">
-      <PageHeader eyebrow="Termine" title="Disposition" description="Wer fährt wann mit wem – Fahrlehrer und Fahrzeuge im Einsatz.">
-        <SmartVorschlag schueler={options.schueler} />
+    <div>
+      <PageHeader title="Kalender">
+        <TerminVorschlag schueler={options.schueler} />
       </PageHeader>
       <Terminplaner heute={heute} startDatum={startDatum} stunden={stundenRes.data ?? []} options={options} pruefungen={pruefungen} />
     </div>

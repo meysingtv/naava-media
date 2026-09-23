@@ -1,11 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { DetailKopf } from "@/components/shared/detail-kopf";
 import { PrintButton } from "@/app/(dashboard)/rechnungen/[id]/print-button";
 import { FAHRSTUNDE_TYPEN, pflichtFahrtenFuer } from "@/lib/constants";
 import { formatDatum, formatUhrzeit } from "@/lib/utils";
@@ -54,56 +51,52 @@ export default async function AusbildungsnachweisPage({ params }: { params: { id
   const unterschrieben = stunden.filter((f) => f.unterschrift).length;
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <Button asChild variant="ghost" size="sm">
-          <Link href={`/schueler/${s.id}`}>
-            <ArrowLeft className="h-4 w-4" /> Zurück
-          </Link>
-        </Button>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">
-            {unterschrieben}/{stunden.length} unterschrieben
-          </span>
-          <PrintButton />
-        </div>
+    <div>
+      <div className="print:hidden">
+        <DetailKopf
+          zurueck={{ href: `/schueler/${s.id}`, label: `${s.vorname} ${s.nachname}` }}
+          titel="Ausbildungsnachweis"
+          kurztitel={`Nachweis ${s.nachname}`}
+          meta={[`${s.vorname} ${s.nachname}`, `Klasse ${klasse}`, `${stunden.length} Fahrstunden`, `${unterschrieben} von ${stunden.length} unterschrieben`]}
+          aktionen={<PrintButton />}
+        />
       </div>
 
-      <Card className="mx-auto max-w-4xl p-6 sm:p-10 print:border-0 print:shadow-none">
+      <article className="mx-auto max-w-4xl rounded-xl bg-card px-6 py-8 text-foreground shadow-panel sm:px-10 sm:py-10 print:max-w-none print:p-0 print:shadow-none">
         {/* Kopf */}
         <div className="flex items-start justify-between border-b pb-4">
           <div>
             <h1 className="text-lg font-semibold">{fs?.name ?? "Fahrschule"}</h1>
-            <p className="mt-0.5 whitespace-pre-line text-sm text-muted-foreground">
+            <p className="mt-0.5 whitespace-pre-line text-sm text-foreground-secondary">
               {[fs?.strasse, [fs?.plz, fs?.ort].filter(Boolean).join(" ")].filter(Boolean).join("\n")}
             </p>
           </div>
           <div className="text-right">
             <p className="text-base font-semibold">Ausbildungsnachweis</p>
-            <p className="text-xs text-muted-foreground">Klasse {klasse}</p>
+            <p className="text-xs text-foreground-secondary">Klasse {klasse}</p>
           </div>
         </div>
 
         {/* Schüler */}
         <div className="mt-4 flex flex-wrap justify-between gap-4 text-sm">
           <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Fahrschüler</p>
+            <p className="text-xs uppercase tracking-wide text-foreground-secondary">Fahrschüler</p>
             <p className="font-medium">
               {s.vorname} {s.nachname}
             </p>
             {s.geburtsdatum && (
-              <p className="text-muted-foreground">geb. {formatDatum(s.geburtsdatum)}</p>
+              <p className="text-foreground-secondary">geb. {formatDatum(s.geburtsdatum)}</p>
             )}
           </div>
           <div className="text-right">
             {s.kundennummer != null && (
               <p>
-                <span className="text-muted-foreground">Kundennr.: </span>
+                <span className="text-foreground-secondary">Kundennr.: </span>
                 <span className="font-medium">{s.kundennummer}</span>
               </p>
             )}
             <p>
-              <span className="text-muted-foreground">Ausbildungsbeginn: </span>
+              <span className="text-foreground-secondary">Ausbildungsbeginn: </span>
               {formatDatum(s.anmeldedatum)}
             </p>
           </div>
@@ -115,7 +108,7 @@ export default async function AusbildungsnachweisPage({ params }: { params: { id
             const ok = row.ist >= row.soll;
             return (
               <div key={row.label} className="rounded-lg border p-3 text-center">
-                <p className="text-xs text-muted-foreground">{row.label}</p>
+                <p className="text-xs text-foreground-secondary">{row.label}</p>
                 <p className={`text-lg font-semibold tabular-nums ${ok ? "text-success" : "text-foreground"}`}>
                   {row.ist} / {row.soll}
                 </p>
@@ -127,7 +120,7 @@ export default async function AusbildungsnachweisPage({ params }: { params: { id
         {/* Fahrstunden-Tabelle */}
         <table className="mt-6 w-full text-sm">
           <thead>
-            <tr className="border-b text-left text-muted-foreground">
+            <tr className="border-b text-left text-foreground-secondary">
               <th className="py-2 pr-2 font-medium">Nr.</th>
               <th className="py-2 pr-2 font-medium">Datum</th>
               <th className="py-2 pr-2 font-medium">Art</th>
@@ -140,24 +133,24 @@ export default async function AusbildungsnachweisPage({ params }: { params: { id
           <tbody>
             {stunden.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-muted-foreground">
+                <td colSpan={7} className="py-8 text-center text-foreground-secondary">
                   Noch keine abgeschlossenen Fahrstunden.
                 </td>
               </tr>
             ) : (
               stunden.map((f, i) => (
                 <tr key={f.id} className="border-b align-middle">
-                  <td className="py-2 pr-2 tabular-nums text-muted-foreground">{i + 1}</td>
+                  <td className="py-2 pr-2 tabular-nums text-foreground-secondary">{i + 1}</td>
                   <td className="py-2 pr-2 tabular-nums">
                     {formatDatum(f.datum)}
-                    <span className="ml-1 text-xs text-muted-foreground">{formatUhrzeit(f.uhrzeit)}</span>
+                    <span className="ml-1 text-xs text-foreground-secondary">{formatUhrzeit(f.uhrzeit)}</span>
                   </td>
                   <td className="py-2 pr-2">{FAHRSTUNDE_TYPEN[f.typ]?.kurz ?? f.typ}</td>
                   <td className="py-2 pr-2 tabular-nums">{f.dauer_minuten}</td>
                   <td className="py-2 pr-2">
                     {f.fahrlehrer ? `${f.fahrlehrer.vorname} ${f.fahrlehrer.nachname}` : "—"}
                   </td>
-                  <td className="py-2 pr-2 text-muted-foreground">{f.fahrzeug?.kennzeichen ?? "—"}</td>
+                  <td className="py-2 pr-2 text-foreground-secondary">{f.fahrzeug?.kennzeichen ?? "—"}</td>
                   <td className="py-2 text-right">
                     <div className="inline-flex items-center justify-end gap-2">
                       {f.unterschrift && (
@@ -180,11 +173,11 @@ export default async function AusbildungsnachweisPage({ params }: { params: { id
           </tbody>
         </table>
 
-        <p className="mt-8 text-xs text-muted-foreground">
+        <p className="mt-8 text-xs text-foreground-secondary">
           Dieser Nachweis dokumentiert die absolvierten Ausbildungsfahrten gemäß Fahrschüler-Ausbildungsordnung.
           Digitale Unterschriften werden je Fahrstunde erfasst.
         </p>
-      </Card>
+      </article>
     </div>
   );
 }

@@ -1,106 +1,120 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useFormState } from "react-dom";
-import { Plus, Trash2 } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { Field } from "@/components/ui/field";
+import { FeldGitter } from "@/components/ui/formular";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { SubmitButton } from "@/components/shared/submit-button";
-import { FormMessage } from "@/components/shared/form-message";
+import { FilterBar } from "@/components/shared/filter-bar";
+import { FormularDialog } from "@/components/shared/formular-dialog";
 import { formatEuro } from "@/lib/utils";
 import type { Leistung } from "@/lib/types";
-import { leistungErstellen, leistungLoeschen, type LeistungState } from "./leistungen-actions";
+import { leistungErstellen, leistungLoeschen } from "./leistungen-actions";
 
-const initial: LeistungState = {};
+/** Leistung anlegen – Name, Preis, Einheit, Klasse und Kategorie. */
+export function LeistungNeu() {
+  return (
+    <FormularDialog
+      action={leistungErstellen}
+      ausloeser="Leistung anlegen"
+      titel="Neue Leistung"
+      beschreibung="Beim Schreiben einer Rechnung fügst du sie mit einem Klick als Position ein."
+      erfolg="Leistung gespeichert"
+    >
+      <Field label="Name" required>
+        <Input name="name" required autoFocus placeholder="z. B. Übungsstunde 45 Min." />
+      </Field>
+      <FeldGitter>
+        <Field label="Preis" required>
+          <Input name="preis" type="number" step="0.01" min="0" required placeholder="0,00" trailing="€" />
+        </Field>
+        <Field label="Einheit">
+          <Input name="einheit" defaultValue="Stk" />
+        </Field>
+        <Field label="Kategorie" hint="z. B. Fahrstunde, Gebühr, Material">
+          <Input name="kategorie" />
+        </Field>
+        <Field label="Klasse" hint="Optional">
+          <Input name="klasse" placeholder="z. B. B" />
+        </Field>
+      </FeldGitter>
+    </FormularDialog>
+  );
+}
 
 export function Preisliste({ leistungen }: { leistungen: Leistung[] }) {
-  const [state, action] = useFormState(leistungErstellen, initial);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [suche, setSuche] = useState("");
+  const [, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (state.ok) {
-      toast.success("Leistung gespeichert");
-      formRef.current?.reset();
-    }
-  }, [state]);
+  const gefiltert = useMemo(() => {
+    const q = suche.trim().toLowerCase();
+    return q ? leistungen.filter((l) => `${l.name} ${l.kategorie ?? ""} ${l.klasse ?? ""}`.toLowerCase().includes(q)) : leistungen;
+  }, [leistungen, suche]);
+
+  function loeschen(l: Leistung) {
+    const daten = new FormData();
+    daten.set("id", l.id);
+    startTransition(async () => {
+      await leistungLoeschen(daten);
+      toast.success(`„${l.name}“ gelöscht`);
+    });
+  }
+
+  const spalten: DataTableColumn<Leistung>[] = [
+    {
+      key: "name",
+      header: "Leistung",
+      primary: true,
+      sortValue: (l) => l.name,
+      cell: (l) => <span className="font-medium text-foreground">{l.name}</span>,
+    },
+    {
+      key: "kategorie",
+      header: "Kategorie",
+      hideBelow: "md",
+      sortValue: (l) => l.kategorie ?? "",
+      cell: (l) => <span className="text-foreground-secondary">{l.kategorie || "—"}</span>,
+    },
+    {
+      key: "klasse",
+      header: "Klasse",
+      hideBelow: "md",
+      sortValue: (l) => l.klasse ?? "",
+      cell: (l) => <span className="text-foreground-secondary">{l.klasse || "—"}</span>,
+    },
+    {
+      key: "einheit",
+      header: "Einheit",
+      hideBelow: "lg",
+      cell: (l) => <span className="text-foreground-secondary">{l.einheit}</span>,
+    },
+    {
+      key: "preis",
+      header: "Preis",
+      numeric: true,
+      sortValue: (l) => Number(l.preis),
+      cell: (l) => <span className="font-medium text-foreground">{formatEuro(Number(l.preis))}</span>,
+    },
+  ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Preisliste / Leistungen</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Definiere Standard-Leistungen mit Preisen – beim Rechnung-Erstellen fügst du sie mit einem Klick ein.
+    <DataTable
+      rows={gefiltert}
+      columns={spalten}
+      getRowId={(l) => l.id}
+      itemLabel="Leistungen"
+      caption="Preisliste"
+      pageSize={false}
+      rowActions={(l) => [{ label: "Löschen", icon: Trash2, variant: "danger", onSelect: () => loeschen(l) }]}
+      toolbar={<FilterBar search={{ placeholder: "Leistung, Kategorie oder Klasse", value: suche, onChange: setSuche }} />}
+      emptyState={
+        <p className="px-4 py-10 text-center text-13 text-foreground-secondary">
+          {leistungen.length ? "Keine Leistung gefunden." : "Noch keine Leistungen. Lege z. B. Übungsstunde, Sonderfahrt und Grundgebühr an."}
         </p>
-
-        {leistungen.length > 0 && (
-          <div className="divide-y rounded-lg border">
-            {leistungen.map((l) => (
-              <div key={l.id} className="flex items-center gap-3 px-3 py-2.5">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">{l.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {l.kategorie ? `${l.kategorie} · ` : ""}
-                    pro {l.einheit}
-                    {l.klasse ? ` · Klasse ${l.klasse}` : ""}
-                  </p>
-                </div>
-                <Badge variant="secondary" className="tabular-nums">
-                  {formatEuro(Number(l.preis))}
-                </Badge>
-                <form action={leistungLoeschen}>
-                  <input type="hidden" name="id" value={l.id} />
-                  <button
-                    type="submit"
-                    aria-label="Löschen"
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive-soft hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </form>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <form ref={formRef} action={action} className="space-y-3 rounded-lg border bg-surface/50 p-3">
-          <FormMessage error={state.error} />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-6">
-            <div className="space-y-1 sm:col-span-3">
-              <Label className="text-xs">Name *</Label>
-              <Input name="name" required placeholder="z. B. Fahrstunde 45 Min" />
-            </div>
-            <div className="space-y-1 sm:col-span-1">
-              <Label className="text-xs">Preis €</Label>
-              <Input name="preis" type="number" step="0.01" min="0" placeholder="0,00" />
-            </div>
-            <div className="space-y-1 sm:col-span-1">
-              <Label className="text-xs">Einheit</Label>
-              <Input name="einheit" defaultValue="Stk" />
-            </div>
-            <div className="space-y-1 sm:col-span-1">
-              <Label className="text-xs">Klasse</Label>
-              <Input name="klasse" placeholder="z. B. B" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-6">
-            <div className="space-y-1 sm:col-span-3">
-              <Label className="text-xs">Kategorie</Label>
-              <Input name="kategorie" placeholder="Fahrstunde / Gebühr / Material" />
-            </div>
-            <div className="flex items-end sm:col-span-3">
-              <SubmitButton className="ml-auto">
-                <Plus /> Leistung hinzufügen
-              </SubmitButton>
-            </div>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+      }
+    />
   );
 }

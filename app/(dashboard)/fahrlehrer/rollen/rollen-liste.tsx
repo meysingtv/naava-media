@@ -1,13 +1,9 @@
-"use client";
-
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Globe, Pencil, Plus, Smartphone, Trash2 } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Panel } from "@/components/ui/panel";
 import { cn } from "@/lib/utils";
-import { rolleLoeschen } from "../rollen-actions";
 
 export interface RolleEintrag {
   key: string;
@@ -19,118 +15,71 @@ export interface RolleEintrag {
   system: boolean;
 }
 
-function Tip({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <span className="group relative inline-flex">
-      {children}
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs font-medium text-background opacity-0 shadow transition-opacity duration-150 group-hover:opacity-100">
-        {label}
-      </span>
-    </span>
-  );
-}
-
-const toolbarBtn =
-  "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-fast hover:bg-surface hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25";
-const toolbarBtnAus = cn(toolbarBtn, "cursor-not-allowed opacity-40");
-
-export function RollenListe({ eintraege, selectedKey }: { eintraege: RolleEintrag[]; selectedKey?: string }) {
-  const router = useRouter();
-  const selected = selectedKey ? eintraege.find((e) => e.key === selectedKey) : undefined;
-  const bearbeitbar = Boolean(selected && !selected.system);
+/** Alle Rollen – Standardrollen oben, eigene darunter; die gewählte ist hervorgehoben. */
+export function RollenListe({
+  eintraege,
+  selectedKey,
+  anzahl,
+}: {
+  eintraege: RolleEintrag[];
+  selectedKey?: string;
+  /** Mitarbeiter je Rolle. */
+  anzahl: Record<string, number>;
+}) {
+  const gruppen = [
+    { titel: "Standardrollen", liste: eintraege.filter((e) => e.system) },
+    { titel: "Eigene Rollen", liste: eintraege.filter((e) => !e.system) },
+  ];
 
   return (
-    <div>
-      <Card>
-        <div className="flex flex-wrap items-center gap-1 border-b bg-surface/60 p-2">
-          <Tip label={!selected ? "Erst Rolle auswählen" : selected.system ? "Standardrolle (nicht bearbeitbar)" : "Rolle bearbeiten"}>
-            {bearbeitbar ? (
-              <Link href={`/fahrlehrer/rollen?rolle=${selected!.key}&edit=1`} aria-label="Rolle bearbeiten" className={toolbarBtn}>
-                <Pencil className="h-4 w-4" />
-              </Link>
-            ) : (
-              <span aria-disabled="true" className={toolbarBtnAus}>
-                <Pencil className="h-4 w-4" />
-              </span>
-            )}
-          </Tip>
-          <Tip label="Neue Rolle">
-            <Link href="/fahrlehrer/rollen?neu=1" aria-label="Neue Rolle" className={toolbarBtn}>
-              <Plus className="h-4 w-4" />
-            </Link>
-          </Tip>
-          <Tip label={!selected ? "Erst Rolle auswählen" : selected.system ? "Standardrolle (nicht löschbar)" : "Rolle löschen"}>
-            {bearbeitbar ? (
-              <form action={rolleLoeschen}>
-                <input type="hidden" name="id" value={selected!.id ?? ""} />
-                <button type="submit" aria-label="Rolle löschen" className={cn(toolbarBtn, "hover:text-destructive")}>
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </form>
-            ) : (
-              <span aria-disabled="true" className={toolbarBtnAus}>
-                <Trash2 className="h-4 w-4" />
-              </span>
-            )}
-          </Tip>
-          <div className="ml-auto pr-2 text-xs text-muted-foreground">{eintraege.length} Rollen</div>
-        </div>
-
-        <div className="max-h-[calc(100vh-16rem)] overflow-auto">
-          <table className="w-full text-sm tabular-nums">
-            <thead className="sticky top-0 z-10 border-b bg-surface text-left text-[13px] text-muted-foreground">
-              <tr>
-                <th className="h-10 px-3 font-medium">Rolle</th>
-                <th className="hidden h-10 px-3 font-medium sm:table-cell">Beschreibung</th>
-                <th className="h-10 px-3 font-medium">Zugangsart</th>
-                <th className="h-10 px-3 font-medium">Zugang</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {eintraege.map((e) => {
+    <Panel padding="none">
+      {gruppen.map((g) => (
+        <section key={g.titel} aria-label={g.titel}>
+          <h3 className="border-b border-border bg-surface-muted/60 px-4 py-1.5 text-xs font-semibold text-foreground-secondary">{g.titel}</h3>
+          {g.liste.length === 0 ? (
+            <p className="px-4 py-6 text-13 text-foreground-secondary">Noch keine eigene Rolle angelegt.</p>
+          ) : (
+            <ul className="divide-y divide-border border-b border-border last:border-b-0">
+              {g.liste.map((e) => {
                 const aktiv = e.key === selectedKey;
+                const n = anzahl[e.key] ?? 0;
                 return (
-                  <tr
-                    key={e.key}
-                    onClick={() => router.push(`/fahrlehrer/rollen?rolle=${e.key}`)}
-                    className={cn("cursor-pointer transition-colors", aktiv ? "bg-primary-soft/70 shadow-[inset_2px_0_0_hsl(var(--primary))]" : "hover:bg-surface")}
-                  >
-                    <td className={cn("px-3 py-2", aktiv ? "font-semibold" : "font-medium")}>
-                      <span className="flex items-center gap-2">
-                        {e.name}
-                        {e.system && (
-                          <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                            Standard
-                          </span>
+                  <li key={e.key}>
+                    <Link
+                      href={`/fahrlehrer/rollen?rolle=${e.key}`}
+                      aria-current={aktiv ? "true" : undefined}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3 transition-colors",
+                        aktiv ? "bg-primary-soft/70" : "hover:bg-surface-muted/60",
+                      )}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                          aktiv ? "bg-card text-primary-text" : "bg-muted text-foreground-secondary",
                         )}
+                      >
+                        <ShieldCheck className="h-4 w-4" strokeWidth={1.75} />
                       </span>
-                    </td>
-                    <td className="hidden max-w-[16rem] truncate px-3 py-2 text-muted-foreground sm:table-cell">
-                      {e.beschreibung || "—"}
-                    </td>
-                    <td className="px-3 py-2">
-                      {e.zugangsart ? <Badge variant="secondary">{e.zugangsart}</Badge> : <span className="text-muted-foreground">—</span>}
-                    </td>
-                    <td className="px-3 py-2">
-                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                        {e.web_zugang ? (
-                          <>
-                            <Globe className="h-3.5 w-3.5" /> Web + Mobile
-                          </>
-                        ) : (
-                          <>
-                            <Smartphone className="h-3.5 w-3.5" /> Nur Mobile
-                          </>
-                        )}
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2">
+                          <span className="truncate text-13 font-semibold text-foreground">{e.name}</span>
+                          {e.system && <Badge variant="secondary">Standard</Badge>}
+                        </span>
+                        <span className="block truncate text-xs text-foreground-secondary">{e.beschreibung || "Ohne Beschreibung"}</span>
                       </span>
-                    </td>
-                  </tr>
+                      <span className="shrink-0 text-right text-xs tabular-nums text-foreground-tertiary">
+                        {n} {n === 1 ? "Person" : "Personen"}
+                      </span>
+                    </Link>
+                  </li>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-    </div>
+            </ul>
+          )}
+        </section>
+      ))}
+    </Panel>
   );
 }

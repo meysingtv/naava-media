@@ -88,14 +88,14 @@ export interface SidebarBereich {
 }
 
 export const SIDEBAR_BEREICHE: SidebarBereich[] = [
-  { key: "dashboard", label: "Dashboard", beschreibung: "Übersicht & Kennzahlen" },
-  { key: "schueler", label: "Schüler", beschreibung: "Schülerverwaltung & Akten" },
-  { key: "kalender", label: "Terminplaner", beschreibung: "Fahrstunden & Termine" },
-  { key: "theorie", label: "Theorie", beschreibung: "Theorieunterricht" },
-  { key: "rechnungen", label: "Rechnungen", beschreibung: "Rechnungen & Zahlungen" },
-  { key: "fahrlehrer", label: "Benutzer", beschreibung: "Team & Rollen" },
-  { key: "fahrzeuge", label: "Fahrzeuge", beschreibung: "Fahrzeugflotte" },
-  { key: "einstellungen", label: "Einstellungen", beschreibung: "Fahrschul-Einstellungen" },
+  { key: "dashboard", label: "Dashboard", beschreibung: "Übersicht und Kennzahlen" },
+  { key: "schueler", label: "Schüler", beschreibung: "Schülerakten und Ausbildungsstand" },
+  { key: "kalender", label: "Kalender", beschreibung: "Fahrstunden und Termine" },
+  { key: "theorie", label: "Ausbildung", beschreibung: "Theorie, Kurse und Prüfungen" },
+  { key: "rechnungen", label: "Finanzen", beschreibung: "Rechnungen und Zahlungen" },
+  { key: "fahrlehrer", label: "Team", beschreibung: "Mitarbeiter und Rollen" },
+  { key: "fahrzeuge", label: "Fahrzeuge", beschreibung: "Fahrzeuge und Fristen" },
+  { key: "einstellungen", label: "Einstellungen", beschreibung: "Profil der Fahrschule und Preisliste" },
 ];
 
 // Fahrstunden-Typen inkl. Farbkodierung für den Kalender

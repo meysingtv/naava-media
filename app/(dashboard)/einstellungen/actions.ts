@@ -28,31 +28,34 @@ export async function fahrschuleAktualisieren(
     return { error: "Nur der Geschäftsführer darf die Einstellungen ändern." };
   }
 
-  const name = String(formData.get("name") ?? "").trim();
-  if (!name) {
-    return { error: "Der Name der Fahrschule darf nicht leer sein." };
+  // Nur Felder speichern, die das Formular mitschickt – die Einstellungen
+  // sind auf mehrere Seiten verteilt.
+  const FELDER = [
+    "strasse",
+    "plz",
+    "ort",
+    "logo_url",
+    "telefon",
+    "email",
+    "website",
+    "iban",
+    "steuernummer",
+    "kontoinhaber",
+    "bic",
+    "glaeubiger_id",
+    "zahlungslink",
+  ] as const;
+  const aenderung: Record<string, string | null> = {};
+  if (formData.has("name")) {
+    const name = String(formData.get("name") ?? "").trim();
+    if (!name) return { error: "Der Name der Fahrschule darf nicht leer sein." };
+    aenderung.name = name;
   }
+  for (const feld of FELDER) if (formData.has(feld)) aenderung[feld] = leerZuNull(formData.get(feld));
+  if (Object.keys(aenderung).length === 0) return { message: "Nichts zu speichern." };
 
   const supabase = createClient();
-  const { error } = await supabase
-    .from("fahrschule")
-    .update({
-      name,
-      strasse: leerZuNull(formData.get("strasse")),
-      plz: leerZuNull(formData.get("plz")),
-      ort: leerZuNull(formData.get("ort")),
-      logo_url: leerZuNull(formData.get("logo_url")),
-      telefon: leerZuNull(formData.get("telefon")),
-      email: leerZuNull(formData.get("email")),
-      website: leerZuNull(formData.get("website")),
-      iban: leerZuNull(formData.get("iban")),
-      steuernummer: leerZuNull(formData.get("steuernummer")),
-      kontoinhaber: leerZuNull(formData.get("kontoinhaber")),
-      bic: leerZuNull(formData.get("bic")),
-      glaeubiger_id: leerZuNull(formData.get("glaeubiger_id")),
-      zahlungslink: leerZuNull(formData.get("zahlungslink")),
-    })
-    .eq("id", kontext.fahrschule.id);
+  const { error } = await supabase.from("fahrschule").update(aenderung).eq("id", kontext.fahrschule.id);
 
   if (error) {
     return { error: error.message };

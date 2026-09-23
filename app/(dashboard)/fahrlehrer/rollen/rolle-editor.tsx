@@ -1,199 +1,149 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useFormState } from "react-dom";
-import { Check, X } from "lucide-react";
 
 import { rolleSpeichern, type RolleState } from "../rollen-actions";
+import { Auswahl } from "@/components/ui/auswahl";
 import { Button } from "@/components/ui/button";
-import { SubmitButton } from "@/components/shared/submit-button";
-import { FormMessage } from "@/components/shared/form-message";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { FormMessage } from "@/components/shared/form-message";
+import { SubmitButton } from "@/components/shared/submit-button";
 import { SIDEBAR_BEREICHE } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { Benutzerrolle, RolleRecht } from "@/lib/types";
 
 const initial: RolleState = {};
+const ZUGANGSARTEN = ["Verwaltung", "Fahrlehrer", "Büro", "Eingeschränkt"];
 
-const feld =
-  "h-9 w-full rounded-md border border-border-strong bg-background shadow-xs px-3 text-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/20";
-
-const ZUGANGSART_VORSCHLAEGE = ["Verwaltung", "Fahrlehrer", "Büro", "Eingeschränkt"];
-
-function Abschnitt({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-3">
-      <h3 className="border-b pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
-      {children}
-    </section>
-  );
-}
-
-function F({ label, children, req }: { label: string; children: React.ReactNode; req?: boolean }) {
-  return (
-    <div className="min-w-0">
-      <label className="mb-1 block text-[13px] text-foreground/70">
-        {label}
-        {req && <span className="text-destructive"> *</span>}
-      </label>
-      {children}
-    </div>
-  );
-}
-
+/** Eigene Rolle anlegen oder bearbeiten – Name, Zugang und Bereiche. */
 export function RolleEditor({ rolle }: { rolle?: Benutzerrolle }) {
   const [state, action] = useFormState(rolleSpeichern, initial);
-  const [tab, setTab] = useState<"allgemein" | "rechte">("allgemein");
+  const [reiter, setReiter] = useState<"allgemein" | "bereiche">("allgemein");
   const [webZugang, setWebZugang] = useState(rolle?.web_zugang ?? true);
-  const [sidebar, setSidebar] = useState<Record<string, RolleRecht>>(
-    () => (rolle?.rechte?.sidebar as Record<string, RolleRecht>) ?? {},
-  );
+  const [zugangsart, setZugangsart] = useState(rolle?.zugangsart ?? "");
+  const [sidebar, setSidebar] = useState<Record<string, RolleRecht>>(() => (rolle?.rechte?.sidebar as Record<string, RolleRecht>) ?? {});
 
-  const titel = rolle ? rolle.name || "Rolle bearbeiten" : "Neue Rolle";
+  const zugangsarten = zugangsart && !ZUGANGSARTEN.includes(zugangsart) ? [...ZUGANGSARTEN, zugangsart] : ZUGANGSARTEN;
+  const zurueck = rolle ? `/fahrlehrer/rollen?rolle=${rolle.id}` : "/fahrlehrer/rollen";
 
-  function setRecht(key: string, art: "ansehen" | "bearbeiten", value: boolean) {
+  function setRecht(key: string, art: "ansehen" | "bearbeiten", wert: boolean) {
     setSidebar((prev) => {
       const aktuell = { ...(prev[key] ?? {}) };
-      aktuell[art] = value;
-      if (art === "bearbeiten" && value) aktuell.ansehen = true;
-      if (art === "ansehen" && !value) aktuell.bearbeiten = false;
+      aktuell[art] = wert;
+      if (art === "bearbeiten" && wert) aktuell.ansehen = true;
+      if (art === "ansehen" && !wert) aktuell.bearbeiten = false;
       return { ...prev, [key]: aktuell };
     });
   }
 
-  const rechteJson = JSON.stringify({ sidebar });
-
-  const tabCls = (aktiv: boolean) =>
-    cn(
-      "border-b-2 pb-1.5 text-sm font-medium transition-colors",
-      aktiv ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
-    );
-
   return (
-    <form action={action}>
+    <form action={action} className="overflow-hidden rounded-xl bg-card shadow-panel">
       {rolle && <input type="hidden" name="id" value={rolle.id} />}
       <input type="hidden" name="web_zugang" value={String(webZugang)} />
-      <input type="hidden" name="rechte" value={rechteJson} />
+      <input type="hidden" name="rechte" value={JSON.stringify({ sidebar })} />
+      <input type="hidden" name="zugangsart" value={zugangsart} />
 
-      <div className="rounded-md border bg-card">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-2.5">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-            <h1 className="text-sm font-semibold tracking-tight">{titel}</h1>
-            <div className="flex items-center gap-5">
-              <button type="button" onClick={() => setTab("allgemein")} className={tabCls(tab === "allgemein")}>
-                Allgemein
-              </button>
-              <button type="button" onClick={() => setTab("rechte")} className={tabCls(tab === "rechte")}>
-                Berechtigungen
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Button asChild variant="outline" size="sm" type="button">
-              <a href="/fahrlehrer/rollen">
-                <X className="h-4 w-4" /> Abbrechen
-              </a>
-            </Button>
-            <SubmitButton size="sm">
-              <Check className="h-4 w-4" /> Speichern
-            </SubmitButton>
-          </div>
+      <header className="border-b border-border px-5 pt-4">
+        <h2 className="text-[15px] font-semibold text-foreground">{rolle ? `${rolle.name} bearbeiten` : "Neue Rolle"}</h2>
+        <div role="tablist" className="mt-3 flex gap-5">
+          {(
+            [
+              ["allgemein", "Allgemein"],
+              ["bereiche", "Bereiche"],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={reiter === key}
+              onClick={() => setReiter(key)}
+              className={cn(
+                "-mb-px border-b-2 pb-2.5 text-13 font-medium transition-colors",
+                reiter === key ? "border-foreground text-foreground" : "border-transparent text-foreground-secondary hover:text-foreground",
+              )}
+            >
+              {label}
+            </button>
+          ))}
         </div>
+      </header>
 
+      <div className="px-5 py-5">
         {state.error && (
-          <div className="border-b px-4 py-2">
+          <div className="mb-5">
             <FormMessage error={state.error} />
           </div>
         )}
 
-        {/* Allgemein */}
-        <div className={cn("space-y-6 p-4", tab !== "allgemein" && "hidden")}>
-          <Abschnitt title="Rolle">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <F label="Rollenname" req>
-                  <input name="name" required defaultValue={rolle?.name ?? ""} placeholder="z. B. Büro" className={feld} />
-                </F>
-              </div>
-              <div className="sm:col-span-2">
-                <F label="Beschreibung">
-                  <input
-                    name="beschreibung"
-                    defaultValue={rolle?.beschreibung ?? undefined}
-                    placeholder="Kurze Beschreibung"
-                    className={feld}
-                  />
-                </F>
-              </div>
-              <F label="Zugangsart">
-                <input
-                  name="zugangsart"
-                  list="zugangsart-vorschlaege"
-                  defaultValue={rolle?.zugangsart ?? undefined}
-                  placeholder="z. B. Verwaltung"
-                  className={feld}
-                />
-                <datalist id="zugangsart-vorschlaege">
-                  {ZUGANGSART_VORSCHLAEGE.map((v) => (
-                    <option key={v} value={v} />
-                  ))}
-                </datalist>
-              </F>
+        <div className={cn("space-y-5", reiter !== "allgemein" && "hidden")}>
+          <Field label="Name der Rolle" required>
+            <Input name="name" required defaultValue={rolle?.name ?? ""} placeholder="z. B. Büro Teilzeit" />
+          </Field>
+          <Field label="Beschreibung">
+            <Input name="beschreibung" defaultValue={rolle?.beschreibung ?? undefined} placeholder="Wofür ist die Rolle gedacht?" />
+          </Field>
+          <Field label="Zugangsart">
+            <Auswahl
+              optionen={zugangsarten.map((z) => ({ value: z, label: z }))}
+              value={zugangsart}
+              onChange={setZugangsart}
+              leerLabel="Keine Angabe"
+              placeholder="Keine Angabe"
+            />
+          </Field>
+          <div className="flex items-center justify-between gap-4 rounded-lg bg-surface-muted/60 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-13 font-medium text-foreground">Anmeldung im Browser</p>
+              <p className="text-xs text-foreground-secondary">Aus: Die Person meldet sich nur über die App an.</p>
             </div>
-          </Abschnitt>
-
-          <Abschnitt title="Allgemeiner Zugang">
-            <div className="flex items-center justify-between gap-3 rounded-md border p-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium">Web-Zugang</p>
-                <p className="text-xs text-muted-foreground">
-                  Aus = der Benutzer kann sich nur über die mobile App anmelden.
-                </p>
-              </div>
-              <Switch checked={webZugang} onCheckedChange={setWebZugang} aria-label="Web-Zugang" />
-            </div>
-          </Abschnitt>
+            <Switch checked={webZugang} onCheckedChange={setWebZugang} aria-label="Anmeldung im Browser" />
+          </div>
         </div>
 
-        {/* Berechtigungen */}
-        <div className={cn("space-y-3 p-4", tab !== "rechte" && "hidden")}>
-          <div className="overflow-hidden rounded-md border">
-            <div className="grid grid-cols-[1fr_4rem_5rem] items-center gap-2 border-b bg-surface px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              <span>Bereich</span>
-              <span className="text-center">Ansehen</span>
-              <span className="text-center">Bearbeiten</span>
-            </div>
-            <div className="divide-y">
-              {SIDEBAR_BEREICHE.map((b) => {
-                const recht = sidebar[b.key] ?? {};
-                return (
-                  <div key={b.key} className="grid grid-cols-[1fr_4rem_5rem] items-center gap-2 px-3 py-2">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{b.label}</p>
-                      <p className="truncate text-xs text-muted-foreground">{b.beschreibung}</p>
-                    </div>
-                    <div className="flex justify-center">
-                      <Switch
-                        checked={Boolean(recht.ansehen)}
-                        onCheckedChange={(v) => setRecht(b.key, "ansehen", v)}
-                        aria-label={`${b.label} ansehen`}
-                      />
-                    </div>
-                    <div className="flex justify-center">
-                      <Switch
-                        checked={Boolean(recht.bearbeiten)}
-                        onCheckedChange={(v) => setRecht(b.key, "bearbeiten", v)}
-                        aria-label={`${b.label} bearbeiten`}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+        <div className={cn(reiter !== "bereiche" && "hidden")}>
+          <div className="grid grid-cols-[minmax(0,1fr)_72px_88px] items-center gap-2 border-b border-border pb-2 text-xs font-medium text-foreground-secondary">
+            <span>Bereich</span>
+            <span className="text-center">Ansehen</span>
+            <span className="text-center">Bearbeiten</span>
           </div>
-          <p className="text-xs text-muted-foreground">Bearbeiten schließt Ansehen automatisch mit ein.</p>
+          <ul className="divide-y divide-border">
+            {SIDEBAR_BEREICHE.map((b) => {
+              const recht = sidebar[b.key] ?? {};
+              return (
+                <li key={b.key} className="grid grid-cols-[minmax(0,1fr)_72px_88px] items-center gap-2 py-2.5">
+                  <span className="min-w-0">
+                    <span className="block text-13 font-medium text-foreground">{b.label}</span>
+                    <span className="block truncate text-xs text-foreground-secondary">{b.beschreibung}</span>
+                  </span>
+                  <span className="flex justify-center">
+                    <Switch checked={Boolean(recht.ansehen)} onCheckedChange={(v) => setRecht(b.key, "ansehen", v)} aria-label={`${b.label} ansehen`} />
+                  </span>
+                  <span className="flex justify-center">
+                    <Switch
+                      checked={Boolean(recht.bearbeiten)}
+                      onCheckedChange={(v) => setRecht(b.key, "bearbeiten", v)}
+                      aria-label={`${b.label} bearbeiten`}
+                    />
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-3 text-xs text-foreground-tertiary">Bearbeiten schließt Ansehen mit ein.</p>
         </div>
       </div>
+
+      <footer className="flex items-center justify-end gap-2 border-t border-border bg-surface-muted/40 px-5 py-3">
+        <Button asChild variant="outline" size="sm">
+          <Link href={zurueck}>Abbrechen</Link>
+        </Button>
+        <SubmitButton size="sm">{rolle ? "Änderungen speichern" : "Rolle anlegen"}</SubmitButton>
+      </footer>
     </form>
   );
 }

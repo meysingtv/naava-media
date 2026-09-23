@@ -89,7 +89,7 @@ export function FahrstundePanel({
   }, [state]);
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-xl bg-card shadow-panel lg:h-[calc(100vh-7rem)]">
+    <div className="flex flex-col overflow-hidden rounded-xl bg-card shadow-panel xl:max-h-[calc(100dvh-6.5rem)]">
       {/* Kopf */}
       <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3.5">
         <div className="min-w-0">
