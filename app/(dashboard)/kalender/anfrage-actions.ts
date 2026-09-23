@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
 import { darf } from "@/lib/zugriff";
+import { dbFehlerText } from "@/lib/db-fehler";
 
 export interface AnfrageErgebnis {
   ok?: boolean;
@@ -11,10 +12,7 @@ export interface AnfrageErgebnis {
 }
 
 function meldung(m: string): string {
-  if (/could not find the function|does not exist|schema cache/i.test(m)) {
-    return "Bitte zuerst das Datenbank-Update 0020 in Supabase einspielen.";
-  }
-  return m;
+  return dbFehlerText(m);
 }
 
 /** Anfrage annehmen: legt die Fahrstunde an (Überschneidungen prüft die Datenbank). */

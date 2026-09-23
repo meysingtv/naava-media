@@ -11,8 +11,8 @@ export interface AnfrageZustand {
 
 /** Datenbank-Meldungen verständlich machen – eigene Meldungen der Funktionen bleiben, wie sie sind. */
 function verstaendlich(meldung: string): string {
-  if (/could not find the function|does not exist|schema cache/i.test(meldung)) {
-    return "Online-Anfragen sind bei deiner Fahrschule noch nicht eingerichtet.";
+  if (/schema cache|could not find the function|(column|relation|function) .* does not exist/i.test(meldung)) {
+    return "Online-Anfragen sind bei deiner Fahrschule gerade nicht verfügbar. Bitte später noch einmal versuchen.";
   }
   return meldung;
 }

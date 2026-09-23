@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
+import { dbFehlerText } from "@/lib/db-fehler";
 
 export interface EinstellungenState {
   error?: string;
@@ -66,9 +67,6 @@ export async function fahrschuleAktualisieren(
   return { message: "Änderungen wurden gespeichert." };
 }
 
-function fehlendeMigration(m: string): boolean {
-  return /column .* does not exist|could not find .* column|schema cache/i.test(m);
-}
 
 /** Online-Anfragen im Portal: Hauptschalter und Regeln (nur Chef). */
 export async function anfragenEinstellungenSpeichern(eingabe: {
@@ -90,7 +88,7 @@ export async function anfragenEinstellungenSpeichern(eingabe: {
     .update({ anfragen_aktiv: eingabe.aktiv, anfragen_vorlauf_stunden: vorlauf, anfragen_max_offen: maxOffen })
     .eq("id", kontext.fahrschule.id);
   if (error) {
-    return { error: fehlendeMigration(error.message) ? "Bitte zuerst das Datenbank-Update 0020 in Supabase einspielen." : error.message };
+    return { error: dbFehlerText(error.message) };
   }
 
   revalidatePath("/einstellungen");
@@ -106,7 +104,7 @@ export async function schuelerAnfragenSetzen(ids: string[], gesperrt: boolean): 
 
   const { error } = await createClient().from("fahrschueler").update({ anfragen_gesperrt: gesperrt }).in("id", ids);
   if (error) {
-    return { error: fehlendeMigration(error.message) ? "Bitte zuerst das Datenbank-Update 0020 in Supabase einspielen." : error.message };
+    return { error: dbFehlerText(error.message) };
   }
 
   revalidatePath("/einstellungen");
