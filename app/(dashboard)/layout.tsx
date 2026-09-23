@@ -15,21 +15,12 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const kontext = await getKontext();
-
-  if (!kontext) {
-    redirect("/auth/login");
-  }
-  if (!kontext.fahrlehrer || !kontext.fahrschule) {
-    redirect("/auth/setup");
-  }
-
-  const { fahrlehrer, fahrschule } = kontext;
-
   // Zähler für Navigation und Glocke – drei schlanke Abfragen, nur Anzahlen.
+  // Sie starten sofort und laufen parallel zum Laden des Kontexts (RLS
+  // begrenzt sie ohnehin auf die eigene Fahrschule).
   const supabase = createClient();
   const heute = isoInTagen(0);
-  const [aufgabenRes, rechnungRes, bestaetigungRes] = await Promise.all([
+  const zaehlerAbfragen = Promise.all([
     supabase.from("aufgabe").select("id", { count: "exact", head: true }).eq("status", "offen"),
     supabase
       .from("rechnung")
@@ -45,6 +36,18 @@ export default async function DashboardLayout({
       .is("bestaetigt_am", null)
       .is("abgesagt_am", null),
   ]);
+
+  const kontext = await getKontext();
+
+  if (!kontext) {
+    redirect("/auth/login");
+  }
+  if (!kontext.fahrlehrer || !kontext.fahrschule) {
+    redirect("/auth/setup");
+  }
+
+  const { fahrlehrer, fahrschule } = kontext;
+  const [aufgabenRes, rechnungRes, bestaetigungRes] = await zaehlerAbfragen;
   const ueberfaellig = (rechnungRes.data ?? []).filter(
     (r) => r.status === "ueberfaellig" || (r.faelligkeitsdatum != null && r.faelligkeitsdatum < heute),
   ).length;

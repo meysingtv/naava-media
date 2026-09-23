@@ -6,6 +6,7 @@ import { ChevronRight, type LucideIcon } from "lucide-react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSidebar } from "@/components/shared/sidebar-context";
+import { useVorladen } from "@/components/shared/vorladen";
 import { cn } from "@/lib/utils";
 import { bereichsZaehler, zaehlerTon, type Bereich, type BereichItem, type Zaehler } from "@/components/shared/bereiche";
 
@@ -89,6 +90,7 @@ export function SidebarItem({
   imDrawer?: boolean;
 }) {
   const { collapsed } = useSidebar();
+  const vorladen = useVorladen();
   const eingeklappt = collapsed && !imDrawer;
   const m = masse(eingeklappt, imDrawer);
   const Icon = item.icon;
@@ -98,6 +100,7 @@ export function SidebarItem({
       <MitTooltip an={eingeklappt} label={item.label}>
         <Link
           href={item.href}
+          {...vorladen(item.href)}
           aria-current={aktiv ? "page" : undefined}
           aria-label={eingeklappt ? item.label : undefined}
           data-active={aktiv}
@@ -136,6 +139,7 @@ export function SidebarBereich({
   imDrawer?: boolean;
 }) {
   const { collapsed } = useSidebar();
+  const vorladen = useVorladen();
   const eingeklappt = collapsed && !imDrawer;
   const listeId = React.useId();
   const listeRef = React.useRef<HTMLDivElement>(null);
@@ -188,6 +192,7 @@ export function SidebarBereich({
       >
         <Link
           href={erste.href}
+          {...vorladen(erste.href)}
           className={cn(
             "flex h-full min-w-0 flex-1 items-center gap-2.5 rounded-md text-sm font-medium outline-none",
             "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/70",
@@ -254,6 +259,7 @@ function SidebarUnterpunkt({
   badge?: number;
   imDrawer?: boolean;
 }) {
+  const vorladen = useVorladen();
   return (
     <li className="relative">
       {aktiv && (
@@ -261,6 +267,7 @@ function SidebarUnterpunkt({
       )}
       <Link
         href={item.href}
+        {...vorladen(item.href)}
         aria-current={aktiv ? "page" : undefined}
         data-active={aktiv}
         className={cn(

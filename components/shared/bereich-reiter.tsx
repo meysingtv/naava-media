@@ -7,6 +7,7 @@ import { ChevronRight } from "lucide-react";
 
 import { bereicheFuer, bereichsReiter } from "@/components/shared/bereiche";
 import { useSidebarOptional } from "@/components/shared/sidebar-context";
+import { useVorladen } from "@/components/shared/vorladen";
 import { cn } from "@/lib/utils";
 
 function useBereichsReiter() {
@@ -78,6 +79,7 @@ export function SeitenTitel({
 /** Reiterleiste unter dem Titel – nur auf Bereichs-Startseiten mit mehreren Seiten. */
 export function BereichReiterLeiste() {
   const reiter = useBereichsReiter();
+  const vorladen = useVorladen();
   if (!reiter) return null;
 
   return (
@@ -91,6 +93,7 @@ export function BereichReiterLeiste() {
           <Link
             key={i.href}
             href={i.href}
+            {...vorladen(i.href)}
             aria-current={aktiv ? "page" : undefined}
             className={cn(
               "relative -mb-px inline-flex h-10 shrink-0 items-center whitespace-nowrap px-0.5 text-sm font-medium transition-colors",

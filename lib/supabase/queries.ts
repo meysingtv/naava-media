@@ -22,6 +22,10 @@ export interface Kontext {
  * verschachtelte Server-Komponenten teilen sich das Ergebnis, statt Auth +
  * Fahrlehrer + Fahrschule + RPC mehrfach pro Navigation auszuführen.
  * `getSession()` liest die Session lokal aus dem Cookie (kein Netzwerk).
+ *
+ * Tempo: Fahrlehrer und Fahrschule kommen in EINER Abfrage (Einbettung über
+ * `fahrschule_id`), parallel zur Fahrschul-Liste – eine Datenbank-Runde statt
+ * drei hintereinander. Schlägt die Einbettung fehl, gilt der alte Weg.
  */
 export const getKontext = cache(async (): Promise<Kontext | null> => {
   const supabase = createClient();
@@ -34,28 +38,34 @@ export const getKontext = cache(async (): Promise<Kontext | null> => {
   if (!user) return null;
 
   // RLS liefert nur den Fahrlehrer-Datensatz der AKTIVEN Fahrschule.
-  const { data: fahrlehrer } = await supabase
-    .from("fahrlehrer")
-    .select("*")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  // Parallel dazu: alle Fahrschulen des Nutzers (für den Umschalter).
+  const [eigener, liste] = await Promise.all([
+    supabase.from("fahrlehrer").select("*, fahrschule!fahrschule_id(*)").eq("user_id", user.id).maybeSingle(),
+    supabase.rpc("meine_fahrschulen"),
+  ]);
 
+  let fahrlehrer: Fahrlehrer | null = null;
   let fahrschule: Fahrschule | null = null;
-  if (fahrlehrer) {
-    const { data } = await supabase
-      .from("fahrschule")
-      .select("*")
-      .eq("id", fahrlehrer.fahrschule_id)
-      .maybeSingle();
-    fahrschule = data ?? null;
+  if (!eigener.error) {
+    const zeile = eigener.data as (Fahrlehrer & { fahrschule?: Fahrschule | null }) | null;
+    if (zeile) {
+      const { fahrschule: eingebettet, ...rest } = zeile;
+      fahrlehrer = rest as Fahrlehrer;
+      fahrschule = eingebettet ?? null;
+    }
+  } else {
+    const { data } = await supabase.from("fahrlehrer").select("*").eq("user_id", user.id).maybeSingle();
+    fahrlehrer = (data as Fahrlehrer | null) ?? null;
+  }
+  if (fahrlehrer && !fahrschule) {
+    const { data } = await supabase.from("fahrschule").select("*").eq("id", fahrlehrer.fahrschule_id).maybeSingle();
+    fahrschule = (data as Fahrschule | null) ?? null;
   }
 
-  // Alle Fahrschulen des Nutzers (für den Umschalter oben links).
   // Resilient: falls die Migration noch nicht eingespielt ist, Fallback.
   let fahrschulen: FahrschulMitgliedschaft[] = [];
-  const { data: alle, error: rpcError } = await supabase.rpc("meine_fahrschulen");
-  if (!rpcError && alle) {
-    fahrschulen = alle as FahrschulMitgliedschaft[];
+  if (!liste.error && liste.data) {
+    fahrschulen = liste.data as FahrschulMitgliedschaft[];
   }
   if (fahrschulen.length === 0 && fahrschule) {
     fahrschulen = [
@@ -64,7 +74,7 @@ export const getKontext = cache(async (): Promise<Kontext | null> => {
         name: fahrschule.name,
         ort: fahrschule.ort,
         logo_url: fahrschule.logo_url,
-        rolle: (fahrlehrer as Fahrlehrer | null)?.rolle ?? "fahrlehrer",
+        rolle: fahrlehrer?.rolle ?? "fahrlehrer",
       },
     ];
   }
@@ -72,7 +82,7 @@ export const getKontext = cache(async (): Promise<Kontext | null> => {
   return {
     userId: user.id,
     email: user.email ?? null,
-    fahrlehrer: (fahrlehrer as Fahrlehrer) ?? null,
+    fahrlehrer,
     fahrschule,
     fahrschulen,
   };

@@ -11,6 +11,9 @@ const nextConfig = {
     // werden nur die tatsächlich genutzten Icons geladen. Beschleunigt sowohl
     // die Dev-Kompilierung als auch die First-Load-Chunks je Route deutlich.
     optimizePackageImports: ["lucide-react"],
+    // Router-Zwischenspeicher: besuchte Seiten 30 s sofort wieder da, beim
+    // Überfahren vorgeladene Seiten höchstens 60 s alt (statt 5 Minuten).
+    staleTimes: { dynamic: 30, static: 60 },
   },
   // Kurz-URLs für Anmeldung und Registrierung (Website → App).
   async redirects() {

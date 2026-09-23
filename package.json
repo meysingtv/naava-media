@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "dev:netz": "next dev -H 0.0.0.0",
+    "dev": "next dev --turbo",
+    "dev:netz": "next dev --turbo -H 0.0.0.0",
+    "dev:webpack": "next dev",
     "build": "next build",
     "start": "next start",
     "start:netz": "next start -H 0.0.0.0",
