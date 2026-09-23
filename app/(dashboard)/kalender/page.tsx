@@ -19,9 +19,10 @@ type PruefRow = Pick<Pruefung, "id" | "datum" | "uhrzeit" | "art" | "pruefstelle
   fahrschueler: Pick<Fahrschueler, "vorname" | "nachname"> | null;
 };
 
-export default async function DispositionPage() {
+export default async function DispositionPage({ searchParams }: { searchParams: { datum?: string } }) {
   const supabase = createClient();
   const heute = iso(new Date());
+  const startDatum = /^\d{4}-\d{2}-\d{2}$/.test(searchParams.datum ?? "") ? searchParams.datum : undefined;
   const von = addTage(-21);
   const bis = addTage(60);
 
@@ -67,7 +68,7 @@ export default async function DispositionPage() {
       <PageHeader eyebrow="Termine" title="Disposition" description="Wer fährt wann mit wem – Fahrlehrer und Fahrzeuge im Einsatz.">
         <SmartVorschlag schueler={options.schueler} />
       </PageHeader>
-      <Terminplaner heute={heute} stunden={stundenRes.data ?? []} options={options} pruefungen={pruefungen} />
+      <Terminplaner heute={heute} startDatum={startDatum} stunden={stundenRes.data ?? []} options={options} pruefungen={pruefungen} />
     </div>
   );
 }

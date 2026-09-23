@@ -70,7 +70,7 @@ export function SeitenTitel({
         </nav>
       )}
       <h1 className="truncate text-title font-semibold text-foreground">{title}</h1>
-      {description && <p className="mt-0.5 truncate text-sm text-foreground-secondary">{description}</p>}
+      {description && <p className="mt-0.5 text-sm text-foreground-secondary sm:truncate">{description}</p>}
     </div>
   );
 }

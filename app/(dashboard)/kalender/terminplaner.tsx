@@ -94,18 +94,21 @@ const WT_LANG = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Sam
 
 export function Terminplaner({
   heute,
+  startDatum,
   stunden,
   options,
   pruefungen = [],
 }: {
   heute: string;
+  /** Tag, der beim Öffnen gezeigt wird (z. B. aus dem Mini-Kalender im Leitstand). */
+  startDatum?: string;
   stunden: FahrstundeMitRelationen[];
   options: { schueler: Option[]; fahrlehrer: Option[]; fahrzeuge: Option[] };
   pruefungen?: Pruef[];
 }) {
   const [ansicht, setAnsicht] = useState<Ansicht>("tag");
   const [dimension, setDimension] = useState<Dimension>("lehrer");
-  const [anker, setAnker] = useState(heute);
+  const [anker, setAnker] = useState(startDatum ?? heute);
   const [nurBelegt, setNurBelegt] = useState(false);
 
   const [open, setOpen] = useState(false);

@@ -107,66 +107,67 @@ export interface TypMeta {
   variant: BadgeVariante; // v3: Badge-Variante statt Klassen-Override
 }
 
-// Kalender-Farben je Art: ruhige, aufeinander abgestimmte Töne. Mint-Grün ist
-// die normale Fahrstunde; die anderen Arten bleiben unterscheidbar, aber gedeckt.
+// Farben je Fahrstunden-Art – sieben klar unterscheidbare, gleich kräftige
+// Töne. Sie tragen Kalender, Tagesplan und Auswertungen; weiße Schrift auf
+// jeder Farbe erreicht mindestens 3:1 (große/fette Schrift in Blöcken).
 export const FAHRSTUNDE_FARBE: Record<FahrstundeTyp, string> = {
-  normal: "#14A15A",
-  ueberland: "#1E8E5A",
-  autobahn: "#2F80ED",
-  nacht: "#1F5FB8",
-  pruefung: "#D9463D", // --destructive
-  theorie: "#D48A0C", // --warning
-  sonstiges: "#5B6B63", // --text-secondary (kräftig genug für den 3-px-Block)
+  normal: "#3565E8", // Blau
+  ueberland: "#0E9A77", // Smaragd
+  autobahn: "#7650E0", // Violett
+  nacht: "#2F3F8F", // Nachtblau
+  pruefung: "#E0434A", // Rot
+  theorie: "#E38A1C", // Orange
+  sonstiges: "#6B7383", // Schiefer
 };
 
 export const FAHRSTUNDE_TYPEN: Record<FahrstundeTyp, TypMeta> = {
   normal: {
     label: "Normale Fahrstunde",
     kurz: "Normal",
-    badge: "[&_i]:bg-primary",
-    dot: "bg-primary",
+    badge: "[&_i]:bg-[#3565E8]",
+    dot: "bg-[#3565E8]",
     variant: "default",
   },
   ueberland: {
     label: "Überlandfahrt",
     kurz: "Überland",
-    badge: "[&_i]:bg-success",
-    dot: "bg-success",
+    badge: "[&_i]:bg-[#0E9A77]",
+    dot: "bg-[#0E9A77]",
     variant: "success",
   },
   autobahn: {
     label: "Autobahnfahrt",
     kurz: "Autobahn",
-    badge: "[&_i]:bg-info",
-    dot: "bg-info",
+    badge: "[&_i]:bg-[#7650E0]",
+    dot: "bg-[#7650E0]",
     variant: "info",
   },
   nacht: {
     label: "Nachtfahrt",
     kurz: "Nacht",
-    badge: "[&_i]:bg-primary",
-    dot: "bg-primary",
+    badge: "[&_i]:bg-[#2F3F8F]",
+    dot: "bg-[#2F3F8F]",
     variant: "default",
   },
   pruefung: {
     label: "Prüfung",
     kurz: "Prüfung",
-    badge: "[&_i]:bg-destructive",
-    dot: "bg-destructive",
+    badge: "[&_i]:bg-[#E0434A]",
+    dot: "bg-[#E0434A]",
     variant: "destructive",
   },
   theorie: {
     label: "Theoriestunde",
     kurz: "Theorie",
-    badge: "[&_i]:bg-warning",
-    dot: "bg-warning",
+    badge: "[&_i]:bg-[#E38A1C]",
+    dot: "bg-[#E38A1C]",
     variant: "warning",
   },
   sonstiges: {
     label: "Sonstiges",
     kurz: "Sonstiges",
-    badge: "[&_i]:bg-border-strong",
-    dot: "bg-muted-foreground",
+    badge: "[&_i]:bg-[#6B7383]",
+    dot: "bg-[#6B7383]",
     variant: "secondary",
   },
 };

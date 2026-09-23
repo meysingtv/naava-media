@@ -220,7 +220,7 @@ export function FilterChip({
 
 /**
  * Segment-Steuerung für Listen („Alle · Offen · Überfällig") mit Zahl je
- * Segment – eine graue Schiene, das aktive Segment als weißes Feld.
+ * Segment – eine weiße Schiene, das aktive Segment hellblau hinterlegt.
  * Seiten-Navigation bleibt den Unterstrich-Reitern vorbehalten.
  */
 export function Segmente<K extends string>({
@@ -241,7 +241,7 @@ export function Segmente<K extends string>({
       role="radiogroup"
       aria-label={label}
       className={cn(
-        "inline-flex h-8 max-w-full shrink-0 items-center gap-0.5 overflow-x-auto rounded-md bg-muted p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        "inline-flex h-8 max-w-full shrink-0 items-center gap-0.5 overflow-x-auto rounded-lg bg-card p-0.5 shadow-panel [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         className,
       )}
     >
@@ -257,14 +257,12 @@ export function Segmente<K extends string>({
             className={cn(
               "inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[5px] px-2.5 text-13 font-medium transition-colors duration-fast",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/70",
-              aktiv
-                ? "bg-card text-foreground shadow-[0_1px_2px_rgba(16,24,40,0.08),0_0_0_1px_hsl(var(--border))]"
-                : "text-foreground-secondary hover:text-foreground",
+              aktiv ? "bg-primary-soft text-primary-text" : "text-foreground-secondary hover:bg-muted hover:text-foreground",
             )}
           >
             {o.label}
             {o.anzahl != null && (
-              <span className={cn("tabular-nums", aktiv ? "text-foreground-secondary" : "text-foreground-tertiary")}>
+              <span className={cn("tabular-nums", aktiv ? "text-primary-text/70" : "text-foreground-tertiary")}>
                 {o.anzahl}
               </span>
             )}

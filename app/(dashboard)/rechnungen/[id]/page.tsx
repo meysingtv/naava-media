@@ -60,6 +60,7 @@ export default async function RechnungDetailPage({ params }: { params: { id: str
         <DetailKopf
           zurueck={{ href: "/rechnungen", label: "Rechnungen" }}
           titel={`Rechnung ${rechnung.nummer}`}
+          kurztitel={rechnung.nummer}
           status={<Badge variant={status.variant}>{status.label}</Badge>}
           meta={[
             schueler ? `${schueler.vorname} ${schueler.nachname}` : "Ohne Schüler",
@@ -106,7 +107,7 @@ export default async function RechnungDetailPage({ params }: { params: { id: str
 
       <div className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_300px]">
         {/* Rechnungsdokument – so, wie es gedruckt wird */}
-        <article className="min-w-0 rounded-lg bg-card px-8 py-10 shadow-panel sm:px-12 print:p-0 print:shadow-none">
+        <article className="min-w-0 rounded-xl bg-card px-8 py-10 shadow-panel sm:px-12 print:p-0 print:shadow-none">
           <header className="flex flex-wrap items-start justify-between gap-6">
             <div>
               <p className="text-base font-semibold text-foreground">{fahrschule?.name ?? "Fahrschule"}</p>

@@ -50,7 +50,7 @@ function Fortschritt({ label, ist, soll }: { label: string; ist: number; soll: n
       <span className="truncate text-13 text-foreground">{label}</span>
       <span className="h-1.5 overflow-hidden rounded-full bg-muted">
         <span
-          className={cn("block h-full rounded-full", fertig ? "bg-success" : "bg-foreground/75")}
+          className={cn("block h-full rounded-full", fertig ? "bg-success" : "bg-primary")}
           style={{ width: `${prozent}%` }}
         />
       </span>
@@ -218,7 +218,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
         }
       >
         {/* Ausbildungsweg – sechs Stufen als geteilte Leiste */}
-        <ol className="mt-6 grid grid-cols-2 overflow-hidden rounded-lg bg-card shadow-panel sm:grid-cols-3 xl:grid-cols-6">
+        <ol className="mt-6 grid grid-cols-2 overflow-hidden rounded-xl bg-card shadow-panel sm:grid-cols-3 xl:grid-cols-6">
           {stufen.map((st) => (
             <li
               key={st.key}
@@ -318,11 +318,11 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
                           </span>
                         </span>
                         <span className="shrink-0 text-13 tabular-nums text-foreground-secondary">{f.dauer_minuten} Min.</span>
-                        <span className="w-24 shrink-0 text-right">
+                        <span className="w-28 shrink-0 text-right">
                           {f.bestaetigt_am ? (
                             <StatusDot ton="success">Bestätigt</StatusDot>
                           ) : (
-                            <StatusDot ton="warning">Offen</StatusDot>
+                            <StatusDot ton="warning">Unbestätigt</StatusDot>
                           )}
                         </span>
                       </li>
@@ -339,7 +339,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
             </div>
 
             {/* Eigenschaftsspalte */}
-            <aside className="min-w-0 divide-y divide-border lg:border-l lg:border-border lg:pl-8">
+            <aside className="min-w-0 self-start divide-y divide-border rounded-xl bg-card px-5 py-5 shadow-panel">
               <Seitenblock titel="Kontakt">
                 <Eigenschaften breite="schmal">
                   <Eigenschaft label="Telefon">
@@ -428,11 +428,11 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
         {/* ---------------- Fahrstunden ---------------- */}
         <TabsContent value="fahrstunden" className="mt-6">
           {fahrstunden.length === 0 ? (
-            <div className="rounded-lg shadow-panel">
+            <div className="rounded-xl shadow-panel">
               <AbschnittLeer>Noch keine Fahrstunden. Termine legst du im Kalender an.</AbschnittLeer>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-lg bg-card shadow-panel">
+            <div className="overflow-hidden rounded-xl bg-card shadow-panel">
               <Table>
                 <TableHeader className="static">
                   <TableRow className="hover:bg-transparent">
@@ -553,7 +553,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
             <div className="grid gap-3 sm:grid-cols-2">
               <Link
                 href={`/schueler/${s.id}/ausbildungsnachweis`}
-                className="flex items-center gap-3 rounded-lg bg-card p-4 shadow-panel transition-shadow hover:shadow-[0_0_0_1px_hsl(var(--border-hover))]"
+                className="flex items-center gap-3 rounded-xl bg-card p-4 shadow-panel transition-shadow hover:shadow-[0_0_0_1px_hsl(var(--border-hover))]"
               >
                 <FileText className="h-5 w-5 shrink-0 text-foreground-tertiary" strokeWidth={1.5} />
                 <span className="min-w-0">
@@ -563,7 +563,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
               </Link>
               <Link
                 href={`/schueler/${s.id}/vertrag`}
-                className="flex items-center gap-3 rounded-lg bg-card p-4 shadow-panel transition-shadow hover:shadow-[0_0_0_1px_hsl(var(--border-hover))]"
+                className="flex items-center gap-3 rounded-xl bg-card p-4 shadow-panel transition-shadow hover:shadow-[0_0_0_1px_hsl(var(--border-hover))]"
               >
                 <FileSignature className="h-5 w-5 shrink-0 text-foreground-tertiary" strokeWidth={1.5} />
                 <span className="min-w-0">

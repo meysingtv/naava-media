@@ -1,21 +1,33 @@
-import Link from "next/link";
-import { Bell } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import { Glocke } from "@/components/shared/glocke";
 import { GlobalSearch } from "@/components/shared/global-search";
 import { HeaderSentinel } from "@/components/shared/header-sentinel";
 import { MobileMenuButton } from "@/components/shared/mobile-menu-button";
 import { NeuMenu } from "@/components/shared/neu-menu";
+import { NutzerMenu } from "@/components/shared/nutzer-menu";
+import { ZuletztReiter } from "@/components/shared/zuletzt-reiter";
+import type { FahrlehrerRolle } from "@/lib/types";
 
 /**
- * App-Leiste: die EINE Zeile, die über allen Seiten steht und beim Scrollen
- * oben bleibt – Suche mittig, „Neu" und Glocke bündig rechts. Sie gehört der
- * Anwendung, nicht der Seite; Titel, Brotkrumen und Seitenaktionen stehen
- * darunter im Seitenkopf (`page-topbar.tsx`).
+ * App-Leiste: die EINE Zeile über allen Seiten, bleibt beim Scrollen oben.
+ * Links die zuletzt geöffneten anderen Seiten als Reiter, mittig die Suche,
+ * rechts „Neu", die Glocke (mit Zähler für unbestätigte Termine) und das
+ * Konto mit Name und Rolle.
  *
- * Höhe 56 px = Versatz der klebenden Tabellenköpfe (`stickyHeaderOffset`).
+ * Höhe 56 px = Versatz der klebenden Tabellenköpfe.
  */
-export function AppBar() {
+export function AppBar({
+  vorname,
+  nachname,
+  rolle,
+  email,
+  offeneBestaetigungen,
+}: {
+  vorname: string;
+  nachname: string;
+  rolle: FahrlehrerRolle;
+  email: string | null;
+  offeneBestaetigungen: number;
+}) {
   return (
     <>
       <HeaderSentinel />
@@ -29,22 +41,23 @@ export function AppBar() {
       >
         <MobileMenuButton className="-ml-1.5 shrink-0 lg:hidden" />
 
+        {/* Zuletzt geöffnet – endet immer vor der Suche */}
+        <ZuletztReiter className="relative z-[1] hidden max-w-[calc(50vw-var(--sidebar-w)-182px)] xl:flex" />
+
         {/* Suche – mittig im FENSTER: der Versatz gleicht die halbe
             Navigationsbreite aus, damit die Mitte auf dem Bildschirm stimmt. */}
         <div className="pointer-events-none absolute inset-x-0 hidden justify-center md:flex lg:translate-x-[calc(var(--sidebar-w)/-2)]">
-          <div className="pointer-events-auto w-full max-w-[420px] px-4">
+          <div className="pointer-events-auto w-full max-w-[332px] px-4">
             <GlobalSearch />
           </div>
         </div>
 
-        <div className="relative ml-auto flex shrink-0 items-center gap-2">
+        <div className="relative ml-auto flex shrink-0 items-center gap-1.5">
           <GlobalSearch variant="icon" className="md:hidden" />
           <NeuMenu />
-          <Button asChild variant="ghost" size="icon-sm">
-            <Link href="/erinnerungen" aria-label="Erinnerungen">
-              <Bell className="!size-[18px]" strokeWidth={1.75} />
-            </Link>
-          </Button>
+          <Glocke anzahl={offeneBestaetigungen} />
+          <span aria-hidden="true" className="mx-1.5 hidden h-6 w-px bg-border sm:block" />
+          <NutzerMenu vorname={vorname} nachname={nachname} rolle={rolle} email={email} />
         </div>
       </header>
     </>

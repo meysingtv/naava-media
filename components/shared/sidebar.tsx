@@ -5,7 +5,6 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { PanelLeftClose, PanelLeftOpen, Sparkles, X } from "lucide-react";
 
 import { FahrschulSwitcher } from "@/components/shared/fahrschul-switcher";
-import { NutzerMenu } from "@/components/shared/nutzer-menu";
 import { SidebarButton } from "@/components/shared/sidebar-item";
 import { SidebarNav } from "@/components/shared/sidebar-nav";
 import { useSidebar } from "@/components/shared/sidebar-context";
@@ -51,21 +50,13 @@ function SidebarInhalt({ imDrawer, ...props }: SidebarProps & { imDrawer?: boole
       {/* B – Navigation */}
       <SidebarNav rolle={props.rolle} zaehler={props.zaehler} imDrawer={imDrawer} />
 
-      {/* C – Fuß: Hilfe, Einstellungen, Assistent, Konto */}
+      {/* C – Fuß: Hilfe, Einstellungen, Assistent, Einklappen. Das Konto sitzt oben rechts. */}
       <div className="mt-auto space-y-px px-3 pb-3 pt-4">
         <SidebarNav rolle={props.rolle} imDrawer={imDrawer} teil="fuss" />
         <SidebarButton
           icon={Sparkles}
           label="Assistent"
           onClick={() => setAssistentOffen(true)}
-          imDrawer={imDrawer}
-        />
-
-        <NutzerMenu
-          vorname={props.vorname}
-          nachname={props.nachname}
-          rolle={props.rolle}
-          email={props.email}
           imDrawer={imDrawer}
         />
 

@@ -15,22 +15,22 @@ interface DashboardShellProps {
   email: string | null;
   fahrschulen: FahrschulMitgliedschaft[];
   aktiveFahrschuleId: string | null;
-  /** Zähler an Sidebar-Einträgen – nur, wenn die Zahl ohne Extrakosten vorliegt. */
+  /** Zähler an Navigationseinträgen – nur, wenn die Zahl ohne Extrakosten vorliegt. */
   zaehler?: Zaehler;
+  /** Unbestätigte Fahrstunden der nächsten drei Tage – Punkt an der Glocke. */
+  offeneBestaetigungen?: number;
   children: React.ReactNode;
 }
 
 /**
- * App-Rahmen v4: feste Navigation links (240 px / eingeklappt 64 px), rechts
- * oben die App-Leiste (Suche, „Neu", Glocke – bleibt beim Scrollen stehen)
- * und darunter der Seiteninhalt mit eigenem Seitenkopf. Keine Bereichs-
- * Leiste, keine Kontext-Tabs, keine Bottom-Bar.
+ * App-Rahmen v4.1: Navigation links und App-Leiste oben bilden einen weißen
+ * Rahmen. Darin liegt die hellgraue Arbeitsfläche mit abgerundeter Ecke
+ * oben links; die Inhalte stehen als weiße Karten darauf.
  *
- * Gescrollt wird die SEITE, nicht `main` – dadurch funktionieren
- * `sticky top-0` am Seitenkopf und `sticky top-14` am Tabellenkopf ohne
- * Sonderfälle, und der Druck bleibt einfach.
+ * Gescrollt wird die SEITE, nicht `main` – dadurch klebt die App-Leiste
+ * ohne Sonderfälle, und der Druck bleibt einfach.
  */
-export function DashboardShell({ children, zaehler, ...kontext }: DashboardShellProps) {
+export function DashboardShell({ children, zaehler, offeneBestaetigungen, ...kontext }: DashboardShellProps) {
   return (
     <SidebarProvider rolle={kontext.rolle}>
       <a
@@ -40,16 +40,22 @@ export function DashboardShell({ children, zaehler, ...kontext }: DashboardShell
         Zum Inhalt springen
       </a>
 
-      <div className="min-h-dvh bg-canvas">
+      <div className="min-h-dvh bg-background">
         <Sidebar {...kontext} zaehler={zaehler} />
         <SidebarDrawer {...kontext} zaehler={zaehler} />
 
         <div className="transition-[padding] duration-overlay ease-soft lg:pl-[var(--sidebar-w)] print:pl-0">
-          <AppBar />
+          <AppBar
+            vorname={kontext.vorname}
+            nachname={kontext.nachname}
+            rolle={kontext.rolle}
+            email={kontext.email}
+            offeneBestaetigungen={offeneBestaetigungen ?? 0}
+          />
           <main
             id="inhalt"
             tabIndex={-1}
-            className="w-full px-4 pb-16 pt-7 focus-visible:outline-none md:px-6 md:pt-8 lg:px-8 print:!p-0"
+            className="min-h-[calc(100dvh-3.5rem)] w-full bg-canvas px-4 pb-16 pt-6 focus-visible:outline-none md:px-6 md:pt-8 lg:rounded-tl-[20px] lg:px-8 print:!bg-white print:!p-0"
           >
             {children}
           </main>

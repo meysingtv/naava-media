@@ -41,7 +41,7 @@ export function Abschnitt({
         </div>
       )}
       {rahmen ? (
-        <div className={cn("overflow-hidden rounded-lg bg-card shadow-panel", inhaltClassName)}>{children}</div>
+        <div className={cn("overflow-hidden rounded-xl bg-card shadow-panel", inhaltClassName)}>{children}</div>
       ) : (
         <div className={inhaltClassName}>{children}</div>
       )}

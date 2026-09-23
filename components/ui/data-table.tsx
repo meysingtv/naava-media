@@ -290,7 +290,7 @@ export function DataTable<T>({
             style={{ top: maxHeight ? 0 : stickyHeaderOffset }}
             className="max-md:!static max-md:!top-auto"
           >
-            <TableRow className="hover:bg-surface-muted">
+            <TableRow className="hover:bg-transparent">
               {selectable && (
                 <TableHead className="w-10">
                   <Checkbox

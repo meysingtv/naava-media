@@ -4,8 +4,8 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Tabelle v4: 44-px-Zeilen, 13 px, klebender Kopf in Satzschrift auf
- * hellgrauem Grund, 1-px-Linien, Zahlen tabellarisch und rechtsbündig.
+ * Tabelle v4: 44-px-Zeilen, 13 px, klebender Kopf in Satzschrift (grau,
+ * ohne Fläche), 1-px-Linien, Zahlen tabellarisch und rechtsbündig.
  */
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
@@ -20,7 +20,7 @@ const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttribut
   ({ className, ...props }, ref) => (
     <thead
       ref={ref}
-      className={cn("sticky top-0 z-sticky bg-surface-muted [&_tr]:border-b [&_tr]:border-border", className)}
+      className={cn("sticky top-0 z-sticky bg-card [&_tr]:border-b [&_tr]:border-border", className)}
       {...props}
     />
   ),

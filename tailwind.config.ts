@@ -120,8 +120,8 @@ const config: Config = {
       borderRadius: {
         sm: "0.25rem", // 4px – Checkbox, Menü-Items, Punkte-Chips
         md: "var(--radius-control)", // 6px – Knöpfe, Felder
-        lg: "var(--radius-panel)", // 8px – Container, Popover
-        xl: "var(--radius-panel)", // 8px – Container (Alias, Bestand)
+        lg: "0.5rem", // 8px – Popover, kleine Container
+        xl: "var(--radius-panel)", // 12px – Karten
         "2xl": "var(--radius-dialog)", // 12px – Dialog, Kommandopalette
       },
       boxShadow: {

@@ -13,6 +13,7 @@ export function DetailKopf({
   zurueck,
   bild,
   titel,
+  kurztitel,
   status,
   meta,
   aktionen,
@@ -22,6 +23,8 @@ export function DetailKopf({
   zurueck?: { href: string; label: string };
   bild?: React.ReactNode;
   titel: React.ReactNode;
+  /** Kurzer Name für die Reiter „zuletzt geöffnet" (z. B. „RE-0128"). */
+  kurztitel?: string;
   status?: React.ReactNode;
   /** Einzelteile der Meta-Zeile, werden mit „·" verbunden; leere fallen weg. */
   meta?: React.ReactNode[];
@@ -49,7 +52,9 @@ export function DetailKopf({
           {bild}
           <div className="min-w-0">
             <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
-              <h1 className="truncate text-title font-semibold text-foreground">{titel}</h1>
+              <h1 data-kurztitel={kurztitel} className="truncate text-title font-semibold text-foreground">
+                {titel}
+              </h1>
               {status}
             </div>
             {teile.length > 0 && (

@@ -65,7 +65,7 @@ function Sonderfahrten({ f }: { f: Fortschritt }) {
     <div className="flex items-center gap-2.5">
       <span className="h-1 w-16 overflow-hidden rounded-full bg-muted">
         <span
-          className={cn("block h-full rounded-full", prozent >= 100 ? "bg-success" : "bg-foreground/70")}
+          className={cn("block h-full rounded-full", prozent >= 100 ? "bg-success" : "bg-primary")}
           style={{ width: `${prozent}%` }}
         />
       </span>

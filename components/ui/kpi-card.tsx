@@ -25,6 +25,10 @@ export interface KpiCardProps {
   trend?: number[];
   tone?: "neutral" | "success" | "warning" | "destructive" | "info";
   href?: string;
+  /** Kleines Symbol oben rechts in einer getönten Kachel (als Element übergeben). */
+  icon?: React.ReactNode;
+  /** Farbe der Symbol-Kachel (Hex), Standard Kobaltblau. */
+  akzent?: string;
   size?: "default" | "lg";
   loading?: boolean;
   className?: string;
@@ -93,6 +97,8 @@ export function KpiCard({
   trend,
   tone = "neutral",
   href,
+  icon,
+  akzent = "#2B59E6",
   size = "default",
   loading,
   className,
@@ -106,7 +112,15 @@ export function KpiCard({
     <>
       <div className="flex items-center justify-between gap-2">
         <p className="truncate text-13 font-medium text-foreground-secondary">{label}</p>
-        {href && (
+        {icon ? (
+          <span
+            aria-hidden="true"
+            className="-my-1 hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:flex [&_svg]:h-4 [&_svg]:w-4"
+            style={{ background: `${akzent}14`, color: akzent }}
+          >
+            {icon}
+          </span>
+        ) : href && (
           <ArrowUpRight
             className="h-3.5 w-3.5 shrink-0 text-foreground-tertiary opacity-0 transition-opacity group-hover:opacity-100"
             strokeWidth={1.75}
@@ -166,7 +180,7 @@ export function KpiCard({
     "group flex min-w-0 flex-col",
     imStreifen
       ? "px-5 py-4 shadow-[-1px_0_0_0_hsl(var(--border)),0_-1px_0_0_hsl(var(--border))]"
-      : "rounded-lg bg-card p-4 shadow-panel print:shadow-none print:ring-1 print:ring-border",
+      : "rounded-xl bg-card p-4 shadow-panel print:shadow-none print:ring-1 print:ring-border",
     href && "transition-colors duration-fast ease-soft hover:bg-surface-muted",
     className,
   );
@@ -203,7 +217,7 @@ export function KpiRow({
     <ImStreifen.Provider value={true}>
       <div
         className={cn(
-          "grid grid-cols-2 overflow-hidden rounded-lg bg-card shadow-panel print:shadow-none print:ring-1 print:ring-border",
+          "grid grid-cols-2 overflow-hidden rounded-xl bg-card shadow-panel print:shadow-none print:ring-1 print:ring-border",
           anzahl === 3 ? "lg:grid-cols-3" : anzahl >= 6 ? "lg:grid-cols-3 xl:grid-cols-6" : anzahl === 2 ? "" : "lg:grid-cols-4",
           className,
         )}
