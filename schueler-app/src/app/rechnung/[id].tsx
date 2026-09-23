@@ -6,7 +6,7 @@ import { ladeRechnung, ladeSchule } from "@/lib/daten";
 import { formatDatum, formatEuro } from "@/lib/format";
 import { useLoader } from "@/lib/use-loader";
 import { useTheme } from "@/lib/theme-context";
-import { radius, space } from "@/lib/theme";
+import { karte, space } from "@/lib/theme";
 
 const STATUS = {
   offen: { label: "Offen", tone: "warning" as const },
@@ -42,7 +42,7 @@ export default function RechnungScreen() {
   return (
     <Screen>
       <ScrollView contentContainerStyle={{ padding: space(4), paddingBottom: space(10) }}>
-        <View style={{ backgroundColor: colors.card, borderRadius: radius.lg, padding: space(5), marginBottom: space(6), gap: space(1) }}>
+        <View style={[karte(colors), { padding: space(5), marginBottom: space(6), gap: space(1) }]}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text style={{ fontSize: 15, color: colors.textMuted }}>Rechnung {r.nummer}</Text>
             <Badge label={st.label} tone={st.tone} />

@@ -3,15 +3,16 @@ import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from "react-
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { Badge, Button, Screen, ScreenHeader, Segmented } from "@/components/ui";
-import { TerminKarte } from "@/components/termin-karte";
+import { Badge, Button, IconKachel, Screen, Segmented } from "@/components/ui";
+import { GradientKopf } from "@/components/kopf";
+import { DatumBlock, TerminKarte } from "@/components/termin-karte";
 import { istAnstehend } from "@/lib/constants";
 import { anfrageZurueckziehen, ladeAnfragen, ladeFahrstunden, ladeLehrer, ladeRegeln } from "@/lib/daten";
 import { endUhrzeit, formatDatumLang, formatUhrzeit } from "@/lib/format";
 import { useLoader } from "@/lib/use-loader";
 import { useRealtime } from "@/lib/use-realtime";
 import { useTheme } from "@/lib/theme-context";
-import { radius, space } from "@/lib/theme";
+import { karte, space } from "@/lib/theme";
 import type { Anfrage } from "@/lib/types";
 
 type Ansicht = "anstehend" | "anfragen" | "verlauf";
@@ -46,15 +47,21 @@ function AnfrageKarte({ a, lehrer, beiAenderung }: { a: Anfrage; lehrer?: string
   }
 
   return (
-    <View style={{ backgroundColor: colors.card, borderRadius: radius.lg, padding: space(4), gap: space(1.5) }}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space(2) }}>
-        <Text style={{ fontSize: 17, fontWeight: "600", color: colors.text, flex: 1 }}>{formatDatumLang(a.datum)}</Text>
-        <Badge label={st.label} tone={st.tone} />
+    <View style={[karte(colors), { padding: space(3.5), gap: space(2.5) }]}>
+      <View style={{ flexDirection: "row", gap: space(3.5), alignItems: "center" }}>
+        <DatumBlock iso={a.datum} farbe={colors.accent} blass={a.status === "abgelehnt"} />
+        <View style={{ flex: 1, gap: 3 }}>
+          <View style={{ flexDirection: "row" }}>
+            <Badge label={st.label} tone={st.tone} />
+          </View>
+          <Text style={{ fontSize: 18, fontWeight: "700", color: colors.text }}>
+            {formatUhrzeit(a.uhrzeit)} – {endUhrzeit(a.uhrzeit, a.dauer_minuten)} Uhr
+          </Text>
+          <Text style={{ fontSize: 14, color: colors.textMuted }} numberOfLines={1}>
+            {a.dauer_minuten} Min.{lehrer ? ` · Wunsch: ${lehrer}` : ""}
+          </Text>
+        </View>
       </View>
-      <Text style={{ fontSize: 15, color: colors.textMuted }}>
-        {formatUhrzeit(a.uhrzeit)} – {endUhrzeit(a.uhrzeit, a.dauer_minuten)} Uhr · {a.dauer_minuten} Min.
-        {lehrer ? ` · Wunsch: ${lehrer}` : ""}
-      </Text>
       {a.notiz ? <Text style={{ fontSize: 14, color: colors.text }}>„{a.notiz}“</Text> : null}
       {a.antwort ? (
         <Text style={{ fontSize: 14, color: a.status === "abgelehnt" ? colors.danger : colors.textMuted }}>
@@ -62,8 +69,8 @@ function AnfrageKarte({ a, lehrer, beiAenderung }: { a: Anfrage; lehrer?: string
         </Text>
       ) : null}
       {a.status === "offen" ? (
-        <Pressable onPress={zurueckziehen} disabled={arbeitet} hitSlop={6} style={{ alignSelf: "flex-start", marginTop: space(1) }}>
-          <Text style={{ color: colors.danger, fontSize: 15, fontWeight: "600", opacity: arbeitet ? 0.5 : 1 }}>Zurückziehen</Text>
+        <Pressable onPress={zurueckziehen} disabled={arbeitet} hitSlop={6} style={{ alignSelf: "flex-start" }}>
+          <Text style={{ color: colors.danger, fontSize: 15, fontWeight: "700", opacity: arbeitet ? 0.5 : 1 }}>Zurückziehen</Text>
         </Pressable>
       ) : null}
     </View>
@@ -73,9 +80,10 @@ function AnfrageKarte({ a, lehrer, beiAenderung }: { a: Anfrage; lehrer?: string
 function Leer({ text, children }: { text: string; children?: React.ReactNode }) {
   const { colors } = useTheme();
   return (
-    <View style={{ backgroundColor: colors.card, borderRadius: radius.lg, padding: space(6), alignItems: "center", gap: space(3) }}>
-      <Text style={{ color: colors.textMuted, fontSize: 15, textAlign: "center" }}>{text}</Text>
-      {children}
+    <View style={[karte(colors), { padding: space(6), alignItems: "center", gap: space(3.5) }]}>
+      <IconKachel name="calendar-clear-outline" farbe={colors.accent} groesse={52} />
+      <Text style={{ color: colors.textMuted, fontSize: 15, textAlign: "center", lineHeight: 21 }}>{text}</Text>
+      {children ? <View style={{ alignSelf: "stretch" }}>{children}</View> : null}
     </View>
   );
 }
@@ -124,17 +132,32 @@ export default function TermineScreen() {
 
   return (
     <Screen>
-      <ScreenHeader
-        title="Termine"
-        right={
+      <GradientKopf
+        titel="Termine"
+        untertitel={anstehend.length === 1 ? "1 Fahrstunde geplant" : `${anstehend.length} Fahrstunden geplant`}
+        rechts={
           erlaubt ? (
-            <Pressable onPress={() => router.push("/anfrage")} hitSlop={10} accessibilityLabel="Fahrstunde anfragen">
-              <Ionicons name="add-circle" size={32} color={colors.accent} />
+            <Pressable
+              onPress={() => router.push("/anfrage")}
+              hitSlop={10}
+              accessibilityLabel="Fahrstunde anfragen"
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+                backgroundColor: "rgba(255,255,255,0.22)",
+                paddingHorizontal: space(3),
+                paddingVertical: space(2),
+                borderRadius: 999,
+              }}
+            >
+              <Ionicons name="add" size={18} color="#FFFFFF" />
+              <Text style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 14 }}>Anfragen</Text>
             </Pressable>
           ) : undefined
         }
       />
-      <View style={{ paddingHorizontal: space(4), paddingBottom: space(3) }}>
+      <View style={{ paddingHorizontal: space(4), paddingTop: space(4), paddingBottom: space(3) }}>
         <Segmented<Ansicht>
           options={[
             { value: "anstehend", label: `Anstehend (${anstehend.length})` },

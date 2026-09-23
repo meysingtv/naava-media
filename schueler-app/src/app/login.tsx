@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
-import { Button, Screen, Section, Segmented } from "@/components/ui";
-import { FieldRow } from "@/components/form-fields";
-import { Wortmarke } from "@/components/wortmarke";
+import { Button, Input, Screen, Segmented } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/lib/theme-context";
-import { space } from "@/lib/theme";
+import { karte, space } from "@/lib/theme";
 
 type Modus = "anmelden" | "registrieren";
 
@@ -20,6 +20,7 @@ type Modus = "anmelden" | "registrieren";
  */
 export default function LoginScreen() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { session, verknuepft, pruefen } = useAuth();
   const [modus, setModus] = useState<Modus>("anmelden");
   const [email, setEmail] = useState("");
@@ -94,74 +95,100 @@ export default function LoginScreen() {
 
   return (
     <Screen>
-      <SafeAreaView style={{ flex: 1 }}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-          <ScrollView
-            contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: space(4) }}
-            keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" bounces={false}>
+          <LinearGradient
+            colors={[colors.heroVon, colors.heroBis]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              paddingTop: insets.top + space(12),
+              paddingBottom: space(20),
+              paddingHorizontal: space(6),
+              borderBottomLeftRadius: 32,
+              borderBottomRightRadius: 32,
+              overflow: "hidden",
+            }}
           >
-            <View style={{ alignItems: "center", marginBottom: space(8) }}>
-              <Wortmarke groesse={40} />
-              <Text style={{ fontSize: 15, color: colors.textMuted, marginTop: space(3), textAlign: "center" }}>
-                Termine, Fortschritt und Rechnungen – deine Fahrschule in der Tasche.
-              </Text>
+            <View
+              pointerEvents="none"
+              style={{ position: "absolute", width: 280, height: 280, borderRadius: 140, backgroundColor: "rgba(255,255,255,0.08)", top: -90, right: -90 }}
+            />
+            <View
+              pointerEvents="none"
+              style={{ position: "absolute", width: 180, height: 180, borderRadius: 90, backgroundColor: "rgba(255,255,255,0.06)", bottom: -70, left: -50 }}
+            />
+            <View
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 20,
+                backgroundColor: "rgba(255,255,255,0.2)",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: space(5),
+              }}
+            >
+              <Ionicons name="car-sport" size={34} color="#FFFFFF" />
             </View>
+            <Text style={{ fontSize: 34, fontWeight: "800", color: "#FFFFFF" }}>Willkommen!</Text>
+            <Text style={{ fontSize: 16, color: "rgba(255,255,255,0.88)", marginTop: space(2), lineHeight: 22 }}>
+              Deine Fahrstunden, dein Fortschritt und deine Rechnungen – alles an einem Ort.
+            </Text>
+          </LinearGradient>
 
-            <View style={{ marginBottom: space(5) }}>
-              <Segmented<Modus>
-                options={[
-                  { value: "anmelden", label: "Anmelden" },
-                  { value: "registrieren", label: "Konto erstellen" },
-                ]}
-                value={modus}
-                onChange={(m) => {
-                  setModus(m);
-                  setFehler(null);
-                  setHinweis(null);
-                }}
-              />
-            </View>
+          <View style={[karte(colors), { marginHorizontal: space(4), marginTop: -space(14), padding: space(5), gap: space(3.5) }]}>
+            <Segmented<Modus>
+              options={[
+                { value: "anmelden", label: "Anmelden" },
+                { value: "registrieren", label: "Konto erstellen" },
+              ]}
+              value={modus}
+              onChange={(m) => {
+                setModus(m);
+                setFehler(null);
+                setHinweis(null);
+              }}
+            />
 
-            {fehler ? (
-              <Text style={{ color: colors.danger, textAlign: "center", marginBottom: space(3), fontSize: 14 }}>{fehler}</Text>
-            ) : null}
-            {hinweis ? (
-              <Text style={{ color: colors.success, textAlign: "center", marginBottom: space(3), fontSize: 14 }}>{hinweis}</Text>
-            ) : null}
+            <Input
+              icon="mail-outline"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="E-Mail"
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              textContentType="username"
+            />
+            <Input
+              icon="lock-closed-outline"
+              value={passwort}
+              onChangeText={setPasswort}
+              placeholder={modus === "registrieren" ? "Passwort (mind. 8 Zeichen)" : "Passwort"}
+              secureTextEntry
+              textContentType={modus === "registrieren" ? "newPassword" : "password"}
+            />
+            <Input
+              icon="key-outline"
+              value={code}
+              onChangeText={setCode}
+              placeholder={modus === "anmelden" ? "Zugangscode (optional)" : "Zugangscode deiner Fahrschule"}
+              autoCapitalize="characters"
+              autoCorrect={false}
+            />
 
-            <Section footer="Den Zugangscode bekommst du von deiner Fahrschule. Nach dem ersten Mal brauchst du ihn nicht mehr.">
-              <FieldRow
-                label="E-Mail"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="name@beispiel.de"
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                textContentType="username"
-              />
-              <FieldRow
-                label="Passwort"
-                value={passwort}
-                onChangeText={setPasswort}
-                placeholder={modus === "registrieren" ? "mindestens 8 Zeichen" : "Passwort"}
-                secureTextEntry
-                textContentType={modus === "registrieren" ? "newPassword" : "password"}
-              />
-              <FieldRow
-                label="Code"
-                value={code}
-                onChangeText={setCode}
-                placeholder={modus === "anmelden" ? "nur beim ersten Mal" : "von deiner Fahrschule"}
-                autoCapitalize="characters"
-                autoCorrect={false}
-              />
-            </Section>
+            {fehler ? <Text style={{ color: colors.danger, fontSize: 14, lineHeight: 19 }}>{fehler}</Text> : null}
+            {hinweis ? <Text style={{ color: colors.success, fontSize: 14, lineHeight: 19 }}>{hinweis}</Text> : null}
 
             <Button title={modus === "anmelden" ? "Anmelden" : "Konto erstellen"} onPress={los} loading={laedt} />
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+          </View>
+
+          <Text style={{ color: colors.textMuted, fontSize: 13, textAlign: "center", marginHorizontal: space(8), marginTop: space(5), marginBottom: space(8), lineHeight: 18 }}>
+            Den Zugangscode bekommst du von deiner Fahrschule. Nach dem ersten Mal brauchst du ihn nicht mehr.
+          </Text>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

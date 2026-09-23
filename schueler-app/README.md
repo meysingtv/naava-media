@@ -1,4 +1,4 @@
-# Fahrbar – Schüler-App (iOS)
+# Schüler-App (iOS)
 
 Native iPhone-App (Expo / React Native) **für Fahrschüler**. Nutzt **dasselbe
 Supabase-Backend** wie die Website und die Fahrlehrer-App (`../mobile`) –
@@ -33,6 +33,10 @@ eingespielt und unter Einstellungen → Schülerportal sind Anfragen eingeschalt
 
 ## Auf dem Mac starten (Xcode)
 
+Nach einem `git pull` mit neuen Paketen immer zuerst `npm install` – und die
+App mit `npx expo run:ios` neu bauen (neue native Bausteine wie Farbverläufe
+kommen erst mit einem neuen Build in die App).
+
 ```bash
 npx expo run:ios
 ```
@@ -41,7 +45,7 @@ Oder das Xcode-Projekt erzeugen und in Xcode öffnen:
 
 ```bash
 npx expo prebuild
-open ios/Fahrbar.xcworkspace
+open ios/Fahrschule.xcworkspace
 ```
 
 Der `ios/`-Ordner wird lokal erzeugt und ist absichtlich nicht eingecheckt.

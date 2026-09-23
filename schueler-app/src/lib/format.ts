@@ -71,3 +71,21 @@ export function formatDatum(iso: string | null | undefined): string {
   const d = parseISO(iso);
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
 }
+
+const MONATE_KURZ = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+
+/** Bausteine für einen Datums-Block: 25 · Do · Sep */
+export function datumTeile(iso: string): { tag: number; wochentag: string; monat: string } {
+  const d = parseISO(iso);
+  return { tag: d.getDate(), wochentag: WOCHENTAGE_KURZ[d.getDay()], monat: MONATE_KURZ[d.getMonth()] };
+}
+
+/** „Heute", „Morgen", „In 3 Tagen" – sonst das lange Datum. */
+export function wannText(iso: string): string {
+  const heute = heuteISO();
+  if (iso === heute) return "Heute";
+  if (iso === plusTageISO(heute, 1)) return "Morgen";
+  const tage = Math.round((parseISO(iso).getTime() - parseISO(heute).getTime()) / 86_400_000);
+  if (tage > 1 && tage < 7) return `In ${tage} Tagen`;
+  return formatDatumLang(iso);
+}

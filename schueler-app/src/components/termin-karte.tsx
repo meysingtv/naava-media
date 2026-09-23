@@ -4,14 +4,34 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { terminAbsagen, terminZusagen } from "@/lib/daten";
 import { typFarbe, typLabel } from "@/lib/constants";
-import { endUhrzeit, formatDatumLang, formatUhrzeit } from "@/lib/format";
+import { datumTeile, endUhrzeit, formatDatumLang, formatUhrzeit } from "@/lib/format";
 import { useTheme } from "@/lib/theme-context";
-import { radius, space } from "@/lib/theme";
+import { karte, radius, space } from "@/lib/theme";
 import type { Fahrstunde } from "@/lib/types";
 
+/** Farbiger Datums-Block: Wochentag, Tag, Monat. */
+export function DatumBlock({ iso, farbe, blass }: { iso: string; farbe: string; blass?: boolean }) {
+  const t = datumTeile(iso);
+  return (
+    <View
+      style={{
+        width: 58,
+        paddingVertical: space(2),
+        borderRadius: radius.lg,
+        alignItems: "center",
+        backgroundColor: blass ? "rgba(100,116,139,0.12)" : farbe + "1A",
+      }}
+    >
+      <Text style={{ fontSize: 12, fontWeight: "700", color: blass ? "#64748B" : farbe, textTransform: "uppercase" }}>{t.wochentag}</Text>
+      <Text style={{ fontSize: 24, fontWeight: "800", color: blass ? "#64748B" : farbe, lineHeight: 28 }}>{t.tag}</Text>
+      <Text style={{ fontSize: 11, fontWeight: "600", color: blass ? "#64748B" : farbe }}>{t.monat}</Text>
+    </View>
+  );
+}
+
 /**
- * Eine Fahrstunde des Schülers: Farbe nach Art, Datum, Uhrzeit, Fahrlehrer.
- * Anstehende Stunden lassen sich zusagen oder absagen.
+ * Eine Fahrstunde des Schülers: Datums-Block in der Farbe der Art, Uhrzeit,
+ * Fahrlehrer und Stand. Anstehende Stunden lassen sich zusagen oder absagen.
  */
 export function TerminKarte({
   stunde,
@@ -26,7 +46,9 @@ export function TerminKarte({
 }) {
   const { colors } = useTheme();
   const [arbeitet, setArbeitet] = useState<"zu" | "ab" | null>(null);
-  const farbe = stunde.status === "ausgefallen" ? colors.textMuted : typFarbe(stunde.typ);
+  const ausgefallen = stunde.status === "ausgefallen";
+  const gefahren = stunde.status === "abgeschlossen";
+  const farbe = typFarbe(stunde.typ);
   const zugesagt = Boolean(stunde.bestaetigt_am);
 
   async function zusagen() {
@@ -60,81 +82,94 @@ export function TerminKarte({
     );
   }
 
-  return (
-    <View style={{ backgroundColor: colors.card, borderRadius: radius.lg, overflow: "hidden", flexDirection: "row" }}>
-      <View style={{ width: 5, backgroundColor: farbe }} />
-      <View style={{ flex: 1, padding: space(4), gap: space(1) }}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space(2) }}>
-          <Text style={{ fontSize: 13, fontWeight: "700", color: farbe, textTransform: "uppercase", letterSpacing: 0.4 }}>
-            {typLabel(stunde.typ)}
-          </Text>
-          {stunde.status === "abgeschlossen" ? (
-            <Text style={{ fontSize: 12, fontWeight: "700", color: colors.success }}>Gefahren</Text>
-          ) : stunde.status === "ausgefallen" ? (
-            <Text style={{ fontSize: 12, fontWeight: "700", color: colors.textMuted }}>Ausgefallen</Text>
-          ) : zugesagt ? (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Ionicons name="checkmark-circle" size={15} color={colors.success} />
-              <Text style={{ fontSize: 12, fontWeight: "700", color: colors.success }}>Zugesagt</Text>
-            </View>
-          ) : null}
-        </View>
-        <Text
-          style={{
-            fontSize: 17,
-            fontWeight: "600",
-            color: colors.text,
-            textDecorationLine: stunde.status === "ausgefallen" ? "line-through" : "none",
-          }}
-        >
-          {formatDatumLang(stunde.datum)}
-        </Text>
-        <Text style={{ fontSize: 15, color: colors.textMuted }}>
-          {formatUhrzeit(stunde.uhrzeit)} – {endUhrzeit(stunde.uhrzeit, stunde.dauer_minuten)} Uhr · {stunde.dauer_minuten} Min.
-          {lehrer ? ` · ${lehrer}` : ""}
-        </Text>
+  const stand = ausgefallen
+    ? { text: "Abgesagt", farbe: colors.textMuted, icon: "close-circle" as const }
+    : gefahren
+      ? { text: "Gefahren", farbe: colors.success, icon: "checkmark-done-circle" as const }
+      : zugesagt
+        ? { text: "Zugesagt", farbe: colors.success, icon: "checkmark-circle" as const }
+        : null;
 
-        {aktionen && stunde.status === "geplant" && stunde.bestaetigung_token ? (
-          <View style={{ flexDirection: "row", gap: space(2), marginTop: space(2) }}>
-            {!zugesagt ? (
-              <Pressable
-                onPress={zusagen}
-                disabled={arbeitet != null}
-                style={({ pressed }) => ({
-                  flex: 1,
-                  alignItems: "center",
-                  paddingVertical: space(2.5),
-                  borderRadius: radius.md,
-                  backgroundColor: pressed ? colors.accent + "CC" : colors.accent,
-                })}
-              >
-                {arbeitet === "zu" ? (
-                  <ActivityIndicator color={colors.onAccent} />
-                ) : (
-                  <Text style={{ color: colors.onAccent, fontSize: 15, fontWeight: "600" }}>Zusagen</Text>
-                )}
-              </Pressable>
+  return (
+    <View style={[karte(colors), { padding: space(3.5), gap: space(3) }]}>
+      <View style={{ flexDirection: "row", gap: space(3.5), alignItems: "center" }}>
+        <DatumBlock iso={stunde.datum} farbe={farbe} blass={ausgefallen} />
+        <View style={{ flex: 1, gap: 3 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: space(2) }}>
+            <View style={{ backgroundColor: (ausgefallen ? colors.textMuted : farbe) + "1A", paddingHorizontal: space(2), paddingVertical: 3, borderRadius: radius.full }}>
+              <Text style={{ fontSize: 12, fontWeight: "700", color: ausgefallen ? colors.textMuted : farbe }}>{typLabel(stunde.typ)}</Text>
+            </View>
+            {stand ? (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                <Ionicons name={stand.icon} size={14} color={stand.farbe} />
+                <Text style={{ fontSize: 12, fontWeight: "700", color: stand.farbe }}>{stand.text}</Text>
+              </View>
             ) : null}
+          </View>
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: "700",
+              color: ausgefallen ? colors.textMuted : colors.text,
+              textDecorationLine: ausgefallen ? "line-through" : "none",
+            }}
+          >
+            {formatUhrzeit(stunde.uhrzeit)} – {endUhrzeit(stunde.uhrzeit, stunde.dauer_minuten)} Uhr
+          </Text>
+          <Text style={{ fontSize: 14, color: colors.textMuted }} numberOfLines={1}>
+            {stunde.dauer_minuten} Min.{lehrer ? ` · mit ${lehrer}` : ""}
+          </Text>
+        </View>
+      </View>
+
+      {aktionen && stunde.status === "geplant" && stunde.bestaetigung_token ? (
+        <View style={{ flexDirection: "row", gap: space(2) }}>
+          {!zugesagt ? (
             <Pressable
-              onPress={absagen}
+              onPress={zusagen}
               disabled={arbeitet != null}
               style={({ pressed }) => ({
                 flex: 1,
+                flexDirection: "row",
+                gap: space(1.5),
                 alignItems: "center",
-                paddingVertical: space(2.5),
+                justifyContent: "center",
+                paddingVertical: space(3),
                 borderRadius: radius.md,
-                backgroundColor: pressed ? colors.danger + "30" : colors.danger + "1A",
+                backgroundColor: colors.accent,
+                opacity: pressed ? 0.85 : 1,
               })}
             >
-              {arbeitet === "ab" ? (
-                <ActivityIndicator color={colors.danger} />
+              {arbeitet === "zu" ? (
+                <ActivityIndicator color={colors.onAccent} />
               ) : (
-                <Text style={{ color: colors.danger, fontSize: 15, fontWeight: "600" }}>Absagen</Text>
+                <>
+                  <Ionicons name="checkmark" size={18} color={colors.onAccent} />
+                  <Text style={{ color: colors.onAccent, fontSize: 15, fontWeight: "700" }}>Zusagen</Text>
+                </>
               )}
             </Pressable>
-          </View>
-        ) : null}
-      </View>
+          ) : null}
+          <Pressable
+            onPress={absagen}
+            disabled={arbeitet != null}
+            style={({ pressed }) => ({
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingVertical: space(3),
+              borderRadius: radius.md,
+              backgroundColor: colors.danger + (pressed ? "2E" : "17"),
+            })}
+          >
+            {arbeitet === "ab" ? (
+              <ActivityIndicator color={colors.danger} />
+            ) : (
+              <Text style={{ color: colors.danger, fontSize: 15, fontWeight: "700" }}>Absagen</Text>
+            )}
+          </Pressable>
+        </View>
+      ) : null}
     </View>
   );
 }

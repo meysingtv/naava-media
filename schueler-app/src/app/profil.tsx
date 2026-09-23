@@ -26,7 +26,7 @@ export default function ProfilScreen() {
       await planeErinnerungen();
       Alert.alert("Mitteilungen aktiv", "Du wirst eine Stunde vor jeder Fahrstunde erinnert und erfährst sofort, wenn deine Anfrage beantwortet ist.");
     } else {
-      Alert.alert("Nicht erlaubt", "Bitte Mitteilungen in den iOS-Einstellungen für Fahrbar erlauben.");
+      Alert.alert("Nicht erlaubt", "Bitte Mitteilungen in den iOS-Einstellungen für die App erlauben.");
     }
   }
 
