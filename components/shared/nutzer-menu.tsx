@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, LifeBuoy, LogOut, Settings, UserRound } from "lucide-react";
+import { ChevronsUpDown, LifeBuoy, LogOut, Settings, UserRound } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -11,56 +11,88 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useSidebar } from "@/components/shared/sidebar-context";
 import { ROLLEN } from "@/lib/constants";
-import { initialen } from "@/lib/utils";
+import { cn, initialen } from "@/lib/utils";
 import { abmelden } from "@/app/auth/actions";
 import type { FahrlehrerRolle } from "@/lib/types";
 
+function Avatar({ vorname, nachname }: { vorname: string; nachname: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
+    >
+      {initialen(vorname, nachname)}
+    </span>
+  );
+}
+
 /**
- * Nutzer oben rechts in der App-Leiste: Avatar mit Initialen, daneben Name
- * und Rolle (ab Tablet-Breite). Das Menü enthält Einstellungen, Hilfe und
- * Abmelden; die Abmelde-Logik (Server-Action `abmelden`) ist unverändert.
+ * Konto unten in der Navigation: Avatar, Name und Rolle; das Menü öffnet
+ * nach rechts (im Drawer nach oben) und enthält Einstellungen, Team, Hilfe
+ * und Abmelden. Die Abmelde-Logik (Server-Action `abmelden`) ist unverändert.
  */
 export function NutzerMenu({
   vorname,
   nachname,
   rolle,
   email,
+  imDrawer,
 }: {
   vorname: string;
   nachname: string;
   rolle: FahrlehrerRolle;
   email: string | null;
+  imDrawer?: boolean;
 }) {
+  const { collapsed } = useSidebar();
+  const eingeklappt = collapsed && !imDrawer;
   const istChef = rolle === "chef";
+  const name = `${vorname} ${nachname}`;
+
+  const trigger = (
+    <DropdownMenuTrigger
+      aria-label={`${name} · ${ROLLEN[rolle]} – Konto`}
+      className={cn(
+        "flex items-center rounded-lg text-left outline-none transition-colors duration-fast",
+        "hover:bg-sidebar-hover data-[state=open]:bg-sidebar-hover",
+        "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/70",
+        eingeklappt ? "mx-auto h-10 w-10 justify-center" : "h-12 w-full gap-2.5 pl-1.5 pr-2",
+      )}
+    >
+      <Avatar vorname={vorname} nachname={nachname} />
+      {!eingeklappt && (
+        <>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-semibold leading-5 text-foreground">{name}</span>
+            <span className="block truncate text-xs leading-4 text-foreground-tertiary">{ROLLEN[rolle]}</span>
+          </span>
+          <ChevronsUpDown className="h-4 w-4 shrink-0 text-sidebar-muted" strokeWidth={1.75} aria-hidden="true" />
+        </>
+      )}
+    </DropdownMenuTrigger>
+  );
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        aria-label={`${vorname} ${nachname} · ${ROLLEN[rolle]} – Konto`}
-        className="flex h-10 items-center gap-2.5 rounded-lg pl-1 pr-1.5 outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/70 data-[state=open]:bg-muted xl:pr-2"
-      >
-        <span
-          aria-hidden="true"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
-        >
-          {initialen(vorname, nachname)}
-        </span>
-        <span className="hidden min-w-0 text-left xl:block">
-          <span className="block max-w-[140px] truncate text-13 font-semibold leading-4 text-foreground">
-            {vorname} {nachname}
-          </span>
-          <span className="block max-w-[140px] truncate text-xs leading-4 text-foreground-tertiary">{ROLLEN[rolle]}</span>
-        </span>
-        <ChevronDown className="hidden h-3.5 w-3.5 shrink-0 text-foreground-tertiary xl:block" strokeWidth={1.75} aria-hidden="true" />
-      </DropdownMenuTrigger>
+      {eingeklappt ? (
+        <Tooltip side="right" sideOffset={10}>
+          <TooltipTrigger>{trigger}</TooltipTrigger>
+          <TooltipContent>{name}</TooltipContent>
+        </Tooltip>
+      ) : (
+        trigger
+      )}
 
-      <DropdownMenuContent align="end" sideOffset={6} className="w-60">
-        <DropdownMenuLabel className="text-foreground">
-          <span className="block truncate text-13 font-medium">
-            {vorname} {nachname}
+      <DropdownMenuContent side={imDrawer ? "top" : "right"} align="end" sideOffset={imDrawer ? 6 : 12} className="w-60">
+        <DropdownMenuLabel className="flex items-center gap-2.5 text-foreground">
+          <Avatar vorname={vorname} nachname={nachname} />
+          <span className="min-w-0">
+            <span className="block truncate text-13 font-semibold">{name}</span>
+            <span className="block truncate text-xs font-normal text-muted-foreground">{email ?? ROLLEN[rolle]}</span>
           </span>
-          <span className="block truncate text-xs font-normal text-muted-foreground">{email ?? ROLLEN[rolle]}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {istChef && (

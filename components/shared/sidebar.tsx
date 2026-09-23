@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { PanelLeftClose, PanelLeftOpen, Sparkles, X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 
 import { FahrschulSwitcher } from "@/components/shared/fahrschul-switcher";
+import { NutzerMenu } from "@/components/shared/nutzer-menu";
 import { SidebarButton } from "@/components/shared/sidebar-item";
-import { SidebarNav } from "@/components/shared/sidebar-nav";
+import { SidebarFussEintraege, SidebarNav } from "@/components/shared/sidebar-nav";
 import { useSidebar } from "@/components/shared/sidebar-context";
 import { cn } from "@/lib/utils";
 import type { Zaehler } from "@/components/shared/bereiche";
@@ -26,48 +27,60 @@ export interface SidebarProps {
 }
 
 /**
- * Gemeinsames Innenleben von fester Sidebar und Mobil-Drawer.
- *
- * Die Navigation trägt ausschließlich Navigation. Suche, „Neu" und Glocke
- * sitzen in der App-Leiste oben (`app-bar.tsx`).
+ * Gemeinsames Innenleben von fester Navigation und Mobil-Drawer – aufgebaut
+ * wie bekannte SaaS-Navigationen:
+ *   Kopf   – Fahrschule (Logo/Kürzel, Name, Ort); Einklappen sitzt links in der App-Leiste
+ *   Mitte  – Bereiche in Gruppen, aufklappbar
+ *   Fuß    – Assistent, Hilfe, Einstellungen und darunter das eigene Konto
+ * Suche, „Neu" und Glocke sitzen in der App-Leiste oben (`app-bar.tsx`).
  */
 function SidebarInhalt({ imDrawer, ...props }: SidebarProps & { imDrawer?: boolean }) {
-  const { collapsed, umschalten, setAssistentOffen } = useSidebar();
+  const { collapsed, setAssistentOffen } = useSidebar();
+  const eingeklappt = collapsed && !imDrawer;
 
   return (
     <>
-      {/* A – Fahrschul-Umschalter */}
-      <FahrschulSwitcher
-        fahrschuleName={props.fahrschuleName}
-        ort={props.ort}
-        logoUrl={props.logoUrl}
-        rolle={props.rolle}
-        fahrschulen={props.fahrschulen}
-        aktiveFahrschuleId={props.aktiveFahrschuleId}
-        imDrawer={imDrawer}
-      />
-
-      {/* B – Navigation */}
-      <SidebarNav rolle={props.rolle} zaehler={props.zaehler} imDrawer={imDrawer} />
-
-      {/* C – Fuß: Hilfe, Einstellungen, Assistent, Einklappen. Das Konto sitzt oben rechts. */}
-      <div className="mt-auto space-y-px px-3 pb-3 pt-4">
-        <SidebarNav rolle={props.rolle} imDrawer={imDrawer} teil="fuss" />
-        <SidebarButton
-          icon={Sparkles}
-          label="Assistent"
-          onClick={() => setAssistentOffen(true)}
+      {/* Kopf */}
+      <div className={cn("flex h-14 shrink-0 items-center px-3", eingeklappt && "justify-center px-0", imDrawer && "pr-12")}>
+        <FahrschulSwitcher
+          fahrschuleName={props.fahrschuleName}
+          ort={props.ort}
+          logoUrl={props.logoUrl}
+          rolle={props.rolle}
+          fahrschulen={props.fahrschulen}
+          aktiveFahrschuleId={props.aktiveFahrschuleId}
           imDrawer={imDrawer}
         />
+      </div>
 
-        {!imDrawer && (
-          <SidebarButton
-            icon={collapsed ? PanelLeftOpen : PanelLeftClose}
-            label={collapsed ? "Ausklappen" : "Einklappen"}
-            onClick={umschalten}
-            className="hidden text-sidebar-muted lg:flex"
+      {/* Bereiche */}
+      <SidebarNav rolle={props.rolle} zaehler={props.zaehler} imDrawer={imDrawer} />
+
+      {/* Fuß */}
+      <div className={cn("shrink-0 border-t border-sidebar-border px-3 pb-3 pt-2", eingeklappt && "px-0")}>
+        <nav aria-label="Hilfe und Einstellungen">
+          <ul className="space-y-0.5">
+            <li>
+              <SidebarButton
+                icon={Sparkles}
+                label="Assistent"
+                onClick={() => setAssistentOffen(true)}
+                imDrawer={imDrawer}
+              />
+            </li>
+            <SidebarFussEintraege rolle={props.rolle} imDrawer={imDrawer} />
+          </ul>
+        </nav>
+
+        <div className={cn("mt-2", eingeklappt && "flex justify-center")}>
+          <NutzerMenu
+            vorname={props.vorname}
+            nachname={props.nachname}
+            rolle={props.rolle}
+            email={props.email}
+            imDrawer={imDrawer}
           />
-        )}
+        </div>
       </div>
     </>
   );
@@ -92,7 +105,7 @@ export function Sidebar(props: SidebarProps) {
   );
 }
 
-/** Off-Canvas-Drawer (< 1024 px), geöffnet über den Menü-Button im Seitenkopf. */
+/** Off-Canvas-Drawer (< 1024 px), geöffnet über den Menü-Button in der App-Leiste. */
 export function SidebarDrawer(props: SidebarProps) {
   const { drawerOffen, setDrawerOffen } = useSidebar();
 

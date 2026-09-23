@@ -28,10 +28,10 @@ import {
 import type { FahrlehrerRolle } from "@/lib/types";
 
 /**
- * Navigation v4: zehn Bereiche in der linken Navigation, darunter Hilfe und
- * Einstellungen. Hat ein Bereich mehrere Seiten, stehen sie als Reiter im
- * Seitenkopf (`bereich-reiter.tsx`) – die Navigation bleibt kurz und passt
- * ohne Scrollen auf den Bildschirm.
+ * Navigation v5: zehn Bereiche in drei Gruppen, unten Hilfe und
+ * Einstellungen. Hat ein Bereich mehrere Seiten, klappt er in der
+ * Navigation auf (aktiver Bereich automatisch) – zusätzlich stehen die
+ * Seiten als Reiter im Seitenkopf (`bereich-reiter.tsx`).
  *
  * `BEREICHE`, `bereicheFuer` und `aktiverBereich` bleiben die einzige
  * Quelle für Einträge und Rollen-Sichtbarkeit. Alle Adressen sind dieselben
@@ -52,10 +52,18 @@ export interface Bereich {
   label: string;
   /** Icon des Bereichs in der Navigation. */
   icon: LucideIcon;
-  /** Optische Gruppe in der Navigation (Abstand statt Überschrift). */
+  /** Gruppe in der Navigation – Überschrift siehe `GRUPPEN_TITEL`. */
   gruppe: "arbeit" | "betrieb" | "geschaeft" | "fuss";
   items: BereichItem[];
 }
+
+/** Überschrift je Gruppe; die erste Gruppe und der Fuß stehen ohne. */
+export const GRUPPEN_TITEL: Record<Bereich["gruppe"], string | null> = {
+  arbeit: null,
+  betrieb: "Betrieb",
+  geschaeft: "Verwaltung",
+  fuss: null,
+};
 
 const ALLE: FahrlehrerRolle[] = ["chef", "fahrlehrer", "buero"];
 const CHEF_BUERO: FahrlehrerRolle[] = ["chef", "buero"];
@@ -160,18 +168,18 @@ export const BEREICHE: Bereich[] = [
     ],
   },
   {
-    key: "einstellungen",
-    label: "Einstellungen",
-    icon: Settings,
-    gruppe: "fuss",
-    items: [{ href: "/einstellungen", label: "Einstellungen", rollen: ["chef"], icon: Settings }],
-  },
-  {
     key: "hilfe",
     label: "Hilfe",
     icon: LifeBuoy,
     gruppe: "fuss",
     items: [{ href: "/hilfe", label: "Hilfe", rollen: ALLE, icon: LifeBuoy }],
+  },
+  {
+    key: "einstellungen",
+    label: "Einstellungen",
+    icon: Settings,
+    gruppe: "fuss",
+    items: [{ href: "/einstellungen", label: "Einstellungen", rollen: ["chef"], icon: Settings }],
   },
 ];
 
@@ -213,3 +221,21 @@ export function bereichsReiter(
 
 /** Zähler an Navigationseinträgen – nur gesetzt, wenn die Zahl ohne Extrakosten anfällt. */
 export type Zaehler = Partial<Record<NonNullable<BereichItem["badgeKey"]>, number>>;
+
+/** Summe der Zähler aller Seiten eines Bereichs (z. B. überfällige Rechnungen → Finanzen). */
+export function bereichsZaehler(b: Bereich, zaehler?: Zaehler): number | undefined {
+  let summe = 0;
+  let gefunden = false;
+  for (const i of b.items) {
+    if (i.badgeKey && zaehler?.[i.badgeKey] != null) {
+      summe += zaehler[i.badgeKey] ?? 0;
+      gefunden = true;
+    }
+  }
+  return gefunden && summe > 0 ? summe : undefined;
+}
+
+/** Überfällige Rechnungen zählen rot, alles andere neutral. */
+export function zaehlerTon(badgeKey?: BereichItem["badgeKey"]): "neutral" | "danger" {
+  return badgeKey === "rechnungen_ueberfaellig" ? "danger" : "neutral";
+}

@@ -1,33 +1,19 @@
 import { Glocke } from "@/components/shared/glocke";
 import { GlobalSearch } from "@/components/shared/global-search";
 import { HeaderSentinel } from "@/components/shared/header-sentinel";
-import { MobileMenuButton } from "@/components/shared/mobile-menu-button";
+import { MobileMenuButton, NavigationUmschalter } from "@/components/shared/mobile-menu-button";
 import { NeuMenu } from "@/components/shared/neu-menu";
-import { NutzerMenu } from "@/components/shared/nutzer-menu";
 import { ZuletztReiter } from "@/components/shared/zuletzt-reiter";
-import type { FahrlehrerRolle } from "@/lib/types";
 
 /**
  * App-Leiste: die EINE Zeile über allen Seiten, bleibt beim Scrollen oben.
  * Links die zuletzt geöffneten anderen Seiten als Reiter, mittig die Suche,
- * rechts „Neu", die Glocke (mit Zähler für unbestätigte Termine) und das
- * Konto mit Name und Rolle.
+ * rechts „Neu" und die Glocke (mit Zähler für unbestätigte Termine). Das
+ * eigene Konto sitzt unten in der Navigation.
  *
  * Höhe 56 px = Versatz der klebenden Tabellenköpfe.
  */
-export function AppBar({
-  vorname,
-  nachname,
-  rolle,
-  email,
-  offeneBestaetigungen,
-}: {
-  vorname: string;
-  nachname: string;
-  rolle: FahrlehrerRolle;
-  email: string | null;
-  offeneBestaetigungen: number;
-}) {
+export function AppBar({ offeneBestaetigungen }: { offeneBestaetigungen: number }) {
   return (
     <>
       <HeaderSentinel />
@@ -40,9 +26,11 @@ export function AppBar({
         ].join(" ")}
       >
         <MobileMenuButton className="-ml-1.5 shrink-0 lg:hidden" />
+        <NavigationUmschalter className="relative z-[1] -ml-2 hidden shrink-0 lg:inline-flex" />
+        <span aria-hidden="true" className="hidden h-5 w-px shrink-0 bg-border xl:block" />
 
         {/* Zuletzt geöffnet – endet immer vor der Suche */}
-        <ZuletztReiter className="relative z-[1] hidden max-w-[calc(50vw-var(--sidebar-w)-182px)] xl:flex" />
+        <ZuletztReiter className="relative z-[1] hidden max-w-[calc(50vw-var(--sidebar-w)-240px)] xl:flex" />
 
         {/* Suche – mittig im FENSTER: der Versatz gleicht die halbe
             Navigationsbreite aus, damit die Mitte auf dem Bildschirm stimmt. */}
@@ -56,8 +44,6 @@ export function AppBar({
           <GlobalSearch variant="icon" className="md:hidden" />
           <NeuMenu />
           <Glocke anzahl={offeneBestaetigungen} />
-          <span aria-hidden="true" className="mx-1.5 hidden h-6 w-px bg-border sm:block" />
-          <NutzerMenu vorname={vorname} nachname={nachname} rolle={rolle} email={email} />
         </div>
       </header>
     </>
