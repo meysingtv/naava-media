@@ -56,7 +56,7 @@ export function DashboardShell({ children, zaehler, offeneBestaetigungen, ...kon
         </div>
       </div>
 
-      <ShellOverlays rolle={kontext.rolle} />
+      <ShellOverlays />
     </SidebarProvider>
   );
 }

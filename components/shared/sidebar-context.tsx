@@ -15,7 +15,7 @@ interface SidebarKontext {
   /** Mobil: Off-Canvas-Drawer offen. */
   drawerOffen: boolean;
   setDrawerOffen: (o: boolean) => void;
-  /** Kommandopalette (⌘K). */
+  /** ⌘K / Strg+K gedrückt: die Suche in der App-Leiste holt sich den Fokus. */
   paletteOffen: boolean;
   setPaletteOffen: (o: boolean) => void;
   /** KI-Assistent (⌘J). */
