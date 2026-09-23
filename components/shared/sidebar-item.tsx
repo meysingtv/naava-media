@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useSidebar } from "@/components/shared/sidebar-context";
 import { useVorladen } from "@/components/shared/vorladen";
 import { cn } from "@/lib/utils";
-import { bereichsZaehler, zaehlerTon, type Bereich, type BereichItem, type Zaehler } from "@/components/shared/bereiche";
+import { bereichsZaehler, zaehlerTon, type Bereich, type BereichItem, type Zaehler, type ZaehlerTon } from "@/components/shared/bereiche";
 
 /**
  * Bausteine der Navigation v5 – Maße wie in gängigen SaaS-Navigationen:
@@ -43,7 +43,7 @@ function Zaehlpille({
   eingeklappt,
 }: {
   wert: number;
-  ton?: "neutral" | "danger";
+  ton?: ZaehlerTon;
   eingeklappt?: boolean;
 }) {
   return (
@@ -53,6 +53,7 @@ function Zaehlpille({
         "inline-flex shrink-0 items-center justify-center rounded-full font-semibold tabular-nums leading-none",
         "bg-sidebar-badge text-foreground-secondary",
         "data-[tone=danger]:bg-destructive data-[tone=danger]:text-destructive-foreground",
+        "data-[tone=akzent]:bg-primary data-[tone=akzent]:text-primary-foreground",
         eingeklappt
           ? "absolute -right-1 -top-1 h-4 min-w-4 px-1 text-[10px] ring-2 ring-sidebar"
           : "ml-auto h-[18px] min-w-[18px] px-1.5 text-[11px]",
@@ -85,7 +86,7 @@ export function SidebarItem({
   item: BereichItem;
   aktiv: boolean;
   badge?: number;
-  ton?: "neutral" | "danger";
+  ton?: ZaehlerTon;
   /** Im Drawer wird nie eingeklappt gerendert. */
   imDrawer?: boolean;
 }) {
@@ -167,7 +168,8 @@ export function SidebarBereich({
   }, [offen]);
   const Icon = bereich.icon;
   const summe = bereichsZaehler(bereich, zaehler);
-  const ton = bereich.items.some((i) => zaehlerTon(i.badgeKey) === "danger") ? "danger" : "neutral";
+  const toene = bereich.items.map((i) => zaehlerTon(i.badgeKey));
+  const ton: ZaehlerTon = toene.includes("danger") ? "danger" : toene.includes("akzent") ? "akzent" : "neutral";
   const erste = bereich.items[0];
 
   if (eingeklappt) {

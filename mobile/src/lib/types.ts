@@ -85,3 +85,29 @@ export type FahrstundeMitRelationen = Fahrstunde & {
 // Select-String für Fahrstunden inkl. Relationen (identisch zur Web-App).
 export const FAHRSTUNDE_SELECT =
   "*, fahrschueler(id, vorname, nachname, avatar_farbe), fahrlehrer(id, vorname, nachname), fahrzeug(id, kennzeichen)";
+
+// Fahrstunden-Anfrage aus dem Schüler-Portal (Migration 0020 der Web-App)
+export type AnfrageStatus = "offen" | "angenommen" | "abgelehnt" | "zurueckgezogen";
+
+export type FahrstundeAnfrage = {
+  id: string;
+  fahrschule_id: string;
+  schueler_id: string;
+  wunsch_fahrlehrer_id: string | null;
+  datum: string;
+  uhrzeit: string;
+  dauer_minuten: number;
+  notiz: string | null;
+  status: AnfrageStatus;
+  antwort: string | null;
+  fahrstunde_id: string | null;
+  created_at: string;
+};
+
+export type AnfrageMitNamen = FahrstundeAnfrage & {
+  fahrschueler: { id: string; vorname: string; nachname: string; avatar_farbe: string | null } | null;
+  wunsch: { id: string; vorname: string; nachname: string } | null;
+};
+
+export const ANFRAGE_SELECT =
+  "*, fahrschueler(id, vorname, nachname, avatar_farbe), wunsch:fahrlehrer!wunsch_fahrlehrer_id(id, vorname, nachname)";

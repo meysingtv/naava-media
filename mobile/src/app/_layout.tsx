@@ -6,6 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { ThemeProvider, useTheme } from "@/lib/theme-context";
 import { planeErinnerungen } from "@/lib/notifications";
+import { useNeueAnfragenMelden } from "@/lib/anfragen";
 import { HeaderCancel } from "@/components/header-cancel";
 import { HeaderPlus } from "@/components/header-plus";
 
@@ -16,6 +17,8 @@ function RootNavigator() {
   useEffect(() => {
     if (session) planeErinnerungen();
   }, [session]);
+  // Neue Fahrstunden-Anfragen als Mitteilung melden, solange die App läuft.
+  useNeueAnfragenMelden(Boolean(session));
 
   if (loading) {
     return (
@@ -59,6 +62,7 @@ function RootNavigator() {
           <Stack.Screen name="team/index" options={{ title: "Team", headerRight: () => <HeaderPlus href="/team/neu" /> }} />
           <Stack.Screen name="team/neu" options={{ title: "Neuer Mitarbeiter", ...modal }} />
           <Stack.Screen name="team/[id]" options={{ title: "Mitarbeiter bearbeiten", ...modal }} />
+          <Stack.Screen name="anfragen/index" options={{ title: "Anfragen von Schülern" }} />
         </Stack.Protected>
       </Stack>
     </>

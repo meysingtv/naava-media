@@ -77,6 +77,7 @@ export default function MehrScreen() {
           </Section>
 
           <Section title="Verwaltung">
+            <Row title="Anfragen von Schülern" chevron onPress={() => router.push("/anfragen")} />
             <Row title="Fahrzeuge" chevron onPress={() => router.push("/fahrzeuge")} />
             <Row title="Team" chevron onPress={() => router.push("/team")} />
           </Section>

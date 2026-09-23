@@ -29,6 +29,10 @@ export type Fahrschule = {
   kontoinhaber: string | null;
   // Optionaler Online-Zahlungslink (Migration 0017)
   zahlungslink: string | null;
+  // Fahrstunden-Anfragen aus dem Portal (Migration 0020) – fehlen, solange sie nicht eingespielt ist
+  anfragen_aktiv?: boolean;
+  anfragen_vorlauf_stunden?: number;
+  anfragen_max_offen?: number;
   created_at: string;
 };
 
@@ -125,6 +129,8 @@ export type Fahrschueler = {
   user_id: string | null;
   portal_code: string | null;
   portal_aktiv: boolean;
+  // Einzelner Schüler von Online-Anfragen ausgenommen (Migration 0020)
+  anfragen_gesperrt?: boolean;
   created_at: string;
 };
 
@@ -487,6 +493,26 @@ export type FahrschulMitgliedschaft = {
   ort: string | null;
   logo_url: string | null;
   rolle: FahrlehrerRolle;
+};
+
+// Fahrstunden-Anfrage aus dem Schüler-Portal (Migration 0020)
+export type AnfrageStatus = "offen" | "angenommen" | "abgelehnt" | "zurueckgezogen";
+
+export type FahrstundeAnfrage = {
+  id: string;
+  fahrschule_id: string;
+  schueler_id: string;
+  wunsch_fahrlehrer_id: string | null;
+  datum: string;
+  uhrzeit: string;
+  dauer_minuten: number;
+  notiz: string | null;
+  status: AnfrageStatus;
+  antwort: string | null;
+  fahrstunde_id: string | null;
+  bearbeitet_von: string | null;
+  bearbeitet_am: string | null;
+  created_at: string;
 };
 
 // ---------------------------------------------------------------------

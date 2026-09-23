@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, CheckCircle2, Clock, Receipt } from "lucide-react";
+import { ArrowRight, CalendarDays, CalendarPlus, CheckCircle2, Clock, Receipt } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { formatDatum, formatEuro, formatUhrzeit } from "@/lib/utils";
 import type { Fahrstunde, Rechnung } from "@/lib/types";
 import { getSchuelerKontext } from "./kontext";
 import { PortalShell } from "./portal-shell";
+import { ladePortalAnfragen } from "./termine/anfragen-daten";
 
 export const metadata = { title: "Mein Portal" };
 
@@ -34,7 +35,7 @@ export default async function PortalStartPage() {
   const supabase = createClient();
   const heute = new Date().toISOString().slice(0, 10);
 
-  const [naechsteRes, rechnungRes] = await Promise.all([
+  const [naechsteRes, rechnungRes, anfrage] = await Promise.all([
     supabase
       .from("fahrstunde")
       .select("*")
@@ -47,7 +48,9 @@ export default async function PortalStartPage() {
     supabase.from("rechnung").select("betrag_brutto, status").returns<
       Pick<Rechnung, "betrag_brutto" | "status">[]
     >(),
+    ladePortalAnfragen(),
   ]);
+  const offeneAnfragen = anfrage.anfragen.filter((a) => a.status === "offen").length;
 
   const naechste = naechsteRes.data?.[0];
   const offen = (rechnungRes.data ?? []).filter((r) => r.status !== "bezahlt");
@@ -118,6 +121,17 @@ export default async function PortalStartPage() {
 
         {/* Links */}
         <div className="space-y-2">
+          {anfrage.regeln?.erlaubt && (
+            <Link
+              href="/portal/termine#anfragen"
+              className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3 transition-colors hover:bg-surface"
+            >
+              <CalendarPlus className="h-5 w-5 text-primary" strokeWidth={1.75} />
+              <span className="flex-1 text-sm font-medium">Fahrstunde anfragen</span>
+              {offeneAnfragen > 0 && <Badge variant="warning">{offeneAnfragen} offen</Badge>}
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+          )}
           <Link
             href="/portal/termine"
             className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3 transition-colors hover:bg-surface"

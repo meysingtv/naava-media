@@ -35,6 +35,8 @@ export default async function DashboardLayout({
       .lte("datum", isoInTagen(3))
       .is("bestaetigt_am", null)
       .is("abgesagt_am", null),
+    // Offene Fahrstunden-Anfragen aus dem Portal (ohne Migration 0020: Fehler → 0)
+    supabase.from("fahrstunde_anfrage").select("id", { count: "exact", head: true }).eq("status", "offen"),
   ]);
 
   const kontext = await getKontext();
@@ -47,7 +49,7 @@ export default async function DashboardLayout({
   }
 
   const { fahrlehrer, fahrschule } = kontext;
-  const [aufgabenRes, rechnungRes, bestaetigungRes] = await zaehlerAbfragen;
+  const [aufgabenRes, rechnungRes, bestaetigungRes, anfragenRes] = await zaehlerAbfragen;
   const ueberfaellig = (rechnungRes.data ?? []).filter(
     (r) => r.status === "ueberfaellig" || (r.faelligkeitsdatum != null && r.faelligkeitsdatum < heute),
   ).length;
@@ -74,7 +76,11 @@ export default async function DashboardLayout({
         email={kontext.email}
         fahrschulen={kontext.fahrschulen}
         aktiveFahrschuleId={fahrschule.id}
-        zaehler={{ aufgaben: aufgabenRes.count ?? 0, rechnungen_ueberfaellig: ueberfaellig }}
+        zaehler={{
+          aufgaben: aufgabenRes.count ?? 0,
+          rechnungen_ueberfaellig: ueberfaellig,
+          anfragen: anfragenRes.error ? 0 : anfragenRes.count ?? 0,
+        }}
         offeneBestaetigungen={bestaetigungRes.count ?? 0}
       >
         {children}

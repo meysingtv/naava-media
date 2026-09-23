@@ -44,7 +44,7 @@ export interface BereichItem {
   /** Ein Icon je Eintrag – ausschließlich lucide, strokeWidth 1.75. */
   icon: LucideIcon;
   /** Optionaler Zähler-Slot; wird nur gefüllt, wenn die Zahl gratis vorliegt. */
-  badgeKey?: "aufgaben" | "rechnungen_ueberfaellig";
+  badgeKey?: "aufgaben" | "rechnungen_ueberfaellig" | "anfragen";
 }
 
 export interface Bereich {
@@ -89,7 +89,7 @@ export const BEREICHE: Bereich[] = [
     label: "Kalender",
     icon: CalendarDays,
     gruppe: "arbeit",
-    items: [{ href: "/kalender", label: "Kalender", rollen: CHEF_LEHRER, icon: CalendarDays }],
+    items: [{ href: "/kalender", label: "Kalender", rollen: CHEF_LEHRER, icon: CalendarDays, badgeKey: "anfragen" }],
   },
   {
     key: "kommunikation",
@@ -235,7 +235,11 @@ export function bereichsZaehler(b: Bereich, zaehler?: Zaehler): number | undefin
   return gefunden && summe > 0 ? summe : undefined;
 }
 
-/** Überfällige Rechnungen zählen rot, alles andere neutral. */
-export function zaehlerTon(badgeKey?: BereichItem["badgeKey"]): "neutral" | "danger" {
-  return badgeKey === "rechnungen_ueberfaellig" ? "danger" : "neutral";
+export type ZaehlerTon = "neutral" | "danger" | "akzent";
+
+/** Überfällige Rechnungen zählen rot, neue Anfragen blau, alles andere neutral. */
+export function zaehlerTon(badgeKey?: BereichItem["badgeKey"]): ZaehlerTon {
+  if (badgeKey === "rechnungen_ueberfaellig") return "danger";
+  if (badgeKey === "anfragen") return "akzent";
+  return "neutral";
 }

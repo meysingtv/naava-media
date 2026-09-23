@@ -49,7 +49,15 @@ export default function HomeScreen() {
     { cacheKey: "aufgaben" },
   );
 
+  // Offene Anfragen aus dem Schüler-Portal (ohne Datenbank-Update 0020: keine)
+  const anfragen = useLoader<{ id: string }[]>(
+    () => supabase.from("fahrstunde_anfrage").select("id").eq("status", "offen").returns<{ id: string }[]>(),
+    { cacheKey: "anfragen-zahl" },
+  );
+  const offeneAnfragen = anfragen.data?.length ?? 0;
+
   useRealtime("home-stunden", "fahrstunde", () => stunden.refresh());
+  useRealtime("home-anfragen", "fahrstunde_anfrage", () => anfragen.refresh());
   useRealtime("home-aufgaben", "pinnwand", () => aufgaben.refresh());
 
   const tage = useMemo(() => {
@@ -89,6 +97,27 @@ export default function HomeScreen() {
           value={tab}
           onChange={setTab}
         />
+        {offeneAnfragen > 0 ? (
+          <Pressable
+            onPress={() => router.push("/anfragen")}
+            style={({ pressed }) => ({
+              marginTop: space(3),
+              flexDirection: "row",
+              alignItems: "center",
+              gap: space(3),
+              backgroundColor: pressed ? colors.accent + "30" : colors.accent + "1F",
+              borderRadius: radius.md,
+              paddingHorizontal: space(4),
+              paddingVertical: space(3),
+            })}
+          >
+            <Ionicons name="mail-unread-outline" size={22} color={colors.accent} />
+            <Text style={{ flex: 1, fontSize: 15, fontWeight: "600", color: colors.accent }}>
+              {offeneAnfragen === 1 ? "1 neue Anfrage" : `${offeneAnfragen} neue Anfragen`} von Schülern
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.accent} />
+          </Pressable>
+        ) : null}
       </View>
 
       <ScrollView
@@ -99,6 +128,7 @@ export default function HomeScreen() {
             onRefresh={() => {
               stunden.refresh();
               aufgaben.refresh();
+              anfragen.refresh();
             }}
             tintColor={colors.accent}
           />

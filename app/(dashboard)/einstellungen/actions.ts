@@ -65,3 +65,50 @@ export async function fahrschuleAktualisieren(
   revalidatePath("/", "layout");
   return { message: "Änderungen wurden gespeichert." };
 }
+
+function fehlendeMigration(m: string): boolean {
+  return /column .* does not exist|could not find .* column|schema cache/i.test(m);
+}
+
+/** Online-Anfragen im Portal: Hauptschalter und Regeln (nur Chef). */
+export async function anfragenEinstellungenSpeichern(eingabe: {
+  aktiv: boolean;
+  vorlaufStunden: number;
+  maxOffen: number;
+}): Promise<EinstellungenState> {
+  const kontext = await getKontext();
+  if (!kontext?.fahrschule) return { error: "Keine Fahrschule gefunden." };
+  if (kontext.fahrlehrer?.rolle !== "chef") return { error: "Nur der Geschäftsführer darf das ändern." };
+
+  const vorlauf = Math.round(eingabe.vorlaufStunden);
+  const maxOffen = Math.round(eingabe.maxOffen);
+  if (!Number.isFinite(vorlauf) || vorlauf < 0 || vorlauf > 336) return { error: "Vorlauf: 0 bis 336 Stunden." };
+  if (!Number.isFinite(maxOffen) || maxOffen < 1 || maxOffen > 20) return { error: "Offene Anfragen: 1 bis 20." };
+
+  const { error } = await createClient()
+    .from("fahrschule")
+    .update({ anfragen_aktiv: eingabe.aktiv, anfragen_vorlauf_stunden: vorlauf, anfragen_max_offen: maxOffen })
+    .eq("id", kontext.fahrschule.id);
+  if (error) {
+    return { error: fehlendeMigration(error.message) ? "Bitte zuerst das Datenbank-Update 0020 in Supabase einspielen." : error.message };
+  }
+
+  revalidatePath("/einstellungen");
+  return { message: eingabe.aktiv ? "Online-Anfragen sind eingeschaltet." : "Online-Anfragen sind ausgeschaltet." };
+}
+
+/** Einzelne Schüler von Online-Anfragen ausnehmen oder wieder freigeben (nur Chef). */
+export async function schuelerAnfragenSetzen(ids: string[], gesperrt: boolean): Promise<EinstellungenState> {
+  const kontext = await getKontext();
+  if (!kontext?.fahrschule) return { error: "Keine Fahrschule gefunden." };
+  if (kontext.fahrlehrer?.rolle !== "chef") return { error: "Nur der Geschäftsführer darf das ändern." };
+  if (ids.length === 0) return {};
+
+  const { error } = await createClient().from("fahrschueler").update({ anfragen_gesperrt: gesperrt }).in("id", ids);
+  if (error) {
+    return { error: fehlendeMigration(error.message) ? "Bitte zuerst das Datenbank-Update 0020 in Supabase einspielen." : error.message };
+  }
+
+  revalidatePath("/einstellungen");
+  return { message: gesperrt ? "Gesperrt." : "Freigegeben." };
+}

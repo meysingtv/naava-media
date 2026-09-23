@@ -8,6 +8,8 @@ import { cn, formatDatum, formatUhrzeit } from "@/lib/utils";
 import type { Fahrstunde } from "@/lib/types";
 import { getSchuelerKontext } from "../kontext";
 import { PortalShell } from "../portal-shell";
+import { AnfrageBereich } from "./anfrage-bereich";
+import { ladePortalAnfragen } from "./anfragen-daten";
 
 export const metadata = { title: "Meine Termine" };
 
@@ -46,16 +48,19 @@ function Zeile({ f, vergangen, kalender }: { f: Fahrstunde; vergangen?: boolean;
 }
 
 export default async function PortalTerminePage() {
-  const { schule } = await getSchuelerKontext();
   const supabase = createClient();
   const heute = new Date().toISOString().slice(0, 10);
 
-  const { data } = await supabase
-    .from("fahrstunde")
-    .select("*")
-    .order("datum", { ascending: false })
-    .order("uhrzeit", { ascending: false })
-    .returns<Fahrstunde[]>();
+  const [{ schule }, { data }, anfrage] = await Promise.all([
+    getSchuelerKontext(),
+    supabase
+      .from("fahrstunde")
+      .select("*")
+      .order("datum", { ascending: false })
+      .order("uhrzeit", { ascending: false })
+      .returns<Fahrstunde[]>(),
+    ladePortalAnfragen(),
+  ]);
 
   const alle = data ?? [];
   const anstehend = alle
@@ -66,6 +71,10 @@ export default async function PortalTerminePage() {
   return (
     <PortalShell schuleName={schule?.name ?? "Fahrschule"}>
       <h1 className="mb-4 text-xl font-semibold tracking-tight">Meine Termine</h1>
+
+      <div className="mb-5">
+        <AnfrageBereich {...anfrage} />
+      </div>
 
       {alle.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border-strong py-14 text-center text-muted-foreground">

@@ -76,6 +76,7 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
   const supabase = createClient();
   // Rechnungen, Raten und Kontostand nur für Rollen mit Zugriff auf Rechnungen.
   const zeigeFinanzen = await darf("/rechnungen");
+  const zeigeEinstellungen = await darf("/einstellungen");
   const zeigeKalender = await darf("/kalender");
 
   const { data: schueler } = await supabase.from("fahrschueler").select("*").eq("id", schuelerId).maybeSingle();
@@ -616,6 +617,22 @@ export async function SchuelerAkte({ schuelerId }: { schuelerId: string }) {
                 <p className="text-13 text-foreground-secondary">
                   Der Schüler meldet sich im Portal mit E-Mail, Passwort und diesem Code an.
                 </p>
+                {s.anfragen_gesperrt !== undefined && (
+                  <p className="text-13 text-foreground-secondary">
+                    Fahrstunden anfragen:{" "}
+                    <span className="font-medium text-foreground">
+                      {s.anfragen_gesperrt ? "für diesen Schüler gesperrt" : "erlaubt, sobald in den Einstellungen eingeschaltet"}
+                    </span>
+                    {zeigeEinstellungen && (
+                      <>
+                        {" · "}
+                        <Link href="/einstellungen?bereich=portal" className="font-medium text-primary-text hover:underline">
+                          Ändern
+                        </Link>
+                      </>
+                    )}
+                  </p>
+                )}
                 <form action={portalZugangSperren}>
                   <input type="hidden" name="id" value={s.id} />
                   <Button type="submit" variant="outline" size="sm" className="text-destructive-text">

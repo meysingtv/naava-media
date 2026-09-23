@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Building2, ChevronRight, CreditCard, ReceiptText, ShieldCheck } from "lucide-react";
+import { Building2, CalendarClock, ChevronRight, CreditCard, ReceiptText, ShieldCheck } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import type { Leistung } from "@/lib/types";
 import { FahrschuleForm, ZahlungForm } from "./einstellungen-form";
 import { LeistungNeu, Preisliste } from "./preisliste";
+import { AnfragenEinstellungen, type AnfrageSchueler } from "./anfragen-einstellungen";
 
 export const metadata = { title: "Einstellungen · FahrschulApp" };
 
@@ -16,6 +17,7 @@ const BEREICHE = [
   { key: "fahrschule", label: "Fahrschule", icon: Building2 },
   { key: "zahlung", label: "Rechnungen und Zahlung", icon: CreditCard },
   { key: "preisliste", label: "Preisliste", icon: ReceiptText },
+  { key: "portal", label: "Schülerportal", icon: CalendarClock },
 ] as const;
 
 type Bereich = (typeof BEREICHE)[number]["key"];
@@ -40,6 +42,30 @@ export default async function EinstellungenPage({ searchParams }: { searchParams
             .returns<Leistung[]>()
         ).data ?? []
       : [];
+
+  // Schülerportal: Online-Anfragen – Schüler in Ausbildung mit ihrer Freigabe.
+  let anfrageSchueler: AnfrageSchueler[] = [];
+  let migrationFehlt = kontext.fahrschule.anfragen_aktiv === undefined;
+  if (bereich === "portal") {
+    const res = await supabase
+      .from("fahrschueler")
+      .select("id, vorname, nachname, portal_aktiv, anfragen_gesperrt")
+      .eq("ausbildung_beendet", false)
+      .order("nachname")
+      .returns<AnfrageSchueler[]>();
+    if (res.error) {
+      migrationFehlt = true;
+      const ohne = await supabase
+        .from("fahrschueler")
+        .select("id, vorname, nachname, portal_aktiv")
+        .eq("ausbildung_beendet", false)
+        .order("nachname")
+        .returns<Omit<AnfrageSchueler, "anfragen_gesperrt">[]>();
+      anfrageSchueler = (ohne.data ?? []).map((s) => ({ ...s, anfragen_gesperrt: false }));
+    } else {
+      anfrageSchueler = res.data ?? [];
+    }
+  }
 
   return (
     <div>
@@ -83,6 +109,15 @@ export default async function EinstellungenPage({ searchParams }: { searchParams
           {bereich === "fahrschule" && <FahrschuleForm fahrschule={kontext.fahrschule} />}
           {bereich === "zahlung" && <ZahlungForm fahrschule={kontext.fahrschule} />}
           {bereich === "preisliste" && <Preisliste leistungen={leistungen} />}
+          {bereich === "portal" && (
+            <AnfragenEinstellungen
+              aktiv={Boolean(kontext.fahrschule.anfragen_aktiv)}
+              vorlaufStunden={kontext.fahrschule.anfragen_vorlauf_stunden ?? 24}
+              maxOffen={kontext.fahrschule.anfragen_max_offen ?? 3}
+              schueler={anfrageSchueler}
+              migrationFehlt={migrationFehlt}
+            />
+          )}
         </div>
       </div>
     </div>
