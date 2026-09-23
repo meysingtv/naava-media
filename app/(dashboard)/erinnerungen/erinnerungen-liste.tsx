@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, MessageCircle, Phone } from "lucide-react";
+import { CalendarX, Mail, MessageCircle, Phone } from "lucide-react";
 
 import { StatusDot } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
@@ -22,6 +22,8 @@ export interface ErinnerungItem {
   token: string | null;
   bestaetigt: boolean;
   abgesagt: boolean;
+  /** Zeitpunkt der Absage durch den Schüler (Link oder App). */
+  abgesagtAm?: string | null;
   erinnerungGesendet: boolean;
   name: string;
   vorname: string | null;
@@ -30,6 +32,16 @@ export interface ErinnerungItem {
 }
 
 type Segment = "offen" | "zugesagt" | "abgesagt" | "alle";
+
+/** „vor 5 Min.", „vor 3 Std.", „gestern" – für den Zeitpunkt einer Absage. */
+function seit(iso: string): string {
+  const min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (min < 60) return `vor ${Math.max(1, min)} Min.`;
+  const std = Math.round(min / 60);
+  if (std < 24) return `vor ${std} Std.`;
+  const tage = Math.round(std / 24);
+  return tage === 1 ? "gestern" : `vor ${tage} Tagen`;
+}
 
 function telInternational(tel: string): string {
   let d = tel.replace(/[^\d+]/g, "");
@@ -90,8 +102,23 @@ export function ErinnerungenListe({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, segment]);
 
+  const abgesagtAnzahl = items.filter((i) => i.abgesagt).length;
+
   return (
     <div className="space-y-3">
+      {abgesagtAnzahl > 0 && segment !== "abgesagt" && (
+        <button
+          type="button"
+          onClick={() => setSegment("abgesagt")}
+          className="flex w-full items-center gap-2.5 rounded-xl bg-destructive-soft px-4 py-2.5 text-left text-13 text-destructive-text transition-colors hover:bg-destructive/15"
+        >
+          <CalendarX className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+          <span className="flex-1">
+            {abgesagtAnzahl === 1 ? "1 Termin wurde vom Schüler abgesagt" : `${abgesagtAnzahl} Termine wurden von Schülern abgesagt`} – der Platz ist frei.
+          </span>
+          <span className="font-medium">Ansehen</span>
+        </button>
+      )}
       <Segmente
         optionen={[
           { key: "offen", label: "Offen", anzahl: items.filter((i) => passt(i, "offen")).length },
@@ -135,10 +162,20 @@ export function ErinnerungenListe({
                       <span className="w-12 shrink-0 text-13 font-medium tabular-nums text-foreground">{formatUhrzeit(item.uhrzeit)}</span>
                       <span aria-hidden="true" className="h-8 w-[3px] shrink-0 rounded-full" style={{ background: FAHRSTUNDE_FARBE[item.typ] }} />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-13 font-medium text-foreground">{item.name}</span>
+                        <span className={cn("block truncate text-13 font-medium text-foreground", item.abgesagt && "line-through decoration-foreground-tertiary")}>
+                          {item.name}
+                        </span>
                         <span className="block truncate text-xs text-foreground-secondary">
-                          {typ.kurz} · {item.dauer_minuten} Min.
-                          {item.telefon ? ` · ${item.telefon}` : ""}
+                          {item.abgesagt ? (
+                            <span className="text-destructive-text">
+                              Vom Schüler abgesagt{item.abgesagtAm ? ` ${seit(item.abgesagtAm)}` : ""} – Platz ist frei
+                            </span>
+                          ) : (
+                            <>
+                              {typ.kurz} · {item.dauer_minuten} Min.
+                              {item.telefon ? ` · ${item.telefon}` : ""}
+                            </>
+                          )}
                         </span>
                       </span>
 

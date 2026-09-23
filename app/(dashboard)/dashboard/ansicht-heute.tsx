@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BellRing, CalendarDays, CheckSquare, Gauge, Phone, Timer, UserRound } from "lucide-react";
+import { BellRing, CalendarDays, CalendarX, CheckSquare, Gauge, Phone, Timer, UserRound } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,25 @@ type TerminRow = {
 type AufgabeRow = Aufgabe & { fahrschueler: { vorname: string; nachname: string } | null };
 type LehrerRow = { id: string; vorname: string; nachname: string; rolle: string };
 type WocheRow = { datum: string; dauer_minuten: number | null };
+type AbsageRow = {
+  id: string;
+  datum: string;
+  uhrzeit: string;
+  dauer_minuten: number | null;
+  abgesagt_am: string;
+  fahrschueler: { id: string; vorname: string; nachname: string } | null;
+  fahrlehrer: { vorname: string; nachname: string } | null;
+};
+
+/** „vor 5 Min.", „vor 3 Std.", „gestern" */
+function seit(iso: string): string {
+  const min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (min < 60) return `vor ${Math.max(1, min)} Min.`;
+  const std = Math.round(min / 60);
+  if (std < 24) return `vor ${std} Std.`;
+  const tage = Math.round(std / 24);
+  return tage === 1 ? "gestern" : `vor ${tage} Tagen`;
+}
 
 const SEL_TERMIN =
   "id, datum, uhrzeit, dauer_minuten, typ, status, bestaetigt_am, abgesagt_am, fahrschueler(id, vorname, nachname, telefon), fahrlehrer(id, vorname, nachname), fahrzeug(id, kennzeichen)";
@@ -79,6 +98,15 @@ export async function AnsichtHeute({
     .eq("status", "geplant")
     .gte("datum", heute)
     .lte("datum", plusTage(heute, 3));
+  // Absagen von Schülern (Link oder App) für die nächsten sieben Tage
+  const absagenQ = supabase
+    .from("fahrstunde")
+    .select("id, datum, uhrzeit, dauer_minuten, abgesagt_am, fahrschueler(id, vorname, nachname), fahrlehrer(vorname, nachname)")
+    .not("abgesagt_am", "is", null)
+    .gte("datum", heute)
+    .lte("datum", plusTage(heute, 7))
+    .order("abgesagt_am", { ascending: false })
+    .limit(5);
   const monatQ = supabase
     .from("fahrstunde")
     .select("datum")
@@ -86,7 +114,7 @@ export async function AnsichtHeute({
     .gte("datum", monatsbeginn)
     .lte("datum", monatsende);
 
-  const [termineRes, kommendeRes, aufgabenRes, aufgabenAlleRes, lehrerRes, wocheRes, monatRes, pruefMonatRes] = await Promise.all([
+  const [termineRes, kommendeRes, aufgabenRes, aufgabenAlleRes, lehrerRes, wocheRes, monatRes, pruefMonatRes, absagenRes] = await Promise.all([
     (nurMeine ? termineQ.eq("fahrlehrer_id", ich) : termineQ).order("uhrzeit", { ascending: true }).returns<TerminRow[]>(),
     (nurMeine ? kommendeQ.eq("fahrlehrer_id", ich) : kommendeQ).returns<
       { id: string; bestaetigt_am: string | null; abgesagt_am: string | null }[]
@@ -120,7 +148,10 @@ export async function AnsichtHeute({
       : Promise.resolve({ data: [] as WocheRow[] }),
     (nurMeine ? monatQ.eq("fahrlehrer_id", ich) : monatQ).returns<{ datum: string }[]>(),
     supabase.from("pruefung").select("datum").gte("datum", monatsbeginn).lte("datum", monatsende).returns<{ datum: string }[]>(),
+    (nurMeine ? absagenQ.eq("fahrlehrer_id", ich) : absagenQ).returns<AbsageRow[]>(),
   ]);
+  // Ohne Datenbank-Update 0019 gibt es die Spalte nicht – dann einfach keine Absagen.
+  const absagen = absagenRes.error ? [] : absagenRes.data ?? [];
 
   const termine = termineRes.data ?? [];
   const kommende = kommendeRes.data ?? [];
@@ -232,6 +263,25 @@ export async function AnsichtHeute({
         />
       </KennzahlReihe>
 
+      {/* Absagen von Schülern (Link oder App) – schmale Leiste, nur wenn es welche gibt */}
+      {absagen.length > 0 && (
+        <Link
+          href="/erinnerungen"
+          className="flex items-start gap-3 rounded-xl bg-destructive-soft px-4 py-3 text-13 text-destructive-text transition-colors hover:bg-destructive/15 sm:items-center"
+        >
+          <CalendarX className="mt-0.5 h-4 w-4 shrink-0 sm:mt-0" strokeWidth={1.75} aria-hidden="true" />
+          <span className="min-w-0 flex-1">
+            <span className="font-medium">
+              {absagen[0].fahrschueler ? `${absagen[0].fahrschueler.vorname} ${absagen[0].fahrschueler.nachname}` : "Ein Schüler"}
+            </span>{" "}
+            hat {absagen[0].datum === heute ? "heute" : `${wochentagKurz(absagen[0].datum)}., ${formatDatum(absagen[0].datum).slice(0, 6)}`}{" "}
+            {formatUhrzeit(absagen[0].uhrzeit)} Uhr abgesagt ({seit(absagen[0].abgesagt_am)})
+            {absagen.length > 1 ? ` – und ${absagen.length - 1} weitere Absage${absagen.length > 2 ? "n" : ""}` : ""}. Der Platz ist frei.
+          </span>
+          <span className="shrink-0 font-medium">Ansehen</span>
+        </Link>
+      )}
+
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         {/* Tagesplan */}
         <Karte
@@ -254,7 +304,9 @@ export async function AnsichtHeute({
                 const blass = vorbei || ausgefallen;
                 const name = t.fahrschueler ? `${t.fahrschueler.vorname} ${t.fahrschueler.nachname}` : typ.label;
                 const chip = ausgefallen
-                  ? "Ausgefallen"
+                  ? t.abgesagt_am
+                    ? "Abgesagt"
+                    : "Ausgefallen"
                   : vorbei
                     ? "Gefahren"
                     : laeuft

@@ -27,7 +27,8 @@ export default async function ErinnerungenPage() {
     .select(
       "id, datum, uhrzeit, dauer_minuten, typ, bestaetigung_token, bestaetigt_am, abgesagt_am, erinnerung_gesendet_am, fahrschueler(vorname, nachname, telefon, email)",
     )
-    .eq("status", "geplant")
+    // Geplante Termine plus die, die ein Schüler per Link oder App abgesagt hat.
+    .or("status.eq.geplant,abgesagt_am.not.is.null")
     .gte("datum", heute)
     .lte("datum", plusTage(heute, 3))
     .order("datum", { ascending: true })
@@ -43,6 +44,7 @@ export default async function ErinnerungenPage() {
     token: r.bestaetigung_token,
     bestaetigt: r.bestaetigt_am != null,
     abgesagt: r.abgesagt_am != null,
+    abgesagtAm: r.abgesagt_am,
     erinnerungGesendet: r.erinnerung_gesendet_am != null,
     name: r.fahrschueler ? `${r.fahrschueler.vorname} ${r.fahrschueler.nachname}` : "—",
     vorname: r.fahrschueler?.vorname ?? null,
@@ -50,9 +52,10 @@ export default async function ErinnerungenPage() {
     email: r.fahrschueler?.email ?? null,
   }));
 
-  const zugesagt = items.filter((i) => i.bestaetigt).length;
+  const geplant = items.filter((i) => !i.abgesagt);
+  const zugesagt = geplant.filter((i) => i.bestaetigt).length;
   const abgesagt = items.filter((i) => i.abgesagt).length;
-  const offen = items.filter((i) => !i.bestaetigt && !i.abgesagt);
+  const offen = geplant.filter((i) => !i.bestaetigt);
   const erinnert = offen.filter((i) => i.erinnerungGesendet).length;
 
   const h = headers();
@@ -66,11 +69,11 @@ export default async function ErinnerungenPage() {
 
       <div className="space-y-6">
         <KpiRow>
-          <KpiCard label="Termine in 3 Tagen" value={items.length} sub="geplante Fahrstunden ab heute" />
+          <KpiCard label="Termine in 3 Tagen" value={geplant.length} sub="geplante Fahrstunden ab heute" />
           <KpiCard
             label="Zugesagt"
             value={zugesagt}
-            sub={items.length ? `${Math.round((zugesagt / items.length) * 100)} % der Termine` : "Noch keine Termine"}
+            sub={geplant.length ? `${Math.round((zugesagt / geplant.length) * 100)} % der Termine` : "Noch keine Termine"}
           />
           <KpiCard
             label="Noch offen"
