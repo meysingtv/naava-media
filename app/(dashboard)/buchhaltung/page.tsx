@@ -1,23 +1,29 @@
 import Link from "next/link";
-import { ArrowDownRight, ArrowUpRight, Download, Euro, Trash2, Wallet } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Karte, KarteLeer } from "@/components/ui/karte";
+import { KpiCard, KpiRow } from "@/components/ui/kpi-card";
+import { LinkSegmente } from "@/components/shared/link-segmente";
 import { PageHeader } from "@/components/shared/page-header";
-import { StatCard } from "@/components/shared/stat-card";
+import { Saeulen } from "@/components/shared/saeulen";
 import { cn, formatDatum, formatEuro } from "@/lib/utils";
+import { heuteBerlin } from "@/lib/zeit";
 import type { KassenbuchEintrag, Rechnung } from "@/lib/types";
 import { KassenbuchNeu } from "./kassenbuch-neu";
 import { kassenEintragLoeschen } from "./actions";
 
 export const metadata = { title: "Buchhaltung · FahrschulApp" };
 
-const MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+type RechnungRow = Pick<Rechnung, "rechnungsdatum" | "betrag_netto" | "betrag_brutto" | "status">;
 
-export default async function BuchhaltungPage() {
+export default async function BuchhaltungPage({ searchParams }: { searchParams: { jahr?: string } }) {
   const supabase = createClient();
-  const jahr = new Date().getFullYear();
+  const heute = heuteBerlin();
+  const aktuellesJahr = Number(heute.slice(0, 4));
+  const jahre = [aktuellesJahr, aktuellesJahr - 1, aktuellesJahr - 2];
+  const jahr = jahre.includes(Number(searchParams.jahr)) ? Number(searchParams.jahr) : aktuellesJahr;
 
   const [rechnungRes, kassenRes] = await Promise.all([
     supabase
@@ -25,30 +31,39 @@ export default async function BuchhaltungPage() {
       .select("rechnungsdatum, betrag_netto, betrag_brutto, status")
       .gte("rechnungsdatum", `${jahr}-01-01`)
       .lte("rechnungsdatum", `${jahr}-12-31`)
-      .returns<Pick<Rechnung, "rechnungsdatum" | "betrag_netto" | "betrag_brutto" | "status">[]>(),
+      .returns<RechnungRow[]>(),
     supabase
       .from("kassenbuch_eintrag")
       .select("*")
+      .gte("datum", `${jahr}-01-01`)
+      .lte("datum", `${jahr}-12-31`)
       .order("datum", { ascending: false })
       .order("created_at", { ascending: false })
       .returns<KassenbuchEintrag[]>(),
   ]);
 
   const rechnungen = rechnungRes.data ?? [];
-  const netto = rechnungen.reduce((s, r) => s + Number(r.betrag_netto ?? 0), 0);
-  const brutto = rechnungen.reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
-  const ust = brutto - netto;
-  const offen = rechnungen
-    .filter((r) => r.status !== "bezahlt")
-    .reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
+  const netto = (liste: RechnungRow[]) => liste.reduce((s, r) => s + Number(r.betrag_netto ?? 0), 0);
+  const brutto = (liste: RechnungRow[]) => liste.reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
+  const offen = rechnungen.filter((r) => r.status !== "bezahlt");
 
-  // Umsatz je Monat
-  const monatsUmsatz: number[] = Array.from({ length: 12 }, () => 0);
-  for (const r of rechnungen) {
-    if (!r.rechnungsdatum) continue;
-    const m = Number(r.rechnungsdatum.slice(5, 7)) - 1;
-    if (m >= 0 && m < 12) monatsUmsatz[m] += Number(r.betrag_brutto ?? 0);
-  }
+  // Umsatz je Monat und Umsatzsteuer je Quartal (für die Voranmeldung)
+  const monate = Array.from({ length: 12 }, (_, i) => {
+    const schluessel = `${jahr}-${String(i + 1).padStart(2, "0")}`;
+    return {
+      schluessel,
+      label: new Date(Date.UTC(jahr, i, 1)).toLocaleDateString("de-DE", { month: "short", timeZone: "UTC" }).replace(".", ""),
+      wert: brutto(rechnungen.filter((r) => (r.rechnungsdatum ?? "").startsWith(schluessel))),
+    };
+  });
+  const quartale = [0, 1, 2, 3].map((q) => {
+    const liste = rechnungen.filter((r) => {
+      const m = Number((r.rechnungsdatum ?? "").slice(5, 7));
+      return m >= q * 3 + 1 && m <= q * 3 + 3;
+    });
+    return { label: `Q${q + 1}`, netto: netto(liste), brutto: brutto(liste), anzahl: liste.length };
+  });
+  const aktuelleMonat = jahr === aktuellesJahr ? heute.slice(0, 7) : `${jahr}-12`;
 
   // Kassenbuch
   const kasse = kassenRes.data ?? [];
@@ -57,133 +72,129 @@ export default async function BuchhaltungPage() {
   const saldo = einnahmen - ausgaben;
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Buchhaltung" description={`Umsatz, Umsatzsteuer & Kassenbuch für ${jahr}.`}>
-        <Button asChild variant="outline">
+    <div>
+      <PageHeader title="Buchhaltung">
+        <LinkSegmente
+          label="Jahr"
+          aktiv={String(jahr)}
+          optionen={jahre.map((j) => ({ key: String(j), label: String(j), href: j === aktuellesJahr ? "/buchhaltung" : `/buchhaltung?jahr=${j}` }))}
+        />
+        <Button asChild size="sm">
           <Link href={`/buchhaltung/datev?jahr=${jahr}`}>
-            <Download /> DATEV-Export
+            <Download /> DATEV-Export {jahr}
           </Link>
         </Button>
       </PageHeader>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label={`Umsatz ${jahr} (brutto)`} value={formatEuro(brutto)} icon={Euro} />
-        <StatCard label="Umsatz netto" value={formatEuro(netto)} icon={Euro} />
-        <StatCard label="Umsatzsteuer" value={formatEuro(ust)} icon={Euro} />
-        <StatCard
-          label="Offene Forderungen"
-          value={formatEuro(offen)}
-          icon={ArrowDownRight}
-          iconClassName={offen > 0 ? "bg-warning-soft text-warning" : undefined}
-        />
-      </div>
+      <div className="space-y-6">
+        <KpiRow>
+          <KpiCard label={`Umsatz ${jahr} brutto`} value={formatEuro(brutto(rechnungen))} sub={`${rechnungen.length} Rechnungen`} />
+          <KpiCard label="Umsatz netto" value={formatEuro(netto(rechnungen))} sub="ohne Umsatzsteuer" />
+          <KpiCard label="Umsatzsteuer" value={formatEuro(brutto(rechnungen) - netto(rechnungen))} sub="aus gestellten Rechnungen" />
+          <KpiCard
+            label="Offene Forderungen"
+            value={formatEuro(brutto(offen))}
+            sub={`${offen.length} ${offen.length === 1 ? "Rechnung" : "Rechnungen"}`}
+            tone={offen.length ? "warning" : "neutral"}
+            href="/rechnungen"
+          />
+        </KpiRow>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* Umsatz je Monat */}
-        <Card className="overflow-hidden">
-          <CardHeader className="p-5 pb-3">
-            <CardTitle>Umsatz je Monat</CardTitle>
-          </CardHeader>
-          <div className="border-t">
-            <table className="w-full text-sm tabular-nums">
-              <tbody className="divide-y">
-                {monatsUmsatz.map((wert, i) => (
-                  <tr key={i} className="transition-colors hover:bg-surface">
-                    <td className="px-5 py-2 text-foreground-secondary">{MONATE[i]}</td>
-                    <td className="px-5 py-2 text-right font-medium text-foreground">{formatEuro(wert)}</td>
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <Karte titel="Umsatz je Monat" meta={`${jahr} · brutto`} className="xl:col-span-2" inhaltClassName="px-5 pb-5">
+            <Saeulen werte={monate} einheit="euro" hervorheben={aktuelleMonat} label={`Umsatz je Monat ${jahr}`} />
+          </Karte>
+
+          <Karte titel="Umsatzsteuer je Quartal" meta="für die Voranmeldung" inhaltClassName="pb-2">
+            <table className="w-full text-13 tabular-nums">
+              <thead>
+                <tr className="border-y border-border bg-surface-muted/60 text-left text-xs text-foreground-secondary">
+                  <th className="px-5 py-2 font-medium">Quartal</th>
+                  <th className="px-2 py-2 text-right font-medium">Netto</th>
+                  <th className="px-5 py-2 text-right font-medium">USt.</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {quartale.map((q) => (
+                  <tr key={q.label}>
+                    <td className="px-5 py-2.5 font-medium text-foreground">{q.label}</td>
+                    <td className="px-2 py-2.5 text-right text-foreground-secondary">{formatEuro(q.netto)}</td>
+                    <td className="px-5 py-2.5 text-right font-medium text-foreground">{formatEuro(q.brutto - q.netto)}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t bg-surface font-semibold">
-                  <td className="px-5 py-2.5">Gesamt</td>
-                  <td className="px-5 py-2.5 text-right">{formatEuro(brutto)}</td>
+                <tr className="border-t border-border">
+                  <td className="px-5 py-2.5 font-semibold text-foreground">Gesamt</td>
+                  <td className="px-2 py-2.5 text-right font-semibold text-foreground">{formatEuro(netto(rechnungen))}</td>
+                  <td className="px-5 py-2.5 text-right font-semibold text-foreground">{formatEuro(brutto(rechnungen) - netto(rechnungen))}</td>
                 </tr>
               </tfoot>
             </table>
-          </div>
-        </Card>
+          </Karte>
+        </div>
 
-        {/* Kassenbuch */}
-        <Card className="overflow-hidden">
-          <CardHeader className="flex-row items-center justify-between space-y-0 p-5 pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} /> Kassenbuch
-            </CardTitle>
-            <KassenbuchNeu />
-          </CardHeader>
-
-          <div className="grid grid-cols-3 gap-px border-y bg-border text-center">
-            <div className="bg-card px-3 py-2.5">
-              <p className="text-2xs uppercase tracking-wide text-muted-foreground">Einnahmen</p>
-              <p className="text-sm font-semibold text-success tabular-nums">{formatEuro(einnahmen)}</p>
-            </div>
-            <div className="bg-card px-3 py-2.5">
-              <p className="text-2xs uppercase tracking-wide text-muted-foreground">Ausgaben</p>
-              <p className="text-sm font-semibold text-destructive tabular-nums">{formatEuro(ausgaben)}</p>
-            </div>
-            <div className="bg-card px-3 py-2.5">
-              <p className="text-2xs uppercase tracking-wide text-muted-foreground">Saldo</p>
-              <p className={cn("text-sm font-semibold tabular-nums", saldo < 0 ? "text-destructive" : "text-foreground")}>
-                {formatEuro(saldo)}
-              </p>
-            </div>
+        <Karte titel="Kassenbuch" meta={String(jahr)} aktion={<KassenbuchNeu />}>
+          <div className="grid grid-cols-3 border-y border-border">
+            {[
+              { label: "Einnahmen", wert: einnahmen, klasse: "text-foreground" },
+              { label: "Ausgaben", wert: ausgaben, klasse: "text-foreground" },
+              { label: "Saldo", wert: saldo, klasse: saldo < 0 ? "text-destructive-text" : "text-foreground" },
+            ].map((x, i) => (
+              <div key={x.label} className={cn("px-5 py-3", i > 0 && "border-l border-border")}>
+                <p className="text-13 text-foreground-secondary">{x.label}</p>
+                <p className={cn("mt-0.5 text-lg font-semibold tabular-nums", x.klasse)}>{formatEuro(x.wert)}</p>
+              </div>
+            ))}
           </div>
 
           {kasse.length === 0 ? (
-            <p className="px-5 py-10 text-center text-sm text-muted-foreground">
-              Noch keine Kassenbuch-Einträge.
-            </p>
+            <KarteLeer>Noch keine Einträge im Kassenbuch für {jahr}.</KarteLeer>
           ) : (
-            <div className="max-h-[360px] divide-y overflow-y-auto scrollbar-thin">
+            <ul className="max-h-[440px] divide-y divide-border overflow-y-auto scrollbar-thin">
               {kasse.map((k) => {
                 const einnahme = k.typ === "einnahme";
                 return (
-                  <div key={k.id} className="flex items-center gap-3 px-5 py-2.5">
-                    <span
-                      className={cn(
-                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-                        einnahme ? "bg-success-soft text-success" : "bg-destructive-soft text-destructive",
-                      )}
-                    >
-                      {einnahme ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">
+                  <li key={k.id} className="group flex items-center gap-4 px-5 py-2.5">
+                    <span className="w-[84px] shrink-0 text-13 tabular-nums text-foreground-secondary">{formatDatum(k.datum)}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-13 font-medium text-foreground">
                         {k.kategorie || (einnahme ? "Einnahme" : "Ausgabe")}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {formatDatum(k.datum)}
+                      </span>
+                      <span className="block truncate text-xs text-foreground-secondary">
+                        {einnahme ? "Einnahme" : "Ausgabe"}
                         {k.beschreibung ? ` · ${k.beschreibung}` : ""}
-                        {k.beleg ? ` · ${k.beleg}` : ""}
-                      </p>
-                    </div>
-                    <span className={cn("shrink-0 text-sm font-semibold tabular-nums", einnahme ? "text-success" : "text-destructive")}>
+                        {k.beleg ? ` · Beleg ${k.beleg}` : ""}
+                      </span>
+                    </span>
+                    <span className={cn("shrink-0 text-13 font-semibold tabular-nums", einnahme ? "text-foreground" : "text-destructive-text")}>
                       {einnahme ? "+" : "−"}
                       {formatEuro(Number(k.betrag))}
                     </span>
                     <form action={kassenEintragLoeschen}>
                       <input type="hidden" name="id" value={k.id} />
-                      <button
+                      <Button
                         type="submit"
-                        aria-label="Löschen"
-                        className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive-soft hover:text-destructive"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label="Eintrag löschen"
+                        title="Eintrag löschen"
+                        className="text-foreground-tertiary opacity-0 transition-opacity hover:text-destructive-text focus-visible:opacity-100 group-hover:opacity-100"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                        <Trash2 />
+                      </Button>
                     </form>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           )}
-        </Card>
-      </div>
+        </Karte>
 
-      <p className="text-xs text-muted-foreground">
-        Hinweis: Der DATEV-Export ist ein Buchungsstapel-CSV als Startpunkt für deinen Steuerberater –
-        Konten (SKR03) ggf. anpassen.
-      </p>
+        <p className="text-xs text-foreground-tertiary">
+          Der DATEV-Export enthält alle Rechnungen des gewählten Jahres als Buchungsstapel für deinen Steuerberater (Konten nach SKR03, bei Bedarf anpassen).
+        </p>
+      </div>
     </div>
   );
 }

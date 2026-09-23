@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { AlertTriangle, Banknote, Bell, CheckCircle2, Download, Settings } from "lucide-react";
+import { AlertTriangle, Bell, Download } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getKontext } from "@/lib/supabase/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Karte, KarteLeer } from "@/components/ui/karte";
+import { KpiCard, KpiRow } from "@/components/ui/kpi-card";
 import { PageHeader } from "@/components/shared/page-header";
-import { EmptyState } from "@/components/shared/empty-state";
 import { formatDatum, formatEuro } from "@/lib/utils";
+import { heuteBerlin, tageBis } from "@/lib/zeit";
 import type { Rechnung } from "@/lib/types";
 import { mahnlaufAusfuehren } from "./actions";
 
@@ -24,11 +24,13 @@ type RechnungMitSepa = Rechnung & {
   } | null;
 };
 
+const name = (r: RechnungMitSepa) => (r.fahrschueler ? `${r.fahrschueler.vorname} ${r.fahrschueler.nachname}` : "Ohne Schüler");
+
 export default async function RechnungslaufPage() {
   const supabase = createClient();
   const kontext = await getKontext();
   const fs = kontext?.fahrschule;
-  const heute = new Date().toISOString().slice(0, 10);
+  const heute = heuteBerlin();
 
   const { data } = await supabase
     .from("rechnung")
@@ -38,140 +40,124 @@ export default async function RechnungslaufPage() {
     .returns<RechnungMitSepa[]>();
 
   const offene = data ?? [];
-  const sepaFaehig = offene.filter(
-    (r) => r.fahrschueler?.iban && r.fahrschueler?.sepa_mandat_ref && r.fahrschueler?.sepa_mandat_am,
-  );
-  const sepaSumme = sepaFaehig.reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
+  const summe = (liste: RechnungMitSepa[]) => liste.reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
+  const sepaFaehig = offene.filter((r) => r.fahrschueler?.iban && r.fahrschueler?.sepa_mandat_ref && r.fahrschueler?.sepa_mandat_am);
   const ueberfaellig = offene.filter((r) => r.faelligkeitsdatum && r.faelligkeitsdatum < heute);
-  const ueberfaelligSumme = ueberfaellig.reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0);
-
+  const gemahnt = offene.filter((r) => r.mahnstufe > 0);
   const sepaBereit = Boolean(fs?.iban && fs?.glaeubiger_id);
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Rechnungslauf"
-        description="SEPA-Lastschriften einziehen und überfällige Rechnungen sammeln anmahnen."
-      />
+    <div>
+      <PageHeader title="Rechnungslauf" />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* SEPA-Lastschrift */}
-        <Card>
-          <CardHeader className="flex-row items-center justify-between space-y-0 p-5 pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <Banknote className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} /> SEPA-Lastschrift
-            </CardTitle>
-            <Badge variant="secondary">{sepaFaehig.length} Posten</Badge>
-          </CardHeader>
-          <CardContent className="space-y-4 p-5 pt-0">
-            <div className="rounded-lg border bg-surface px-4 py-3">
-              <p className="text-2xs uppercase tracking-wide text-muted-foreground">Einzugsbetrag</p>
-              <p className="text-xl font-semibold text-foreground tabular-nums">{formatEuro(sepaSumme)}</p>
-            </div>
+      <div className="space-y-6">
+        <KpiRow cols={3}>
+          <KpiCard
+            label="Per Lastschrift einziehbar"
+            value={formatEuro(summe(sepaFaehig))}
+            sub={`${sepaFaehig.length} ${sepaFaehig.length === 1 ? "Rechnung" : "Rechnungen"} mit SEPA-Mandat`}
+          />
+          <KpiCard
+            label="Überfällig"
+            value={formatEuro(summe(ueberfaellig))}
+            sub={`${ueberfaellig.length} ${ueberfaellig.length === 1 ? "Rechnung" : "Rechnungen"}`}
+            tone={ueberfaellig.length ? "destructive" : "neutral"}
+          />
+          <KpiCard
+            label="Bereits gemahnt"
+            value={gemahnt.length}
+            sub={gemahnt.length ? `${gemahnt.filter((r) => r.mahnstufe >= 2).length} in der 2. Stufe oder höher` : "Keine offenen Mahnungen"}
+          />
+        </KpiRow>
 
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <Karte titel="SEPA-Lastschrift" meta={sepaFaehig.length ? `${sepaFaehig.length} Posten` : undefined} inhaltClassName="flex flex-col">
             {!sepaBereit ? (
-              <div className="flex items-start gap-2.5 rounded-md border border-warning/25 bg-warning-soft px-3 py-2.5 text-sm text-warning">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="mx-5 mb-5 flex items-start gap-2.5 rounded-lg bg-warning-soft px-4 py-3 text-13 text-warning-text">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
                 <span>
                   Für den Einzug fehlen IBAN und Gläubiger-ID der Fahrschule.{" "}
                   <Link href="/einstellungen" className="font-medium underline underline-offset-2">
-                    In Einstellungen hinterlegen
+                    In den Einstellungen hinterlegen
                   </Link>
-                  .
                 </span>
               </div>
             ) : sepaFaehig.length === 0 ? (
-              <p className="rounded-md bg-surface-muted/60 px-3 py-6 text-center text-sm text-muted-foreground">
-                Keine einzugsfähigen Rechnungen. Voraussetzung: Schüler mit IBAN + SEPA-Mandat.
-              </p>
+              <KarteLeer>Keine Rechnung ist einziehbar. Dafür braucht der Schüler eine IBAN und ein erteiltes SEPA-Mandat.</KarteLeer>
             ) : (
               <>
-                <div className="max-h-56 divide-y overflow-y-auto rounded-md border scrollbar-thin">
-                  {sepaFaehig.slice(0, 50).map((r) => (
-                    <div key={r.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
-                      <span className="truncate">
-                        {r.fahrschueler?.vorname} {r.fahrschueler?.nachname}
-                        <span className="text-muted-foreground"> · {r.nummer}</span>
-                      </span>
-                      <span className="shrink-0 font-medium tabular-nums">{formatEuro(Number(r.betrag_brutto))}</span>
-                    </div>
+                <ul className="max-h-[320px] divide-y divide-border overflow-y-auto border-t border-border scrollbar-thin">
+                  {sepaFaehig.map((r) => (
+                    <li key={r.id}>
+                      <Link href={`/rechnungen/${r.id}`} className="flex items-center gap-3 px-5 py-2.5 transition-colors hover:bg-surface-muted">
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-13 font-medium text-foreground">{name(r)}</span>
+                          <span className="block truncate text-xs text-foreground-secondary">
+                            {r.nummer}
+                            {r.faelligkeitsdatum ? ` · fällig ${formatDatum(r.faelligkeitsdatum)}` : ""}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-13 font-semibold tabular-nums text-foreground">{formatEuro(Number(r.betrag_brutto))}</span>
+                      </Link>
+                    </li>
                   ))}
-                </div>
-                <Button asChild className="w-full">
-                  <a href="/rechnungslauf/sepa">
-                    <Download /> SEPA-XML erzeugen ({sepaFaehig.length})
-                  </a>
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Lädt eine pain.008-Datei zum Import ins Online-Banking herunter.
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Mahnlauf */}
-        <Card>
-          <CardHeader className="flex-row items-center justify-between space-y-0 p-5 pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} /> Mahnlauf
-            </CardTitle>
-            <Badge variant={ueberfaellig.length > 0 ? "warning" : "secondary"}>
-              {ueberfaellig.length} überfällig
-            </Badge>
-          </CardHeader>
-          <CardContent className="space-y-4 p-5 pt-0">
-            <div className="rounded-lg border bg-surface px-4 py-3">
-              <p className="text-2xs uppercase tracking-wide text-muted-foreground">Überfällige Summe</p>
-              <p className="text-xl font-semibold text-foreground tabular-nums">{formatEuro(ueberfaelligSumme)}</p>
-            </div>
-
-            {ueberfaellig.length === 0 ? (
-              <EmptyState
-                variant="inline"
-                icon={CheckCircle2}
-                title="Keine überfälligen Rechnungen"
-                description="Alle Rechnungen sind innerhalb der Frist – aktuell ist kein Mahnlauf nötig."
-                className="rounded-md bg-surface-muted/60 py-8"
-              />
-            ) : (
-              <>
-                <div className="max-h-56 divide-y overflow-y-auto rounded-md border scrollbar-thin">
-                  {ueberfaellig.slice(0, 50).map((r) => (
-                    <div key={r.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
-                      <span className="min-w-0 truncate">
-                        {r.fahrschueler ? `${r.fahrschueler.vorname} ${r.fahrschueler.nachname}` : "Ohne Schüler"}
-                        <span className="text-muted-foreground"> · fällig {formatDatum(r.faelligkeitsdatum)}</span>
-                      </span>
-                      <span className="flex shrink-0 items-center gap-2">
-                        {r.mahnstufe > 0 && <Badge variant="outline">St. {r.mahnstufe}</Badge>}
-                        <span className="font-medium tabular-nums">{formatEuro(Number(r.betrag_brutto))}</span>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <form action={mahnlaufAusfuehren}>
-                  <Button type="submit" className="w-full">
-                    <Bell /> Alle anmahnen (Stufe +1)
+                </ul>
+                <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3">
+                  <p className="text-xs text-foreground-secondary">Datei im Format pain.008 für den Import ins Online-Banking.</p>
+                  <Button asChild size="sm">
+                    <a href="/rechnungslauf/sepa">
+                      <Download /> SEPA-Datei erzeugen
+                    </a>
                   </Button>
-                </form>
-                <p className="text-xs text-muted-foreground">
-                  Erhöht die Mahnstufe aller überfälligen Rechnungen. Einzelne Mahnschreiben druckst du in
-                  der jeweiligen Rechnung.
-                </p>
+                </div>
               </>
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </Karte>
 
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Settings className="h-3.5 w-3.5" />
-        SEPA-Gläubigerdaten &amp; Konto pflegst du unter{" "}
-        <Link href="/einstellungen" className="font-medium text-primary underline-offset-2 hover:underline">
-          Einstellungen
-        </Link>
-        .
+          <Karte titel="Mahnlauf" meta={ueberfaellig.length ? `${ueberfaellig.length} überfällig` : undefined} inhaltClassName="flex flex-col">
+            {ueberfaellig.length === 0 ? (
+              <KarteLeer>Keine Rechnung ist überfällig – ein Mahnlauf ist nicht nötig.</KarteLeer>
+            ) : (
+              <>
+                <ul className="max-h-[320px] divide-y divide-border overflow-y-auto border-t border-border scrollbar-thin">
+                  {ueberfaellig.map((r) => {
+                    const tage = r.faelligkeitsdatum ? -tageBis(r.faelligkeitsdatum, heute) : 0;
+                    return (
+                      <li key={r.id}>
+                        <Link href={`/rechnungen/${r.id}`} className="flex items-center gap-3 px-5 py-2.5 transition-colors hover:bg-surface-muted">
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-13 font-medium text-foreground">{name(r)}</span>
+                            <span className="block truncate text-xs text-foreground-secondary">
+                              {r.nummer} · seit {tage} {tage === 1 ? "Tag" : "Tagen"}
+                              {r.mahnstufe > 0 ? ` · ${r.mahnstufe}. Mahnung` : ""}
+                            </span>
+                          </span>
+                          <span className="shrink-0 text-13 font-semibold tabular-nums text-destructive-text">{formatEuro(Number(r.betrag_brutto))}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3">
+                  <p className="text-xs text-foreground-secondary">Erhöht die Mahnstufe aller überfälligen Rechnungen um eins.</p>
+                  <form action={mahnlaufAusfuehren}>
+                    <Button type="submit" size="sm">
+                      <Bell /> Alle {ueberfaellig.length} anmahnen
+                    </Button>
+                  </form>
+                </div>
+              </>
+            )}
+          </Karte>
+        </div>
+
+        <p className="text-xs text-foreground-tertiary">
+          Das Mahnschreiben selbst druckst du in der jeweiligen Rechnung. Gläubiger-ID und Konto der Fahrschule pflegst du in den{" "}
+          <Link href="/einstellungen" className="text-primary-text hover:underline">
+            Einstellungen
+          </Link>
+          .
+        </p>
       </div>
     </div>
   );

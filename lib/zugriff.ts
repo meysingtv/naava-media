@@ -31,3 +31,8 @@ export async function darf(href: string): Promise<boolean> {
 export async function nurMitZugriff(href: string): Promise<void> {
   if (!(await darf(href))) redirect("/dashboard");
 }
+
+/** Umsatz, Einnahmen und Vergleiche sieht nur die Geschäftsführung – das Büro sieht offene Posten. */
+export async function siehtUmsatz(): Promise<boolean> {
+  return (await aktuelleRolle()) === "chef";
+}

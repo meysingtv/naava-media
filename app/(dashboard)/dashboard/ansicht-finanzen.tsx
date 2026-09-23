@@ -6,7 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Karte, KarteLeer, KartenLink } from "@/components/ui/karte";
 import { Kennzahl, KennzahlReihe } from "@/components/ui/kennzahl";
+import { Monatsverlauf } from "@/components/shared/monatsverlauf";
+import { ZAHLARTEN } from "@/lib/constants";
 import { AKZENT } from "@/lib/farben";
+import { monatsWerte } from "@/lib/finanzen";
 import { formatDatum, formatEuro } from "@/lib/utils";
 import { plusTage } from "@/lib/zeit";
 
@@ -37,23 +40,8 @@ type ZahlungRow = {
   rechnung: { nummer: string } | null;
 };
 
-const ZAHLART: Record<string, string> = { bar: "Bar", ueberweisung: "Überweisung", lastschrift: "Lastschrift", karte: "Karte" };
-
 function tageZwischen(von: string, bis: string): number {
   return Math.round((new Date(`${bis}T12:00:00Z`).getTime() - new Date(`${von}T12:00:00Z`).getTime()) / 86_400_000);
-}
-
-/** Rundet auf eine „schöne" Obergrenze für die Achse (100, 250, 500, 1.000 …). */
-function schoeneObergrenze(wert: number): number {
-  if (wert <= 0) return 100;
-  const basis = Math.pow(10, Math.floor(Math.log10(wert)));
-  const n = wert / basis;
-  const stufe = n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10;
-  return stufe * basis;
-}
-
-function euroKurz(wert: number): string {
-  return `${wert.toLocaleString("de-DE", { maximumFractionDigits: 0 })} €`;
 }
 
 function Name({ s }: { s: { vorname: string; nachname: string } | null }) {
@@ -128,25 +116,13 @@ export async function AnsichtFinanzen({ variante, heute }: { variante: "voll" | 
   // ---------------------------------------------------------------- Verlauf (nur Geschäftsführung)
   const eingaenge = eingangRes.data ?? [];
   const gestellt = gestelltRes.data ?? [];
-  const monate = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date(Date.UTC(jahr, monat - 6 + i, 1));
-    const schluessel = d.toISOString().slice(0, 7);
-    return {
-      schluessel,
-      label: d.toLocaleDateString("de-DE", { month: "short", timeZone: "UTC" }).replace(".", ""),
-      gestellt: gestellt.filter((r) => r.rechnungsdatum.startsWith(schluessel)).reduce((s, r) => s + Number(r.betrag_brutto ?? 0), 0),
-      eingang: eingaenge.filter((z) => z.datum.startsWith(schluessel)).reduce((s, z) => s + Number(z.betrag ?? 0), 0),
-    };
-  });
+  const monate = monatsWerte(heute, 6, gestellt, eingaenge);
   const dieserMonat = monate[monate.length - 1];
   const eingangVormonatGleicherStand = eingaenge
     .filter((z) => z.datum >= vormonatBeginn && z.datum <= vormonatStichtag)
     .reduce((s, z) => s + Number(z.betrag ?? 0), 0);
   const veraenderung =
     eingangVormonatGleicherStand > 0 ? ((dieserMonat.eingang - eingangVormonatGleicherStand) / eingangVormonatGleicherStand) * 100 : null;
-  const achsenMax = schoeneObergrenze(Math.max(...monate.map((m) => Math.max(m.gestellt, m.eingang))));
-  const summeEingang = monate.reduce((s, m) => s + m.eingang, 0);
-  const summeGestellt = monate.reduce((s, m) => s + m.gestellt, 0);
 
   // ---------------------------------------------------------------- Bausteine
   const ueberfaelligKarte = (
@@ -348,58 +324,7 @@ export async function AnsichtFinanzen({ variante, heute }: { variante: "voll" | 
           className="xl:col-span-2"
           inhaltClassName="px-5 pb-5"
         >
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-13">
-            <span className="inline-flex items-center gap-2 text-foreground-secondary">
-              <i className="h-2.5 w-2.5 rounded-sm bg-[#C9D6FA]" aria-hidden="true" /> Gestellt
-              <span className="font-semibold tabular-nums text-foreground">{formatEuro(summeGestellt)}</span>
-            </span>
-            <span className="inline-flex items-center gap-2 text-foreground-secondary">
-              <i className="h-2.5 w-2.5 rounded-sm" style={{ background: AKZENT.blau }} aria-hidden="true" /> Eingegangen
-              <span className="font-semibold tabular-nums text-foreground">{formatEuro(summeEingang)}</span>
-            </span>
-          </div>
-          <div
-            className="mt-5 grid grid-cols-[56px_minmax(0,1fr)] gap-3"
-            role="img"
-            aria-label={`Gestellte und eingegangene Beträge der letzten sechs Monate: gestellt ${formatEuro(summeGestellt)}, eingegangen ${formatEuro(summeEingang)}`}
-          >
-            <div className="relative h-[240px] text-right text-[11px] tabular-nums text-foreground-tertiary">
-              {[1, 0.75, 0.5, 0.25, 0].map((f) => (
-                <span key={f} className="absolute right-0 -translate-y-1/2" style={{ top: `${(1 - f) * 100}%` }}>
-                  {euroKurz(achsenMax * f)}
-                </span>
-              ))}
-            </div>
-            <div className="relative h-[240px]">
-              {[0, 0.25, 0.5, 0.75, 1].map((f) => (
-                <span key={f} className="absolute inset-x-0 border-t border-dashed border-border" style={{ top: `${f * 100}%` }} aria-hidden="true" />
-              ))}
-              <div className="absolute inset-0 grid grid-cols-6 items-end gap-3">
-                {monate.map((m) => (
-                  <div key={m.schluessel} className="flex h-full items-end justify-center gap-1.5">
-                    <span
-                      className="w-4 rounded-t-[4px] bg-[#C9D6FA]"
-                      style={{ height: `${(m.gestellt / achsenMax) * 100}%` }}
-                      title={`${m.label}: gestellt ${formatEuro(m.gestellt)}`}
-                    />
-                    <span
-                      className="w-4 rounded-t-[4px]"
-                      style={{ height: `${(m.eingang / achsenMax) * 100}%`, background: AKZENT.blau }}
-                      title={`${m.label}: eingegangen ${formatEuro(m.eingang)}`}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-            <span />
-            <div className="grid grid-cols-6 gap-3 text-center text-xs text-foreground-tertiary">
-              {monate.map((m) => (
-                <span key={m.schluessel} className={m === dieserMonat ? "font-semibold text-foreground" : undefined}>
-                  {m.label}
-                </span>
-              ))}
-            </div>
-          </div>
+          <Monatsverlauf monate={monate} />
         </Karte>
 
         {ueberfaelligKarte}
@@ -425,10 +350,10 @@ export async function AnsichtFinanzen({ variante, heute }: { variante: "voll" | 
                     </span>
                     <span className="block truncate text-xs text-foreground-secondary">
                       {z.rechnung?.nummer ? `${z.rechnung.nummer} · ` : ""}
-                      {ZAHLART[z.art] ?? z.art}
+                      {ZAHLARTEN[z.art] ?? z.art}
                     </span>
                   </span>
-                  <span className="shrink-0 text-13 font-semibold tabular-nums text-success-text">+{formatEuro(Number(z.betrag))}</span>
+                  <span className="shrink-0 text-13 font-semibold tabular-nums text-foreground">{formatEuro(Number(z.betrag))}</span>
                 </li>
               ))}
             </ul>
