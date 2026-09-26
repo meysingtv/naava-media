@@ -226,7 +226,7 @@ export default function OnlineDuellSeite() {
           {offenerCode ? (
             <View style={{ alignItems: "center", gap: abstand(3), padding: abstand(5), borderRadius: radius.l, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.orangeLinie }}>
               <T v="mini">Dein Duell-Code</T>
-              <T v="display" style={{ letterSpacing: 6, fontFamily: schrift.titel }}>
+              <T v="display" style={{ letterSpacing: 6, ...schrift.titel }}>
                 {offenerCode}
               </T>
               <Pressable

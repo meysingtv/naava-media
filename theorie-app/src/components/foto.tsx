@@ -83,14 +83,14 @@ export function FotoKachel({
   hintergrund?: ReactNode;
 }) {
   const text = (
-    <View style={{ flex: 1, padding: abstand(3), justifyContent: "space-between" }}>
+    <View style={{ flex: 1, padding: 13, justifyContent: "space-between" }}>
       <View style={{ flexDirection: "row" }}>{oben}</View>
       <View>
-        <T v="h3" style={{ fontSize: 17.5, lineHeight: 22, letterSpacing: -0.3, textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 6 }} numberOfLines={1} >
+        <T v="h3" passend style={{ fontSize: 18, lineHeight: 22, letterSpacing: -0.3, textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 6 }}>
           {titel}
         </T>
         <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(1.5) }}>
-          <T v="klein" farbe="#E4E6EA" style={{ flex: 1, fontSize: 12.5, textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 4 }} numberOfLines={1}>
+          <T v="klein" farbe="#E9EBEE" passend style={{ flex: 1, fontSize: 13.5, lineHeight: 18, textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 4 }}>
             {unter}
           </T>
           <PfeilKreis groesse={28} />
@@ -100,7 +100,7 @@ export function FotoKachel({
   );
   if (quelle) {
     return (
-      <FotoFlaeche quelle={quelle} onPress={onPress} style={{ flex: 1, height: 132 }}>
+      <FotoFlaeche quelle={quelle} onPress={onPress} style={{ flex: 1, height: 131, borderRadius: 16 }}>
         {hintergrund}
         {text}
       </FotoFlaeche>
@@ -114,8 +114,8 @@ export function FotoKachel({
       }}
       style={({ pressed }) => ({
         flex: 1,
-        height: 132,
-        borderRadius: 20,
+        height: 131,
+        borderRadius: 16,
         overflow: "hidden",
         backgroundColor: farben.flaeche,
         borderWidth: 1,
@@ -162,7 +162,7 @@ export function LeuchtSaeulen({ hoehe = 84 }: { hoehe?: number }) {
 export type KategorieId = ThemaId | "grundstoff";
 
 function Kreis({ children }: { children: ReactNode }) {
-  return <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: "#22252B", alignItems: "center", justifyContent: "center" }}>{children}</View>;
+  return <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: "#23262C", alignItems: "center", justifyContent: "center" }}>{children}</View>;
 }
 
 /** Symbol einer Kategorie – Zeichen, wo es eins gibt, sonst ein ruhiges Icon. */
@@ -171,37 +171,37 @@ export function KategorieIcon({ id }: { id: KategorieId }) {
     case "grundstoff":
       return (
         <Kreis>
-          <Ionicons name="school-outline" size={27} color={farben.text2} />
+          <Ionicons name="school-outline" size={28} color="#E4E6EA" />
         </Kreis>
       );
     case "gefahren":
-      return <Ionicons name="warning-outline" size={46} color={farben.orange} />;
+      return <Ionicons name="warning-outline" size={42} color={farben.orange} />;
     case "vorfahrt":
-      return <Verkehrszeichen zeichen="z306" groesse={50} />;
+      return <Verkehrszeichen zeichen="z306" groesse={46} />;
     case "zeichen":
-      return <Verkehrszeichen zeichen="z101" groesse={50} />;
+      return <Verkehrszeichen zeichen="z101" groesse={46} />;
     case "umwelt":
       return (
         <Kreis>
-          <Ionicons name="leaf" size={27} color={farben.gruen} />
+          <Ionicons name="leaf" size={28} color={farben.gruen} />
         </Kreis>
       );
     case "technik":
       return (
         <Kreis>
-          <Ionicons name="settings" size={27} color="#A7ACB4" />
+          <Ionicons name="settings" size={30} color="#B4B9C1" />
         </Kreis>
       );
     case "manoever":
       return (
         <Kreis>
-          <Ionicons name="walk" size={28} color="#A7ACB4" />
+          <MaterialCommunityIcons name="human-cane" size={32} color="#B4B9C1" />
         </Kreis>
       );
     case "tempo":
       return (
         <Kreis>
-          <Ionicons name="speedometer" size={26} color={farben.orange} />
+          <Ionicons name="speedometer" size={28} color={farben.orange} />
         </Kreis>
       );
     case "parken":
@@ -215,13 +215,13 @@ export function KategorieIcon({ id }: { id: KategorieId }) {
     case "mensch":
       return (
         <Kreis>
-          <Ionicons name="person" size={24} color="#A7ACB4" />
+          <Ionicons name="person" size={26} color="#B4B9C1" />
         </Kreis>
       );
     case "zahlen":
       return (
         <Kreis>
-          <Ionicons name="calculator" size={25} color={farben.gelb} />
+          <Ionicons name="calculator" size={27} color={farben.gelb} />
         </Kreis>
       );
   }
@@ -250,8 +250,8 @@ export function KategorieZeile({
         onPress();
       }}
       style={({ pressed }) => ({
-        height: 94,
-        borderRadius: 18,
+        height: 81,
+        borderRadius: 14,
         overflow: "hidden",
         backgroundColor: farben.flaeche,
         borderWidth: 1,
@@ -269,33 +269,33 @@ export function KategorieZeile({
         end={{ x: 1, y: 0.5 }}
         style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "62%" }}
       />
-      <View style={{ width: 80, alignItems: "center", justifyContent: "center" }}>
+      <View style={{ width: 74, alignItems: "center", justifyContent: "center" }}>
         <KategorieIcon id={id} />
       </View>
-      <View style={{ flex: 1, paddingRight: 64, gap: 3 }}>
-        <T v="h3" numberOfLines={1} style={{ fontSize: 17, textShadowColor: "rgba(0,0,0,0.7)", textShadowRadius: 6 }}>
+      <View style={{ flex: 1, paddingRight: 56 }}>
+        <T v="h3" numberOfLines={1} style={{ fontSize: 17, lineHeight: 21, ...schrift.textHalb, textShadowColor: "rgba(0,0,0,0.7)", textShadowRadius: 6 }}>
           {titel}
         </T>
-        <T v="klein" farbe={farben.text2} style={{ fontFamily: schrift.textMittel }}>
+        <T v="klein" farbe={farben.text2} style={{ ...schrift.text, fontSize: 14, lineHeight: 18, marginTop: 1 }}>
           {anzahl === 1 ? "1 Frage" : `${anzahl} Fragen`}
         </T>
-        <View style={{ width: "78%", marginTop: 6 }}>
+        <View style={{ width: 118, marginTop: 7 }}>
           <Balken wert={anteil} hoehe={7} hintergrund="rgba(255,255,255,0.13)" />
         </View>
       </View>
       <View
         style={{
           position: "absolute",
-          right: 12,
-          width: 34,
-          height: 34,
-          borderRadius: 17,
+          right: 10,
+          width: 32,
+          height: 32,
+          borderRadius: 16,
           backgroundColor: "rgba(0,0,0,0.5)",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <Ionicons name="chevron-forward" size={19} color="#FFFFFF" />
+        <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
       </View>
     </Pressable>
   );

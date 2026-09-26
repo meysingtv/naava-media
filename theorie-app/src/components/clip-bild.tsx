@@ -4,7 +4,7 @@ import Svg, { Circle, G, Line, Rect, Text as SvgText } from "react-native-svg";
 
 import type { ClipBildKey } from "@/lib/clips";
 import type { LeuchteKey } from "@/lib/fragen";
-import { farben, schrift } from "@/lib/theme";
+import { farben, schrift, svgSchrift } from "@/lib/theme";
 import { ANDERE, ASPHALT, Auto, DU, GEHWEG, GRUND, Kreuzung, MARKIERUNG, NEUTRAL, RAND, Radfahrer } from "./lagen";
 import { Kontrollleuchte, LEUCHTE_NAME } from "./leuchten";
 
@@ -91,7 +91,7 @@ function Leuchten({ breite, aktiv }: { breite: number; aktiv: boolean }) {
               <Kontrollleuchte leuchte={l} groesse={g} />
             </Animated.View>
           </View>
-          <Text style={{ fontFamily: schrift.textHalb, fontSize: 11, color: farben.text3, marginTop: 2 }} numberOfLines={1}>
+          <Text style={{ ...schrift.textHalb, fontSize: 11, color: farben.text3, marginTop: 2 }} numberOfLines={1}>
             {LEUCHTE_NAME[l]}
           </Text>
         </View>
@@ -148,7 +148,7 @@ function Anhalteweg({ breite, aktiv }: { breite: number; aktiv: boolean }) {
         width: 80,
         top: 58 * k,
         textAlign: "center",
-        fontFamily: schrift.titelFett,
+        ...schrift.titelFett,
         fontSize: 13,
         color: farbe,
         opacity: v.interpolate({ inputRange: [ab, ab + 0.08], outputRange: [0, 1], extrapolate: "clamp" }),
@@ -167,10 +167,10 @@ function Anhalteweg({ breite, aktiv }: { breite: number; aktiv: boolean }) {
         <Line x1={0} y1={150} x2={SB} y2={150} stroke={MARKIERUNG} strokeWidth={2} strokeDasharray="12 10" />
         <Line x1={start} y1={80} x2={start} y2={110} stroke={farben.text3} strokeWidth={1.5} />
         <Line x1={start + reaktion + bremsen} y1={80} x2={start + reaktion + bremsen} y2={110} stroke={farben.text3} strokeWidth={1.5} />
-        <SvgText x={start} y={206} fill={farben.text3} fontSize={11} fontFamily={schrift.textHalb} textAnchor="middle">
+        <SvgText x={start} y={206} fill={farben.text3} fontSize={11} fontFamily={svgSchrift.text} textAnchor="middle">
           Gefahr erkannt
         </SvgText>
-        <SvgText x={start + reaktion + bremsen} y={206} fill={farben.text3} fontSize={11} fontFamily={schrift.textHalb} textAnchor="middle">
+        <SvgText x={start + reaktion + bremsen} y={206} fill={farben.text3} fontSize={11} fontFamily={svgSchrift.text} textAnchor="middle">
           Stillstand
         </SvgText>
       </Szene>
@@ -298,10 +298,10 @@ function Abstand({ breite, aktiv }: { breite: number; aktiv: boolean }) {
         <Line x1={86} y1={70} x2={210} y2={70} stroke={farben.orange} strokeWidth={2} />
         <Line x1={86} y1={63} x2={86} y2={77} stroke={farben.orange} strokeWidth={2} />
         <Line x1={210} y1={63} x2={210} y2={77} stroke={farben.orange} strokeWidth={2} />
-        <SvgText x={148} y={56} fill={farben.orange} fontSize={16} fontFamily={schrift.schild} fontWeight="800" textAnchor="middle">
+        <SvgText x={148} y={56} fill={farben.orange} fontSize={16} fontFamily={svgSchrift.schild} fontWeight="800" textAnchor="middle">
           50 m
         </SvgText>
-        <SvgText x={62} y={210} fill={farben.text3} fontSize={11} fontFamily={schrift.textHalb} textAnchor="middle">
+        <SvgText x={62} y={210} fill={farben.text3} fontSize={11} fontFamily={svgSchrift.text} textAnchor="middle">
           100 km/h
         </SvgText>
       </Szene>
@@ -345,7 +345,7 @@ function Schulbus({ breite, aktiv }: { breite: number; aktiv: boolean }) {
         <Line x1={0} y1={110} x2={SB} y2={110} stroke={MARKIERUNG} strokeWidth={2} strokeDasharray="12 10" />
         <Line x1={262} y1={186} x2={262} y2={170} stroke="#AEB6C8" strokeWidth={2} />
         <Circle cx={262} cy={164} r={10} fill={farben.schildGelb} stroke="#1E7F4F" strokeWidth={2} />
-        <SvgText x={262} y={168.5} fill="#1E7F4F" fontSize={12} fontFamily={schrift.schild} fontWeight="800" textAnchor="middle">
+        <SvgText x={262} y={168.5} fill="#1E7F4F" fontSize={12} fontFamily={svgSchrift.schild} fontWeight="800" textAnchor="middle">
           H
         </SvgText>
         <Rect x={168} y={115} width={112} height={31} rx={6} fill="#FFC857" />
@@ -395,7 +395,7 @@ function Radabstand({ breite, aktiv }: { breite: number; aktiv: boolean }) {
       </Szene>
       <Animated.View pointerEvents="none" style={{ position: "absolute", left: 150 * k - 34, top: 128 * k, alignItems: "center", opacity: sichtbar }}>
         <View style={{ width: 2, height: 36 * k, backgroundColor: farben.orange }} />
-        <Text style={{ position: "absolute", left: 10, top: 10 * k, fontFamily: schrift.titel, fontSize: 15, color: farben.orange }}>1,5 m</Text>
+        <Text style={{ position: "absolute", left: 10, top: 10 * k, ...schrift.titel, fontSize: 15, color: farben.orange }}>1,5 m</Text>
       </Animated.View>
       <Fahrzeug k={k} farbe={ANDERE} rad winkel={90} x={radX} y={170 * k - g / 2} />
       <Fahrzeug k={k} farbe={DU} winkel={90} x={autoX} y={122 * k - g / 2} />

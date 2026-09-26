@@ -227,7 +227,7 @@ export default function Duell() {
       <View style={{ marginHorizontal: RAND, marginTop: abstand(2), padding: abstand(4), borderRadius: radius.l, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie, gap: abstand(4) }}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Seite name={ichName} punkte={punkte.ich} status={aufgedeckt ? (meins ? "richtig" : "falsch") : gesperrt ? "abgegeben" : "am Zug"} />
-          <T v="h3" farbe={farben.orange} style={{ fontFamily: schrift.titel, marginHorizontal: abstand(2) }}>
+          <T v="h3" farbe={farben.orange} style={{ ...schrift.titel, marginHorizontal: abstand(2) }}>
             VS
           </T>
           <Seite

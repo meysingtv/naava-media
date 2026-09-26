@@ -75,7 +75,7 @@ export default function Willkommen() {
                 hitSlop={8}
                 style={{ alignSelf: "center", paddingVertical: abstand(2) }}
               >
-                <T v="klein" farbe={farben.text2} style={{ fontFamily: schrift.textHalb }}>
+                <T v="klein" farbe={farben.text2} style={{ ...schrift.textHalb }}>
                   Erst mal ohne Konto umschauen
                 </T>
               </Pressable>

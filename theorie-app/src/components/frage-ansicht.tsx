@@ -16,9 +16,9 @@ function Auswahlkreis({ zustand }: { zustand: Zustand }) {
   return (
     <View
       style={{
-        width: 26,
-        height: 26,
-        borderRadius: 13,
+        width: 22,
+        height: 22,
+        borderRadius: 11,
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: gefuellt ? farbe : "transparent",
@@ -27,9 +27,9 @@ function Auswahlkreis({ zustand }: { zustand: Zustand }) {
       }}
     >
       {zustand === "falsch" ? (
-        <Ionicons name="close" size={17} color="#FFFFFF" />
+        <Ionicons name="close" size={15} color="#FFFFFF" />
       ) : gefuellt || zustand === "verpasst" ? (
-        <Ionicons name="checkmark" size={zustand === "verpasst" ? 15 : 17} color={gefuellt ? "#FFFFFF" : farben.gruen} />
+        <Ionicons name="checkmark" size={zustand === "verpasst" ? 13 : 15} color={gefuellt ? "#FFFFFF" : farben.gruen} />
       ) : null}
     </View>
   );
@@ -42,9 +42,9 @@ export function Rueckmeldung({ richtig, text }: { richtig: boolean; text: string
     <View
       style={{
         flexDirection: "row",
-        gap: abstand(3.5),
-        padding: abstand(4),
-        borderRadius: 18,
+        gap: 12,
+        padding: 13,
+        borderRadius: 14,
         backgroundColor: richtig ? farben.gruenDunkel : "#2A1615",
         borderWidth: 1,
         borderColor: farbe + "55",
@@ -52,9 +52,9 @@ export function Rueckmeldung({ richtig, text }: { richtig: boolean; text: string
     >
       <View
         style={{
-          width: 46,
-          height: 46,
-          borderRadius: 23,
+          width: 34,
+          height: 34,
+          borderRadius: 17,
           backgroundColor: farbe,
           alignItems: "center",
           justifyContent: "center",
@@ -64,13 +64,13 @@ export function Rueckmeldung({ richtig, text }: { richtig: boolean; text: string
           shadowOffset: { width: 0, height: 0 },
         }}
       >
-        <Ionicons name={richtig ? "checkmark" : "close"} size={28} color="#FFFFFF" />
+        <Ionicons name={richtig ? "checkmark" : "close"} size={22} color="#FFFFFF" />
       </View>
-      <View style={{ flex: 1, gap: 4 }}>
-        <T v="h3" farbe={farbe} style={{ fontSize: 19 }}>
+      <View style={{ flex: 1, gap: 3 }}>
+        <T v="h3" farbe={farbe} style={{ fontSize: 17, lineHeight: 21 }}>
           {richtig ? "Richtig!" : "Leider falsch"}
         </T>
-        <T v="text" farbe={farben.text} style={{ lineHeight: 21 }}>
+        <T v="text" farbe={farben.text} style={{ fontSize: 14, lineHeight: 19 }}>
           {text}
         </T>
       </View>
@@ -107,10 +107,11 @@ export function FrageAnsicht({
 }) {
   const thema = themaVon(frage.thema);
   const mitBild = Boolean(frage.bild) || !kompakt;
-  const metaZeigen = !ohneMeta && (Boolean(frage.bild) || kompakt);
+  // Wie in der Vorlage: über der Frage nur das Bild. Thema und Punkte nur im Duell (ohne Bild).
+  const metaZeigen = !ohneMeta && Boolean(kompakt) && !frage.bild;
 
   return (
-    <View style={{ gap: abstand(4) }}>
+    <View style={{ gap: 16 }}>
       {mitBild ? <FrageBild bild={frage.bild} thema={frage.thema} punkte={frage.punkte} kompakt={kompakt} /> : null}
 
       <View style={{ gap: abstand(1.5) }}>
@@ -119,18 +120,13 @@ export function FrageAnsicht({
             {thema.titel} · {frage.punkte} Punkte
           </T>
         ) : null}
-        <T v="h2" style={{ fontSize: 21, lineHeight: 28 }}>
+        <T v="h2" style={{ fontSize: 18.5, lineHeight: 25 }}>
           {frage.text}
         </T>
-        {frage.art === "auswahl" && !aufgedeckt ? (
-          <T v="klein" style={{ fontSize: 12.5 }}>
-            Eine oder mehrere Antworten können richtig sein.
-          </T>
-        ) : null}
       </View>
 
       {frage.art === "auswahl" ? (
-        <View style={{ gap: abstand(2.5) }}>
+        <View style={{ gap: 7 }}>
           {frage.antworten.map((antwort, i) => {
             const gewaehlt = auswahl.includes(i);
             let zustand: Zustand = gewaehlt ? "gewaehlt" : "offen";
@@ -156,20 +152,20 @@ export function FrageAnsicht({
                 style={({ pressed }) => ({
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: abstand(3.5),
-                  minHeight: 58,
-                  paddingVertical: abstand(3.5),
-                  paddingHorizontal: abstand(4),
-                  borderRadius: 14,
+                  gap: 13,
+                  minHeight: 47,
+                  paddingVertical: 11,
+                  paddingHorizontal: 13,
+                  borderRadius: 11,
                   borderWidth: 1.5,
                   borderColor: rand,
                   backgroundColor: flaeche,
-                  opacity: zustand === "aus" ? 0.55 : pressed ? 0.85 : 1,
+                  opacity: pressed ? 0.85 : 1,
                   ...(zustand === "richtig" ? { shadowColor: farben.gruen, shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } } : null),
                 })}
               >
                 <Auswahlkreis zustand={zustand} />
-                <T v="textStark" style={{ flex: 1, fontFamily: schrift.textMittel, fontSize: 16, lineHeight: 22 }}>
+                <T v="textStark" style={{ flex: 1, ...schrift.text, fontSize: 15.5, lineHeight: 21 }}>
                   {antwort.text}
                 </T>
               </Pressable>
@@ -223,7 +219,7 @@ function ZahlEingabe({
           placeholder="0"
           placeholderTextColor={farben.text4}
           selectionColor={farben.orange}
-          style={{ flex: 1, fontFamily: schrift.titel, fontSize: 36, color: farben.text, fontVariant: ["tabular-nums"] }}
+          style={{ flex: 1, ...schrift.titel, fontSize: 36, color: farben.text, fontVariant: ["tabular-nums"] }}
         />
         <T v="h3" farbe={farben.text3}>
           {frage.einheit}

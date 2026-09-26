@@ -32,7 +32,7 @@ function Formel({ titel, formel, rechnung, ergebnis }: { titel: string; formel: 
   return (
     <Karte style={{ gap: abstand(2) }}>
       <T v="mini">{titel}</T>
-      <T v="h2" farbe={farben.orange} style={{ fontFamily: schrift.titel }}>
+      <T v="h2" farbe={farben.orange} style={{ ...schrift.titel }}>
         {formel}
       </T>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>

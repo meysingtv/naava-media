@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Animated, Easing, Text, View } from "react-native";
 import Svg, { Circle, Polygon, Rect } from "react-native-svg";
 
-import { farben, schrift } from "@/lib/theme";
+import { farben, svgSchrift } from "@/lib/theme";
 
 const AnimCircle = Animated.createAnimatedComponent(Circle);
 
@@ -22,7 +22,7 @@ export function Logo({ groesse = 28, mitText = true }: { groesse?: number; mitTe
         <Polygon points="49.1,41 50.9,41 50.7,33 49.3,33" fill={farben.orange} />
       </Svg>
       {mitText ? (
-        <Text style={{ fontFamily: schrift.schild, fontSize: groesse * 0.82, color: farben.text, letterSpacing: -0.6 }}>spur</Text>
+        <Text style={{ fontFamily: svgSchrift.schild, fontSize: groesse * 0.82, color: farben.text, letterSpacing: -0.6 }}>spur</Text>
       ) : null}
     </View>
   );

@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Abschnitt, Gruppe, Knopf, KopfTaste, T, Zeile, type IconName } from "@/components/ui";
+import { Abschnitt, Gruppe, Knopf, KopfTaste, T, Zeile, type IconName, kopfOben } from "@/components/ui";
 import { FotoFlaeche } from "@/components/foto";
 import { Ring } from "@/components/grafik";
 import { INHALT_UNTEN } from "@/components/tab-leiste";
@@ -43,7 +43,7 @@ export default function Pruefen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <View style={{ paddingTop: insets.top + abstand(1.5), paddingHorizontal: RAND - 8 }}>
+      <View style={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND - 8, paddingBottom: abstand(1) }}>
         <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center" }}>
           <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
             <T v="h3" style={{ fontSize: 19 }}>

@@ -230,7 +230,7 @@ export default function Registrieren() {
               textContentType="newPassword"
             />
             {fehler ? (
-              <T v="klein" farbe={farben.rot} style={{ fontFamily: schrift.textHalb }}>
+              <T v="klein" farbe={farben.rot} style={{ ...schrift.textHalb }}>
                 {fehler}
               </T>
             ) : null}

@@ -32,7 +32,7 @@ function Punkt({ text, index, aktiv }: { text: string; index: number; aktiv: boo
       }}
     >
       <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center", marginTop: 1 }}>
-        <T v="klein" farbe={farben.orange} style={{ fontFamily: schrift.textFett, fontSize: 12 }}>
+        <T v="klein" farbe={farben.orange} style={{ ...schrift.textFett, fontSize: 12 }}>
           {index + 1}
         </T>
       </View>
@@ -69,7 +69,7 @@ function Aktion({ icon, aktiv, farbe, text, onPress, label }: { icon: keyof type
     >
       <Ionicons name={icon} size={20} color={aktiv ? farbe ?? farben.orange : farben.text2} />
       {text ? (
-        <T v="klein" farbe={aktiv ? farbe ?? farben.orange : farben.text2} style={{ fontFamily: schrift.textHalb, fontVariant: ["tabular-nums"] }}>
+        <T v="klein" farbe={aktiv ? farbe ?? farben.orange : farben.text2} style={{ ...schrift.textHalb, fontVariant: ["tabular-nums"] }}>
           {text}
         </T>
       ) : null}

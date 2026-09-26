@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Eingabe, Knopf, KopfTaste, Segment, T } from "@/components/ui";
+import { Eingabe, Knopf, KopfTaste, Segment, T, kopfOben } from "@/components/ui";
 import { KategorieZeile } from "@/components/foto";
 import { INHALT_UNTEN } from "@/components/tab-leiste";
 import { Verkehrszeichen } from "@/components/zeichen";
@@ -100,7 +100,7 @@ export default function Lernen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <View style={{ paddingTop: insets.top + abstand(1.5), paddingHorizontal: RAND - 8 }}>
+      <View style={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND - 8, paddingBottom: abstand(1) }}>
         <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
             <T v="h3" style={{ fontSize: 19 }}>
@@ -114,7 +114,7 @@ export default function Lernen() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: INHALT_UNTEN, gap: abstand(3) }}
+        contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(1), paddingBottom: INHALT_UNTEN, gap: 9 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -143,7 +143,7 @@ export default function Lernen() {
                 { id: "favoriten", titel: "Favoriten" },
                 { id: "schwierige", titel: "Schwierige" },
               ]}
-              style={{ marginBottom: abstand(1) }}
+              style={{ marginBottom: 0 }}
             />
 
             {reiter === "kategorien" ? (

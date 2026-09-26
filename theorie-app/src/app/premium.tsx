@@ -43,7 +43,7 @@ export default function Premium() {
               <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center" }}>
                 <Ionicons name={v.icon} size={18} color={farben.orange} />
               </View>
-              <T v="textStark" style={{ flex: 1, fontFamily: schrift.textMittel }}>
+              <T v="textStark" style={{ flex: 1, ...schrift.textMittel }}>
                 {v.text}
               </T>
             </View>

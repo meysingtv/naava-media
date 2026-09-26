@@ -1,52 +1,66 @@
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Abschnitt, Avatar, Balken, Gruppe, KopfTaste, Segment, T, Zeile, type IconName } from "@/components/ui";
+import { Abschnitt, Avatar, Balken, Gruppe, KopfTaste, Saeulen, Segment, T, Zeile, kopfOben } from "@/components/ui";
 import { Ring } from "@/components/grafik";
 import { INHALT_UNTEN } from "@/components/tab-leiste";
 import { CLIPS } from "@/lib/clips";
 import { ERFOLGE } from "@/lib/erfolge";
-import { THEMEN, themaVon } from "@/lib/fragen";
+import { THEMEN, themaVon, type ThemaId } from "@/lib/fragen";
 import { tausender } from "@/lib/format";
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { auswertung, fortschritt, lernzeitText, serieAktuell, useStand, xpHeute, type Zeitraum } from "@/lib/stand";
 import { abstand, farben, quoteFarbe, RAND, schrift } from "@/lib/theme";
 
-function Kachel({ icon, farbe, wert, label }: { icon: IconName; farbe: string; wert: string; label: string }) {
+function Kachel({ symbol, wert, label }: { symbol: React.ReactNode; wert: string; label: string }) {
   return (
     <View
       style={{
         flex: 1,
         alignItems: "center",
-        gap: 3,
-        paddingVertical: abstand(4),
-        borderRadius: 18,
+        paddingVertical: 11,
+        borderRadius: 14,
         backgroundColor: farben.flaeche,
         borderWidth: 1,
         borderColor: farben.linieStark,
       }}
     >
-      <Ionicons name={icon} size={26} color={farbe} />
-      <T v="zahl" style={{ fontSize: 24, lineHeight: 29, marginTop: 2 }} numberOfLines={1}>
+      <View style={{ height: 26, justifyContent: "center" }}>{symbol}</View>
+      <T v="zahl" style={{ fontSize: 22, lineHeight: 27, marginTop: 3 }} numberOfLines={1}>
         {wert}
       </T>
-      <T v="klein" farbe={farben.text2} style={{ fontSize: 12.5 }} numberOfLines={1}>
+      <T v="klein" farbe={farben.text2} style={{ fontSize: 12.5, lineHeight: 16 }} numberOfLines={1}>
         {label}
       </T>
     </View>
   );
 }
 
-const PUNKTE_LABEL: Record<Zeitraum, string> = { woche: "Punkte Woche", monat: "Punkte Monat", gesamt: "Punkte gesamt" };
-const LEER_TEXT: Record<Zeitraum, string> = {
-  woche: "In den letzten 7 Tagen hast du noch keine Fragen beantwortet.",
-  monat: "In den letzten 30 Tagen hast du noch keine Fragen beantwortet.",
-  gesamt: "Beantworte ein paar Fragen – dann siehst du hier, was schon sitzt.",
-};
+/** Diese Bereiche stehen immer da – in der Reihenfolge der Vorlage. */
+const HAUPTBEREICHE: ThemaId[] = ["zeichen", "vorfahrt", "gefahren", "umwelt", "technik", "manoever"];
+
+/** Glühbirne mit weichem Lichtschein. */
+function Gluehbirne() {
+  return (
+    <View style={{ width: 36, height: 40, alignItems: "center", justifyContent: "center" }}>
+      <Svg width={56} height={56} style={{ position: "absolute", left: -10, top: -8 }}>
+        <Defs>
+          <RadialGradient id="schein" cx="50%" cy="45%" r="50%">
+            <Stop offset="0" stopColor={farben.gelb} stopOpacity={0.32} />
+            <Stop offset="1" stopColor={farben.gelb} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Circle cx={28} cy={26} r={26} fill="url(#schein)" />
+      </Svg>
+      <Ionicons name="bulb" size={32} color={farben.gelb} />
+    </View>
+  );
+}
 
 export default function MeinFortschritt() {
   const insets = useSafeAreaInsets();
@@ -56,8 +70,9 @@ export default function MeinFortschritt() {
 
   const gesamt = fortschritt(stand);
   const daten = auswertung(stand, zeitraum);
-  const reihenfolge = new Map(THEMEN.map((t, i) => [t.id, i]));
-  const themen = [...daten.themen].sort((a, b) => (reihenfolge.get(a.thema) ?? 0) - (reihenfolge.get(b.thema) ?? 0));
+  const quoten = new Map(daten.themen.map((t) => [t.thema, t.quote]));
+  const weitere = THEMEN.map((t) => t.id).filter((id) => !HAUPTBEREICHE.includes(id) && quoten.has(id));
+  const zeilen = [...HAUPTBEREICHE, ...weitere].map((thema) => ({ thema, quote: quoten.get(thema) ?? 0 }));
   const schwaechste = [...daten.themen].filter((t) => t.richtig + t.falsch >= 3).sort((a, b) => a.quote - b.quote)[0];
   const freigeschaltet = ERFOLGE.filter((e) => stand.erfolge[e.id]).length;
   const gemerkteClips = CLIPS.filter((c) => stand.clips.gemerkt.includes(c.id));
@@ -75,7 +90,7 @@ export default function MeinFortschritt() {
 
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <View style={{ paddingTop: insets.top + abstand(1.5), paddingHorizontal: RAND - 8 }}>
+      <View style={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND - 8, paddingBottom: abstand(1) }}>
         <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
             <T v="h3" style={{ fontSize: 19 }}>
@@ -83,13 +98,12 @@ export default function MeinFortschritt() {
             </T>
           </View>
           <KopfTaste icon="arrow-back" label="Zur Startseite" onPress={() => router.navigate("/heute")} />
-          <KopfTaste icon="settings-outline" label="Einstellungen" onPress={() => router.push("/einstellungen")} />
         </View>
       </View>
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: INHALT_UNTEN, gap: abstand(4) }}
+        contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(1), paddingBottom: INHALT_UNTEN, gap: 10 }}
         showsVerticalScrollIndicator={false}
       >
         <Segment<Zeitraum>
@@ -108,119 +122,100 @@ export default function MeinFortschritt() {
             flexDirection: "row",
             alignItems: "center",
             gap: abstand(3),
-            padding: abstand(5),
-            borderRadius: 22,
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            borderRadius: 16,
             backgroundColor: farben.flaeche,
             borderWidth: 1,
             borderColor: farben.linieStark,
           }}
         >
-          <View style={{ flex: 1, gap: abstand(1) }}>
-            <T v="h3" style={{ fontSize: 17 }}>
+          <View style={{ flex: 1 }}>
+            <T v="h3" style={{ fontSize: 16, lineHeight: 20, ...schrift.textHalb }}>
               Gesamtfortschritt
             </T>
-            <T v="display" style={{ fontSize: 46, lineHeight: 52, letterSpacing: -1.2 }}>
+            <T v="display" style={{ fontSize: 38, lineHeight: 45, letterSpacing: -0.8 }}>
               {Math.round(gesamt.anteil * 100)}%
             </T>
-            <View style={{ width: "92%", marginTop: abstand(1) }}>
-              <Balken wert={gesamt.anteil} hoehe={9} />
+            <View style={{ width: "90%", marginTop: 4 }}>
+              <Balken wert={gesamt.anteil} hoehe={8} />
             </View>
-            <T v="textStark" farbe={farben.text2} style={{ fontSize: 14.5, fontFamily: schrift.textMittel, marginTop: abstand(1) }}>
+            <T v="textStark" farbe={farben.text} style={{ fontSize: 15, lineHeight: 19, ...schrift.textMittel, marginTop: 10 }}>
               {gesamt.richtig} / {gesamt.gesamt} Fragen
             </T>
           </View>
-          <Ring anteil={gesamt.anteil} groesse={100} dicke={8}>
-            <Ionicons name="stats-chart" size={34} color={farben.orange} />
+          <Ring anteil={gesamt.anteil} groesse={76} dicke={7}>
+            <Saeulen groesse={28} />
           </Ring>
         </View>
 
         {/* Kennzahlen */}
-        <View style={{ flexDirection: "row", gap: abstand(2.5) }}>
-          <Kachel icon="flame" farbe={farben.orange} wert={String(serieAktuell(stand))} label="Tages-Streak" />
-          <Kachel icon="star" farbe={farben.gelb} wert={tausender(daten.xp)} label={PUNKTE_LABEL[zeitraum]} />
-          <Kachel icon="stats-chart" farbe={farben.orange} wert={lernzeitText(daten.sekunden)} label="Lernzeit" />
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <Kachel symbol={<MaterialCommunityIcons name="fire" size={26} color={farben.orange} />} wert={String(serieAktuell(stand))} label="Tages-Streak" />
+          <Kachel symbol={<Ionicons name="star" size={24} color={farben.gelb} />} wert={tausender(xpHeute(stand))} label="Punkte heute" />
+          <Kachel symbol={<Saeulen groesse={22} />} wert={lernzeitText(daten.sekunden)} label="Lernzeit" />
         </View>
-        {xpHeute(stand) > 0 ? (
-          <T v="klein" zentriert style={{ marginTop: -abstand(1) }}>
-            Heute: {tausender(xpHeute(stand))} Punkte
-          </T>
-        ) : null}
 
         {/* Stärken & Schwächen */}
-        <View style={{ marginTop: abstand(2) }}>
-          <T v="titel" style={{ fontSize: 22, marginBottom: abstand(3) }}>
+        <View style={{ marginTop: 4 }}>
+          <T v="titel" style={{ fontSize: 20, lineHeight: 25, marginBottom: 10 }}>
             Stärken & Schwächen
           </T>
-          <View style={{ padding: abstand(4), gap: abstand(3.5), borderRadius: 20, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
-            {themen.length === 0 ? (
-              <T v="text" zentriert style={{ paddingVertical: abstand(3) }}>
-                {LEER_TEXT[zeitraum]}
-              </T>
-            ) : (
-              themen.map((t) => (
-                <Pressable
-                  key={t.thema}
-                  onPress={() => {
-                    tippen();
-                    router.push({ pathname: "/thema/[id]", params: { id: t.thema } });
-                  }}
-                  style={{ flexDirection: "row", alignItems: "center", gap: abstand(3) }}
-                >
-                  <T v="textStark" numberOfLines={1} style={{ width: "38%", fontFamily: schrift.textMittel, fontSize: 14.5 }}>
-                    {themaVon(t.thema).titel}
-                  </T>
-                  <View style={{ flex: 1 }}>
-                    <Balken wert={t.quote} farbe={quoteFarbe(t.quote)} hoehe={14} hintergrund={farben.flaeche3} />
-                  </View>
-                  <T v="textStark" numberOfLines={1} style={{ width: 50, textAlign: "right", fontSize: 14.5, fontVariant: ["tabular-nums"] }}>
-                    {Math.round(t.quote * 100)}%
-                  </T>
-                </Pressable>
-              ))
-            )}
+          <View style={{ paddingVertical: 14, paddingHorizontal: 14, gap: 13, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
+            {zeilen.map((t) => (
+              <Pressable
+                key={t.thema}
+                onPress={() => {
+                  tippen();
+                  router.push({ pathname: "/thema/[id]", params: { id: t.thema } });
+                }}
+                style={{ flexDirection: "row", alignItems: "center", gap: abstand(3) }}
+              >
+                <T v="textStark" numberOfLines={1} style={{ width: "43%", ...schrift.text, fontSize: 14, lineHeight: 18 }}>
+                  {themaVon(t.thema).titel}
+                </T>
+                <View style={{ flex: 1 }}>
+                  <Balken wert={t.quote} farbe={quoteFarbe(t.quote)} hoehe={12} hintergrund={farben.flaeche3} />
+                </View>
+                <T v="textStark" numberOfLines={1} style={{ width: 40, textAlign: "right", ...schrift.textMittel, fontSize: 14, lineHeight: 18, fontVariant: ["tabular-nums"] }}>
+                  {Math.round(t.quote * 100)}%
+                </T>
+              </Pressable>
+            ))}
           </View>
         </View>
 
         {/* Tipp */}
-        <View
-          style={{
+        <Pressable
+          disabled={!schwaechste || schwaechste.quote >= 0.75}
+          onPress={() => {
+            if (!schwaechste) return;
+            tippen();
+            router.push({ pathname: "/training", params: { modus: "thema", thema: schwaechste.thema } });
+          }}
+          style={({ pressed }) => ({
             flexDirection: "row",
-            gap: abstand(3.5),
-            padding: abstand(4),
-            borderRadius: 20,
+            gap: 12,
+            padding: 14,
+            borderRadius: 14,
             backgroundColor: "#1D160F",
             borderWidth: 1,
             borderColor: "rgba(255,122,0,0.28)",
-          }}
+            opacity: pressed ? 0.85 : 1,
+          })}
         >
-          <View style={{ shadowColor: farben.gelb, shadowOpacity: 0.8, shadowRadius: 12, shadowOffset: { width: 0, height: 0 } }}>
-            <Ionicons name="bulb" size={34} color={farben.gelb} />
-          </View>
-          <View style={{ flex: 1, gap: 3 }}>
-            <T v="h3" farbe={farben.orange} style={{ fontSize: 16 }}>
+          <Gluehbirne />
+          <View style={{ flex: 1, gap: 2 }}>
+            <T v="h3" farbe={farben.orange} style={{ fontSize: 16, lineHeight: 20, ...schrift.textHalb }}>
               Tipp
             </T>
-            <T v="text" farbe={farben.text} style={{ fontSize: 14.5, lineHeight: 21 }}>
+            <T v="text" farbe={farben.text} style={{ fontSize: 14, lineHeight: 19 }}>
               {schwaechste && schwaechste.quote < 0.75
                 ? `Übe gezielt ${themaVon(schwaechste.thema).titel} – dort liegt deine Erfolgsquote erst bei ${Math.round(schwaechste.quote * 100)} %.`
                 : "Übe gezielt die Bereiche, in denen du noch schwächer bist, um deine Erfolgsquote zu erhöhen."}
             </T>
-            {schwaechste && schwaechste.quote < 0.75 ? (
-              <Pressable
-                onPress={() => {
-                  tippen();
-                  router.push({ pathname: "/training", params: { modus: "thema", thema: schwaechste.thema } });
-                }}
-                hitSlop={8}
-                style={{ marginTop: 4 }}
-              >
-                <T v="textStark" farbe={farben.orange} style={{ fontSize: 14 }}>
-                  Jetzt üben →
-                </T>
-              </Pressable>
-            ) : null}
           </View>
-        </View>
+        </Pressable>
 
         {/* Profil */}
         <View style={{ marginTop: abstand(4) }}>

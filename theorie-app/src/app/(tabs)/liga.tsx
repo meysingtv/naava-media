@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Abschnitt, Avatar, Chip, Eingabe, Gruppe, Karte, Knopf, KopfTaste, Segment, T, Zeile } from "@/components/ui";
+import { Abschnitt, Avatar, Chip, Eingabe, Gruppe, Karte, Knopf, kopfOben, KopfTaste, Segment, T, Zeile } from "@/components/ui";
 import { INHALT_UNTEN } from "@/components/tab-leiste";
 import { GEGNER } from "@/lib/duell";
 import { tausender } from "@/lib/format";
@@ -139,7 +139,7 @@ export default function Liga() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: farben.grund }}
-      contentContainerStyle={{ paddingTop: insets.top + abstand(1.5), paddingHorizontal: RAND, paddingBottom: INHALT_UNTEN, gap: abstand(5) }}
+      contentContainerStyle={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND, paddingBottom: INHALT_UNTEN, gap: abstand(4) }}
       keyboardShouldPersistTaps="handled"
     >
       <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginHorizontal: -8 }}>
@@ -226,7 +226,7 @@ export default function Liga() {
               </T>
               {gast ? (
                 <Pressable onPress={kontoErstellen} hitSlop={8}>
-                  <T v="klein" farbe={farben.orange} style={{ fontFamily: schrift.textHalb }}>
+                  <T v="klein" farbe={farben.orange} style={{ ...schrift.textHalb }}>
                     Konto erstellen
                   </T>
                 </Pressable>

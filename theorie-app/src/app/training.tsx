@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Abschnitt, Chip, Gruppe, Knopf, KopfTaste, Plakette, T, Zeile } from "@/components/ui";
+import { Abschnitt, Chip, Gruppe, Knopf, kopfOben, KopfTaste, Plakette, T, Zeile } from "@/components/ui";
 import { FrageAnsicht } from "@/components/frage-ansicht";
 import { Ring } from "@/components/grafik";
 import { antwortRichtig, frageVon, FRAGEN, fragenZuThema, istBildfrage, istZeichen, themaVon, zahlLesen, type ThemaId } from "@/lib/fragen";
@@ -196,14 +196,11 @@ export default function Training() {
   // ------------------------------------------------------------------ Frage
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <View style={{ paddingTop: insets.top + abstand(1.5), paddingHorizontal: RAND - 8, paddingBottom: abstand(3), gap: abstand(3) }}>
+      <View style={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND - 8, paddingBottom: abstand(3), gap: abstand(2.5) }}>
         <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
             <T v="h3" style={{ fontSize: 19, fontVariant: ["tabular-nums"] }}>
               Frage {index + 1}/{ids.length}
-            </T>
-            <T v="klein" numberOfLines={1} style={{ fontSize: 11.5, marginTop: -1 }}>
-              {titel}
             </T>
           </View>
           <KopfTaste icon="arrow-back" label="Training beenden" onPress={schliessen} />
@@ -214,7 +211,7 @@ export default function Training() {
             onPress={() => merken(frage.id)}
           />
         </View>
-        <View style={{ marginHorizontal: 8, height: 9, borderRadius: 5, backgroundColor: farben.flaeche3 }}>
+        <View style={{ marginHorizontal: 8, height: 10, borderRadius: 5, backgroundColor: farben.flaeche3 }}>
           <View
             style={{
               width: `${Math.max(4, ((index + (aufgedeckt ? 1 : 0)) / ids.length) * 100)}%`,

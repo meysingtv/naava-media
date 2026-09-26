@@ -60,13 +60,13 @@ export default function Anmelden() {
           />
         </View>
         {fehler ? (
-          <T v="klein" farbe={farben.rot} style={{ fontFamily: schrift.textHalb }}>
+          <T v="klein" farbe={farben.rot} style={{ ...schrift.textHalb }}>
             {fehler}
           </T>
         ) : null}
         <Knopf titel="Anmelden" laedt={laedt} deaktiviert={!email || !passwort} onPress={los} />
         <Pressable onPress={vergessen} hitSlop={8} style={{ alignSelf: "center", paddingVertical: abstand(2) }}>
-          <T v="klein" farbe={farben.text2} style={{ fontFamily: schrift.textHalb }}>
+          <T v="klein" farbe={farben.text2} style={{ ...schrift.textHalb }}>
             Passwort vergessen?
           </T>
         </Pressable>

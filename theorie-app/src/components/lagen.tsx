@@ -1,7 +1,7 @@
 import Svg, { Circle, Ellipse, G, Line, Path, Polygon, Rect, Text as SvgText } from "react-native-svg";
 
 import type { LageKey } from "@/lib/fragen";
-import { farben, schrift } from "@/lib/theme";
+import { farben, svgSchrift } from "@/lib/theme";
 import { ZeichenGrafik } from "./zeichen";
 
 // Lagepläne von oben (viewBox 300 × 220): du bist immer das blaue Auto,
@@ -189,7 +189,7 @@ function Rettungsgasse() {
         <Line x1={110} y1={0} x2={110} y2={220} />
         <Line x1={160} y1={0} x2={160} y2={220} />
       </G>
-      <SvgText x={233} y={116} fill="#5A6380" fontSize={9} fontFamily={schrift.textHalb} textAnchor="middle" transform="rotate(-90 233 112)">
+      <SvgText x={233} y={116} fill="#5A6380" fontSize={9} fontFamily={svgSchrift.text} textAnchor="middle" transform="rotate(-90 233 112)">
         Seitenstreifen
       </SvgText>
       {spuren.map((x) => (
@@ -228,7 +228,7 @@ function Schulbus() {
       {/* Haltestelle */}
       <Line x1={262} y1={186} x2={262} y2={170} stroke="#AEB6C8" strokeWidth={2} />
       <Circle cx={262} cy={164} r={10} fill={farben.schildGelb} stroke="#1E7F4F" strokeWidth={2} />
-      <SvgText x={262} y={168.5} fill="#1E7F4F" fontSize={12} fontFamily={schrift.schild} fontWeight="800" textAnchor="middle">
+      <SvgText x={262} y={168.5} fill="#1E7F4F" fontSize={12} fontFamily={svgSchrift.schild} fontWeight="800" textAnchor="middle">
         H
       </SvgText>
       {/* Bus mit Warnblinklicht */}

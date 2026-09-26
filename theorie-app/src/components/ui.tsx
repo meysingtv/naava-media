@@ -26,15 +26,15 @@ export type IconName = keyof typeof Ionicons.glyphMap;
 // ---------------------------------------------------------------------------
 
 const VARIANTEN = {
-  display: { fontFamily: schrift.titel, fontSize: 34, lineHeight: 40, letterSpacing: -0.9, color: farben.text },
-  titel: { fontFamily: schrift.titel, fontSize: 26, lineHeight: 31, letterSpacing: -0.6, color: farben.text },
-  h2: { fontFamily: schrift.titelFett, fontSize: 20, lineHeight: 25, letterSpacing: -0.35, color: farben.text },
-  h3: { fontFamily: schrift.titelFett, fontSize: 17, lineHeight: 22, letterSpacing: -0.2, color: farben.text },
-  text: { fontFamily: schrift.text, fontSize: 15, lineHeight: 22, color: farben.text2 },
-  textStark: { fontFamily: schrift.textHalb, fontSize: 15, lineHeight: 21, color: farben.text },
-  klein: { fontFamily: schrift.textMittel, fontSize: 13, lineHeight: 18, color: farben.text3 },
-  mini: { fontFamily: schrift.textHalb, fontSize: 11.5, lineHeight: 14, letterSpacing: 0.8, color: farben.text3, textTransform: "uppercase" },
-  zahl: { fontFamily: schrift.titel, fontSize: 28, lineHeight: 33, letterSpacing: -0.7, color: farben.text, fontVariant: ["tabular-nums"] },
+  display: { ...schrift.titel, fontSize: 32, lineHeight: 38, letterSpacing: -0.5, color: farben.text },
+  titel: { ...schrift.titel, fontSize: 24, lineHeight: 29, letterSpacing: -0.4, color: farben.text },
+  h2: { ...schrift.titelFett, fontSize: 19, lineHeight: 24, letterSpacing: -0.2, color: farben.text },
+  h3: { ...schrift.titelFett, fontSize: 17, lineHeight: 22, letterSpacing: -0.1, color: farben.text },
+  text: { ...schrift.text, fontSize: 15, lineHeight: 21, color: farben.text2 },
+  textStark: { ...schrift.textHalb, fontSize: 15, lineHeight: 20, color: farben.text },
+  klein: { ...schrift.textMittel, fontSize: 13, lineHeight: 17, color: farben.text3 },
+  mini: { ...schrift.textHalb, fontSize: 11.5, lineHeight: 14, letterSpacing: 0.8, color: farben.text3, textTransform: "uppercase" },
+  zahl: { ...schrift.titel, fontSize: 26, lineHeight: 30, letterSpacing: -0.4, color: farben.text, fontVariant: ["tabular-nums"] },
 } satisfies Record<string, TextStyle>;
 
 export type TextVariante = keyof typeof VARIANTEN;
@@ -47,6 +47,7 @@ export function T({
   children,
   numberOfLines,
   selectable,
+  passend,
 }: {
   v?: TextVariante;
   farbe?: string;
@@ -55,10 +56,14 @@ export function T({
   children: ReactNode;
   numberOfLines?: number;
   selectable?: boolean;
+  /** Einzeilig und bei Platzmangel leicht verkleinern statt abschneiden. */
+  passend?: boolean;
 }) {
   return (
     <Text
-      numberOfLines={numberOfLines}
+      numberOfLines={passend ? 1 : numberOfLines}
+      adjustsFontSizeToFit={passend}
+      minimumFontScale={passend ? 0.82 : undefined}
       selectable={selectable}
       style={[VARIANTEN[v], farbe ? { color: farbe } : null, zentriert ? { textAlign: "center" } : null, style]}
     >
@@ -84,7 +89,7 @@ export function Karte({
 }) {
   const basis: ViewStyle = {
     backgroundColor: farben.flaeche,
-    borderRadius: radius.l,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: hervorgehoben ? farben.orangeLinie : farben.linie,
     padding: abstand(4),
@@ -122,7 +127,7 @@ export function Abschnitt({
       {klein ? <T v="mini">{titel}</T> : <T v="h2" style={{ fontSize: 21 }}>{titel}</T>}
       {aktion && onAktion ? (
         <Pressable onPress={onAktion} hitSlop={10}>
-          <T v="klein" farbe={farben.orange} style={{ fontFamily: schrift.textHalb }}>
+          <T v="klein" farbe={farben.orange} style={{ ...schrift.textHalb }}>
             {aktion}
           </T>
         </Pressable>
@@ -159,8 +164,8 @@ export function Knopf({
   const hintergrund = { primaer: farben.orange, sekundaer: farben.flaeche2, geist: "transparent", gefahr: farben.rotSoft }[art];
   const vorder = { primaer: farben.aufOrange, sekundaer: farben.text, geist: farben.orange, gefahr: farben.rot }[art];
   const aus = deaktiviert || laedt;
-  const hoehe = klein ? 46 : 56;
-  const rund = klein ? 14 : 18;
+  const hoehe = klein ? 44 : 52;
+  const rund = klein ? 12 : 26;
   return (
     <Pressable
       onPress={() => {
@@ -201,7 +206,7 @@ export function Knopf({
         <ActivityIndicator color={vorder} />
       ) : (
         <>
-          <Text style={{ fontFamily: schrift.textFett, fontSize: klein ? 15 : 17, color: vorder, letterSpacing: -0.1 }}>{titel}</Text>
+          <Text style={{ ...schrift.textHalb, fontSize: klein ? 16 : 18, color: vorder }}>{titel}</Text>
           {icon ? <Ionicons name={icon} size={klein ? 17 : 19} color={vorder} /> : null}
         </>
       )}
@@ -228,7 +233,7 @@ export function Plakette({ icon, farbe = farben.orange, groesse = 40, gefuellt }
 }
 
 /** Weißes, abgerundetes Quadrat mit dunklem Symbol – wie auf den Foto-Kacheln. */
-export function IconQuadrat({ icon, groesse = 44, hell = true }: { icon: IconName; groesse?: number; hell?: boolean }) {
+export function IconQuadrat({ icon, groesse = 42, hell = true }: { icon: IconName; groesse?: number; hell?: boolean }) {
   return (
     <View
       style={{
@@ -247,8 +252,20 @@ export function IconQuadrat({ icon, groesse = 44, hell = true }: { icon: IconNam
   );
 }
 
+/** Drei ansteigende Säulen – das Statistik-Symbol der Vorlage. */
+export function Saeulen({ groesse = 22, farbe = farben.orange }: { groesse?: number; farbe?: string }) {
+  const b = Math.max(3, Math.round(groesse * 0.24));
+  return (
+    <View style={{ width: groesse, height: groesse, flexDirection: "row", alignItems: "flex-end", justifyContent: "center", gap: Math.max(2, Math.round(groesse * 0.1)) }}>
+      {[0.45, 0.72, 1].map((h, i) => (
+        <View key={i} style={{ width: b, height: groesse * h, borderRadius: b / 3, backgroundColor: farbe }} />
+      ))}
+    </View>
+  );
+}
+
 /** Kleiner oranger Kreis mit Pfeil – die „Los“-Taste auf Kacheln. */
-export function PfeilKreis({ groesse = 32 }: { groesse?: number }) {
+export function PfeilKreis({ groesse = 28 }: { groesse?: number }) {
   return (
     <View
       style={{
@@ -285,7 +302,7 @@ export function Chip({ text, farbe = farben.text2, icon, aktiv, onPress }: { tex
       }}
     >
       {icon ? <Ionicons name={icon} size={14} color={aktiv ? farben.aufOrange : farbe} /> : null}
-      <Text style={{ fontFamily: schrift.textHalb, fontSize: 13, color: aktiv ? farben.aufOrange : farbe }}>{text}</Text>
+      <Text style={{ ...schrift.textHalb, fontSize: 13, color: aktiv ? farben.aufOrange : farbe }}>{text}</Text>
     </View>
   );
   if (!onPress) return inhalt;
@@ -317,7 +334,7 @@ export function Segment<W extends string>({
   const [breite, setBreite] = useState(0);
   const index = Math.max(0, optionen.findIndex((o) => o.id === wert));
   const x = useRef(new Animated.Value(index)).current;
-  const teil = breite > 0 ? (breite - 8) / optionen.length : 0;
+  const teil = breite > 0 ? (breite - 6) / optionen.length : 0;
 
   useEffect(() => {
     Animated.spring(x, { toValue: index, useNativeDriver: true, damping: 20, stiffness: 220, mass: 0.7 }).start();
@@ -327,7 +344,7 @@ export function Segment<W extends string>({
     <View
       onLayout={(e) => setBreite(e.nativeEvent.layout.width)}
       style={[
-        { flexDirection: "row", height: 46, padding: 4, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie },
+        { flexDirection: "row", height: 40, padding: 3, borderRadius: 20, backgroundColor: "#1A1C20", borderWidth: 1, borderColor: farben.linie },
         style,
       ]}
     >
@@ -336,11 +353,11 @@ export function Segment<W extends string>({
           pointerEvents="none"
           style={{
             position: "absolute",
-            top: 4,
-            bottom: 4,
-            left: 4,
+            top: 3,
+            bottom: 3,
+            left: 3,
             width: teil,
-            borderRadius: 12,
+            borderRadius: 17,
             overflow: "hidden",
             transform: [{ translateX: x.interpolate({ inputRange: [0, 1], outputRange: [0, teil] }) }],
             shadowColor: farben.orange,
@@ -349,7 +366,7 @@ export function Segment<W extends string>({
             shadowOffset: { width: 0, height: 3 },
           }}
         >
-          <LinearGradient colors={[farben.orangeHell, farben.orange]} style={{ flex: 1, borderRadius: 12 }} />
+          <LinearGradient colors={[farben.orangeHell, farben.orange]} style={{ flex: 1, borderRadius: 17 }} />
         </Animated.View>
       ) : null}
       {optionen.map((o) => {
@@ -366,7 +383,7 @@ export function Segment<W extends string>({
             accessibilityState={{ selected: aktiv }}
             style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
           >
-            <Text style={{ fontFamily: aktiv ? schrift.textFett : schrift.textMittel, fontSize: 14.5, color: aktiv ? "#FFFFFF" : farben.text2 }}>{o.titel}</Text>
+            <Text style={{ ...(aktiv ? schrift.textHalb : schrift.text), fontSize: 15, color: aktiv ? "#FFFFFF" : farben.text2 }}>{o.titel}</Text>
           </Pressable>
         );
       })}
@@ -447,7 +464,7 @@ export function Zeile({
 export function Gruppe({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   const kinder = (Array.isArray(children) ? children : [children]).flat().filter(Boolean);
   return (
-    <View style={[{ backgroundColor: farben.flaeche, borderRadius: radius.l, borderWidth: 1, borderColor: farben.linie, overflow: "hidden" }, style]}>
+    <View style={[{ backgroundColor: farben.flaeche, borderRadius: 16, borderWidth: 1, borderColor: farben.linie, overflow: "hidden" }, style]}>
       {kinder.map((kind, i) => (
         <View key={i}>
           {i > 0 ? <View style={{ height: 1, backgroundColor: farben.linie, marginLeft: abstand(4) }} /> : null}
@@ -479,7 +496,7 @@ export function Avatar({ name, groesse = 44, farbe = farben.orange }: { name: st
         justifyContent: "center",
       }}
     >
-      <Text style={{ fontFamily: schrift.titel, fontSize: groesse * 0.38, color: farben.text }}>{kuerzel}</Text>
+      <Text style={{ ...schrift.titel, fontSize: groesse * 0.38, color: farben.text }}>{kuerzel}</Text>
     </View>
   );
 }
@@ -505,7 +522,7 @@ export function Eingabe({ icon, fehler, ...props }: TextInputProps & { icon?: Ic
         selectionColor={farben.orange}
         keyboardAppearance="dark"
         {...props}
-        style={[{ flex: 1, fontFamily: schrift.textMittel, fontSize: 16, color: farben.text, height: "100%" }, props.style]}
+        style={[{ flex: 1, ...schrift.textMittel, fontSize: 16, color: farben.text, height: "100%" }, props.style]}
       />
     </View>
   );
@@ -532,6 +549,11 @@ export function KopfTaste({ icon, onPress, label, farbe = farben.text }: { icon:
   );
 }
 
+/** Abstand der Kopfzeile von oben – knapp unter der Statusleiste wie in der Vorlage. */
+export function kopfOben(inset: number): number {
+  return Math.max(inset - 6, 10);
+}
+
 export function zurueck() {
   if (router.canGoBack()) router.back();
   else router.replace("/");
@@ -556,7 +578,7 @@ export function Kopf({
 }) {
   const insets = useSafeAreaInsets();
   return (
-    <View style={{ paddingTop: insets.top + abstand(1.5), paddingHorizontal: RAND - 8, paddingBottom: abstand(2), backgroundColor: farben.grund }}>
+    <View style={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND - 8, paddingBottom: abstand(1), backgroundColor: farben.grund }}>
       <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         {titel ? (
           <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>

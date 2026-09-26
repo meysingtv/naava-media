@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Abschnitt, Chip, Gruppe, Karte, Knopf, Kopf, KopfTaste, T, Zeile } from "@/components/ui";
+import { Abschnitt, Chip, Gruppe, Karte, Knopf, Kopf, kopfOben, KopfTaste, T, Zeile } from "@/components/ui";
 import { FrageAnsicht } from "@/components/frage-ansicht";
 import { Ring } from "@/components/grafik";
 import { antwortRichtig, frageVon, FRAGEN, THEMEN, themaVon, type Frage } from "@/lib/fragen";
@@ -196,7 +196,7 @@ export default function Pruefung() {
                 transform: [{ rotate: "-4deg" }],
               }}
             >
-              <T v="h2" farbe={ok ? farben.gruen : farben.rot} style={{ letterSpacing: 1.5, fontFamily: schrift.titel }}>
+              <T v="h2" farbe={ok ? farben.gruen : farben.rot} style={{ letterSpacing: 1.5, ...schrift.titel }}>
                 {ok ? "BESTANDEN" : "NICHT BESTANDEN"}
               </T>
             </View>
@@ -260,7 +260,7 @@ export default function Pruefung() {
 
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <View style={{ paddingTop: insets.top + abstand(1.5), paddingHorizontal: RAND - 8, gap: abstand(2.5) }}>
+      <View style={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND - 8, gap: abstand(2.5) }}>
         <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <View pointerEvents="none" style={{ position: "absolute", left: 70, right: 70, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
             <T v="h3" style={{ fontSize: 19, fontVariant: ["tabular-nums"] }}>
@@ -329,7 +329,7 @@ export default function Pruefung() {
                 borderColor: aktiv ? farben.orange : fertig ? farben.flaeche3 : farben.linie,
               }}
             >
-              <T v="klein" farbe={aktiv ? farben.orange : fertig ? farben.text : farben.text3} style={{ fontFamily: schrift.textHalb }}>
+              <T v="klein" farbe={aktiv ? farben.orange : fertig ? farben.text : farben.text3} style={{ ...schrift.textHalb }}>
                 {i + 1}
               </T>
             </Pressable>

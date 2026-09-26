@@ -6,13 +6,13 @@ import Svg, { Circle, Path } from "react-native-svg";
 import type { BildKey, LageKey, LeuchteKey, ThemaId, ZeichenKey } from "@/lib/fragen";
 import { themaVon } from "@/lib/fragen";
 import { FOTOS, strassenFoto, themaFoto } from "@/lib/fotos";
-import { farben } from "@/lib/theme";
+import { farben, schrift } from "@/lib/theme";
 import { T } from "./ui";
 import { Lageplan } from "./lagen";
 import { Kontrollleuchte } from "./leuchten";
 import { Verkehrszeichen } from "./zeichen";
 
-const RUND = 18;
+const RUND = 14;
 
 /** Armaturenbrett und Lenkrad als dunkle Silhouette am unteren Bildrand. */
 function Cockpit({ breite, hoehe }: { breite: number; hoehe: number }) {
@@ -43,9 +43,7 @@ function Fahrersicht({ zeichen, breite }: { zeichen: ZeichenKey; breite: number 
       <Image source={strassenFoto(zeichen)} style={{ position: "absolute", width: breite, height: hoehe }} resizeMode="cover" />
       <LinearGradient colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0)", "rgba(0,0,0,0.25)"]} locations={[0, 0.5, 1]} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
       <View style={{ position: "absolute", right: breite * 0.07, top: hoehe * 0.05, alignItems: "center" }}>
-        <View style={{ shadowColor: "#000", shadowOpacity: 0.45, shadowRadius: 6, shadowOffset: { width: 0, height: 3 } }}>
-          <Verkehrszeichen zeichen={zeichen} groesse={schild} />
-        </View>
+        <Verkehrszeichen zeichen={zeichen} groesse={schild} />
         <View style={{ width: Math.max(4, schild * 0.07), height: hoehe * 0.62, marginTop: -schild * 0.06, borderRadius: 2, backgroundColor: "#B7BBC2" }} />
       </View>
       <Cockpit breite={breite} hoehe={hoehe} />
@@ -76,13 +74,13 @@ export function ThemaBanner({ thema, breite, punkte }: { thema: ThemaId; breite:
       <LinearGradient colors={["rgba(11,12,15,0)", "rgba(11,12,15,0.25)", "rgba(11,12,15,0.85)"]} locations={[0, 0.45, 1]} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
       <View style={{ position: "absolute", left: 14, bottom: 12, right: 14, flexDirection: "row", alignItems: "center", gap: 8 }}>
         <View style={{ paddingHorizontal: 10, height: 26, borderRadius: 13, backgroundColor: "rgba(11,12,15,0.7)", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.14)" }}>
-          <T v="klein" farbe={farben.text} style={{ fontSize: 12.5, fontFamily: "Inter_600SemiBold" }}>
+          <T v="klein" farbe={farben.text} style={{ fontSize: 12.5, ...schrift.textHalb }}>
             {themaVon(thema).titel}
           </T>
         </View>
         {punkte ? (
           <View style={{ paddingHorizontal: 10, height: 26, borderRadius: 13, backgroundColor: punkte >= 5 ? farben.orange : "rgba(11,12,15,0.7)", justifyContent: "center" }}>
-            <T v="klein" farbe="#FFFFFF" style={{ fontSize: 12.5, fontFamily: "Inter_600SemiBold" }}>
+            <T v="klein" farbe="#FFFFFF" style={{ fontSize: 12.5, ...schrift.textHalb }}>
               {punkte} Punkte
             </T>
           </View>

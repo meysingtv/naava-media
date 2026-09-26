@@ -1,3 +1,5 @@
+import { Platform, type TextStyle } from "react-native";
+
 // Design-Tokens von „Spur“: tiefes Schwarz als Grund, kräftiges Orange als
 // Signalfarbe, Grün für richtig. Karten sind leicht angehoben und tragen eine
 // feine helle Kante; Fotos bringen die Farbe in die Oberfläche.
@@ -46,14 +48,35 @@ export const farben = {
   gelaende: "#121418",
 } as const;
 
+type Gewicht = "400" | "500" | "600" | "700" | "800";
+
+const INTER: Record<Gewicht, string> = {
+  "400": "Inter_400Regular",
+  "500": "Inter_500Medium",
+  "600": "Inter_600SemiBold",
+  "700": "Inter_700Bold",
+  "800": "Inter_800ExtraBold",
+};
+
+/** Auf dem iPhone die Systemschrift (San Francisco) wie in der Vorlage, sonst Inter. */
+function schnitt(g: Gewicht): TextStyle {
+  return Platform.OS === "ios" ? { fontFamily: "System", fontWeight: g } : { fontFamily: INTER[g] };
+}
+
 export const schrift = {
-  titel: "Inter_800ExtraBold",
-  titelFett: "Inter_700Bold",
-  titelHalb: "Inter_600SemiBold",
-  text: "Inter_400Regular",
-  textMittel: "Inter_500Medium",
-  textHalb: "Inter_600SemiBold",
-  textFett: "Inter_700Bold",
+  titel: schnitt("800"),
+  titelFett: schnitt("700"),
+  titelHalb: schnitt("600"),
+  text: schnitt("400"),
+  textMittel: schnitt("500"),
+  textHalb: schnitt("600"),
+  textFett: schnitt("700"),
+};
+
+/** Schriften für SVG-Grafiken (brauchen einen festen Namen). */
+export const svgSchrift = {
+  text: "Inter_600SemiBold",
+  fett: "Inter_700Bold",
   /** Schmale Schrift für Zahlen auf Verkehrszeichen und das Logo. */
   schild: "Archivo_800ExtraBold",
 } as const;
@@ -63,7 +86,7 @@ export const radius = { s: 10, m: 14, l: 18, xl: 24, voll: 999 } as const;
 export const abstand = (n: number) => n * 4;
 
 /** Seitenrand links/rechts. */
-export const RAND = 18;
+export const RAND = 16;
 
 /** Farbe für eine Erfolgsquote: grün ab 75 %, bernstein ab 60 %, sonst orange. */
 export function quoteFarbe(anteil: number): string {

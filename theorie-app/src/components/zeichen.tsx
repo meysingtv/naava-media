@@ -1,7 +1,7 @@
 import Svg, { Circle, G, Line, Path, Polygon, Rect, Text as SvgText } from "react-native-svg";
 
 import type { ZeichenKey } from "@/lib/fragen";
-import { farben, schrift } from "@/lib/theme";
+import { farben, svgSchrift } from "@/lib/theme";
 
 // Verkehrszeichen als Vektorgrafik (viewBox 100 × 100), den amtlichen
 // Zeichen nachempfunden. Alle Zeichen haben einen weißen Außenrand, damit sie
@@ -97,7 +97,7 @@ export function ZeichenGrafik({ zeichen }: { zeichen: ZeichenKey }) {
           <Polygon points={achteck(49)} fill={WEISS} />
           <Polygon points={achteck(46)} fill={ROT} />
           <Polygon points={achteck(41)} fill="none" stroke={WEISS} strokeWidth={2} />
-          <SvgText x={50} y={58.5} fill={WEISS} fontSize={23} fontFamily={schrift.schild} fontWeight="800" textAnchor="middle" letterSpacing={0.5}>
+          <SvgText x={50} y={58.5} fill={WEISS} fontSize={23} fontFamily={svgSchrift.schild} fontWeight="800" textAnchor="middle" letterSpacing={0.5}>
             STOP
           </SvgText>
         </G>
@@ -131,7 +131,7 @@ export function ZeichenGrafik({ zeichen }: { zeichen: ZeichenKey }) {
     case "z274_30":
       return (
         <Rund fuellung={WEISS} ring={ROT}>
-          <SvgText x={50} y={63} fill={SCHWARZ} fontSize={36} fontFamily={schrift.schild} fontWeight="800" textAnchor="middle" letterSpacing={-1}>
+          <SvgText x={50} y={63} fill={SCHWARZ} fontSize={36} fontFamily={svgSchrift.schild} fontWeight="800" textAnchor="middle" letterSpacing={-1}>
             30
           </SvgText>
         </Rund>
@@ -211,7 +211,7 @@ export function ZeichenGrafik({ zeichen }: { zeichen: ZeichenKey }) {
           <Rect x={5} y={30} width={90} height={40} rx={3} fill={BLAU} />
           <Rect x={11} y={42} width={60} height={16} fill={WEISS} />
           <Polygon points="69,34 90,50 69,66" fill={WEISS} />
-          <SvgText x={40} y={53.2} fill={SCHWARZ} fontSize={8.6} fontFamily={schrift.textFett} fontWeight="700" textAnchor="middle">
+          <SvgText x={40} y={53.2} fill={SCHWARZ} fontSize={8.6} fontFamily={svgSchrift.fett} fontWeight="700" textAnchor="middle">
             Einbahnstraße
           </SvgText>
         </G>
@@ -220,7 +220,7 @@ export function ZeichenGrafik({ zeichen }: { zeichen: ZeichenKey }) {
     case "z314":
       return (
         <Quadrat fuellung={BLAU}>
-          <SvgText x={50} y={72} fill={WEISS} fontSize={62} fontFamily={schrift.schild} fontWeight="800" textAnchor="middle">
+          <SvgText x={50} y={72} fill={WEISS} fontSize={62} fontFamily={svgSchrift.schild} fontWeight="800" textAnchor="middle">
             P
           </SvgText>
         </Quadrat>
@@ -277,7 +277,7 @@ export function TempoZeichen({ zahl, groesse = 96 }: { zahl: number; groesse?: n
   return (
     <Svg width={groesse} height={groesse} viewBox="0 0 100 100">
       <Rund fuellung={WEISS} ring={ROT}>
-        <SvgText x={50} y={63} fill={SCHWARZ} fontSize={zahl >= 100 ? 30 : 36} fontFamily={schrift.schild} fontWeight="800" textAnchor="middle" letterSpacing={-1}>
+        <SvgText x={50} y={63} fill={SCHWARZ} fontSize={zahl >= 100 ? 30 : 36} fontFamily={svgSchrift.schild} fontWeight="800" textAnchor="middle" letterSpacing={-1}>
           {String(zahl)}
         </SvgText>
       </Rund>
