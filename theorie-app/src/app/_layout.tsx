@@ -104,6 +104,7 @@ function Navigation() {
           <Stack.Screen name="duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="online-duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="profil" />
+          <Stack.Screen name="elo" />
           <Stack.Screen name="thema/[id]" />
           <Stack.Screen name="formeln" />
           <Stack.Screen name="zeichen" />

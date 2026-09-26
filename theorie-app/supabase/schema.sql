@@ -323,4 +323,21 @@ end;
 $$;
 grant execute on function public.lern_duell_ergebnis(uuid, integer, integer) to authenticated;
 
+-- 9) Elo-Bestenliste (nur wer schon ein Rangliste-Duell beendet hat) ----
+create or replace function public.lern_elo_rangliste()
+returns table(platz bigint, id uuid, name text, benutzername text, elo integer)
+language sql stable security definer set search_path = public
+as $$
+  select row_number() over (order by p.elo desc, p.created_at) as platz,
+         p.id, p.name, p.benutzername, p.elo
+    from public.lern_profil p
+   where exists (
+     select 1 from public.lern_duell d
+      where d.art = 'rangliste' and d.status = 'fertig' and (d.spieler1 = p.id or d.spieler2 = p.id)
+   )
+   order by p.elo desc, p.created_at
+   limit 100;
+$$;
+grant execute on function public.lern_elo_rangliste() to authenticated;
+
 notify pgrst, 'reload schema';

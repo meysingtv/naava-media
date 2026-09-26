@@ -96,3 +96,12 @@ export function sicht(d: DuellMitNamen | OnlineDuell, ich: string) {
     ichDran: (bin1 ? d.punkte1 : d.punkte2) == null && d.status !== "fertig",
   };
 }
+
+export type EloEintrag = { platz: number; id: string; name: string; benutzername: string; elo: number };
+
+/** Top 100 nach Elo – `null`, wenn der Server (noch) nicht mitspielt. */
+export async function eloRanglisteLaden(): Promise<EloEintrag[] | null> {
+  const { data, error } = await supabase.rpc("lern_elo_rangliste");
+  if (error || !Array.isArray(data)) return null;
+  return (data as EloEintrag[]).map((z) => ({ ...z, platz: Number(z.platz), name: z.name || z.benutzername }));
+}

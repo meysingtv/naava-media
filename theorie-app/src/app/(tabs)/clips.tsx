@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, FlatList, Pressable, Share, useWindowDimensions, View, type ViewToken } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Chip, Knopf, Plakette, T } from "@/components/ui";
@@ -157,7 +157,19 @@ export default function Clips() {
   const [ansicht, setAnsicht] = useState<"alle" | "gemerkt">("alle");
   const [hoehe, setHoehe] = useState(0);
   const [aktiv, setAktiv] = useState(0);
+  const { start } = useLocalSearchParams<{ start?: string }>();
+  const listeRef = useRef<FlatList<Clip>>(null);
   const liste = ansicht === "alle" ? CLIPS : CLIPS.filter((c) => stand.clips.gemerkt.includes(c.id));
+
+  // Aus dem Profil: direkt zu einem gemerkten Clip springen.
+  useEffect(() => {
+    if (!start || hoehe === 0) return;
+    const index = CLIPS.findIndex((c) => c.id === start);
+    if (index < 0) return;
+    setAnsicht("alle");
+    setAktiv(index);
+    requestAnimationFrame(() => listeRef.current?.scrollToIndex({ index, animated: false }));
+  }, [start, hoehe]);
 
   const sichtbar = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     const erstes = viewableItems.find((v) => v.isViewable);
@@ -195,6 +207,7 @@ export default function Clips() {
           </View>
         ) : hoehe > 0 ? (
           <FlatList
+            ref={listeRef}
             key={ansicht}
             data={liste}
             keyExtractor={(c) => c.id}

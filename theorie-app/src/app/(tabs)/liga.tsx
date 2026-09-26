@@ -304,6 +304,15 @@ export default function Liga() {
             )}
           </Karte>
 
+          <Karte onPress={() => router.push("/elo")} style={{ flexDirection: "row", alignItems: "center", gap: abstand(3.5), padding: abstand(4) }}>
+            <Ionicons name="podium-outline" size={22} color={farben.gelb} />
+            <View style={{ flex: 1 }}>
+              <T v="textStark">Top 100 nach Elo</T>
+              <T v="klein">Die besten Duellantinnen und Duellanten</T>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={farben.text4} />
+          </Karte>
+
           {/* Online: Freundes-Duell */}
           <Karte style={{ gap: abstand(4) }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(3.5) }}>

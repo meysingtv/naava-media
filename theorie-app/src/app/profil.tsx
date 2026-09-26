@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Abschnitt, Avatar, Gruppe, Karte, Kopf, T, Zeile } from "@/components/ui";
+import { CLIPS } from "@/lib/clips";
 import { ERFOLGE } from "@/lib/erfolge";
 import { tausender, uhrzeit } from "@/lib/format";
 import { tippen } from "@/lib/haptik";
@@ -31,6 +32,7 @@ export default function Profil() {
   const richtig = Object.values(stand.fragen).reduce((s, f) => s + f.r, 0);
   const quote = antworten > 0 ? Math.round((richtig / antworten) * 100) : 0;
   const freigeschaltet = ERFOLGE.filter((e) => stand.erfolge[e.id]).length;
+  const gemerkteClips = CLIPS.filter((c) => stand.clips.gemerkt.includes(c.id));
 
   function abmeldenFragen() {
     Alert.alert(
@@ -119,6 +121,31 @@ export default function Profil() {
             );
           })}
         </View>
+      </View>
+
+      <View>
+        <Abschnitt titel="Deine Clips" />
+        <View style={{ flexDirection: "row", gap: abstand(3), marginBottom: abstand(3) }}>
+          <Wert zahl={String(stand.clips.gemerkt.length)} label="Gemerkt" />
+          <Wert zahl={String(stand.clips.gemocht.length)} label="Gefällt mir" />
+        </View>
+        {gemerkteClips.length > 0 ? (
+          <Gruppe>
+            {gemerkteClips.map((c) => (
+              <Zeile
+                key={c.id}
+                icon="bookmark"
+                iconFarbe={farben.blau}
+                titel={c.titel}
+                titelZeilen={2}
+                unter={c.kategorie}
+                onPress={() => router.navigate({ pathname: "/clips", params: { start: c.id } })}
+              />
+            ))}
+          </Gruppe>
+        ) : (
+          <T v="klein">Gemerkte Clips erscheinen hier. Tippe in einem Clip auf das Lesezeichen.</T>
+        )}
       </View>
 
       <View>
