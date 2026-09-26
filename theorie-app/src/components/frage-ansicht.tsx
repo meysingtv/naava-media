@@ -1,17 +1,87 @@
 import { Pressable, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import { Chip, T } from "@/components/ui";
+import { T } from "@/components/ui";
 import { FrageBild } from "@/components/frage-bild";
-import { themaVon, zahlLesen, zahlText, type Frage } from "@/lib/fragen";
+import { antwortRichtig, themaVon, zahlLesen, zahlText, type Frage } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
-import { abstand, farben, radius, schrift } from "@/lib/theme";
+import { abstand, farben, schrift } from "@/lib/theme";
 
-const BUCHSTABEN = ["A", "B", "C", "D"];
+type Zustand = "offen" | "gewaehlt" | "richtig" | "verpasst" | "falsch" | "aus";
+
+function Auswahlkreis({ zustand }: { zustand: Zustand }) {
+  const gefuellt = zustand === "gewaehlt" || zustand === "richtig" || zustand === "falsch";
+  const farbe =
+    zustand === "gewaehlt" ? farben.orange : zustand === "richtig" || zustand === "verpasst" ? farben.gruen : zustand === "falsch" ? farben.rot : "#6B7078";
+  return (
+    <View
+      style={{
+        width: 26,
+        height: 26,
+        borderRadius: 13,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: gefuellt ? farbe : "transparent",
+        borderWidth: gefuellt ? 0 : 2,
+        borderColor: farbe,
+      }}
+    >
+      {zustand === "falsch" ? (
+        <Ionicons name="close" size={17} color="#FFFFFF" />
+      ) : gefuellt || zustand === "verpasst" ? (
+        <Ionicons name="checkmark" size={zustand === "verpasst" ? 15 : 17} color={gefuellt ? "#FFFFFF" : farben.gruen} />
+      ) : null}
+    </View>
+  );
+}
+
+/** Rückmeldung nach dem Aufdecken – grün bei richtig, rot bei falsch, mit Erklärung. */
+export function Rueckmeldung({ richtig, text }: { richtig: boolean; text: string }) {
+  const farbe = richtig ? farben.gruen : farben.rot;
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        gap: abstand(3.5),
+        padding: abstand(4),
+        borderRadius: 18,
+        backgroundColor: richtig ? farben.gruenDunkel : "#2A1615",
+        borderWidth: 1,
+        borderColor: farbe + "55",
+      }}
+    >
+      <View
+        style={{
+          width: 46,
+          height: 46,
+          borderRadius: 23,
+          backgroundColor: farbe,
+          alignItems: "center",
+          justifyContent: "center",
+          shadowColor: farbe,
+          shadowOpacity: 0.55,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 0 },
+        }}
+      >
+        <Ionicons name={richtig ? "checkmark" : "close"} size={28} color="#FFFFFF" />
+      </View>
+      <View style={{ flex: 1, gap: 4 }}>
+        <T v="h3" farbe={farbe} style={{ fontSize: 19 }}>
+          {richtig ? "Richtig!" : "Leider falsch"}
+        </T>
+        <T v="text" farbe={farben.text} style={{ lineHeight: 21 }}>
+          {text}
+        </T>
+      </View>
+    </View>
+  );
+}
 
 /**
- * Eine Frage mit Bild und Antworten. Vor dem Aufdecken wählt man aus,
- * danach zeigt die Ansicht richtig/falsch und die Erklärung.
+ * Eine Frage wie in der Vorlage: Bild oben, Frage, Antworten mit
+ * Auswahlkreis. Nach dem Aufdecken färben sich die Antworten und eine
+ * Rückmeldung mit Erklärung erscheint.
  */
 export function FrageAnsicht({
   frage,
@@ -22,6 +92,7 @@ export function FrageAnsicht({
   aufgedeckt,
   ohneErklaerung,
   ohneMeta,
+  kompakt,
 }: {
   frage: Frage;
   auswahl: number[];
@@ -31,67 +102,48 @@ export function FrageAnsicht({
   aufgedeckt: boolean;
   ohneErklaerung?: boolean;
   ohneMeta?: boolean;
+  /** Für Duelle: kein Themenfoto, Zeichen ohne Fahrersicht. */
+  kompakt?: boolean;
 }) {
   const thema = themaVon(frage.thema);
+  const mitBild = Boolean(frage.bild) || !kompakt;
+  const metaZeigen = !ohneMeta && (Boolean(frage.bild) || kompakt);
 
   return (
     <View style={{ gap: abstand(4) }}>
-      {!ohneMeta ? (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(2) }}>
-          <T v="mini" style={{ flex: 1 }} numberOfLines={1}>
-            {thema.titel}
+      {mitBild ? <FrageBild bild={frage.bild} thema={frage.thema} punkte={frage.punkte} kompakt={kompakt} /> : null}
+
+      <View style={{ gap: abstand(1.5) }}>
+        {metaZeigen ? (
+          <T v="klein" farbe={frage.punkte >= 5 ? farben.orange : farben.text3}>
+            {thema.titel} · {frage.punkte} Punkte
           </T>
-          <Chip text={`${frage.punkte} Punkte`} icon="alert-circle-outline" farbe={frage.punkte >= 5 ? farben.orange : farben.text3} />
-        </View>
-      ) : null}
-
-      <T v="h2" style={{ fontSize: 21, lineHeight: 28 }}>
-        {frage.text}
-      </T>
-
-      {frage.bild ? <FrageBild bild={frage.bild} /> : null}
+        ) : null}
+        <T v="h2" style={{ fontSize: 21, lineHeight: 28 }}>
+          {frage.text}
+        </T>
+        {frage.art === "auswahl" && !aufgedeckt ? (
+          <T v="klein" style={{ fontSize: 12.5 }}>
+            Eine oder mehrere Antworten können richtig sein.
+          </T>
+        ) : null}
+      </View>
 
       {frage.art === "auswahl" ? (
         <View style={{ gap: abstand(2.5) }}>
-          {!aufgedeckt ? <T v="klein">Eine oder mehrere Antworten sind richtig.</T> : null}
           {frage.antworten.map((antwort, i) => {
             const gewaehlt = auswahl.includes(i);
-            let rand: string = farben.linie;
-            let flaeche: string = farben.flaeche;
-            let marke: string = farben.flaeche3;
-            let markeText: string = farben.text2;
-            let symbol: keyof typeof Ionicons.glyphMap | null = null;
-            let gedimmt = false;
-            let gestrichelt = false;
-
-            if (!aufgedeckt && gewaehlt) {
-              rand = farben.orange;
-              flaeche = farben.orangeSoft;
-              marke = farben.orange;
-              markeText = farben.aufOrange;
-            }
+            let zustand: Zustand = gewaehlt ? "gewaehlt" : "offen";
             if (aufgedeckt) {
-              if (antwort.richtig && gewaehlt) {
-                rand = farben.gruen;
-                flaeche = farben.gruenSoft;
-                marke = farben.gruen;
-                markeText = farben.aufOrange;
-                symbol = "checkmark";
-              } else if (antwort.richtig) {
-                rand = farben.gruen;
-                gestrichelt = true;
-                symbol = "checkmark";
-                markeText = farben.gruen;
-              } else if (gewaehlt) {
-                rand = farben.rot;
-                flaeche = farben.rotSoft;
-                marke = farben.rot;
-                markeText = farben.aufOrange;
-                symbol = "close";
-              } else {
-                gedimmt = true;
-              }
+              if (antwort.richtig && gewaehlt) zustand = "richtig";
+              else if (antwort.richtig) zustand = "verpasst";
+              else if (gewaehlt) zustand = "falsch";
+              else zustand = "aus";
             }
+            const rand =
+              zustand === "gewaehlt" ? farben.orange : zustand === "richtig" || zustand === "verpasst" ? farben.gruen : zustand === "falsch" ? farben.rot : "rgba(255,255,255,0.09)";
+            const flaeche =
+              zustand === "gewaehlt" ? farben.orangeSoft : zustand === "richtig" ? "#1C3A1F" : zustand === "falsch" ? farben.rotSoft : farben.flaeche;
 
             return (
               <Pressable
@@ -105,26 +157,19 @@ export function FrageAnsicht({
                   flexDirection: "row",
                   alignItems: "center",
                   gap: abstand(3.5),
+                  minHeight: 58,
                   paddingVertical: abstand(3.5),
-                  paddingHorizontal: abstand(3.5),
-                  borderRadius: radius.m + 2,
+                  paddingHorizontal: abstand(4),
+                  borderRadius: 14,
                   borderWidth: 1.5,
-                  borderStyle: gestrichelt ? "dashed" : "solid",
                   borderColor: rand,
                   backgroundColor: flaeche,
-                  opacity: gedimmt ? 0.5 : pressed ? 0.85 : 1,
+                  opacity: zustand === "aus" ? 0.55 : pressed ? 0.85 : 1,
+                  ...(zustand === "richtig" ? { shadowColor: farben.gruen, shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } } : null),
                 })}
               >
-                <View style={{ width: 30, height: 30, borderRadius: 9, backgroundColor: marke, alignItems: "center", justifyContent: "center" }}>
-                  {symbol ? (
-                    <Ionicons name={symbol} size={17} color={markeText} />
-                  ) : (
-                    <T v="textStark" farbe={markeText} style={{ fontSize: 14 }}>
-                      {BUCHSTABEN[i]}
-                    </T>
-                  )}
-                </View>
-                <T v="textStark" style={{ flex: 1, fontFamily: schrift.textMittel, lineHeight: 21 }}>
+                <Auswahlkreis zustand={zustand} />
+                <T v="textStark" style={{ flex: 1, fontFamily: schrift.textMittel, fontSize: 16, lineHeight: 22 }}>
                   {antwort.text}
                 </T>
               </Pressable>
@@ -135,17 +180,7 @@ export function FrageAnsicht({
         <ZahlEingabe frage={frage} eingabe={eingabe} onEingabe={onEingabe} aufgedeckt={aufgedeckt} />
       )}
 
-      {aufgedeckt && !ohneErklaerung ? (
-        <View style={{ padding: abstand(4), borderRadius: radius.l, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie, gap: abstand(1.5) }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(1.5) }}>
-            <Ionicons name="bulb-outline" size={15} color={farben.gelb} />
-            <T v="mini" farbe={farben.gelb}>
-              Erklärung
-            </T>
-          </View>
-          <T v="text">{frage.erklaerung}</T>
-        </View>
-      ) : null}
+      {aufgedeckt && !ohneErklaerung ? <Rueckmeldung richtig={antwortRichtig(frage, auswahl, eingabe)} text={frage.erklaerung} /> : null}
     </View>
   );
 }
@@ -163,7 +198,7 @@ function ZahlEingabe({
 }) {
   const wert = zahlLesen(eingabe);
   const richtig = wert != null && Math.abs(wert - frage.loesung) < 0.001;
-  const rand = !aufgedeckt ? (eingabe ? farben.orange : farben.linieStark) : richtig ? farben.gruen : farben.rot;
+  const rand = !aufgedeckt ? (eingabe ? farben.orange : "rgba(255,255,255,0.12)") : richtig ? farben.gruen : farben.rot;
 
   return (
     <View style={{ gap: abstand(2) }}>
@@ -173,10 +208,10 @@ function ZahlEingabe({
           alignItems: "center",
           height: 76,
           paddingHorizontal: abstand(5),
-          borderRadius: radius.l,
+          borderRadius: 16,
           borderWidth: 1.5,
           borderColor: rand,
-          backgroundColor: aufgedeckt ? (richtig ? farben.gruenSoft : farben.rotSoft) : farben.flaeche,
+          backgroundColor: aufgedeckt ? (richtig ? "#1C3A1F" : farben.rotSoft) : farben.flaeche,
         }}
       >
         <TextInput

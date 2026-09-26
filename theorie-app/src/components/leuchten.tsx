@@ -98,7 +98,7 @@ function Symbol({ leuchte, farbe }: { leuchte: LeuchteKey; farbe: string }) {
 }
 
 export function Kontrollleuchte({ leuchte, groesse = 96, aus }: { leuchte: LeuchteKey; groesse?: number; aus?: boolean }) {
-  const farbe = aus ? "#2A3350" : LEUCHTE_FARBE[leuchte];
+  const farbe = aus ? "#2B2E35" : LEUCHTE_FARBE[leuchte];
   return (
     <Svg width={groesse} height={groesse} viewBox="0 0 100 100">
       {!aus ? <Circle cx={50} cy={50} r={46} fill={farbe} opacity={0.1} /> : null}

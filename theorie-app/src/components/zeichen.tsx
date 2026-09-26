@@ -97,7 +97,7 @@ export function ZeichenGrafik({ zeichen }: { zeichen: ZeichenKey }) {
           <Polygon points={achteck(49)} fill={WEISS} />
           <Polygon points={achteck(46)} fill={ROT} />
           <Polygon points={achteck(41)} fill="none" stroke={WEISS} strokeWidth={2} />
-          <SvgText x={50} y={58.5} fill={WEISS} fontSize={23} fontFamily={schrift.titel} fontWeight="800" textAnchor="middle" letterSpacing={0.5}>
+          <SvgText x={50} y={58.5} fill={WEISS} fontSize={23} fontFamily={schrift.schild} fontWeight="800" textAnchor="middle" letterSpacing={0.5}>
             STOP
           </SvgText>
         </G>
@@ -131,7 +131,7 @@ export function ZeichenGrafik({ zeichen }: { zeichen: ZeichenKey }) {
     case "z274_30":
       return (
         <Rund fuellung={WEISS} ring={ROT}>
-          <SvgText x={50} y={63} fill={SCHWARZ} fontSize={36} fontFamily={schrift.titel} fontWeight="800" textAnchor="middle" letterSpacing={-1}>
+          <SvgText x={50} y={63} fill={SCHWARZ} fontSize={36} fontFamily={schrift.schild} fontWeight="800" textAnchor="middle" letterSpacing={-1}>
             30
           </SvgText>
         </Rund>
@@ -220,7 +220,7 @@ export function ZeichenGrafik({ zeichen }: { zeichen: ZeichenKey }) {
     case "z314":
       return (
         <Quadrat fuellung={BLAU}>
-          <SvgText x={50} y={72} fill={WEISS} fontSize={62} fontFamily={schrift.titel} fontWeight="800" textAnchor="middle">
+          <SvgText x={50} y={72} fill={WEISS} fontSize={62} fontFamily={schrift.schild} fontWeight="800" textAnchor="middle">
             P
           </SvgText>
         </Quadrat>
@@ -268,6 +268,19 @@ export function Verkehrszeichen({ zeichen, groesse = 96 }: { zeichen: ZeichenKey
   return (
     <Svg width={groesse} height={groesse} viewBox="0 0 100 100">
       <ZeichenGrafik zeichen={zeichen} />
+    </Svg>
+  );
+}
+
+/** Zulässige Höchstgeschwindigkeit mit beliebiger Zahl (für Bildkacheln). */
+export function TempoZeichen({ zahl, groesse = 96 }: { zahl: number; groesse?: number }) {
+  return (
+    <Svg width={groesse} height={groesse} viewBox="0 0 100 100">
+      <Rund fuellung={WEISS} ring={ROT}>
+        <SvgText x={50} y={63} fill={SCHWARZ} fontSize={zahl >= 100 ? 30 : 36} fontFamily={schrift.schild} fontWeight="800" textAnchor="middle" letterSpacing={-1}>
+          {String(zahl)}
+        </SvgText>
+      </Rund>
     </Svg>
   );
 }

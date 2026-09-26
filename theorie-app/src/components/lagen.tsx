@@ -9,11 +9,11 @@ import { ZeichenGrafik } from "./zeichen";
 
 export const DU = farben.blau;
 export const ANDERE = farben.orange;
-export const NEUTRAL = "#6B7590";
+export const NEUTRAL = "#7A7F88";
 export const ASPHALT = farben.asphalt;
 export const RAND = farben.asphaltRand;
 export const GRUND = farben.gelaende;
-export const GEHWEG = "#141D35";
+export const GEHWEG = "#1A1C21";
 export const MARKIERUNG = "rgba(255,255,255,0.6)";
 
 /** Auto von oben, Front zeigt bei Winkel 0 nach oben. */
@@ -21,8 +21,8 @@ export function Auto({ x, y, winkel = 0, farbe }: { x: number; y: number; winkel
   return (
     <G transform={`translate(${x} ${y}) rotate(${winkel})`}>
       <Rect x={-11.5} y={-20} width={23} height={40} rx={6.5} fill={farbe} />
-      <Path d="M-8.5,-6 L8.5,-6 L6.8,-13 L-6.8,-13 Z" fill="#0A0F1E" opacity={0.6} />
-      <Path d="M-7.5,11 L7.5,11 L6.2,16 L-6.2,16 Z" fill="#0A0F1E" opacity={0.5} />
+      <Path d="M-8.5,-6 L8.5,-6 L6.8,-13 L-6.8,-13 Z" fill="#0B0C0F" opacity={0.6} />
+      <Path d="M-7.5,11 L7.5,11 L6.2,16 L-6.2,16 Z" fill="#0B0C0F" opacity={0.5} />
       <Rect x={-8} y={-5} width={16} height={15} rx={2.5} fill="#FFFFFF" opacity={0.14} />
       <Rect x={-9.5} y={-20} width={5} height={2.2} rx={1} fill="#FFF4D6" />
       <Rect x={4.5} y={-20} width={5} height={2.2} rx={1} fill="#FFF4D6" />
@@ -126,8 +126,8 @@ function Kreisverkehr() {
       <Rect x={202} y={87} width={98} height={50} fill={ASPHALT} />
       <Circle cx={cx} cy={cy} r={68} fill={ASPHALT} />
       <Circle cx={cx} cy={cy} r={68} fill="none" stroke={RAND} strokeWidth={2} strokeDasharray="30 22" />
-      <Circle cx={cx} cy={cy} r={33} fill="#16213B" stroke={RAND} strokeWidth={2} />
-      <Circle cx={cx} cy={cy} r={20} fill="#1B2A48" />
+      <Circle cx={cx} cy={cy} r={33} fill="#1B1E23" stroke={RAND} strokeWidth={2} />
+      <Circle cx={cx} cy={cy} r={20} fill="#232730" />
       <G stroke={MARKIERUNG} strokeWidth={2} strokeDasharray="8 8">
         <Line x1={150} y1={0} x2={150} y2={40} />
         <Line x1={150} y1={184} x2={150} y2={220} />
@@ -180,7 +180,7 @@ function Rettungsgasse() {
     <G>
       <Rect x={0} y={0} width={300} height={220} fill={GRUND} />
       <Rect x={58} y={0} width={196} height={220} fill={ASPHALT} />
-      <Rect x={212} y={0} width={42} height={220} fill="#26304A" />
+      <Rect x={212} y={0} width={42} height={220} fill="#30343C" />
       <G stroke={MARKIERUNG} strokeWidth={2.4}>
         <Line x1={61} y1={0} x2={61} y2={220} />
         <Line x1={211} y1={0} x2={211} y2={220} />
@@ -228,14 +228,14 @@ function Schulbus() {
       {/* Haltestelle */}
       <Line x1={262} y1={186} x2={262} y2={170} stroke="#AEB6C8" strokeWidth={2} />
       <Circle cx={262} cy={164} r={10} fill={farben.schildGelb} stroke="#1E7F4F" strokeWidth={2} />
-      <SvgText x={262} y={168.5} fill="#1E7F4F" fontSize={12} fontFamily={schrift.titel} fontWeight="800" textAnchor="middle">
+      <SvgText x={262} y={168.5} fill="#1E7F4F" fontSize={12} fontFamily={schrift.schild} fontWeight="800" textAnchor="middle">
         H
       </SvgText>
       {/* Bus mit Warnblinklicht */}
       <G>
         <Rect x={168} y={115} width={112} height={31} rx={6} fill="#FFC857" />
         {[0, 1, 2, 3, 4].map((i) => (
-          <Rect key={i} x={176 + i * 19} y={119} width={13} height={6} rx={1.5} fill="#0A0F1E" opacity={0.55} />
+          <Rect key={i} x={176 + i * 19} y={119} width={13} height={6} rx={1.5} fill="#0B0C0F" opacity={0.55} />
         ))}
         <Rect x={172} y={136} width={100} height={4} rx={2} fill="#E5A92E" />
         {[

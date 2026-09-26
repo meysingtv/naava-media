@@ -36,7 +36,7 @@ export type LeuchteKey = "leuchte_batterie" | "leuchte_oel" | "leuchte_bremse" |
 
 export type BildKey = ZeichenKey | LageKey | LeuchteKey;
 
-export type ThemaId = "gefahren" | "vorfahrt" | "zeichen" | "tempo" | "manoever" | "parken" | "autobahn" | "technik" | "mensch" | "zahlen";
+export type ThemaId = "gefahren" | "vorfahrt" | "zeichen" | "umwelt" | "technik" | "manoever" | "tempo" | "parken" | "autobahn" | "mensch" | "zahlen";
 
 export type Antwort = { text: string; richtig: boolean };
 
@@ -58,13 +58,14 @@ export type Thema = {
 
 export const THEMEN: Thema[] = [
   { id: "gefahren", titel: "Gefahrenlehre", kurz: "Gefahren früh erkennen und richtig reagieren", icon: "warning-outline" },
-  { id: "vorfahrt", titel: "Vorfahrt", kurz: "Wer fährt zuerst – an Kreuzungen und im Kreisverkehr", icon: "git-merge-outline" },
+  { id: "vorfahrt", titel: "Vorfahrt & Vorrang", kurz: "Wer fährt zuerst – an Kreuzungen und im Kreisverkehr", icon: "git-merge-outline" },
   { id: "zeichen", titel: "Verkehrszeichen", kurz: "Gefahr-, Vorschrift- und Richtzeichen", icon: "triangle-outline" },
+  { id: "umwelt", titel: "Umweltschutz", kurz: "Spritsparend, leise und vorausschauend fahren", icon: "leaf-outline" },
+  { id: "technik", titel: "Technik", kurz: "Reifen, Bremsen, Kontrollleuchten", icon: "settings-outline" },
+  { id: "manoever", titel: "Verhalten im Verkehr", kurz: "Überholen, Abbiegen, Einordnen", icon: "walk-outline" },
   { id: "tempo", titel: "Tempo & Abstand", kurz: "Geschwindigkeit, Sicherheitsabstand, Sicht", icon: "speedometer-outline" },
-  { id: "manoever", titel: "Überholen & Abbiegen", kurz: "Überholen, Abbiegen, Einordnen", icon: "swap-horizontal-outline" },
   { id: "parken", titel: "Halten & Parken", kurz: "Wo du halten und parken darfst", icon: "car-outline" },
   { id: "autobahn", titel: "Autobahn & Sonderfälle", kurz: "Rettungsgasse, Bahnübergang, Schulbus", icon: "trail-sign-outline" },
-  { id: "technik", titel: "Technik & Umwelt", kurz: "Reifen, Bremsen, spritsparend fahren", icon: "construct-outline" },
   { id: "mensch", titel: "Mensch & Recht", kurz: "Alkohol, Müdigkeit, Probezeit, Handy", icon: "person-outline" },
   { id: "zahlen", titel: "Zahlen & Formeln", kurz: "Reaktionsweg, Bremsweg, Anhalteweg", icon: "calculator-outline" },
 ];
@@ -559,7 +560,7 @@ export const FRAGEN: Frage[] = [
     erklaerung: "Wenden und Rückwärtsfahren sind auf Autobahnen immer verboten. Hast du eine Ausfahrt verpasst, fährst du bis zur nächsten.",
   },
 
-  // ---------------------------------------------------------------- Technik & Umwelt
+  // ---------------------------------------------------------------- Technik
   {
     id: "k1",
     thema: "technik",
@@ -572,7 +573,7 @@ export const FRAGEN: Frage[] = [
   },
   {
     id: "k2",
-    thema: "technik",
+    thema: "umwelt",
     punkte: 3,
     art: "auswahl",
     text: "Wie fährst du umweltbewusst?",
@@ -585,7 +586,7 @@ export const FRAGEN: Frage[] = [
   },
   {
     id: "k3",
-    thema: "technik",
+    thema: "umwelt",
     punkte: 3,
     art: "auswahl",
     text: "Du wartest mehrere Minuten vor einer geschlossenen Bahnschranke. Was tust du?",
@@ -661,6 +662,53 @@ export const FRAGEN: Frage[] = [
       a("Die Batterie ist vollständig geladen"),
     ],
     erklaerung: "Leuchtet die Ladekontrolle bei laufendem Motor, lädt die Lichtmaschine nicht. Oft ist der Keilriemen schuld – dann kann auch die Wasserpumpe ausfallen.",
+  },
+
+  // ---------------------------------------------------------------- Umweltschutz
+  {
+    id: "u1",
+    thema: "umwelt",
+    punkte: 3,
+    art: "auswahl",
+    text: "Was erhöht den Kraftstoffverbrauch unnötig?",
+    antworten: [a("Ein leerer Dachgepäckträger, der dauerhaft montiert bleibt", true), a("Zu niedriger Reifendruck", true), a("Frühes Hochschalten")],
+    erklaerung: "Dachträger erhöhen den Luftwiderstand, zu wenig Luft im Reifen den Rollwiderstand. Frühes Hochschalten spart dagegen Kraftstoff.",
+  },
+  {
+    id: "u2",
+    thema: "umwelt",
+    punkte: 3,
+    art: "auswahl",
+    text: "Du fährst auf eine rote Ampel zu. Wie fährst du besonders sparsam?",
+    antworten: [a("Früh vom Gas gehen und das Auto rollen lassen", true), a("Bis kurz vor die Ampel beschleunigen und dann kräftig bremsen"), a("Im Leerlauf mit hoher Drehzahl heranrollen")],
+    erklaerung: "Im Schubbetrieb mit eingelegtem Gang verbraucht ein moderner Motor keinen Kraftstoff. Wer vorausschauend rollt, spart Sprit und Bremsen.",
+  },
+  {
+    id: "u3",
+    thema: "umwelt",
+    punkte: 2,
+    art: "auswahl",
+    text: "Wie wirkt sich eine eingeschaltete Klimaanlage aus?",
+    antworten: [a("Sie erhöht den Kraftstoffverbrauch", true), a("Sie hat keinen Einfluss auf den Verbrauch"), a("Sie senkt den Verbrauch, weil die Fenster zu bleiben")],
+    erklaerung: "Der Kompressor der Klimaanlage braucht Energie – je nach Außentemperatur deutlich spürbar. Nur einschalten, wenn nötig.",
+  },
+  {
+    id: "u4",
+    thema: "umwelt",
+    punkte: 3,
+    art: "auswahl",
+    text: "Warum solltest du unnötige Kurzstrecken mit dem Auto vermeiden?",
+    antworten: [a("Ein kalter Motor verbraucht besonders viel Kraftstoff", true), a("Der Motorverschleiß ist bei kaltem Motor höher", true), a("Kurzstrecken sind verboten")],
+    erklaerung: "Bis der Motor warm ist, sind Verbrauch, Abgase und Verschleiß erhöht. Für kurze Wege sind Fahrrad oder Fußweg die bessere Wahl.",
+  },
+  {
+    id: "u5",
+    thema: "umwelt",
+    punkte: 3,
+    art: "auswahl",
+    text: "Wie entsorgst du Altöl richtig?",
+    antworten: [a("Bei einer Annahmestelle, zum Beispiel beim Händler, der Öl verkauft", true), a("In den Hausmüll, gut verpackt"), a("In den Gully – es wird in der Kläranlage gereinigt")],
+    erklaerung: "Schon ein Liter Öl kann eine Million Liter Trinkwasser verunreinigen. Verkäufer von Motoröl müssen Altöl in gleicher Menge zurücknehmen.",
   },
 
   // ---------------------------------------------------------------- Mensch & Recht

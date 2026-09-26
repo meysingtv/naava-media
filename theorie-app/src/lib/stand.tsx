@@ -43,6 +43,10 @@ export type Stand = {
   /** Woche (Montag), in der der Serien-Schutz verbraucht wurde. */
   schutzWoche: string | null;
   clips: { gemocht: string[]; gemerkt: string[] };
+  /** Lernzeit in Sekunden je Tag. */
+  zeitTage: Record<string, number>;
+  /** Richtig/falsch je Tag und Thema – für Woche und Monat im Fortschritt. */
+  themaTage: Record<string, Partial<Record<ThemaId, [number, number]>>>;
 };
 
 export const LEER: Stand = {
@@ -63,6 +67,8 @@ export const LEER: Stand = {
   gebucht: { xp: 0, gesamt: 0, richtig: 0 },
   schutzWoche: null,
   clips: { gemocht: [], gemerkt: [] },
+  zeitTage: {},
+  themaTage: {},
 };
 
 const SPEICHER = "spur-stand-v1";
@@ -189,6 +195,81 @@ export function gemerktIds(s: Stand): string[] {
   return FRAGEN.filter((f) => s.fragen[f.id]?.m).map((f) => f.id);
 }
 
+/** Schwierige Fragen: offene Fehler zuerst, dann Fragen, die mindestens so oft falsch wie richtig waren. */
+export function schwierigeIds(s: Stand): string[] {
+  const offen = new Set(fehlerIds(s));
+  return FRAGEN.filter((f) => {
+    const fs = s.fragen[f.id];
+    return offen.has(f.id) || (fs != null && fs.f > 0 && fs.f >= fs.r);
+  })
+    .sort((x, y) => Number(offen.has(y.id)) - Number(offen.has(x.id)))
+    .map((f) => f.id);
+}
+
+/** Fortschritt wie in der Übersicht: Fragen, deren letzte Antwort richtig war. */
+export function fortschritt(s: Stand, liste: Frage[] = FRAGEN): { richtig: number; gesamt: number; anteil: number } {
+  let richtig = 0;
+  for (const f of liste) {
+    const fs = s.fragen[f.id];
+    if (fs && fs.l === 1 && fs.r > 0) richtig++;
+  }
+  return { richtig, gesamt: liste.length, anteil: liste.length ? richtig / liste.length : 0 };
+}
+
+export type Zeitraum = "woche" | "monat" | "gesamt";
+
+/** Die letzten n Tage (heute eingeschlossen) als Schlüssel. */
+function letzteTage(n: number): string[] {
+  return Array.from({ length: n }, (_, i) => tagVerschoben(-i));
+}
+
+export type ThemaQuote = { thema: ThemaId; richtig: number; falsch: number; quote: number };
+
+export type Auswertung = { xp: number; sekunden: number; antworten: number; themen: ThemaQuote[] };
+
+/** Punkte, Lernzeit und Erfolgsquote je Thema für Woche, Monat oder insgesamt. */
+export function auswertung(s: Stand, zeitraum: Zeitraum): Auswertung {
+  const summen = new Map<ThemaId, [number, number]>();
+  const dazu = (thema: ThemaId, r: number, f: number) => {
+    const alt = summen.get(thema) ?? [0, 0];
+    summen.set(thema, [alt[0] + r, alt[1] + f]);
+  };
+  let xp = 0;
+  let sekunden = 0;
+  if (zeitraum === "gesamt") {
+    xp = s.xp;
+    sekunden = Object.values(s.zeitTage).reduce((a, b) => a + b, 0);
+    for (const f of FRAGEN) {
+      const fs = s.fragen[f.id];
+      if (fs) dazu(f.thema, fs.r, fs.f);
+    }
+  } else {
+    for (const tag of letzteTage(zeitraum === "woche" ? 7 : 30)) {
+      xp += s.xpTage[tag] ?? 0;
+      sekunden += s.zeitTage[tag] ?? 0;
+      const t = s.themaTage[tag];
+      if (!t) continue;
+      for (const [thema, [r, f]] of Object.entries(t) as [ThemaId, [number, number]][]) dazu(thema, r, f);
+    }
+  }
+  const themen: ThemaQuote[] = [];
+  let antworten = 0;
+  for (const [thema, [r, f]] of summen) {
+    if (r + f === 0) continue;
+    antworten += r + f;
+    themen.push({ thema, richtig: r, falsch: f, quote: r / (r + f) });
+  }
+  return { xp, sekunden, antworten, themen };
+}
+
+/** Lernzeit kurz: „12 min“, „1,5 h“, „8 h“. */
+export function lernzeitText(sekunden: number): string {
+  const minuten = sekunden > 0 ? Math.max(1, Math.round(sekunden / 60)) : 0;
+  if (minuten < 60) return `${minuten} min`;
+  const stunden = sekunden / 3600;
+  return stunden >= 10 ? `${Math.round(stunden)} h` : `${String(Math.round(stunden * 10) / 10).replace(".", ",")} h`;
+}
+
 /**
  * Kluge Auswahl fürs Training: erst falsch beantwortete, dann neue, dann
  * wacklige Fragen – innerhalb der Gruppen die am längsten nicht gesehenen.
@@ -234,6 +315,34 @@ function tagGelernt(s: Stand): Stand {
   return { ...s, serie, schutzWoche, besteSerie: Math.max(s.besteSerie, serie), letzterTag: heute };
 }
 
+/** Höchstens so viele Sekunden zählen pro Antwort – wer das Handy weglegt, lernt nicht. */
+const MAX_SEKUNDEN_JE_FRAGE = 90;
+const TAGE_MERKEN = 120;
+
+function aufraeumen<T>(tage: Record<string, T>): Record<string, T> {
+  const keys = Object.keys(tage);
+  if (keys.length <= TAGE_MERKEN) return tage;
+  const behalten = keys.sort().slice(-TAGE_MERKEN);
+  return Object.fromEntries(behalten.map((k) => [k, tage[k]]));
+}
+
+function zeitDazu(s: Stand, sekunden: number): Stand {
+  const sek = Math.round(Math.max(0, sekunden));
+  if (sek === 0) return s;
+  const heute = tagKey();
+  return { ...s, zeitTage: aufraeumen({ ...s.zeitTage, [heute]: (s.zeitTage[heute] ?? 0) + sek }) };
+}
+
+function themaTagDazu(s: Stand, thema: ThemaId, richtig: boolean): Stand {
+  const heute = tagKey();
+  const tag = s.themaTage[heute] ?? {};
+  const [r, f] = tag[thema] ?? [0, 0];
+  return {
+    ...s,
+    themaTage: aufraeumen({ ...s.themaTage, [heute]: { ...tag, [thema]: [r + (richtig ? 1 : 0), f + (richtig ? 0 : 1)] } }),
+  };
+}
+
 function xpDazu(s: Stand, xp: number): Stand {
   const heute = tagKey();
   return { ...s, xp: s.xp + xp, xpTage: { ...s.xpTage, [heute]: (s.xpTage[heute] ?? 0) + xp } };
@@ -255,8 +364,10 @@ function mitErfolgen(s: Stand, extra: string[] = []): { stand: Stand; neu: strin
 type StandKontext = {
   stand: Stand;
   bereit: boolean;
-  /** Antwort verbuchen; gibt die gutgeschriebenen XP zurück. */
-  antwort: (id: string, richtig: boolean) => number;
+  /** Antwort verbuchen (optional mit Bearbeitungszeit); gibt die gutgeschriebenen XP zurück. */
+  antwort: (id: string, richtig: boolean, sekunden?: number) => number;
+  /** Lernzeit gutschreiben, z. B. nach einer Prüfungssimulation. */
+  zeitBuchen: (sekunden: number) => void;
   merken: (id: string) => void;
   trainingFertig: (richtig: number, gesamt: number) => void;
   pruefungFertig: (p: Omit<Pruefung, "datum">) => number;
@@ -314,7 +425,7 @@ export function StandProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const antwort = useCallback(
-    (id: string, richtig: boolean) => {
+    (id: string, richtig: boolean, sekunden = 0) => {
       let s = aktuell.current;
       const alt = s.fragen[id] ?? { r: 0, f: 0, t: 0, box: 0, l: 0 as const };
       const neu: FrageStand = {
@@ -326,6 +437,9 @@ export function StandProvider({ children }: { children: ReactNode }) {
         l: richtig ? 1 : 0,
       };
       s = { ...s, fragen: { ...s.fragen, [id]: neu } };
+      const thema = FRAGEN.find((f) => f.id === id)?.thema;
+      if (thema) s = themaTagDazu(s, thema, richtig);
+      s = zeitDazu(s, Math.min(MAX_SEKUNDEN_JE_FRAGE, sekunden));
       const heute = tagKey();
       const vorher = s.antwortenTage[heute] ?? 0;
       s = { ...s, antwortenTage: { ...s.antwortenTage, [heute]: vorher + 1 } };
@@ -340,6 +454,8 @@ export function StandProvider({ children }: { children: ReactNode }) {
     },
     [anwenden],
   );
+
+  const zeitBuchen = useCallback((sekunden: number) => anwenden(zeitDazu(aktuell.current, sekunden)), [anwenden]);
 
   const merken = useCallback(
     (id: string) => {
@@ -430,6 +546,7 @@ export function StandProvider({ children }: { children: ReactNode }) {
       stand,
       bereit,
       antwort,
+      zeitBuchen,
       merken,
       trainingFertig,
       pruefungFertig,
@@ -442,7 +559,7 @@ export function StandProvider({ children }: { children: ReactNode }) {
       neueErfolge,
       erfolgeGesehen: () => setNeueErfolge([]),
     }),
-    [stand, bereit, antwort, merken, trainingFertig, pruefungFertig, duellFertig, setzen, clipUmschalten, gebuchtSetzen, ersetzen, zuruecksetzen, neueErfolge],
+    [stand, bereit, antwort, zeitBuchen, merken, trainingFertig, pruefungFertig, duellFertig, setzen, clipUmschalten, gebuchtSetzen, ersetzen, zuruecksetzen, neueErfolge],
   );
 
   return <Kontext.Provider value={wert}>{children}</Kontext.Provider>;

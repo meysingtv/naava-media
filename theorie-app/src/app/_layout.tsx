@@ -6,8 +6,8 @@ import * as Notifications from "expo-notifications";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Archivo_600SemiBold, Archivo_700Bold, Archivo_800ExtraBold, useFonts } from "@expo-google-fonts/archivo";
-import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from "@expo-google-fonts/inter";
+import { Archivo_800ExtraBold, useFonts } from "@expo-google-fonts/archivo";
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 
 import { T } from "@/components/ui";
 import { erfolgVon } from "@/lib/erfolge";
@@ -103,13 +103,14 @@ function Navigation() {
           <Stack.Screen name="pruefung" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="online-duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
-          <Stack.Screen name="profil" />
+          <Stack.Screen name="clips" />
           <Stack.Screen name="elo" />
           <Stack.Screen name="thema/[id]" />
           <Stack.Screen name="formeln" />
           <Stack.Screen name="zeichen" />
           <Stack.Screen name="premium" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="einstellungen" />
+          <Stack.Screen name="bildnachweise" />
         </Stack.Protected>
       </Stack>
       <ErfolgHinweis />
@@ -119,13 +120,12 @@ function Navigation() {
 
 export default function RootLayout() {
   const [schriftenGeladen] = useFonts({
-    Archivo_600SemiBold,
-    Archivo_700Bold,
     Archivo_800ExtraBold,
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
+    Inter_800ExtraBold,
   });
 
   if (!schriftenGeladen) return null;

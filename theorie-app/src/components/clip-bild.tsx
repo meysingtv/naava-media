@@ -80,7 +80,7 @@ function Leuchten({ breite, aktiv }: { breite: number; aktiv: boolean }) {
   const liste: LeuchteKey[] = ["leuchte_oel", "leuchte_batterie", "leuchte_bremse", "leuchte_kuehlmittel", "leuchte_motor", "leuchte_fernlicht"];
   const g = breite * 0.2;
   return (
-    <View style={{ flex: 1, backgroundColor: "#05080F", flexDirection: "row", flexWrap: "wrap", alignContent: "center", justifyContent: "center", paddingHorizontal: breite * 0.04 }}>
+    <View style={{ flex: 1, backgroundColor: "#060708", flexDirection: "row", flexWrap: "wrap", alignContent: "center", justifyContent: "center", paddingHorizontal: breite * 0.04 }}>
       {liste.map((l, i) => (
         <View key={l} style={{ width: "33%", alignItems: "center", marginVertical: breite * 0.02 }}>
           <View style={{ width: g, height: g }}>
@@ -194,7 +194,7 @@ function Rettungsgasse({ breite, aktiv }: { breite: number; aktiv: boolean }) {
       <Szene breite={breite}>
         <Rect x={0} y={0} width={SB} height={SH} fill={GRUND} />
         <Rect x={58} y={0} width={196} height={SH} fill={ASPHALT} />
-        <Rect x={212} y={0} width={42} height={SH} fill="#26304A" />
+        <Rect x={212} y={0} width={42} height={SH} fill="#30343C" />
         <Line x1={61} y1={0} x2={61} y2={SH} stroke={MARKIERUNG} strokeWidth={2.4} />
         <Line x1={211} y1={0} x2={211} y2={SH} stroke={MARKIERUNG} strokeWidth={2.4} />
         <Line x1={110} y1={0} x2={110} y2={SH} stroke={MARKIERUNG} strokeWidth={2} strokeDasharray="14 12" />
@@ -245,8 +245,8 @@ function Kreisverkehr({ breite, aktiv }: { breite: number; aktiv: boolean }) {
         <Rect x={0} y={87} width={98} height={50} fill={ASPHALT} />
         <Rect x={202} y={87} width={98} height={50} fill={ASPHALT} />
         <Circle cx={cx} cy={cy} r={68} fill={ASPHALT} />
-        <Circle cx={cx} cy={cy} r={33} fill="#16213B" stroke={RAND} strokeWidth={2} />
-        <Circle cx={cx} cy={cy} r={20} fill="#1B2A48" />
+        <Circle cx={cx} cy={cy} r={33} fill="#1B1E23" stroke={RAND} strokeWidth={2} />
+        <Circle cx={cx} cy={cy} r={20} fill="#232730" />
       </Szene>
       {/* Drehteller: das Auto fährt gegen den Uhrzeigersinn im Kreis */}
       <Animated.View
@@ -298,7 +298,7 @@ function Abstand({ breite, aktiv }: { breite: number; aktiv: boolean }) {
         <Line x1={86} y1={70} x2={210} y2={70} stroke={farben.orange} strokeWidth={2} />
         <Line x1={86} y1={63} x2={86} y2={77} stroke={farben.orange} strokeWidth={2} />
         <Line x1={210} y1={63} x2={210} y2={77} stroke={farben.orange} strokeWidth={2} />
-        <SvgText x={148} y={56} fill={farben.orange} fontSize={16} fontFamily={schrift.titel} fontWeight="800" textAnchor="middle">
+        <SvgText x={148} y={56} fill={farben.orange} fontSize={16} fontFamily={schrift.schild} fontWeight="800" textAnchor="middle">
           50 m
         </SvgText>
         <SvgText x={62} y={210} fill={farben.text3} fontSize={11} fontFamily={schrift.textHalb} textAnchor="middle">
@@ -345,12 +345,12 @@ function Schulbus({ breite, aktiv }: { breite: number; aktiv: boolean }) {
         <Line x1={0} y1={110} x2={SB} y2={110} stroke={MARKIERUNG} strokeWidth={2} strokeDasharray="12 10" />
         <Line x1={262} y1={186} x2={262} y2={170} stroke="#AEB6C8" strokeWidth={2} />
         <Circle cx={262} cy={164} r={10} fill={farben.schildGelb} stroke="#1E7F4F" strokeWidth={2} />
-        <SvgText x={262} y={168.5} fill="#1E7F4F" fontSize={12} fontFamily={schrift.titel} fontWeight="800" textAnchor="middle">
+        <SvgText x={262} y={168.5} fill="#1E7F4F" fontSize={12} fontFamily={schrift.schild} fontWeight="800" textAnchor="middle">
           H
         </SvgText>
         <Rect x={168} y={115} width={112} height={31} rx={6} fill="#FFC857" />
         {[0, 1, 2, 3, 4].map((i) => (
-          <Rect key={i} x={176 + i * 19} y={119} width={13} height={6} rx={1.5} fill="#0A0F1E" opacity={0.55} />
+          <Rect key={i} x={176 + i * 19} y={119} width={13} height={6} rx={1.5} fill="#0B0C0F" opacity={0.55} />
         ))}
         <Circle cx={158} cy={162} r={4.5} fill="#F2C9A5" />
         <Rect x={153} y={167} width={10} height={12} rx={4} fill={ANDERE} />

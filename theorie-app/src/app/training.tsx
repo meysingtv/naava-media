@@ -1,15 +1,15 @@
 import { useRef, useState } from "react";
-import { Alert, Animated, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
+import { Alert, Animated, Keyboard, KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Abschnitt, Chip, Gruppe, Knopf, Plakette, T, Zeile } from "@/components/ui";
+import { Abschnitt, Chip, Gruppe, Knopf, KopfTaste, Plakette, T, Zeile } from "@/components/ui";
 import { FrageAnsicht } from "@/components/frage-ansicht";
 import { Ring } from "@/components/grafik";
 import { antwortRichtig, frageVon, FRAGEN, fragenZuThema, istBildfrage, istZeichen, themaVon, zahlLesen, type ThemaId } from "@/lib/fragen";
-import { erfolg, fehler, tippen } from "@/lib/haptik";
-import { fehlerIds, gemerktIds, gemischt, heuteBeantwortet, serieAktuell, smartAuswahl, useStand, type Stand } from "@/lib/stand";
+import { erfolg, fehler } from "@/lib/haptik";
+import { fehlerIds, gemerktIds, gemischt, heuteBeantwortet, schwierigeIds, serieAktuell, smartAuswahl, useStand, type Stand } from "@/lib/stand";
 import { abstand, farben, RAND } from "@/lib/theme";
 
 type Params = { modus?: string; thema?: string; start?: string };
@@ -20,8 +20,9 @@ const TITEL: Record<string, string> = {
   bild: "Bildfragen",
   zeichen: "Zeichenfragen",
   zahl: "Zahlenfragen",
-  gemerkt: "Gemerkte Fragen",
+  gemerkt: "Favoriten",
   fehler: "Fehler üben",
+  schwierig: "Schwierige Fragen",
 };
 
 function fragenFuer(p: Params, s: Stand): string[] {
@@ -37,6 +38,8 @@ function fragenFuer(p: Params, s: Stand): string[] {
       return gemischt(fehlerIds(s).filter((id) => !thema || frageVon(id)?.thema === thema));
     case "gemerkt":
       return gemischt(gemerktIds(s));
+    case "schwierig":
+      return schwierigeIds(s).slice(0, 20);
     case "bild":
       return smartAuswahl(s, 15, FRAGEN.filter((f) => istBildfrage(f.bild)));
     case "zeichen":
@@ -67,6 +70,7 @@ export default function Training() {
   const [toastXp, setToastXp] = useState(0);
   const toast = useRef(new Animated.Value(0)).current;
   const scroll = useRef<ScrollView>(null);
+  const frageSeit = useRef(Date.now());
 
   const titel = params.modus === "thema" && params.thema ? themaVon(params.thema as ThemaId).titel : TITEL[params.modus ?? "smart"] ?? "Training";
   const frage = ids[index] ? frageVon(ids[index]) : undefined;
@@ -86,7 +90,7 @@ export default function Training() {
     if (!frage) return;
     Keyboard.dismiss();
     const ok = antwortRichtig(frage, auswahl, eingabe);
-    const xp = antwort(frage.id, ok);
+    const xp = antwort(frage.id, ok, (Date.now() - frageSeit.current) / 1000);
     if (ok) erfolg();
     else fehler();
     setErgebnisse((e) => [...e, { id: frage.id, richtig: ok }]);
@@ -108,6 +112,7 @@ export default function Training() {
       setAuswahl([]);
       setEingabe("");
       setAufgedeckt(false);
+      frageSeit.current = Date.now();
       scroll.current?.scrollTo({ y: 0, animated: false });
       return;
     }
@@ -122,12 +127,12 @@ export default function Training() {
       params.modus === "fehler"
         ? "Keine offenen Fehler – alles, was du falsch hattest, sitzt inzwischen."
         : params.modus === "gemerkt"
-          ? "Du hast noch keine Fragen gemerkt. Tippe beim Lernen oben rechts auf das Lesezeichen."
+          ? "Du hast noch keine Favoriten. Tippe beim Lernen oben rechts auf das Herz."
           : "Hier gibt es gerade keine Fragen.";
     return (
       <View style={{ flex: 1, backgroundColor: farben.grund, paddingTop: insets.top, paddingHorizontal: RAND, justifyContent: "center", gap: abstand(5) }}>
-        <Plakette icon={params.modus === "fehler" ? "checkmark-done" : "bookmark-outline"} groesse={64} />
-        <T v="titel">{params.modus === "fehler" ? "Alles erledigt." : "Noch leer."}</T>
+        <Plakette icon={params.modus === "fehler" || params.modus === "schwierig" ? "checkmark-done" : "heart-outline"} groesse={64} />
+        <T v="titel">{params.modus === "fehler" || params.modus === "schwierig" ? "Alles erledigt." : "Noch leer."}</T>
         <T v="text">{text}</T>
         <Knopf titel="Zurück" art="sekundaer" onPress={() => router.back()} />
       </View>
@@ -191,51 +196,47 @@ export default function Training() {
   // ------------------------------------------------------------------ Frage
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <View style={{ paddingTop: insets.top + abstand(2), paddingHorizontal: RAND - 6, paddingBottom: abstand(3), gap: abstand(3) }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(3) }}>
-          <Pressable onPress={schliessen} hitSlop={10} accessibilityLabel="Schließen" style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}>
-            <Ionicons name="close" size={26} color={farben.text} />
-          </Pressable>
-          <View style={{ flex: 1, flexDirection: "row", gap: 3 }}>
-            {ids.map((id, i) => {
-              const e = ergebnisse[i];
-              return (
-                <View
-                  key={id}
-                  style={{
-                    flex: 1,
-                    height: 5,
-                    borderRadius: 3,
-                    backgroundColor: e ? (e.richtig ? farben.gruen : farben.rot) : i === index ? farben.orange : farben.flaeche3,
-                  }}
-                />
-              );
-            })}
+      <View style={{ paddingTop: insets.top + abstand(1.5), paddingHorizontal: RAND - 8, paddingBottom: abstand(3), gap: abstand(3) }}>
+        <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
+            <T v="h3" style={{ fontSize: 19, fontVariant: ["tabular-nums"] }}>
+              Frage {index + 1}/{ids.length}
+            </T>
+            <T v="klein" numberOfLines={1} style={{ fontSize: 11.5, marginTop: -1 }}>
+              {titel}
+            </T>
           </View>
-          <Pressable
-            onPress={() => {
-              tippen();
-              merken(frage.id);
-            }}
-            hitSlop={10}
-            accessibilityLabel={gemerkt ? "Nicht mehr merken" : "Frage merken"}
-            style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
-          >
-            <Ionicons name={gemerkt ? "bookmark" : "bookmark-outline"} size={22} color={gemerkt ? farben.orange : farben.text2} />
-          </Pressable>
+          <KopfTaste icon="arrow-back" label="Training beenden" onPress={schliessen} />
+          <KopfTaste
+            icon={gemerkt ? "heart" : "heart-outline"}
+            farbe={gemerkt ? farben.orange : farben.text}
+            label={gemerkt ? "Aus den Favoriten entfernen" : "Zu den Favoriten"}
+            onPress={() => merken(frage.id)}
+          />
         </View>
-        <T v="klein" style={{ paddingHorizontal: 6 }}>
-          {titel} · Frage {index + 1} von {ids.length}
-        </T>
+        <View style={{ marginHorizontal: 8, height: 9, borderRadius: 5, backgroundColor: farben.flaeche3 }}>
+          <View
+            style={{
+              width: `${Math.max(4, ((index + (aufgedeckt ? 1 : 0)) / ids.length) * 100)}%`,
+              height: "100%",
+              borderRadius: 5,
+              backgroundColor: farben.orange,
+              shadowColor: farben.orange,
+              shadowOpacity: 0.7,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 0 },
+            }}
+          />
+        </View>
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView ref={scroll} contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: abstand(8) }} keyboardShouldPersistTaps="handled">
           <FrageAnsicht frage={frage} auswahl={auswahl} onAuswahl={setAuswahl} eingabe={eingabe} onEingabe={setEingabe} aufgedeckt={aufgedeckt} />
         </ScrollView>
-        <View style={{ paddingHorizontal: RAND, paddingTop: abstand(3), paddingBottom: insets.bottom + abstand(3), borderTopWidth: 1, borderColor: farben.linie, backgroundColor: farben.grund }}>
+        <View style={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: insets.bottom + abstand(3), backgroundColor: farben.grund }}>
           {aufgedeckt ? (
-            <Knopf titel={letzte ? "Auswertung" : "Weiter"} icon="arrow-forward" onPress={weiter} />
+            <Knopf titel={letzte ? "Auswertung" : "Nächste Frage"} icon="arrow-forward" onPress={weiter} />
           ) : (
             <Knopf titel="Antwort prüfen" deaktiviert={!kannPruefen} onPress={pruefen} />
           )}

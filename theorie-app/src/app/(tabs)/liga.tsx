@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Abschnitt, Avatar, Chip, Eingabe, Gruppe, Karte, Knopf, T, Zeile } from "@/components/ui";
+import { Abschnitt, Avatar, Chip, Eingabe, Gruppe, Karte, Knopf, KopfTaste, Segment, T, Zeile } from "@/components/ui";
 import { INHALT_UNTEN } from "@/components/tab-leiste";
 import { GEGNER } from "@/lib/duell";
 import { tausender } from "@/lib/format";
@@ -17,30 +17,6 @@ import { serverVerbunden } from "@/lib/supabase";
 import { abstand, farben, radius, RAND, schrift } from "@/lib/theme";
 
 type Ansicht = "rangliste" | "duell";
-
-function Umschalter<W extends string>({ wert, optionen, onWechsel }: { wert: W; optionen: { id: W; titel: string }[]; onWechsel: (a: W) => void }) {
-  return (
-    <View style={{ flexDirection: "row", padding: 4, borderRadius: 14, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
-      {optionen.map((o) => {
-        const aktiv = o.id === wert;
-        return (
-          <Pressable
-            key={o.id}
-            onPress={() => {
-              tippen();
-              onWechsel(o.id);
-            }}
-            style={{ flex: 1, height: 38, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: aktiv ? farben.flaeche3 : "transparent" }}
-          >
-            <T v="textStark" farbe={aktiv ? farben.text : farben.text3} style={{ fontSize: 14 }} numberOfLines={1}>
-              {o.titel}
-            </T>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
 
 const PODEST = [farben.orange, "#C7CDDA", "#B98A5E"];
 
@@ -163,24 +139,30 @@ export default function Liga() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: farben.grund }}
-      contentContainerStyle={{ paddingTop: insets.top + abstand(3), paddingHorizontal: RAND, paddingBottom: INHALT_UNTEN, gap: abstand(5) }}
+      contentContainerStyle={{ paddingTop: insets.top + abstand(1.5), paddingHorizontal: RAND, paddingBottom: INHALT_UNTEN, gap: abstand(5) }}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <T v="titel">Liga</T>
+      <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginHorizontal: -8 }}>
+        <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
+          <T v="h3" style={{ fontSize: 19 }}>
+            Rangliste
+          </T>
+        </View>
+        <KopfTaste icon="arrow-back" label="Zur Startseite" onPress={() => router.navigate("/heute")} />
         <Pressable
           onPress={() => {
             tippen();
-            router.push("/profil");
+            router.navigate("/profil");
           }}
           hitSlop={6}
           accessibilityLabel="Profil"
+          style={{ marginRight: 6 }}
         >
-          <Avatar name={anzeigeName} groesse={40} />
+          <Avatar name={anzeigeName} groesse={36} />
         </Pressable>
       </View>
 
-      <Umschalter<Ansicht>
+      <Segment<Ansicht>
         wert={ansicht}
         onWechsel={setAnsicht}
         optionen={[
@@ -227,7 +209,7 @@ export default function Liga() {
             ) : null}
           </Karte>
 
-          <Umschalter<"de" | "land">
+          <Segment<"de" | "land">
             wert={regional ? "land" : "de"}
             onWechsel={(w) => regionalWaehlen(w === "land")}
             optionen={[

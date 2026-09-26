@@ -81,7 +81,7 @@ export default function Einstellungen() {
       <Kopf titel="Einstellungen" />
       <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(10), gap: abstand(7) }} keyboardShouldPersistTaps="handled">
         <View>
-          <Abschnitt titel="Tagesziel" />
+          <Abschnitt titel="Tagesziel" klein />
           <View style={{ flexDirection: "row", gap: abstand(2) }}>
             {ZIELE.map((z) => (
               <Chip key={z} text={`${z} Fragen`} aktiv={stand.tagesziel === z} onPress={() => setzen({ tagesziel: z })} />
@@ -93,7 +93,7 @@ export default function Einstellungen() {
         </View>
 
         <View>
-          <Abschnitt titel="Führerscheinklasse" />
+          <Abschnitt titel="Führerscheinklasse" klein />
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: abstand(2) }}>
             {KLASSEN.map((k) => (
               <Chip key={k} text={`Klasse ${k}`} aktiv={stand.klasse === k} onPress={() => klasseAendern(k)} />
@@ -103,7 +103,7 @@ export default function Einstellungen() {
 
         {session ? (
           <View>
-            <Abschnitt titel="Bundesland" />
+            <Abschnitt titel="Bundesland" klein />
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: abstand(2) }}>
               {BUNDESLAENDER.map((b) => (
                 <Chip
@@ -124,7 +124,7 @@ export default function Einstellungen() {
         ) : null}
 
         <View>
-          <Abschnitt titel="Erinnerung" />
+          <Abschnitt titel="Erinnerung" klein />
           <Gruppe>
             <Zeile
               icon="notifications-outline"
@@ -156,7 +156,7 @@ export default function Einstellungen() {
         </View>
 
         <View>
-          <Abschnitt titel="Konto" />
+          <Abschnitt titel="Konto" klein />
           {session ? (
             <View style={{ gap: abstand(3) }}>
               <Eingabe icon="person-outline" value={name} onChangeText={setName} placeholder="Vorname" autoCapitalize="words" />
@@ -193,20 +193,19 @@ export default function Einstellungen() {
           )}
         </View>
 
-        {SUPPORT || DATENSCHUTZ || IMPRESSUM || AGB ? (
-          <View>
-            <Abschnitt titel="Hilfe & Rechtliches" />
-            <Gruppe>
-              {SUPPORT ? <Zeile icon="help-buoy-outline" titel="Hilfe & Kontakt" onPress={() => Linking.openURL(`mailto:${SUPPORT}`)} /> : null}
-              {DATENSCHUTZ ? <Zeile icon="shield-outline" titel="Datenschutz" onPress={() => Linking.openURL(DATENSCHUTZ)} /> : null}
-              {IMPRESSUM ? <Zeile icon="document-text-outline" titel="Impressum" onPress={() => Linking.openURL(IMPRESSUM)} /> : null}
-              {AGB ? <Zeile icon="reader-outline" titel="AGB" onPress={() => Linking.openURL(AGB)} /> : null}
-            </Gruppe>
-          </View>
-        ) : null}
+        <View>
+          <Abschnitt titel="Hilfe & Rechtliches" klein />
+          <Gruppe>
+            {SUPPORT ? <Zeile icon="help-buoy-outline" titel="Hilfe & Kontakt" onPress={() => Linking.openURL(`mailto:${SUPPORT}`)} /> : null}
+            {DATENSCHUTZ ? <Zeile icon="shield-outline" titel="Datenschutz" onPress={() => Linking.openURL(DATENSCHUTZ)} /> : null}
+            {IMPRESSUM ? <Zeile icon="document-text-outline" titel="Impressum" onPress={() => Linking.openURL(IMPRESSUM)} /> : null}
+            {AGB ? <Zeile icon="reader-outline" titel="AGB" onPress={() => Linking.openURL(AGB)} /> : null}
+            <Zeile icon="images-outline" titel="Bildnachweise" onPress={() => router.push("/bildnachweise")} />
+          </Gruppe>
+        </View>
 
         <View>
-          <Abschnitt titel="Daten" />
+          <Abschnitt titel="Daten" klein />
           <Gruppe>
             <Zeile icon="refresh-circle-outline" titel="Fortschritt zurücksetzen" unter="Antworten, Serien, Abzeichen" gefahr ohnePfeil onPress={zuruecksetzenFragen} />
           </Gruppe>

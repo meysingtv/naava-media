@@ -261,6 +261,7 @@ export default function Duell() {
           onEingabe={() => {}}
           aufgedeckt={aufgedeckt}
           ohneErklaerung
+          kompakt
         />
       </ScrollView>
 

@@ -1,35 +1,39 @@
-// Design-Tokens von „Spur“. Farbwelt angelehnt an fahrschulpro.de: tiefes
-// Nachtblau als Grund, Orange als einzige Signalfarbe. Flächen sind flach,
-// Kanten nur als feine Haarlinien – keine Glanz- oder Glaseffekte.
+// Design-Tokens von „Spur“: tiefes Schwarz als Grund, kräftiges Orange als
+// Signalfarbe, Grün für richtig. Karten sind leicht angehoben und tragen eine
+// feine helle Kante; Fotos bringen die Farbe in die Oberfläche.
 
 export const farben = {
-  grund: "#0A0F1E",
-  grundHoch: "#0D1324",
-  flaeche: "#121A2E",
-  flaeche2: "#18213A",
-  flaeche3: "#1F2A47",
-  linie: "rgba(199,205,218,0.08)",
-  linieStark: "rgba(199,205,218,0.16)",
+  grund: "#0B0C0F",
+  grundHoch: "#111316",
+  flaeche: "#16181C",
+  flaeche2: "#1D2025",
+  flaeche3: "#2A2D33",
+  linie: "rgba(255,255,255,0.08)",
+  linieStark: "rgba(255,255,255,0.15)",
 
-  text: "#F4F6FA",
-  text2: "#C7CDDA",
-  text3: "#8A93A8",
-  text4: "#5A6380",
+  text: "#F5F6F7",
+  text2: "#C9CCD1",
+  text3: "#8E939B",
+  text4: "#5E636B",
 
-  orange: "#F47B45",
-  orangeTief: "#E8551A",
-  orangeSoft: "rgba(244,123,69,0.13)",
-  orangeLinie: "rgba(244,123,69,0.45)",
-  aufOrange: "#0A0F1E",
+  orange: "#FF7A00",
+  orangeHell: "#FF9632",
+  orangeTief: "#E86200",
+  orangeSoft: "rgba(255,122,0,0.14)",
+  orangeLinie: "rgba(255,122,0,0.55)",
+  orangeDunkel: "#2E1A08",
+  aufOrange: "#FFFFFF",
 
-  blau: "#64ACFF",
-  blauSoft: "rgba(100,172,255,0.13)",
-  gruen: "#38D39F",
-  gruenSoft: "rgba(56,211,159,0.13)",
-  rot: "#FF6B6B",
-  rotSoft: "rgba(255,107,107,0.13)",
-  gelb: "#FFC857",
-  gelbSoft: "rgba(255,200,87,0.13)",
+  blau: "#4DA3FF",
+  blauSoft: "rgba(77,163,255,0.14)",
+  gruen: "#5DD14A",
+  gruenSoft: "rgba(93,209,74,0.14)",
+  gruenDunkel: "#16261A",
+  rot: "#FF5A4E",
+  rotSoft: "rgba(255,90,78,0.14)",
+  gelb: "#FFB21E",
+  gelbSoft: "rgba(255,178,30,0.14)",
+  bernstein: "#FFA41B",
 
   // Verkehrszeichen und Lagepläne
   schildRot: "#C8102E",
@@ -37,24 +41,33 @@ export const farben = {
   schildGelb: "#F2C500",
   schildWeiss: "#FFFFFF",
   schildSchwarz: "#111111",
-  asphalt: "#2A3350",
-  asphaltRand: "#3A4566",
-  gelaende: "#0F1629",
+  asphalt: "#2B2E35",
+  asphaltRand: "#3B3F48",
+  gelaende: "#121418",
 } as const;
 
 export const schrift = {
-  titel: "Archivo_800ExtraBold",
-  titelFett: "Archivo_700Bold",
-  titelHalb: "Archivo_600SemiBold",
+  titel: "Inter_800ExtraBold",
+  titelFett: "Inter_700Bold",
+  titelHalb: "Inter_600SemiBold",
   text: "Inter_400Regular",
   textMittel: "Inter_500Medium",
   textHalb: "Inter_600SemiBold",
   textFett: "Inter_700Bold",
+  /** Schmale Schrift für Zahlen auf Verkehrszeichen und das Logo. */
+  schild: "Archivo_800ExtraBold",
 } as const;
 
-export const radius = { s: 10, m: 14, l: 20, xl: 26, voll: 999 } as const;
+export const radius = { s: 10, m: 14, l: 18, xl: 24, voll: 999 } as const;
 
 export const abstand = (n: number) => n * 4;
 
 /** Seitenrand links/rechts. */
-export const RAND = 20;
+export const RAND = 18;
+
+/** Farbe für eine Erfolgsquote: grün ab 75 %, bernstein ab 60 %, sonst orange. */
+export function quoteFarbe(anteil: number): string {
+  if (anteil >= 0.75) return farben.gruen;
+  if (anteil >= 0.6) return farben.bernstein;
+  return farben.orange;
+}

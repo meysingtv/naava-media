@@ -4,11 +4,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Abschnitt, Gruppe, Knopf, Kopf, T, Zeile } from "@/components/ui";
+import { FotoFlaeche } from "@/components/foto";
 import { Ring } from "@/components/grafik";
 import { Verkehrszeichen } from "@/components/zeichen";
 import { Kontrollleuchte } from "@/components/leuchten";
 import { fragenZuThema, istZeichen, themaVon, type LeuchteKey, type ThemaId, type ZeichenKey } from "@/lib/fragen";
-import { themaStatistik, useStand } from "@/lib/stand";
+import { themaFoto } from "@/lib/fotos";
+import { fortschritt, themaStatistik, useStand } from "@/lib/stand";
 import { abstand, farben, RAND } from "@/lib/theme";
 
 export default function ThemaSeite() {
@@ -18,6 +20,7 @@ export default function ThemaSeite() {
   const thema = themaVon(id as ThemaId);
   const fragen = fragenZuThema(thema.id);
   const stat = themaStatistik(stand, thema.id);
+  const fort = fortschritt(stand, fragen);
 
   const status = (frageId: string) => {
     const fs = stand.fragen[frageId];
@@ -29,20 +32,27 @@ export default function ThemaSeite() {
 
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <Kopf />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: abstand(8), gap: abstand(7) }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(5) }}>
-          <View style={{ flex: 1, gap: abstand(2) }}>
-            <T v="mini" farbe={farben.orange}>
-              Haltestelle
-            </T>
-            <T v="titel">{thema.titel}</T>
-            <T v="text">{thema.kurz}</T>
+      <Kopf titel={thema.titel} />
+      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(1), paddingBottom: abstand(8), gap: abstand(5) }}>
+        <FotoFlaeche quelle={themaFoto(thema.id)} verlauf="links" style={{ height: 200, borderRadius: 22 }}>
+          <View style={{ flex: 1, padding: abstand(5), flexDirection: "row", alignItems: "flex-end", gap: abstand(3) }}>
+            <View style={{ flex: 1, gap: abstand(1) }}>
+              <T v="titel" style={{ fontSize: 26, textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 8 }}>
+                {thema.titel}
+              </T>
+              <T v="text" farbe="#E4E6EA" style={{ textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 6 }}>
+                {thema.kurz}
+              </T>
+            </View>
+            <View style={{ width: 86, height: 86, borderRadius: 43, backgroundColor: "rgba(10,11,14,0.62)" }}>
+              <Ring anteil={fort.anteil} groesse={86} dicke={7} spur="rgba(255,255,255,0.14)">
+                <T v="h3" style={{ fontSize: 18 }}>
+                  {Math.round(fort.anteil * 100)}%
+                </T>
+              </Ring>
+            </View>
           </View>
-          <Ring anteil={stat.anteil} groesse={96} dicke={8}>
-            <T v="h2">{Math.round(stat.anteil * 100)} %</T>
-          </Ring>
-        </View>
+        </FotoFlaeche>
 
         <View style={{ flexDirection: "row", gap: abstand(2) }}>
           {[

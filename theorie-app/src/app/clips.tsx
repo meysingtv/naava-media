@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Chip, Knopf, Plakette, T } from "@/components/ui";
+import { Chip, Knopf, KopfTaste, Plakette, T, zurueck } from "@/components/ui";
 import { ClipBild } from "@/components/clip-bild";
 import { CLIPS, type Clip } from "@/lib/clips";
 import { stoss, tippen } from "@/lib/haptik";
@@ -182,13 +182,16 @@ export default function Clips() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund, paddingTop: insets.top + abstand(2) }}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: RAND, paddingBottom: abstand(3) }}>
-        <View>
-          <T v="titel">Clips</T>
+    <View style={{ flex: 1, backgroundColor: farben.grund, paddingTop: insets.top + abstand(1.5), paddingBottom: insets.bottom }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(2), paddingHorizontal: RAND - 8, paddingBottom: abstand(3) }}>
+        <KopfTaste icon="arrow-back" label="Zurück" onPress={zurueck} />
+        <View style={{ flex: 1 }}>
+          <T v="h3" style={{ fontSize: 19 }}>
+            Clips
+          </T>
           <T v="klein">Kurz erklärt – wisch nach oben</T>
         </View>
-        <View style={{ flexDirection: "row", gap: abstand(2) }}>
+        <View style={{ flexDirection: "row", gap: abstand(2), paddingRight: 8 }}>
           <Chip text="Für dich" aktiv={ansicht === "alle"} onPress={() => wechsel("alle")} />
           <Chip text={String(stand.clips.gemerkt.length)} icon="bookmark" aktiv={ansicht === "gemerkt"} onPress={() => wechsel("gemerkt")} />
         </View>

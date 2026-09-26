@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Abschnitt, Chip, Gruppe, Karte, Knopf, Kopf, T, Zeile } from "@/components/ui";
+import { Abschnitt, Chip, Gruppe, Karte, Knopf, Kopf, KopfTaste, T, Zeile } from "@/components/ui";
 import { FrageAnsicht } from "@/components/frage-ansicht";
 import { Ring } from "@/components/grafik";
 import { antwortRichtig, frageVon, FRAGEN, THEMEN, themaVon, type Frage } from "@/lib/fragen";
@@ -36,9 +36,10 @@ function beantwortet(f: Frage, a?: { auswahl: number[]; eingabe: string }) {
 
 export default function Pruefung() {
   const insets = useSafeAreaInsets();
-  const { stand, antwort, pruefungFertig } = useStand();
-  const [phase, setPhase] = useState<"start" | "laeuft" | "ergebnis" | "aufloesung">("start");
-  const [ids, setIds] = useState<string[]>([]);
+  const { direkt } = useLocalSearchParams<{ direkt?: string }>();
+  const { stand, antwort, pruefungFertig, zeitBuchen } = useStand();
+  const [phase, setPhase] = useState<"start" | "laeuft" | "ergebnis" | "aufloesung">(direkt ? "laeuft" : "start");
+  const [ids, setIds] = useState<string[]>(() => (direkt ? pruefungsbogen() : []));
   const [index, setIndex] = useState(0);
   const [antworten, setAntworten] = useState<Antworten>({});
   const [sekunden, setSekunden] = useState(0);
@@ -86,6 +87,7 @@ export default function Pruefung() {
     // Durchgefallen bei mehr als 10 Fehlerpunkten – oder bei zwei falschen 5-Punkte-Fragen.
     const bestanden = fehlerpunkte <= MAX_FEHLERPUNKTE && fuenfer < 2;
     const xp = pruefungFertig({ fehlerpunkte, bestanden, richtig, gesamt: ids.length });
+    zeitBuchen(Math.min(sekunden, 60 * 60));
     if (bestanden) erfolg();
     else fehler();
     setErgebnis({ fehlerpunkte, bestanden, richtig, falsche, xp, fuenfer });
@@ -258,33 +260,49 @@ export default function Pruefung() {
 
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <View style={{ paddingTop: insets.top + abstand(2), paddingHorizontal: RAND - 6, flexDirection: "row", alignItems: "center", gap: abstand(2) }}>
-        <Pressable
-          onPress={() =>
-            Alert.alert("Simulation abbrechen?", "Diese Simulation wird nicht gewertet.", [
-              { text: "Weiter prüfen", style: "cancel" },
-              { text: "Abbrechen", style: "destructive", onPress: () => router.back() },
-            ])
-          }
-          hitSlop={10}
-          style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
-        >
-          <Ionicons name="close" size={26} color={farben.text} />
-        </Pressable>
-        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 }}>
-          <Ionicons name="time-outline" size={16} color={farben.text3} />
-          <T v="textStark" style={{ fontVariant: ["tabular-nums"] }}>
-            {dauer(sekunden)}
-          </T>
-          <T v="klein">
-            · {erledigt}/{ids.length} beantwortet
-          </T>
+      <View style={{ paddingTop: insets.top + abstand(1.5), paddingHorizontal: RAND - 8, gap: abstand(2.5) }}>
+        <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <View pointerEvents="none" style={{ position: "absolute", left: 70, right: 70, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
+            <T v="h3" style={{ fontSize: 19, fontVariant: ["tabular-nums"] }}>
+              Frage {index + 1}/{ids.length}
+            </T>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Ionicons name="time-outline" size={12} color={farben.text3} />
+              <T v="klein" style={{ fontSize: 11.5, fontVariant: ["tabular-nums"] }}>
+                {dauer(sekunden)} · {erledigt} beantwortet
+              </T>
+            </View>
+          </View>
+          <KopfTaste
+            icon="close"
+            label="Simulation abbrechen"
+            onPress={() =>
+              Alert.alert("Simulation abbrechen?", "Diese Simulation wird nicht gewertet.", [
+                { text: "Weiter prüfen", style: "cancel" },
+                { text: "Abbrechen", style: "destructive", onPress: () => router.back() },
+              ])
+            }
+          />
+          <Pressable onPress={abgebenFragen} hitSlop={10} style={{ paddingHorizontal: abstand(2), height: 40, justifyContent: "center" }}>
+            <T v="textStark" farbe={farben.orange}>
+              Abgeben
+            </T>
+          </Pressable>
         </View>
-        <Pressable onPress={abgebenFragen} hitSlop={10} style={{ paddingHorizontal: abstand(2), height: 40, justifyContent: "center" }}>
-          <T v="textStark" farbe={farben.orange}>
-            Abgeben
-          </T>
-        </Pressable>
+        <View style={{ marginHorizontal: 8, height: 9, borderRadius: 5, backgroundColor: farben.flaeche3 }}>
+          <View
+            style={{
+              width: `${Math.max(4, (erledigt / Math.max(1, ids.length)) * 100)}%`,
+              height: "100%",
+              borderRadius: 5,
+              backgroundColor: farben.orange,
+              shadowColor: farben.orange,
+              shadowOpacity: 0.7,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 0 },
+            }}
+          />
+        </View>
       </View>
 
       {/* Fragen-Navigator */}
@@ -330,10 +348,10 @@ export default function Pruefung() {
             aufgedeckt={false}
           />
         </ScrollView>
-        <View style={{ flexDirection: "row", gap: abstand(3), paddingHorizontal: RAND, paddingTop: abstand(3), paddingBottom: insets.bottom + abstand(3), borderTopWidth: 1, borderColor: farben.linie }}>
+        <View style={{ flexDirection: "row", gap: abstand(3), paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: insets.bottom + abstand(3) }}>
           <Knopf titel="Zurück" art="sekundaer" deaktiviert={index === 0} onPress={() => gehe(index - 1)} style={{ flex: 1 }} />
           {index + 1 < ids.length ? (
-            <Knopf titel="Weiter" icon="arrow-forward" onPress={() => gehe(index + 1)} style={{ flex: 2 }} />
+            <Knopf titel="Nächste Frage" icon="arrow-forward" onPress={() => gehe(index + 1)} style={{ flex: 2 }} />
           ) : (
             <Knopf titel="Abgeben" icon="checkmark" onPress={abgebenFragen} style={{ flex: 2 }} />
           )}

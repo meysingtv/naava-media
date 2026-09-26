@@ -1,10 +1,16 @@
 # Spur – Theorie-App
 
-Eigenständige iOS-App zum Lernen der Führerschein-Theorie: Streckenplan mit
-Themen als Haltestellen, Tagesziel-Tacho, Training mit Lernfächern,
-Prüfungssimulation mit Fehlerpunkten, Clips (animierte Kurz-Erklärungen),
+Eigenständige iOS-App zum Lernen der Führerschein-Theorie in Schwarz und
+Orange mit Fotokarten: Home mit Tagesziel und Schnellstart, Kategorien mit
+Favoriten und schwierigen Fragen, Fragen in der Fahrersicht, Training mit
+Lernfächern, Prüfungssimulation mit Fehlerpunkten, „Mein Fortschritt“ mit
+Lernzeit sowie Stärken und Schwächen, Clips (animierte Kurz-Erklärungen),
 Online-Duelle (Rangliste mit Elo und Freundes-Code), Wochen-Liga für
 Deutschland und je Bundesland, Serien-Schutz, Abzeichen.
+
+Die Fotos stehen unter freien Lizenzen (CC0, Public Domain, CC BY, CC BY-SA);
+die Nachweise sind in `src/lib/fotos.ts` und in der App unter
+Einstellungen → Bildnachweise.
 
 ## Starten
 
