@@ -34,6 +34,7 @@ type KontoKontext = {
   registrieren: (d: Registrierung) => Promise<{ fehler?: string; bestaetigen?: boolean }>;
   anmelden: (email: string, passwort: string) => Promise<string | null>;
   passwortVergessen: (email: string) => Promise<string | null>;
+  passwortAendern: (neu: string) => Promise<string | null>;
   abmelden: () => Promise<void>;
   alsGast: (name: string) => Promise<void>;
   profilSpeichern: (teil: { name?: string; klasse?: string; bundesland?: string | null }) => Promise<string | null>;
@@ -133,6 +134,12 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     return error ? fehlerText(error.message) : null;
   }, []);
 
+  const passwortAendern = useCallback(async (neu: string) => {
+    if (neu.length < 8) return "Das Passwort braucht mindestens 8 Zeichen.";
+    const { error } = await supabase.auth.updateUser({ password: neu });
+    return error ? fehlerText(error.message) : null;
+  }, []);
+
   const abmelden = useCallback(async () => {
     if (session) await supabase.auth.signOut();
     await AsyncStorage.removeItem(GAST).catch(() => {});
@@ -179,13 +186,14 @@ export function KontoProvider({ children }: { children: ReactNode }) {
       registrieren,
       anmelden,
       passwortVergessen,
+      passwortAendern,
       abmelden,
       alsGast,
       profilSpeichern,
       benutzernameFrei,
       profilNeuLaden: () => profilLaden(session),
     };
-  }, [laedt, session, profil, gastName, registrieren, anmelden, passwortVergessen, abmelden, alsGast, profilSpeichern, benutzernameFrei, profilLaden]);
+  }, [laedt, session, profil, gastName, registrieren, anmelden, passwortVergessen, passwortAendern, abmelden, alsGast, profilSpeichern, benutzernameFrei, profilLaden]);
 
   return <Kontext.Provider value={wert}>{children}</Kontext.Provider>;
 }

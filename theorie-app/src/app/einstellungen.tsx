@@ -25,13 +25,27 @@ const KLASSEN = ["B", "A", "A2", "A1", "AM", "BE"];
 const SUPPORT = process.env.EXPO_PUBLIC_SUPPORT_EMAIL;
 const DATENSCHUTZ = process.env.EXPO_PUBLIC_DATENSCHUTZ_URL;
 const IMPRESSUM = process.env.EXPO_PUBLIC_IMPRESSUM_URL;
+const AGB = process.env.EXPO_PUBLIC_AGB_URL;
 
 export default function Einstellungen() {
   const insets = useSafeAreaInsets();
   const { stand, setzen, zuruecksetzen } = useStand();
-  const { session, profil, gast, anzeigeName, profilSpeichern, abmelden } = useKonto();
+  const { session, profil, gast, anzeigeName, profilSpeichern, abmelden, passwortAendern } = useKonto();
   const [name, setName] = useState(anzeigeName);
   const [speichert, setSpeichert] = useState(false);
+  const [neuesPasswort, setNeuesPasswort] = useState("");
+  const [aendertPasswort, setAendertPasswort] = useState(false);
+
+  async function passwortSpeichern() {
+    setAendertPasswort(true);
+    const f = await passwortAendern(neuesPasswort);
+    setAendertPasswort(false);
+    if (f) Alert.alert("Nicht geändert", f);
+    else {
+      setNeuesPasswort("");
+      Alert.alert("Passwort geändert", "Ab jetzt meldest du dich mit dem neuen Passwort an.");
+    }
+  }
 
   async function erinnerungAendern(an: boolean, stunde = stand.erinnerung.stunde, minute = stand.erinnerung.minute) {
     const ok = await erinnerungPlanen(an, stunde, minute);
@@ -151,6 +165,17 @@ export default function Einstellungen() {
                 {profil ? <Zeile icon="at" titel={`@${profil.benutzername}`} unter="Benutzername" /> : null}
                 <Zeile icon="mail-outline" titel={session.user.email ?? ""} unter="E-Mail" />
               </Gruppe>
+              <Eingabe
+                icon="lock-closed-outline"
+                value={neuesPasswort}
+                onChangeText={setNeuesPasswort}
+                placeholder="Neues Passwort (mind. 8 Zeichen)"
+                secureTextEntry
+                textContentType="newPassword"
+              />
+              {neuesPasswort.length > 0 ? (
+                <Knopf titel="Passwort ändern" klein art="sekundaer" laedt={aendertPasswort} deaktiviert={neuesPasswort.length < 8} onPress={passwortSpeichern} />
+              ) : null}
             </View>
           ) : (
             <Gruppe>
@@ -168,13 +193,14 @@ export default function Einstellungen() {
           )}
         </View>
 
-        {SUPPORT || DATENSCHUTZ || IMPRESSUM ? (
+        {SUPPORT || DATENSCHUTZ || IMPRESSUM || AGB ? (
           <View>
             <Abschnitt titel="Hilfe & Rechtliches" />
             <Gruppe>
               {SUPPORT ? <Zeile icon="help-buoy-outline" titel="Hilfe & Kontakt" onPress={() => Linking.openURL(`mailto:${SUPPORT}`)} /> : null}
               {DATENSCHUTZ ? <Zeile icon="shield-outline" titel="Datenschutz" onPress={() => Linking.openURL(DATENSCHUTZ)} /> : null}
               {IMPRESSUM ? <Zeile icon="document-text-outline" titel="Impressum" onPress={() => Linking.openURL(IMPRESSUM)} /> : null}
+              {AGB ? <Zeile icon="reader-outline" titel="AGB" onPress={() => Linking.openURL(AGB)} /> : null}
             </Gruppe>
           </View>
         ) : null}
