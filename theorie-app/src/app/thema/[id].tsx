@@ -6,7 +6,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Abschnitt, Gruppe, Knopf, Kopf, T, Zeile } from "@/components/ui";
 import { Ring } from "@/components/grafik";
 import { Verkehrszeichen } from "@/components/zeichen";
-import { fragenZuThema, istZeichen, themaVon, type ThemaId, type ZeichenKey } from "@/lib/fragen";
+import { Kontrollleuchte } from "@/components/leuchten";
+import { fragenZuThema, istZeichen, themaVon, type LeuchteKey, type ThemaId, type ZeichenKey } from "@/lib/fragen";
 import { themaStatistik, useStand } from "@/lib/stand";
 import { abstand, farben, RAND } from "@/lib/theme";
 
@@ -87,6 +88,8 @@ export default function ThemaSeite() {
                     f.bild ? (
                       istZeichen(f.bild) ? (
                         <Verkehrszeichen zeichen={f.bild as ZeichenKey} groesse={30} />
+                      ) : f.bild.startsWith("leuchte_") ? (
+                        <Kontrollleuchte leuchte={f.bild as LeuchteKey} groesse={30} />
                       ) : (
                         <Ionicons name="map-outline" size={17} color={farben.text3} />
                       )

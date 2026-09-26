@@ -12,8 +12,8 @@ type IconName = keyof typeof Ionicons.glyphMap;
 const ICONS: Record<string, [IconName, IconName]> = {
   heute: ["today", "today-outline"],
   lernen: ["map", "map-outline"],
+  clips: ["albums", "albums-outline"],
   liga: ["podium", "podium-outline"],
-  profil: ["person-circle", "person-circle-outline"],
 };
 
 export const TAB_HOEHE = 64;

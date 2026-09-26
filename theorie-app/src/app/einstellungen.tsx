@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Abschnitt, Chip, Eingabe, Gruppe, Knopf, Kopf, T, Zeile } from "@/components/ui";
 import { Logo } from "@/components/grafik";
+import { BUNDESLAENDER } from "@/lib/bundeslaender";
 import { erinnerungPlanen } from "@/lib/erinnerung";
 import { uhrzeit } from "@/lib/format";
 import { useKonto } from "@/lib/konto";
@@ -85,6 +86,28 @@ export default function Einstellungen() {
             ))}
           </View>
         </View>
+
+        {session ? (
+          <View>
+            <Abschnitt titel="Bundesland" />
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: abstand(2) }}>
+              {BUNDESLAENDER.map((b) => (
+                <Chip
+                  key={b}
+                  text={b}
+                  aktiv={profil?.bundesland === b}
+                  onPress={async () => {
+                    const f = await profilSpeichern({ bundesland: profil?.bundesland === b ? null : b });
+                    if (f) Alert.alert("Nicht gespeichert", f);
+                  }}
+                />
+              ))}
+            </View>
+            <T v="klein" style={{ marginTop: abstand(2) }}>
+              Für die regionale Rangliste in der Liga.
+            </T>
+          </View>
+        ) : null}
 
         <View>
           <Abschnitt titel="Erinnerung" />

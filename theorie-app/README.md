@@ -2,7 +2,9 @@
 
 Eigenständige iOS-App zum Lernen der Führerschein-Theorie: Streckenplan mit
 Themen als Haltestellen, Tagesziel-Tacho, Training mit Lernfächern,
-Prüfungssimulation mit Fehlerpunkten, Duelle, Wochen-Liga, Abzeichen.
+Prüfungssimulation mit Fehlerpunkten, Clips (animierte Kurz-Erklärungen),
+Online-Duelle (Rangliste mit Elo und Freundes-Code), Wochen-Liga für
+Deutschland und je Bundesland, Serien-Schutz, Abzeichen.
 
 ## Starten
 
@@ -17,7 +19,8 @@ Ohne Server läuft die App im Gastmodus – der Lernstand bleibt auf dem Gerät.
 ## Server (Registrierung, Liga, Sicherung)
 
 1. Neues Supabase-Projekt anlegen (am besten getrennt von der Fahrschul-Software).
-2. Im SQL-Editor `supabase/schema.sql` ausführen.
+2. Im SQL-Editor `supabase/schema.sql` ausführen (bei Updates einfach erneut –
+   das Skript ist wiederholbar).
 3. `.env.example` nach `.env` kopieren und URL + anon key eintragen.
 4. Optional: Authentication → Sign In / Providers → Email → „Confirm email“
    ausschalten, dann sind neue Konten sofort aktiv.

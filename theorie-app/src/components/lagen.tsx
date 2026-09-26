@@ -7,17 +7,17 @@ import { ZeichenGrafik } from "./zeichen";
 // Lagepläne von oben (viewBox 300 × 220): du bist immer das blaue Auto,
 // andere Verkehrsteilnehmer sind orange. Rechtsverkehr.
 
-const DU = farben.blau;
-const ANDERE = farben.orange;
-const NEUTRAL = "#6B7590";
-const ASPHALT = farben.asphalt;
-const RAND = farben.asphaltRand;
-const GRUND = farben.gelaende;
-const GEHWEG = "#141D35";
-const MARKIERUNG = "rgba(255,255,255,0.6)";
+export const DU = farben.blau;
+export const ANDERE = farben.orange;
+export const NEUTRAL = "#6B7590";
+export const ASPHALT = farben.asphalt;
+export const RAND = farben.asphaltRand;
+export const GRUND = farben.gelaende;
+export const GEHWEG = "#141D35";
+export const MARKIERUNG = "rgba(255,255,255,0.6)";
 
 /** Auto von oben, Front zeigt bei Winkel 0 nach oben. */
-function Auto({ x, y, winkel = 0, farbe }: { x: number; y: number; winkel?: number; farbe: string }) {
+export function Auto({ x, y, winkel = 0, farbe }: { x: number; y: number; winkel?: number; farbe: string }) {
   return (
     <G transform={`translate(${x} ${y}) rotate(${winkel})`}>
       <Rect x={-11.5} y={-20} width={23} height={40} rx={6.5} fill={farbe} />
@@ -35,7 +35,7 @@ function Pfeilspitze({ x, y, winkel, farbe }: { x: number; y: number; winkel: nu
 }
 
 /** Fahrweg als Linie mit Spitze; `winkel` ist die Richtung am Ende (0 = nach oben). */
-function Weg({ d, farbe, spitze }: { d: string; farbe: string; spitze: { x: number; y: number; winkel: number } }) {
+export function Weg({ d, farbe, spitze }: { d: string; farbe: string; spitze: { x: number; y: number; winkel: number } }) {
   return (
     <G>
       <Path d={d} stroke={farbe} strokeWidth={3.5} fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="1 7" opacity={0.95} />
@@ -56,7 +56,7 @@ function Schild({ zeichen, x, y, groesse = 26 }: { zeichen: "z205" | "z215" | "z
 }
 
 /** Kreuzung zweier zweispuriger Straßen, Mitte bei (150, 115). */
-function Kreuzung() {
+export function Kreuzung() {
   return (
     <G>
       <Rect x={0} y={0} width={300} height={220} fill={GRUND} />
@@ -144,7 +144,7 @@ function Kreisverkehr() {
   );
 }
 
-function Radfahrer({ x, y }: { x: number; y: number }) {
+export function Radfahrer({ x, y }: { x: number; y: number }) {
   return (
     <G transform={`translate(${x} ${y})`}>
       <Rect x={-2.2} y={-17} width={4.4} height={34} rx={2.2} fill="#C7CDDA" />

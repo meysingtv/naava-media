@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Abschnitt, Chip, Karte, Knopf, Plakette, T, type IconName } from "@/components/ui";
 import { Streckenplan } from "@/components/strecke";
 import { INHALT_UNTEN } from "@/components/tab-leiste";
-import { FRAGEN, THEMEN, istZeichen } from "@/lib/fragen";
+import { FRAGEN, THEMEN, istBildfrage, istZeichen } from "@/lib/fragen";
 import { fehlerIds, gemerktIds, statistik, themaStatistik, useStand } from "@/lib/stand";
 import { abstand, farben, RAND } from "@/lib/theme";
 
@@ -19,7 +19,7 @@ export default function Lernen() {
 
   const modi: Modus[] = [
     { id: "alle", titel: "Alle Fragen", anzahl: FRAGEN.length, icon: "list", farbe: farben.text2 },
-    { id: "bild", titel: "Bildfragen", anzahl: FRAGEN.filter((f) => f.bild?.startsWith("lage_")).length, icon: "image-outline", farbe: farben.blau },
+    { id: "bild", titel: "Bildfragen", anzahl: FRAGEN.filter((f) => istBildfrage(f.bild)).length, icon: "image-outline", farbe: farben.blau },
     { id: "zeichen", titel: "Zeichenfragen", anzahl: FRAGEN.filter((f) => istZeichen(f.bild)).length, icon: "triangle-outline", farbe: farben.orange },
     { id: "zahl", titel: "Zahlenfragen", anzahl: FRAGEN.filter((f) => f.art === "zahl").length, icon: "calculator-outline", farbe: farben.gelb },
     { id: "gemerkt", titel: "Gemerkt", anzahl: gemerktIds(stand).length, icon: "bookmark-outline", farbe: farben.blau },

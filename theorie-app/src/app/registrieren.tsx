@@ -4,7 +4,8 @@ import { router } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Eingabe, Knopf, Kopf, T } from "@/components/ui";
+import { Chip, Eingabe, Knopf, Kopf, T } from "@/components/ui";
+import { BUNDESLAENDER } from "@/lib/bundeslaender";
 import { useKonto } from "@/lib/konto";
 import { tippen } from "@/lib/haptik";
 import { useStand } from "@/lib/stand";
@@ -33,6 +34,7 @@ export default function Registrieren() {
   const [benutzerAngepasst, setBenutzerAngepasst] = useState(false);
   const [frei, setFrei] = useState<boolean | null>(null);
   const [klasse, setKlasse] = useState("B");
+  const [bundesland, setBundesland] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [passwort, setPasswort] = useState("");
   const [fehler, setFehler] = useState<string | null>(null);
@@ -67,7 +69,7 @@ export default function Registrieren() {
   async function absenden() {
     setFehler(null);
     setLaedt(true);
-    const r = await registrieren({ name, benutzername: benutzer, email, passwort, klasse });
+    const r = await registrieren({ name, benutzername: benutzer, email, passwort, klasse, bundesland });
     setLaedt(false);
     if (r.fehler) {
       setFehler(r.fehler);
@@ -187,6 +189,15 @@ export default function Registrieren() {
                   </Pressable>
                 );
               })}
+            </View>
+            <View style={{ gap: abstand(2), marginTop: abstand(2) }}>
+              <T v="h3">Wo lernst du?</T>
+              <T v="klein">Für die Rangliste in deinem Bundesland – optional.</T>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: abstand(2), paddingVertical: abstand(1) }}>
+                {BUNDESLAENDER.map((b) => (
+                  <Chip key={b} text={b} aktiv={bundesland === b} onPress={() => setBundesland(bundesland === b ? null : b)} />
+                ))}
+              </ScrollView>
             </View>
             <View style={{ flexDirection: "row", gap: abstand(3), marginTop: abstand(2) }}>
               <Knopf titel="Zurück" art="sekundaer" onPress={() => setSchritt(0)} style={{ flex: 1 }} />

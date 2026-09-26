@@ -32,7 +32,9 @@ export type LageKey =
   | "lage_rettungsgasse"
   | "lage_schulbus";
 
-export type BildKey = ZeichenKey | LageKey;
+export type LeuchteKey = "leuchte_batterie" | "leuchte_oel" | "leuchte_bremse" | "leuchte_kuehlmittel" | "leuchte_motor" | "leuchte_fernlicht";
+
+export type BildKey = ZeichenKey | LageKey | LeuchteKey;
 
 export type ThemaId = "gefahren" | "vorfahrt" | "zeichen" | "tempo" | "manoever" | "parken" | "autobahn" | "technik" | "mensch" | "zahlen";
 
@@ -618,6 +620,49 @@ export const FRAGEN: Frage[] = [
     erklaerung: "In Deutschland gilt eine situative Winterreifenpflicht: Entscheidend ist das Wetter, nicht das Datum.",
   },
 
+  {
+    id: "k7",
+    thema: "technik",
+    punkte: 5,
+    art: "auswahl",
+    bild: "leuchte_oel",
+    text: "Diese rote Kontrollleuchte geht während der Fahrt an. Was tust du?",
+    antworten: [
+      a("An einer sicheren Stelle anhalten und den Motor abstellen", true),
+      a("Weiterfahren und beim nächsten Tanken Öl nachfüllen"),
+      a("Nichts – solange der Motor läuft, ist alles in Ordnung"),
+    ],
+    erklaerung: "Rot heißt: sofort handeln. Die Öldruck-Leuchte warnt vor zu wenig Schmierung – weiterfahren kann den Motor in kurzer Zeit zerstören.",
+  },
+  {
+    id: "k8",
+    thema: "technik",
+    punkte: 3,
+    art: "auswahl",
+    bild: "leuchte_motor",
+    text: "Was zeigt diese gelbe Kontrollleuchte an?",
+    antworten: [
+      a("Eine Störung an Motor oder Abgasreinigung – bald in die Werkstatt", true),
+      a("Der Tank ist fast leer"),
+      a("Das Fernlicht ist eingeschaltet"),
+    ],
+    erklaerung: "Gelbe Leuchten warnen: Du darfst vorsichtig weiterfahren, solltest das Auto aber bald prüfen lassen.",
+  },
+  {
+    id: "k9",
+    thema: "technik",
+    punkte: 4,
+    art: "auswahl",
+    bild: "leuchte_batterie",
+    text: "Die Ladekontrollleuchte leuchtet während der Fahrt. Was kann die Ursache sein?",
+    antworten: [
+      a("Die Batterie wird nicht mehr geladen, zum Beispiel wegen eines Defekts an der Lichtmaschine", true),
+      a("Der Keilriemen könnte gerissen sein", true),
+      a("Die Batterie ist vollständig geladen"),
+    ],
+    erklaerung: "Leuchtet die Ladekontrolle bei laufendem Motor, lädt die Lichtmaschine nicht. Oft ist der Keilriemen schuld – dann kann auch die Wasserpumpe ausfallen.",
+  },
+
   // ---------------------------------------------------------------- Mensch & Recht
   {
     id: "h1",
@@ -753,6 +798,11 @@ export function fragenZuThema(thema: ThemaId): Frage[] {
 
 export function istZeichen(bild?: BildKey): boolean {
   return Boolean(bild && bild.startsWith("z"));
+}
+
+/** Bildfragen im engeren Sinn: Lagepläne und Kontrollleuchten. */
+export function istBildfrage(bild?: BildKey): boolean {
+  return Boolean(bild && (bild.startsWith("lage_") || bild.startsWith("leuchte_")));
 }
 
 /** Zahl aus einer Eingabe wie „1,5“ oder „0,0“ lesen. */

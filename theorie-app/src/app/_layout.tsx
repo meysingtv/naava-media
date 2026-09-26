@@ -102,6 +102,8 @@ function Navigation() {
           <Stack.Screen name="training" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="pruefung" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
+          <Stack.Screen name="online-duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
+          <Stack.Screen name="profil" />
           <Stack.Screen name="thema/[id]" />
           <Stack.Screen name="formeln" />
           <Stack.Screen name="zeichen" />

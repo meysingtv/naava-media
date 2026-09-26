@@ -3,8 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Abschnitt, Avatar, Gruppe, Karte, T, Zeile } from "@/components/ui";
-import { INHALT_UNTEN } from "@/components/tab-leiste";
+import { Abschnitt, Avatar, Gruppe, Karte, Kopf, T, Zeile } from "@/components/ui";
 import { ERFOLGE } from "@/lib/erfolge";
 import { tausender, uhrzeit } from "@/lib/format";
 import { tippen } from "@/lib/haptik";
@@ -45,9 +44,11 @@ export default function Profil() {
   }
 
   return (
+    <View style={{ flex: 1, backgroundColor: farben.grund }}>
+    <Kopf />
     <ScrollView
       style={{ flex: 1, backgroundColor: farben.grund }}
-      contentContainerStyle={{ paddingTop: insets.top + abstand(3), paddingHorizontal: RAND, paddingBottom: INHALT_UNTEN, gap: abstand(7) }}
+      contentContainerStyle={{ paddingTop: abstand(2), paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(8), gap: abstand(7) }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(4) }}>
         <Avatar name={anzeigeName} groesse={68} />
@@ -139,5 +140,6 @@ export default function Profil() {
         <Zeile icon="log-out-outline" titel={gast ? "Gastmodus beenden" : "Abmelden"} gefahr ohnePfeil onPress={abmeldenFragen} />
       </Gruppe>
     </ScrollView>
+    </View>
   );
 }

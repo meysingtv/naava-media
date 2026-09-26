@@ -18,9 +18,11 @@ export type Profil = {
   avatar_farbe: string;
   xp: number;
   xp_woche: number;
+  bundesland: string | null;
+  elo: number;
 };
 
-type Registrierung = { name: string; benutzername: string; email: string; passwort: string; klasse: string };
+type Registrierung = { name: string; benutzername: string; email: string; passwort: string; klasse: string; bundesland: string | null };
 
 type KontoKontext = {
   laedt: boolean;
@@ -34,8 +36,9 @@ type KontoKontext = {
   passwortVergessen: (email: string) => Promise<string | null>;
   abmelden: () => Promise<void>;
   alsGast: (name: string) => Promise<void>;
-  profilSpeichern: (teil: { name?: string; klasse?: string }) => Promise<string | null>;
+  profilSpeichern: (teil: { name?: string; klasse?: string; bundesland?: string | null }) => Promise<string | null>;
   benutzernameFrei: (name: string) => Promise<boolean | null>;
+  profilNeuLaden: () => Promise<void>;
 };
 
 const GAST = "spur-gast";
@@ -65,7 +68,7 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     }
     const { data } = await supabase
       .from("lern_profil")
-      .select("id, name, benutzername, klasse, avatar_farbe, xp, xp_woche")
+      .select("id, name, benutzername, klasse, avatar_farbe, xp, xp_woche, bundesland, elo")
       .eq("id", s.user.id)
       .maybeSingle<Profil>();
     setProfil(data ?? null);
@@ -106,7 +109,7 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.auth.signUp({
       email: d.email.trim(),
       password: d.passwort,
-      options: { data: { name: d.name.trim(), benutzername: d.benutzername.trim().toLowerCase(), klasse: d.klasse } },
+      options: { data: { name: d.name.trim(), benutzername: d.benutzername.trim().toLowerCase(), klasse: d.klasse, bundesland: d.bundesland } },
     });
     if (error) return { fehler: fehlerText(error.message) };
     if (!data.session) return { bestaetigen: true };
@@ -145,7 +148,7 @@ export function KontoProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const profilSpeichern = useCallback(
-    async (teil: { name?: string; klasse?: string }) => {
+    async (teil: { name?: string; klasse?: string; bundesland?: string | null }) => {
       if (!session) {
         if (teil.name) await alsGast(teil.name);
         return null;
@@ -180,8 +183,9 @@ export function KontoProvider({ children }: { children: ReactNode }) {
       alsGast,
       profilSpeichern,
       benutzernameFrei,
+      profilNeuLaden: () => profilLaden(session),
     };
-  }, [laedt, session, profil, gastName, registrieren, anmelden, passwortVergessen, abmelden, alsGast, profilSpeichern, benutzernameFrei]);
+  }, [laedt, session, profil, gastName, registrieren, anmelden, passwortVergessen, abmelden, alsGast, profilSpeichern, benutzernameFrei, profilLaden]);
 
   return <Kontext.Provider value={wert}>{children}</Kontext.Provider>;
 }

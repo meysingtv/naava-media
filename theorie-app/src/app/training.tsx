@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Abschnitt, Chip, Gruppe, Knopf, Plakette, T, Zeile } from "@/components/ui";
 import { FrageAnsicht } from "@/components/frage-ansicht";
 import { Ring } from "@/components/grafik";
-import { antwortRichtig, frageVon, FRAGEN, fragenZuThema, istZeichen, themaVon, zahlLesen, type ThemaId } from "@/lib/fragen";
+import { antwortRichtig, frageVon, FRAGEN, fragenZuThema, istBildfrage, istZeichen, themaVon, zahlLesen, type ThemaId } from "@/lib/fragen";
 import { erfolg, fehler, tippen } from "@/lib/haptik";
 import { fehlerIds, gemerktIds, gemischt, heuteBeantwortet, serieAktuell, smartAuswahl, useStand, type Stand } from "@/lib/stand";
 import { abstand, farben, RAND } from "@/lib/theme";
@@ -38,7 +38,7 @@ function fragenFuer(p: Params, s: Stand): string[] {
     case "gemerkt":
       return gemischt(gemerktIds(s));
     case "bild":
-      return smartAuswahl(s, 15, FRAGEN.filter((f) => f.bild?.startsWith("lage_")));
+      return smartAuswahl(s, 15, FRAGEN.filter((f) => istBildfrage(f.bild)));
     case "zeichen":
       return smartAuswahl(s, 15, FRAGEN.filter((f) => istZeichen(f.bild)));
     case "zahl":

@@ -3,9 +3,9 @@ import { wochenStart } from "./stand";
 
 export type RangEintrag = { platz: number; id: string; name: string; benutzername: string; xp: number; ich: boolean };
 
-/** Echte Wochen-Rangliste vom Server – `null`, wenn nicht erreichbar. */
-export async function ranglisteLaden(eigeneId: string): Promise<RangEintrag[] | null> {
-  const { data, error } = await supabase.rpc("lern_rangliste");
+/** Echte Wochen-Rangliste vom Server (optional nur ein Bundesland) – `null`, wenn nicht erreichbar. */
+export async function ranglisteLaden(eigeneId: string, bundesland: string | null = null): Promise<RangEintrag[] | null> {
+  const { data, error } = await supabase.rpc("lern_rangliste", { p_bundesland: bundesland });
   if (error || !Array.isArray(data)) return null;
   return (data as { platz: number; id: string; name: string; benutzername: string; xp_woche: number }[]).map((z) => ({
     platz: Number(z.platz),
@@ -32,12 +32,12 @@ function zufall(seed: number) {
 const NAMEN = ["Mia", "Jonas", "Lea", "Ben", "Emir", "Sophie", "Luca", "Hannah", "Noah", "Elif", "Paul", "Amelie", "Finn", "Lina"];
 
 /** Übungs-Rangliste für den Gastmodus: typische Wochenwerte plus du. */
-export function demoRangliste(ich: { name: string; xp: number }): RangEintrag[] {
+export function demoRangliste(ich: { name: string; xp: number }, regional = false): RangEintrag[] {
   const start = wochenStart();
-  const r = zufall(start.getFullYear() * 1000 + start.getMonth() * 40 + start.getDate());
+  const r = zufall(start.getFullYear() * 1000 + start.getMonth() * 40 + start.getDate() + (regional ? 7 : 0));
   // Wochentag bestimmt, wie weit die anderen schon sind.
   const fortschritt = (((new Date().getDay() + 6) % 7) + 1) / 7;
-  const andere = NAMEN.slice(0, 11).map((name, i) => ({
+  const andere = (regional ? NAMEN.slice(3, 10) : NAMEN.slice(0, 11)).map((name, i) => ({
     name,
     xp: Math.round((1400 - i * 105 + r() * 160) * fortschritt),
   }));

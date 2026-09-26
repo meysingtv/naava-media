@@ -13,7 +13,9 @@ import {
   fehlerIds,
   gemerktIds,
   heuteBeantwortet,
+  schutzFrei,
   serieAktuell,
+  serieGeschuetzt,
   statistik,
   themaStatistik,
   useStand,
@@ -83,7 +85,7 @@ export default function Heute() {
         <Pressable
           onPress={() => {
             tippen();
-            router.navigate("/profil");
+            router.push("/profil");
           }}
           hitSlop={6}
         >
@@ -95,13 +97,29 @@ export default function Heute() {
       <Karte style={{ paddingTop: abstand(4), paddingBottom: abstand(5), gap: abstand(4) }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <T v="mini">Tagesziel</T>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Ionicons name="flame" size={15} color={serie > 0 ? farben.orange : farben.text4} />
-            <T v="klein" farbe={serie > 0 ? farben.text : farben.text3}>
-              {serie === 1 ? "1 Tag" : `${serie} Tage`}
-            </T>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(3) }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Ionicons name="shield-checkmark" size={14} color={schutzFrei(stand) ? farben.blau : farben.text4} />
+              <T v="klein" farbe={schutzFrei(stand) ? farben.text2 : farben.text4} style={{ fontSize: 12 }}>
+                {schutzFrei(stand) ? "1 Schutz" : "0 Schutz"}
+              </T>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Ionicons name="flame" size={15} color={serie > 0 ? farben.orange : farben.text4} />
+              <T v="klein" farbe={serie > 0 ? farben.text : farben.text3}>
+                {serie === 1 ? "1 Tag" : `${serie} Tage`}
+              </T>
+            </View>
           </View>
         </View>
+        {serieGeschuetzt(stand) ? (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(2), padding: abstand(3), borderRadius: 12, backgroundColor: farben.blauSoft }}>
+            <Ionicons name="shield-checkmark" size={16} color={farben.blau} />
+            <T v="klein" farbe={farben.text} style={{ flex: 1 }}>
+              Gestern Pause – dein Serien-Schutz hält die Serie. Lern heute, sonst ist sie weg.
+            </T>
+          </View>
+        ) : null}
         <View style={{ alignItems: "center", marginTop: -abstand(1) }}>
           <Tacho wert={beantwortet} ziel={stand.tagesziel} />
         </View>

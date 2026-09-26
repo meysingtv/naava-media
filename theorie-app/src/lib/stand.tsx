@@ -40,6 +40,9 @@ export type Stand = {
   klasse: string;
   /** Bereits an den Server gemeldet (für die Rangliste). */
   gebucht: { xp: number; gesamt: number; richtig: number };
+  /** Woche (Montag), in der der Serien-Schutz verbraucht wurde. */
+  schutzWoche: string | null;
+  clips: { gemocht: string[]; gemerkt: string[] };
 };
 
 export const LEER: Stand = {
@@ -58,6 +61,8 @@ export const LEER: Stand = {
   duell: { rating: 1000, siege: 0, niederlagen: 0, remis: 0 },
   klasse: "B",
   gebucht: { xp: 0, gesamt: 0, richtig: 0 },
+  schutzWoche: null,
+  clips: { gemocht: [], gemerkt: [] },
 };
 
 const SPEICHER = "spur-stand-v1";
@@ -90,10 +95,25 @@ export function wochenStart(d = new Date()): Date {
 // Ableitungen
 // ---------------------------------------------------------------------------
 
-/** Serie nur, wenn heute oder gestern gelernt wurde – sonst ist sie gerissen. */
+function wochenKey(): string {
+  return tagKey(wochenStart());
+}
+
+/** Einmal pro Woche rettet der Serien-Schutz einen verpassten Tag. */
+export function schutzFrei(s: Stand): boolean {
+  return s.schutzWoche !== wochenKey();
+}
+
+/** Serie nur, wenn heute oder gestern gelernt wurde – oder vorgestern mit freiem Serien-Schutz. */
 export function serieAktuell(s: Stand): number {
   if (s.letzterTag === tagKey() || s.letzterTag === tagVerschoben(-1)) return s.serie;
+  if (s.letzterTag === tagVerschoben(-2) && schutzFrei(s)) return s.serie;
   return 0;
+}
+
+/** Hält gerade der Serien-Schutz die Serie am Leben? */
+export function serieGeschuetzt(s: Stand): boolean {
+  return s.letzterTag === tagVerschoben(-2) && schutzFrei(s) && s.serie > 0;
 }
 
 export function heuteBeantwortet(s: Stand): number {
@@ -203,8 +223,15 @@ export function gemischt<T>(liste: T[]): T[] {
 function tagGelernt(s: Stand): Stand {
   const heute = tagKey();
   if (s.letzterTag === heute) return s;
-  const serie = s.letzterTag === tagVerschoben(-1) ? s.serie + 1 : 1;
-  return { ...s, serie, besteSerie: Math.max(s.besteSerie, serie), letzterTag: heute };
+  let serie = 1;
+  let schutzWoche = s.schutzWoche;
+  if (s.letzterTag === tagVerschoben(-1)) serie = s.serie + 1;
+  else if (s.letzterTag === tagVerschoben(-2) && schutzFrei(s) && s.serie > 0) {
+    // Ein Tag verpasst – der Serien-Schutz springt ein.
+    serie = s.serie + 1;
+    schutzWoche = wochenKey();
+  }
+  return { ...s, serie, schutzWoche, besteSerie: Math.max(s.besteSerie, serie), letzterTag: heute };
 }
 
 function xpDazu(s: Stand, xp: number): Stand {
@@ -235,6 +262,7 @@ type StandKontext = {
   pruefungFertig: (p: Omit<Pruefung, "datum">) => number;
   duellFertig: (ergebnis: "sieg" | "remis" | "niederlage", gegnerRating: number) => { xp: number; rating: number };
   setzen: (teil: Partial<Pick<Stand, "tagesziel" | "erinnerung" | "klasse">>) => void;
+  clipUmschalten: (id: string, liste: "gemocht" | "gemerkt") => void;
   gebuchtSetzen: (g: Stand["gebucht"]) => void;
   ersetzen: (s: Stand) => void;
   zuruecksetzen: () => void;
@@ -256,7 +284,13 @@ export function StandProvider({ children }: { children: ReactNode }) {
       .then((roh) => {
         if (roh) {
           const gelesen = JSON.parse(roh) as Partial<Stand>;
-          setStand({ ...LEER, ...gelesen, duell: { ...LEER.duell, ...gelesen.duell }, gebucht: { ...LEER.gebucht, ...gelesen.gebucht } });
+          setStand({
+            ...LEER,
+            ...gelesen,
+            duell: { ...LEER.duell, ...gelesen.duell },
+            gebucht: { ...LEER.gebucht, ...gelesen.gebucht },
+            clips: { ...LEER.clips, ...gelesen.clips },
+          });
         }
       })
       .catch(() => {})
@@ -362,6 +396,16 @@ export function StandProvider({ children }: { children: ReactNode }) {
     [anwenden],
   );
 
+  const clipUmschalten = useCallback(
+    (id: string, liste: "gemocht" | "gemerkt") => {
+      const s = aktuell.current;
+      const alt = s.clips[liste];
+      const neu = alt.includes(id) ? alt.filter((x) => x !== id) : [...alt, id];
+      anwenden({ ...s, clips: { ...s.clips, [liste]: neu } });
+    },
+    [anwenden],
+  );
+
   const gebuchtSetzen = useCallback((g: Stand["gebucht"]) => {
     const s = { ...aktuell.current, gebucht: g };
     aktuell.current = s;
@@ -391,13 +435,14 @@ export function StandProvider({ children }: { children: ReactNode }) {
       pruefungFertig,
       duellFertig,
       setzen,
+      clipUmschalten,
       gebuchtSetzen,
       ersetzen,
       zuruecksetzen,
       neueErfolge,
       erfolgeGesehen: () => setNeueErfolge([]),
     }),
-    [stand, bereit, antwort, merken, trainingFertig, pruefungFertig, duellFertig, setzen, gebuchtSetzen, ersetzen, zuruecksetzen, neueErfolge],
+    [stand, bereit, antwort, merken, trainingFertig, pruefungFertig, duellFertig, setzen, clipUmschalten, gebuchtSetzen, ersetzen, zuruecksetzen, neueErfolge],
   );
 
   return <Kontext.Provider value={wert}>{children}</Kontext.Provider>;
