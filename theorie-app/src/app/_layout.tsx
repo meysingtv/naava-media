@@ -4,11 +4,11 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as Notifications from "expo-notifications";
 import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Archivo_800ExtraBold, useFonts } from "@expo-google-fonts/archivo";
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 
+import { Icon } from "@/components/icon";
 import { T } from "@/components/ui";
 import { erfolgVon } from "@/lib/erfolge";
 import { erfolg } from "@/lib/haptik";
@@ -65,7 +65,7 @@ function ErfolgHinweis() {
       }}
     >
       <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: farben.orange, alignItems: "center", justifyContent: "center" }}>
-        <Ionicons name={e.icon} size={20} color={farben.aufOrange} />
+        <Icon name={e.icon} size={20} color={farben.aufOrange} />
       </View>
       <View style={{ flex: 1 }}>
         <T v="mini" farbe={farben.orange}>

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Animated, Easing, Pressable, ScrollView, Share, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Avatar, Chip, Knopf, Kopf, T } from "@/components/ui";
 import { FrageAnsicht } from "@/components/frage-ansicht";
 import { antwortRichtig, frageVon } from "@/lib/fragen";
@@ -151,7 +151,7 @@ export default function OnlineDuellSeite() {
                 <Avatar name={gegnerName} groesse={76} farbe={farben.blau} />
               ) : (
                 <View style={{ width: 76, height: 76, borderRadius: 38, borderWidth: 1.5, borderStyle: "dashed", borderColor: farben.linieStark, alignItems: "center", justifyContent: "center" }}>
-                  <Ionicons name="help" size={30} color={farben.text4} />
+                  <Icon name="help" size={30} color={farben.text4} />
                 </View>
               )}
               <T v="h3">{gegnerName ?? "Offen"}</T>
@@ -196,7 +196,7 @@ export default function OnlineDuellSeite() {
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: RAND, gap: abstand(6) }}>
           <View style={{ alignItems: "center", gap: abstand(3) }}>
             <View style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: farbe + "22", alignItems: "center", justifyContent: "center" }}>
-              <Ionicons name={!d ? "alert" : fertig ? (s?.gewonnen ? "trophy" : s?.verloren ? "flag" : "git-compare") : "hourglass"} size={38} color={farbe} />
+              <Icon name={!d ? "alert" : fertig ? (s?.gewonnen ? "trophy" : s?.verloren ? "flag" : "git-compare") : "hourglass"} size={38} color={farbe} />
             </View>
             <T v="display" farbe={farbe}>
               {titel}
@@ -234,7 +234,7 @@ export default function OnlineDuellSeite() {
                 style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
                 hitSlop={8}
               >
-                <Ionicons name="share-outline" size={18} color={farben.orange} />
+                <Icon name="share-outline" size={18} color={farben.orange} />
                 <T v="textStark" farbe={farben.orange}>
                   Code teilen
                 </T>
@@ -258,13 +258,13 @@ export default function OnlineDuellSeite() {
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
       <View style={{ paddingTop: insets.top + abstand(2), paddingHorizontal: RAND - 6, flexDirection: "row", alignItems: "center" }}>
         <Pressable onPress={schliessen} hitSlop={10} style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}>
-          <Ionicons name="close" size={26} color={farben.text} />
+          <Icon name="close" size={26} color={farben.text} />
         </Pressable>
         <T v="klein" style={{ flex: 1, textAlign: "center" }}>
           Frage {runde + 1} von {fragen.length}
         </T>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 4, width: 70, justifyContent: "flex-end", paddingRight: 6 }}>
-          <Ionicons name="checkmark-circle" size={16} color={farben.gruen} />
+          <Icon name="checkmark-circle" size={16} color={farben.gruen} />
           <T v="textStark">{punkte}</T>
         </View>
       </View>

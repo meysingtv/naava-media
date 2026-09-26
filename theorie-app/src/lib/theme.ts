@@ -5,37 +5,50 @@ import { Platform, type TextStyle } from "react-native";
 // feine helle Kante; Fotos bringen die Farbe in die Oberfläche.
 
 export const farben = {
-  grund: "#0B0C0F",
-  grundHoch: "#111316",
-  flaeche: "#16181C",
-  flaeche2: "#1D2025",
-  flaeche3: "#2A2D33",
+  // Werte direkt aus der Vorlage gemessen: bläuliches Schwarz, dunkle Karten
+  grund: "#06090D",
+  grundHoch: "#0A0E13",
+  flaeche: "#10151A",
+  flaeche2: "#1A1E24",
+  flaeche3: "#353A42",
+  option: "#18212A",
   linie: "rgba(255,255,255,0.08)",
-  linieStark: "rgba(255,255,255,0.15)",
+  linieStark: "rgba(255,255,255,0.16)",
 
-  text: "#F5F6F7",
-  text2: "#C9CCD1",
-  text3: "#8E939B",
-  text4: "#5E636B",
+  text: "#FFFFFF",
+  text2: "#D6D9DE",
+  text3: "#959AA2",
+  text4: "#62676F",
 
-  orange: "#FF7A00",
-  orangeHell: "#FF9632",
-  orangeTief: "#E86200",
-  orangeSoft: "rgba(255,122,0,0.14)",
-  orangeLinie: "rgba(255,122,0,0.55)",
-  orangeDunkel: "#2E1A08",
+  orange: "#FC7400",
+  orangeHell: "#FF9105",
+  orangeTief: "#EC6600",
+  orangeSoft: "rgba(252,116,0,0.15)",
+  orangeLinie: "rgba(252,116,0,0.6)",
+  orangeDunkel: "#2A1A0B",
   aufOrange: "#FFFFFF",
 
   blau: "#4DA3FF",
   blauSoft: "rgba(77,163,255,0.14)",
-  gruen: "#5DD14A",
-  gruenSoft: "rgba(93,209,74,0.14)",
-  gruenDunkel: "#16261A",
+  gruen: "#62D149",
+  gruenSoft: "rgba(98,209,73,0.15)",
+  gruenDunkel: "#14231D",
+  gruenOption: "#22351F",
   rot: "#FF5A4E",
   rotSoft: "rgba(255,90,78,0.14)",
-  gelb: "#FFB21E",
-  gelbSoft: "rgba(255,178,30,0.14)",
-  bernstein: "#FFA41B",
+  gelb: "#FFB400",
+  gelbSoft: "rgba(255,180,0,0.14)",
+  bernstein: "#FD9E02",
+  krone: "#FFB81C",
+
+  // Flächen einzelner Elemente wie in der Vorlage
+  kreisFlamme: "#3A2313",
+  kreisSaeulen: "#141A1F",
+  kreisStern: "#3D2A10",
+  iconKreis: "#202328",
+  tipp: "#261A10",
+  ringSpur: "#46484C",
+  kachelWeiss: "#FFFBF5",
 
   // Verkehrszeichen und Lagepläne
   schildRot: "#C8102E",
@@ -45,7 +58,7 @@ export const farben = {
   schildSchwarz: "#111111",
   asphalt: "#2B2E35",
   asphaltRand: "#3B3F48",
-  gelaende: "#121418",
+  gelaende: "#10141A",
 } as const;
 
 type Gewicht = "400" | "500" | "600" | "700" | "800";

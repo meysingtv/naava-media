@@ -1,12 +1,13 @@
 import { Pressable, ScrollView, View } from "react-native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Abschnitt, IconQuadrat, Knopf, kopfOben, Saeulen, T } from "@/components/ui";
 import { FotoFlaeche, FotoKachel, LeuchtSaeulen } from "@/components/foto";
 import { Ring } from "@/components/grafik";
-import { INHALT_UNTEN } from "@/components/tab-leiste";
+import { useInhaltUnten } from "@/components/tab-leiste";
 import { TempoZeichen, Verkehrszeichen } from "@/components/zeichen";
 import { CLIPS } from "@/lib/clips";
 import { FOTOS } from "@/lib/fotos";
@@ -30,9 +31,9 @@ function RundTaste({ children, onPress, label, orange }: { children: React.React
         borderRadius: 13,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: orange ? farben.orangeDunkel : farben.flaeche,
-        borderWidth: orange ? 1.5 : 1,
-        borderColor: orange ? farben.orange : farben.linieStark,
+        backgroundColor: orange ? farben.orangeDunkel : "#0B0F14",
+        borderWidth: 1.5,
+        borderColor: orange ? farben.orange : "rgba(255,255,255,0.3)",
         opacity: pressed ? 0.8 : 1,
         ...(orange ? { shadowColor: farben.orange, shadowOpacity: 0.35, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } } : null),
       })}
@@ -42,10 +43,10 @@ function RundTaste({ children, onPress, label, orange }: { children: React.React
   );
 }
 
-function Kennzahl({ symbol, farbe, wert, label }: { symbol: React.ReactNode; farbe: string; wert: string; label: string }) {
+function Kennzahl({ symbol, kreis, wert, label }: { symbol: React.ReactNode; kreis: string; wert: string; label: string }) {
   return (
     <View style={{ flex: 1, alignItems: "center" }}>
-      <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: farbe + "33", alignItems: "center", justifyContent: "center" }}>
+      <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: kreis, alignItems: "center", justifyContent: "center" }}>
         {symbol}
       </View>
       <T v="zahl" style={{ fontSize: 27, lineHeight: 31, marginTop: 4 }}>
@@ -60,6 +61,7 @@ function Kennzahl({ symbol, farbe, wert, label }: { symbol: React.ReactNode; far
 
 export default function Home() {
   const insets = useSafeAreaInsets();
+  const inhaltUnten = useInhaltUnten();
   const { stand } = useStand();
   const { anzeigeName } = useKonto();
 
@@ -73,7 +75,7 @@ export default function Home() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: farben.grund }}
-      contentContainerStyle={{ paddingTop: kopfOben(insets.top) + 2, paddingHorizontal: RAND, paddingBottom: INHALT_UNTEN }}
+      contentContainerStyle={{ paddingTop: kopfOben(insets.top) + 2, paddingHorizontal: RAND, paddingBottom: inhaltUnten }}
       showsVerticalScrollIndicator={false}
     >
       {/* Begrüßung */}
@@ -87,10 +89,10 @@ export default function Home() {
           </T>
         </View>
         <RundTaste label="Erinnerungen" onPress={() => router.push("/einstellungen")}>
-          <Ionicons name="notifications" size={21} color={farben.text} />
+          <Icon name="notifications" size={21} color={farben.text} />
         </RundTaste>
         <RundTaste label="Spur Plus" orange onPress={() => router.push("/premium")}>
-          <MaterialCommunityIcons name="crown" size={24} color={farben.orange} />
+          <Icon name="star" sf="crown.fill" size={22} color={farben.krone} fallback={<MaterialCommunityIcons name="crown" size={24} color={farben.krone} />} />
         </RundTaste>
       </View>
 
@@ -108,16 +110,16 @@ export default function Home() {
           borderColor: farben.linieStark,
         }}
       >
-        <Kennzahl symbol={<MaterialCommunityIcons name="fire" size={26} color={farben.orange} />} farbe={farben.orange} wert={String(serie)} label="Tages-Streak" />
+        <Kennzahl symbol={<Icon name="flame" size={23} color={farben.orange} fallback={<MaterialCommunityIcons name="fire" size={26} color={farben.orange} />} />} kreis={farben.kreisFlamme} wert={String(serie)} label="Tages-Streak" />
         <View style={{ width: 1, height: 58, backgroundColor: farben.linieStark }} />
-        <Kennzahl symbol={<Saeulen groesse={21} />} farbe={farben.orange} wert={`${Math.round(gesamt.anteil * 100)}%`} label="Fortschritt" />
+        <Kennzahl symbol={<Icon name="stats-chart" size={22} color={farben.orange} fallback={<Saeulen groesse={21} />} />} kreis={farben.kreisSaeulen} wert={`${Math.round(gesamt.anteil * 100)}%`} label="Fortschritt" />
         <View style={{ width: 1, height: 58, backgroundColor: farben.linieStark }} />
-        <Kennzahl symbol={<Ionicons name="star" size={23} color={farben.gelb} />} farbe={farben.gelb} wert={String(xpHeute(stand))} label="Heute Punkte" />
+        <Kennzahl symbol={<Icon name="star" size={23} color={farben.gelb} />} kreis={farben.kreisStern} wert={String(xpHeute(stand))} label="Heute Punkte" />
       </View>
 
       {serieGeschuetzt(stand) ? (
         <View style={{ marginTop: 10, flexDirection: "row", alignItems: "center", gap: abstand(2), padding: abstand(3), borderRadius: 12, backgroundColor: farben.blauSoft }}>
-          <Ionicons name="shield-checkmark" size={16} color={farben.blau} />
+          <Icon name="shield-checkmark" size={16} color={farben.blau} />
           <T v="klein" farbe={farben.text} style={{ flex: 1 }}>
             Gestern Pause – dein Serien-Schutz hält die Serie. Lern heute, sonst ist sie weg.
           </T>
@@ -137,7 +139,7 @@ export default function Home() {
               </T>
             </View>
             <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: "rgba(10,11,14,0.62)", alignItems: "center", justifyContent: "center" }}>
-              <Ring anteil={zielAnteil} groesse={80} dicke={7} spur="rgba(255,255,255,0.14)">
+              <Ring anteil={zielAnteil} groesse={80} dicke={7} spur="rgba(255,255,255,0.16)">
                 <T v="h3" style={{ fontSize: 17, fontVariant: ["tabular-nums"] }}>
                   {Math.min(beantwortet, 999)}/{ziel}
                 </T>
@@ -191,7 +193,7 @@ export default function Home() {
               unter="Deine Fortschritte"
               oben={
                 <View style={{ width: 42, height: 42, borderRadius: 12, backgroundColor: "rgba(20,22,26,0.85)", borderWidth: 1, borderColor: farben.linieStark, alignItems: "center", justifyContent: "center" }}>
-                  <Saeulen groesse={20} farbe="#FFFFFF" />
+                  <Icon name="stats-chart" size={21} color="#FFFFFF" weight="semibold" fallback={<Saeulen groesse={20} farbe="#FFFFFF" />} />
                 </View>
               }
               onPress={() => router.navigate("/profil")}
@@ -228,7 +230,7 @@ export default function Home() {
               })}
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Ionicons name="play-circle" size={18} color={farben.orange} />
+                <Icon name="play-circle" size={18} color={farben.orange} />
                 <T v="mini" farbe={farben.orange} numberOfLines={1}>
                   {c.kategorie}
                 </T>
@@ -260,13 +262,13 @@ export default function Home() {
         })}
       >
         <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center" }}>
-          <Ionicons name="flash" size={22} color={farben.orange} />
+          <Icon name="flash" size={22} color={farben.orange} />
         </View>
         <View style={{ flex: 1 }}>
           <T v="h3">Duell starten</T>
           <T v="klein">Tritt gegen andere Fahrschüler an</T>
         </View>
-        <Ionicons name="chevron-forward" size={18} color={farben.text3} />
+        <Icon name="chevron-forward" size={18} color={farben.text3} />
       </Pressable>
     </ScrollView>
   );

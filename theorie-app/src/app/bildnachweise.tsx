@@ -1,7 +1,7 @@
 import { Image, Linking, Pressable, ScrollView, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Kopf, T } from "@/components/ui";
 import { FOTOS, LIZENZ_LINK, NACHWEISE } from "@/lib/fotos";
 import { abstand, farben, RAND } from "@/lib/theme";
@@ -34,7 +34,7 @@ export default function Bildnachweise() {
                   <T v="klein" farbe={farben.text2}>
                     Quelle
                   </T>
-                  <Ionicons name="open-outline" size={12} color={farben.text2} />
+                  <Icon name="open-outline" size={12} color={farben.text2} />
                 </Pressable>
               </View>
             </View>

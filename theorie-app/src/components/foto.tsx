@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import { Image, Pressable, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from "react-native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 
+import { Icon } from "@/components/icon";
 import { Balken, PfeilKreis, T } from "@/components/ui";
 import { Verkehrszeichen } from "@/components/zeichen";
 import type { ThemaId } from "@/lib/fragen";
@@ -162,7 +163,7 @@ export function LeuchtSaeulen({ hoehe = 84 }: { hoehe?: number }) {
 export type KategorieId = ThemaId | "grundstoff";
 
 function Kreis({ children }: { children: ReactNode }) {
-  return <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: "#23262C", alignItems: "center", justifyContent: "center" }}>{children}</View>;
+  return <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: farben.iconKreis, alignItems: "center", justifyContent: "center" }}>{children}</View>;
 }
 
 /** Symbol einer Kategorie – Zeichen, wo es eins gibt, sonst ein ruhiges Icon. */
@@ -171,11 +172,11 @@ export function KategorieIcon({ id }: { id: KategorieId }) {
     case "grundstoff":
       return (
         <Kreis>
-          <Ionicons name="school-outline" size={28} color="#E4E6EA" />
+          <Icon name="school-outline" size={28} color="#E4E6EA" />
         </Kreis>
       );
     case "gefahren":
-      return <Ionicons name="warning-outline" size={42} color={farben.orange} />;
+      return <Icon name="warning-outline" size={40} color="#FF5A1F" weight="semibold" />;
     case "vorfahrt":
       return <Verkehrszeichen zeichen="z306" groesse={46} />;
     case "zeichen":
@@ -183,25 +184,25 @@ export function KategorieIcon({ id }: { id: KategorieId }) {
     case "umwelt":
       return (
         <Kreis>
-          <Ionicons name="leaf" size={28} color={farben.gruen} />
+          <Icon name="leaf" size={28} color={farben.gruen} />
         </Kreis>
       );
     case "technik":
       return (
         <Kreis>
-          <Ionicons name="settings" size={30} color="#B4B9C1" />
+          <Icon name="settings" size={30} color="#B4B9C1" />
         </Kreis>
       );
     case "manoever":
       return (
         <Kreis>
-          <MaterialCommunityIcons name="human-cane" size={32} color="#B4B9C1" />
+          <Icon name="walk" size={28} color="#B4B9C1" fallback={<MaterialCommunityIcons name="human-cane" size={32} color="#B4B9C1" />} />
         </Kreis>
       );
     case "tempo":
       return (
         <Kreis>
-          <Ionicons name="speedometer" size={28} color={farben.orange} />
+          <Icon name="speedometer" size={28} color={farben.orange} />
         </Kreis>
       );
     case "parken":
@@ -209,19 +210,19 @@ export function KategorieIcon({ id }: { id: KategorieId }) {
     case "autobahn":
       return (
         <Kreis>
-          <MaterialCommunityIcons name="highway" size={28} color={farben.blau} />
+          <Icon name="car-outline" sf="road.lanes" size={26} color={farben.blau} fallback={<MaterialCommunityIcons name="highway" size={28} color={farben.blau} />} />
         </Kreis>
       );
     case "mensch":
       return (
         <Kreis>
-          <Ionicons name="person" size={26} color="#B4B9C1" />
+          <Icon name="person" size={26} color="#B4B9C1" />
         </Kreis>
       );
     case "zahlen":
       return (
         <Kreis>
-          <Ionicons name="calculator" size={27} color={farben.gelb} />
+          <Icon name="calculator" size={27} color={farben.gelb} />
         </Kreis>
       );
   }
@@ -295,7 +296,7 @@ export function KategorieZeile({
           justifyContent: "center",
         }}
       >
-        <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
+        <Icon name="chevron-forward" size={18} color="#FFFFFF" />
       </View>
     </Pressable>
   );

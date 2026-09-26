@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Chip, Knopf, Kopf, T } from "@/components/ui";
 import { tippen } from "@/lib/haptik";
 import { abstand, farben, radius, RAND, schrift } from "@/lib/theme";
@@ -41,7 +41,7 @@ export default function Premium() {
           {VORTEILE.map((v) => (
             <View key={v.text} style={{ flexDirection: "row", alignItems: "center", gap: abstand(3.5) }}>
               <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center" }}>
-                <Ionicons name={v.icon} size={18} color={farben.orange} />
+                <Icon name={v.icon} size={18} color={farben.orange} />
               </View>
               <T v="textStark" style={{ flex: 1, ...schrift.textMittel }}>
                 {v.text}

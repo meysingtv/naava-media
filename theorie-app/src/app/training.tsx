@@ -1,9 +1,9 @@
 import { useRef, useState } from "react";
 import { Alert, Animated, Keyboard, KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Abschnitt, Chip, Gruppe, Knopf, kopfOben, KopfTaste, Plakette, T, Zeile } from "@/components/ui";
 import { FrageAnsicht } from "@/components/frage-ansicht";
 import { Ring } from "@/components/grafik";
@@ -260,7 +260,7 @@ export default function Training() {
           transform: [{ translateY: toast.interpolate({ inputRange: [0, 1, 2], outputRange: [8, 0, -10] }) }],
         }}
       >
-        <Ionicons name="flash" size={14} color={farben.orange} />
+        <Icon name="flash" size={14} color={farben.orange} />
         <T v="textStark" farbe={farben.orange} style={{ fontSize: 14 }}>
           +{toastXp} XP
         </T>

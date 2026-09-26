@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Abschnitt, Avatar, Balken, Gruppe, KopfTaste, Saeulen, Segment, T, Zeile, kopfOben } from "@/components/ui";
 import { Ring } from "@/components/grafik";
-import { INHALT_UNTEN } from "@/components/tab-leiste";
+import { useInhaltUnten } from "@/components/tab-leiste";
 import { CLIPS } from "@/lib/clips";
 import { ERFOLGE } from "@/lib/erfolge";
 import { THEMEN, themaVon, type ThemaId } from "@/lib/fragen";
@@ -57,13 +58,14 @@ function Gluehbirne() {
         </Defs>
         <Circle cx={28} cy={26} r={26} fill="url(#schein)" />
       </Svg>
-      <Ionicons name="bulb" size={32} color={farben.gelb} />
+      <Icon name="bulb" size={32} color={farben.gelb} />
     </View>
   );
 }
 
 export default function MeinFortschritt() {
   const insets = useSafeAreaInsets();
+  const inhaltUnten = useInhaltUnten();
   const { stand } = useStand();
   const { profil, gast, anzeigeName, abmelden, session } = useKonto();
   const [zeitraum, setZeitraum] = useState<Zeitraum>("woche");
@@ -103,7 +105,7 @@ export default function MeinFortschritt() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(1), paddingBottom: INHALT_UNTEN, gap: 10 }}
+        contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(1), paddingBottom: inhaltUnten, gap: 10 }}
         showsVerticalScrollIndicator={false}
       >
         <Segment<Zeitraum>
@@ -144,16 +146,16 @@ export default function MeinFortschritt() {
               {gesamt.richtig} / {gesamt.gesamt} Fragen
             </T>
           </View>
-          <Ring anteil={gesamt.anteil} groesse={76} dicke={7}>
-            <Saeulen groesse={28} />
+          <Ring anteil={gesamt.anteil} groesse={76} dicke={7} spur={farben.ringSpur}>
+            <Icon name="stats-chart" size={28} color={farben.orange} fallback={<Saeulen groesse={28} />} />
           </Ring>
         </View>
 
         {/* Kennzahlen */}
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <Kachel symbol={<MaterialCommunityIcons name="fire" size={26} color={farben.orange} />} wert={String(serieAktuell(stand))} label="Tages-Streak" />
-          <Kachel symbol={<Ionicons name="star" size={24} color={farben.gelb} />} wert={tausender(xpHeute(stand))} label="Punkte heute" />
-          <Kachel symbol={<Saeulen groesse={22} />} wert={lernzeitText(daten.sekunden)} label="Lernzeit" />
+          <Kachel symbol={<Icon name="flame" size={24} color={farben.orange} fallback={<MaterialCommunityIcons name="fire" size={26} color={farben.orange} />} />} wert={String(serieAktuell(stand))} label="Tages-Streak" />
+          <Kachel symbol={<Icon name="star" size={24} color={farben.gelb} />} wert={tausender(xpHeute(stand))} label="Punkte heute" />
+          <Kachel symbol={<Icon name="stats-chart" size={24} color={farben.orange} fallback={<Saeulen groesse={22} />} />} wert={lernzeitText(daten.sekunden)} label="Lernzeit" />
         </View>
 
         {/* Stärken & Schwächen */}
@@ -198,7 +200,7 @@ export default function MeinFortschritt() {
             gap: 12,
             padding: 14,
             borderRadius: 14,
-            backgroundColor: "#1D160F",
+            backgroundColor: farben.tipp,
             borderWidth: 1,
             borderColor: "rgba(255,122,0,0.28)",
             opacity: pressed ? 0.85 : 1,
@@ -267,7 +269,7 @@ export default function MeinFortschritt() {
                       borderColor: hat ? farben.orange : farben.linie,
                     }}
                   >
-                    <Ionicons name={hat ? e.icon : "lock-closed"} size={hat ? 23 : 17} color={hat ? farben.orange : farben.text4} />
+                    <Icon name={hat ? e.icon : "lock-closed"} size={hat ? 23 : 17} color={hat ? farben.orange : farben.text4} />
                   </View>
                   <T v="klein" zentriert numberOfLines={2} farbe={hat ? farben.text2 : farben.text4} style={{ fontSize: 11.5, lineHeight: 15, paddingHorizontal: 2 }}>
                     {e.titel}

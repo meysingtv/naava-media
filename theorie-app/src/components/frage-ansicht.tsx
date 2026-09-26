@@ -1,6 +1,6 @@
 import { Pressable, TextInput, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 
+import { Icon } from "@/components/icon";
 import { T } from "@/components/ui";
 import { FrageBild } from "@/components/frage-bild";
 import { antwortRichtig, themaVon, zahlLesen, zahlText, type Frage } from "@/lib/fragen";
@@ -12,7 +12,7 @@ type Zustand = "offen" | "gewaehlt" | "richtig" | "verpasst" | "falsch" | "aus";
 function Auswahlkreis({ zustand }: { zustand: Zustand }) {
   const gefuellt = zustand === "gewaehlt" || zustand === "richtig" || zustand === "falsch";
   const farbe =
-    zustand === "gewaehlt" ? farben.orange : zustand === "richtig" || zustand === "verpasst" ? farben.gruen : zustand === "falsch" ? farben.rot : "#6B7078";
+    zustand === "gewaehlt" ? farben.orange : zustand === "richtig" || zustand === "verpasst" ? farben.gruen : zustand === "falsch" ? farben.rot : "#8E939A";
   return (
     <View
       style={{
@@ -27,9 +27,9 @@ function Auswahlkreis({ zustand }: { zustand: Zustand }) {
       }}
     >
       {zustand === "falsch" ? (
-        <Ionicons name="close" size={15} color="#FFFFFF" />
+        <Icon name="close" size={15} color="#FFFFFF" />
       ) : gefuellt || zustand === "verpasst" ? (
-        <Ionicons name="checkmark" size={zustand === "verpasst" ? 13 : 15} color={gefuellt ? "#FFFFFF" : farben.gruen} />
+        <Icon name="checkmark" size={zustand === "verpasst" ? 13 : 15} color={gefuellt ? "#FFFFFF" : farben.gruen} />
       ) : null}
     </View>
   );
@@ -64,7 +64,7 @@ export function Rueckmeldung({ richtig, text }: { richtig: boolean; text: string
           shadowOffset: { width: 0, height: 0 },
         }}
       >
-        <Ionicons name={richtig ? "checkmark" : "close"} size={22} color="#FFFFFF" />
+        <Icon name={richtig ? "checkmark" : "close"} size={22} color="#FFFFFF" />
       </View>
       <View style={{ flex: 1, gap: 3 }}>
         <T v="h3" farbe={farbe} style={{ fontSize: 17, lineHeight: 21 }}>
@@ -139,7 +139,7 @@ export function FrageAnsicht({
             const rand =
               zustand === "gewaehlt" ? farben.orange : zustand === "richtig" || zustand === "verpasst" ? farben.gruen : zustand === "falsch" ? farben.rot : "rgba(255,255,255,0.09)";
             const flaeche =
-              zustand === "gewaehlt" ? farben.orangeSoft : zustand === "richtig" ? "#1C3A1F" : zustand === "falsch" ? farben.rotSoft : farben.flaeche;
+              zustand === "gewaehlt" ? farben.orangeSoft : zustand === "richtig" ? farben.gruenOption : zustand === "falsch" ? farben.rotSoft : farben.option;
 
             return (
               <Pressable
@@ -207,7 +207,7 @@ function ZahlEingabe({
           borderRadius: 16,
           borderWidth: 1.5,
           borderColor: rand,
-          backgroundColor: aufgedeckt ? (richtig ? "#1C3A1F" : farben.rotSoft) : farben.flaeche,
+          backgroundColor: aufgedeckt ? (richtig ? farben.gruenOption : farben.rotSoft) : farben.option,
         }}
       >
         <TextInput

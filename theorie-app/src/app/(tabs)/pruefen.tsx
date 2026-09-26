@@ -1,12 +1,12 @@
 import { ScrollView, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Abschnitt, Gruppe, Knopf, KopfTaste, T, Zeile, type IconName, kopfOben } from "@/components/ui";
 import { FotoFlaeche } from "@/components/foto";
 import { Ring } from "@/components/grafik";
-import { INHALT_UNTEN } from "@/components/tab-leiste";
+import { useInhaltUnten } from "@/components/tab-leiste";
 import { FOTOS } from "@/lib/fotos";
 import { FRAGEN } from "@/lib/fragen";
 import { datumKurz } from "@/lib/format";
@@ -35,6 +35,7 @@ function Wert({ wert, label, farbe }: { wert: string; label: string; farbe?: str
 
 export default function Pruefen() {
   const insets = useSafeAreaInsets();
+  const inhaltUnten = useInhaltUnten();
   const { stand } = useStand();
   const reife = fortschritt(stand).anteil;
   const bestanden = stand.pruefungen.filter((p) => p.bestanden).length;
@@ -56,7 +57,7 @@ export default function Pruefen() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: INHALT_UNTEN, gap: abstand(5) }}
+        contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: inhaltUnten, gap: abstand(5) }}
         showsVerticalScrollIndicator={false}
       >
         <FotoFlaeche quelle={FOTOS.pruefung} verlauf="stark" style={{ height: 290, borderRadius: 24 }}>
@@ -121,7 +122,7 @@ export default function Pruefen() {
           </View>
         ) : (
           <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(3), padding: abstand(4), borderRadius: 18, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
-            <Ionicons name="time-outline" size={22} color={farben.text3} />
+            <Icon name="time-outline" size={22} color={farben.text3} />
             <T v="klein" style={{ flex: 1 }}>
               Deine Simulationen erscheinen hier – mit Fehlerpunkten und Ergebnis.
             </T>

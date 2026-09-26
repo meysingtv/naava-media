@@ -16,6 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { tippen } from "@/lib/haptik";
 import { abstand, farben, radius, RAND, schrift } from "@/lib/theme";
 
@@ -196,7 +197,7 @@ export function Knopf({
     >
       {art === "primaer" ? (
         <LinearGradient
-          colors={[farben.orangeHell, farben.orange, farben.orangeTief]}
+          colors={["#FF8418", farben.orange, farben.orangeTief]}
           locations={[0, 0.55, 1]}
           style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: rund }}
           pointerEvents="none"
@@ -207,7 +208,7 @@ export function Knopf({
       ) : (
         <>
           <Text style={{ ...schrift.textHalb, fontSize: klein ? 16 : 18, color: vorder }}>{titel}</Text>
-          {icon ? <Ionicons name={icon} size={klein ? 17 : 19} color={vorder} /> : null}
+          {icon ? <Icon name={icon} size={klein ? 17 : 19} color={vorder} /> : null}
         </>
       )}
     </Pressable>
@@ -227,7 +228,7 @@ export function Plakette({ icon, farbe = farben.orange, groesse = 40, gefuellt }
         backgroundColor: gefuellt ? farbe : farbe + "24",
       }}
     >
-      <Ionicons name={icon} size={groesse * 0.5} color={gefuellt ? farben.aufOrange : farbe} />
+      <Icon name={icon} size={groesse * 0.5} color={gefuellt ? farben.aufOrange : farbe} />
     </View>
   );
 }
@@ -242,12 +243,12 @@ export function IconQuadrat({ icon, groesse = 42, hell = true }: { icon: IconNam
         borderRadius: groesse * 0.28,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: hell ? "#FFFFFF" : "rgba(20,22,26,0.85)",
+        backgroundColor: hell ? farben.kachelWeiss : "rgba(20,24,30,0.9)",
         borderWidth: hell ? 0 : 1,
         borderColor: farben.linieStark,
       }}
     >
-      <Ionicons name={icon} size={groesse * 0.5} color={hell ? "#15171B" : farben.text} />
+      <Icon name={icon} size={groesse * 0.52} color={hell ? "#2B2520" : farben.text} weight="semibold" />
     </View>
   );
 }
@@ -281,7 +282,7 @@ export function PfeilKreis({ groesse = 28 }: { groesse?: number }) {
         shadowOffset: { width: 0, height: 2 },
       }}
     >
-      <Ionicons name="chevron-forward" size={groesse * 0.55} color="#FFFFFF" style={{ marginLeft: 1 }} />
+      <Icon name="chevron-forward" size={groesse * 0.55} color="#FFFFFF" style={{ marginLeft: 1 }} />
     </View>
   );
 }
@@ -301,7 +302,7 @@ export function Chip({ text, farbe = farben.text2, icon, aktiv, onPress }: { tex
         borderColor: aktiv ? farben.orange : farben.linie,
       }}
     >
-      {icon ? <Ionicons name={icon} size={14} color={aktiv ? farben.aufOrange : farbe} /> : null}
+      {icon ? <Icon name={icon} size={14} color={aktiv ? farben.aufOrange : farbe} /> : null}
       <Text style={{ ...schrift.textHalb, fontSize: 13, color: aktiv ? farben.aufOrange : farbe }}>{text}</Text>
     </View>
   );
@@ -344,7 +345,7 @@ export function Segment<W extends string>({
     <View
       onLayout={(e) => setBreite(e.nativeEvent.layout.width)}
       style={[
-        { flexDirection: "row", height: 40, padding: 3, borderRadius: 20, backgroundColor: "#1A1C20", borderWidth: 1, borderColor: farben.linie },
+        { flexDirection: "row", height: 40, padding: 3, borderRadius: 20, backgroundColor: farben.flaeche2, borderWidth: 1, borderColor: farben.linie },
         style,
       ]}
     >
@@ -366,7 +367,7 @@ export function Segment<W extends string>({
             shadowOffset: { width: 0, height: 3 },
           }}
         >
-          <LinearGradient colors={[farben.orangeHell, farben.orange]} style={{ flex: 1, borderRadius: 17 }} />
+          <LinearGradient colors={["#FFA022", farben.orangeHell]} style={{ flex: 1, borderRadius: 17 }} />
         </Animated.View>
       ) : null}
       {optionen.map((o) => {
@@ -435,7 +436,7 @@ export function Zeile({
         backgroundColor: pressed ? farben.flaeche2 : "transparent",
       }}
     >
-      {icon ? <Ionicons name={icon} size={20} color={gefahr ? farben.rot : iconFarbe ?? farben.text2} /> : null}
+      {icon ? <Icon name={icon} size={20} color={gefahr ? farben.rot : iconFarbe ?? farben.text2} /> : null}
       <View style={{ flex: 1, gap: 2 }}>
         <T v="textStark" farbe={gefahr ? farben.rot : undefined} numberOfLines={titelZeilen}>
           {titel}
@@ -444,7 +445,7 @@ export function Zeile({
       </View>
       {wert ? <T v="klein" farbe={farben.text2}>{wert}</T> : null}
       {rechts}
-      {onPress && !ohnePfeil ? <Ionicons name="chevron-forward" size={17} color={farben.text4} /> : null}
+      {onPress && !ohnePfeil ? <Icon name="chevron-forward" size={17} color={farben.text4} /> : null}
     </View>
   );
   if (!onPress) return inhalt(false);
@@ -516,7 +517,7 @@ export function Eingabe({ icon, fehler, ...props }: TextInputProps & { icon?: Ic
         borderColor: fehler ? farben.rot : farben.linieStark,
       }}
     >
-      {icon ? <Ionicons name={icon} size={19} color={farben.text3} /> : null}
+      {icon ? <Icon name={icon} size={19} color={farben.text3} /> : null}
       <TextInput
         placeholderTextColor={farben.text4}
         selectionColor={farben.orange}
@@ -544,7 +545,7 @@ export function KopfTaste({ icon, onPress, label, farbe = farben.text }: { icon:
       accessibilityLabel={label}
       style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: pressed ? farben.flaeche2 : "transparent" })}
     >
-      <Ionicons name={icon} size={24} color={farbe} />
+      <Icon name={icon} size={24} color={farbe} />
     </Pressable>
   );
 }

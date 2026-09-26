@@ -1,8 +1,8 @@
 import { ScrollView, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Abschnitt, Gruppe, Knopf, Kopf, T, Zeile } from "@/components/ui";
 import { FotoFlaeche } from "@/components/foto";
 import { Ring } from "@/components/grafik";
@@ -101,7 +101,7 @@ export default function ThemaSeite() {
                       ) : f.bild.startsWith("leuchte_") ? (
                         <Kontrollleuchte leuchte={f.bild as LeuchteKey} groesse={30} />
                       ) : (
-                        <Ionicons name="map-outline" size={17} color={farben.text3} />
+                        <Icon name="map-outline" size={17} color={farben.text3} />
                       )
                     ) : undefined
                   }

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Animated, Easing, Pressable, ScrollView, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Avatar, Chip, Knopf, T } from "@/components/ui";
 import { FrageAnsicht } from "@/components/frage-ansicht";
 import { DUELL_RUNDEN, DUELL_SEKUNDEN, gegnerVon } from "@/lib/duell";
@@ -182,7 +182,7 @@ export default function Duell() {
         <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: RAND, gap: abstand(6) }}>
           <View style={{ alignItems: "center", gap: abstand(3) }}>
             <View style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: farbe + "22", alignItems: "center", justifyContent: "center" }}>
-              <Ionicons name={ende.ergebnis === "sieg" ? "trophy" : ende.ergebnis === "remis" ? "git-compare" : "flag"} size={38} color={farbe} />
+              <Icon name={ende.ergebnis === "sieg" ? "trophy" : ende.ergebnis === "remis" ? "git-compare" : "flag"} size={38} color={farbe} />
             </View>
             <T v="display" farbe={farbe}>
               {titel}
@@ -216,7 +216,7 @@ export default function Duell() {
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
       <View style={{ paddingTop: insets.top + abstand(2), paddingHorizontal: RAND - 6, flexDirection: "row", alignItems: "center" }}>
         <Pressable onPress={schliessen} hitSlop={10} style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}>
-          <Ionicons name="close" size={26} color={farben.text} />
+          <Icon name="close" size={26} color={farben.text} />
         </Pressable>
         <T v="klein" style={{ flex: 1, textAlign: "center", marginRight: 40 }}>
           Runde {runde + 1} von {fragen.length}

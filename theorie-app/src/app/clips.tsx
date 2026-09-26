@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Chip, Knopf, KopfTaste, Plakette, T, zurueck } from "@/components/ui";
 import { ClipBild } from "@/components/clip-bild";
 import { CLIPS, type Clip } from "@/lib/clips";
@@ -67,7 +68,7 @@ function Aktion({ icon, aktiv, farbe, text, onPress, label }: { icon: keyof type
         opacity: pressed ? 0.8 : 1,
       })}
     >
-      <Ionicons name={icon} size={20} color={aktiv ? farbe ?? farben.orange : farben.text2} />
+      <Icon name={icon} size={20} color={aktiv ? farbe ?? farben.orange : farben.text2} />
       {text ? (
         <T v="klein" farbe={aktiv ? farbe ?? farben.orange : farben.text2} style={{ ...schrift.textHalb, fontVariant: ["tabular-nums"] }}>
           {text}
@@ -115,7 +116,7 @@ function ClipKarte({ clip, index, anzahl, hoehe, aktiv }: { clip: Clip; index: n
               transform: [{ scale: herz.interpolate({ inputRange: [0, 1, 2], outputRange: [0.4, 1, 1.25] }) }],
             }}
           >
-            <Ionicons name="heart" size={84} color={farben.orange} />
+            <Icon name="heart" size={84} color={farben.orange} />
           </Animated.View>
         </Pressable>
 

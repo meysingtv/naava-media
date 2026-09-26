@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Abschnitt, Chip, Gruppe, Karte, Knopf, Kopf, kopfOben, KopfTaste, T, Zeile } from "@/components/ui";
 import { FrageAnsicht } from "@/components/frage-ansicht";
 import { Ring } from "@/components/grafik";
@@ -267,7 +268,7 @@ export default function Pruefung() {
               Frage {index + 1}/{ids.length}
             </T>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Ionicons name="time-outline" size={12} color={farben.text3} />
+              <Icon name="time-outline" size={12} color={farben.text3} />
               <T v="klein" style={{ fontSize: 11.5, fontVariant: ["tabular-nums"] }}>
                 {dauer(sekunden)} · {erledigt} beantwortet
               </T>

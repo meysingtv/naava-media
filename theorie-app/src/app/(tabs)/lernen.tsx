@@ -4,9 +4,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Eingabe, Knopf, KopfTaste, Segment, T, kopfOben } from "@/components/ui";
 import { KategorieZeile } from "@/components/foto";
-import { INHALT_UNTEN } from "@/components/tab-leiste";
+import { useInhaltUnten } from "@/components/tab-leiste";
 import { Verkehrszeichen } from "@/components/zeichen";
 import { Kontrollleuchte } from "@/components/leuchten";
 import { FOTOS, themaFoto } from "@/lib/fotos";
@@ -41,7 +42,7 @@ function FrageZeile({ frage, rechts }: { frage: Frage; rechts?: React.ReactNode 
         <Kontrollleuchte leuchte={frage.bild as LeuchteKey} groesse={34} />
       ) : (
         <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: farben.flaeche2, alignItems: "center", justifyContent: "center" }}>
-          <Ionicons name={frage.bild ? "map-outline" : "help"} size={17} color={farben.text3} />
+          <Icon name={frage.bild ? "map-outline" : "help"} size={17} color={farben.text3} />
         </View>
       )}
       <View style={{ flex: 1, gap: 2 }}>
@@ -52,7 +53,7 @@ function FrageZeile({ frage, rechts }: { frage: Frage; rechts?: React.ReactNode 
           {themaVon(frage.thema).titel} · {frage.punkte} Punkte
         </T>
       </View>
-      {rechts ?? <Ionicons name="chevron-forward" size={17} color={farben.text4} />}
+      {rechts ?? <Icon name="chevron-forward" size={17} color={farben.text4} />}
     </Pressable>
   );
 }
@@ -61,7 +62,7 @@ function Leer({ icon, titel, text }: { icon: keyof typeof Ionicons.glyphMap; tit
   return (
     <View style={{ alignItems: "center", gap: abstand(3), paddingVertical: abstand(12), paddingHorizontal: abstand(6) }}>
       <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center" }}>
-        <Ionicons name={icon} size={28} color={farben.orange} />
+        <Icon name={icon} size={28} color={farben.orange} />
       </View>
       <T v="h3" zentriert>
         {titel}
@@ -75,6 +76,7 @@ function Leer({ icon, titel, text }: { icon: keyof typeof Ionicons.glyphMap; tit
 
 export default function Lernen() {
   const insets = useSafeAreaInsets();
+  const inhaltUnten = useInhaltUnten();
   const { stand } = useStand();
   const [reiter, setReiter] = useState<Reiter>("kategorien");
   const [suche, setSuche] = useState<string | null>(null);
@@ -114,7 +116,7 @@ export default function Lernen() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(1), paddingBottom: INHALT_UNTEN, gap: 9 }}
+        contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(1), paddingBottom: inhaltUnten, gap: 9 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -178,7 +180,7 @@ export default function Lernen() {
                 <>
                   <Knopf titel={`Favoriten üben (${gemerkt.length})`} icon="arrow-forward" onPress={() => router.push({ pathname: "/training", params: { modus: "gemerkt" } })} />
                   {gemerkt.map((f) => (
-                    <FrageZeile key={f.id} frage={f} rechts={<Ionicons name="heart" size={18} color={farben.orange} />} />
+                    <FrageZeile key={f.id} frage={f} rechts={<Icon name="heart" size={18} color={farben.orange} />} />
                   ))}
                 </>
               )

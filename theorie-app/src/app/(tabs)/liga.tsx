@@ -1,11 +1,11 @@
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Abschnitt, Avatar, Chip, Eingabe, Gruppe, Karte, Knopf, kopfOben, KopfTaste, Segment, T, Zeile } from "@/components/ui";
-import { INHALT_UNTEN } from "@/components/tab-leiste";
+import { useInhaltUnten } from "@/components/tab-leiste";
 import { GEGNER } from "@/lib/duell";
 import { tausender } from "@/lib/format";
 import { tippen } from "@/lib/haptik";
@@ -68,6 +68,7 @@ function duellStatus(d: DuellMitNamen, ich: string) {
 
 export default function Liga() {
   const insets = useSafeAreaInsets();
+  const inhaltUnten = useInhaltUnten();
   const { stand } = useStand();
   const { session, profil, gast, anzeigeName, abmelden, profilNeuLaden } = useKonto();
   const ich = session?.user.id ?? "";
@@ -139,7 +140,7 @@ export default function Liga() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: farben.grund }}
-      contentContainerStyle={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND, paddingBottom: INHALT_UNTEN, gap: abstand(4) }}
+      contentContainerStyle={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND, paddingBottom: inhaltUnten, gap: abstand(4) }}
       keyboardShouldPersistTaps="handled"
     >
       <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginHorizontal: -8 }}>
@@ -176,7 +177,7 @@ export default function Liga() {
           <Karte style={{ gap: abstand(4) }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(3.5) }}>
               <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: liga.farbe + "22", alignItems: "center", justifyContent: "center" }}>
-                <Ionicons name="trail-sign" size={22} color={liga.farbe} />
+                <Icon name="trail-sign" size={22} color={liga.farbe} />
               </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <T v="h3">{liga.name}</T>
@@ -220,7 +221,7 @@ export default function Liga() {
 
           {!session ? (
             <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(3), padding: abstand(4), borderRadius: radius.l, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
-              <Ionicons name="people-outline" size={22} color={farben.text2} />
+              <Icon name="people-outline" size={22} color={farben.text2} />
               <T v="klein" style={{ flex: 1 }}>
                 Übungsrangliste. Mit Konto trittst du gegen echte Lernende an.
               </T>
@@ -266,7 +267,7 @@ export default function Liga() {
           <Karte hervorgehoben={online} style={{ gap: abstand(4) }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(3.5) }}>
               <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center" }}>
-                <Ionicons name="trophy" size={22} color={farben.orange} />
+                <Icon name="trophy" size={22} color={farben.orange} />
               </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <T v="h3">Rangliste-Duell</T>
@@ -287,19 +288,19 @@ export default function Liga() {
           </Karte>
 
           <Karte onPress={() => router.push("/elo")} style={{ flexDirection: "row", alignItems: "center", gap: abstand(3.5), padding: abstand(4) }}>
-            <Ionicons name="podium-outline" size={22} color={farben.gelb} />
+            <Icon name="podium-outline" size={22} color={farben.gelb} />
             <View style={{ flex: 1 }}>
               <T v="textStark">Top 100 nach Elo</T>
               <T v="klein">Die besten Duellantinnen und Duellanten</T>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={farben.text4} />
+            <Icon name="chevron-forward" size={18} color={farben.text4} />
           </Karte>
 
           {/* Online: Freundes-Duell */}
           <Karte style={{ gap: abstand(4) }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(3.5) }}>
               <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: farben.blauSoft, alignItems: "center", justifyContent: "center" }}>
-                <Ionicons name="people" size={22} color={farben.blau} />
+                <Icon name="people" size={22} color={farben.blau} />
               </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <T v="h3">Freundes-Duell</T>

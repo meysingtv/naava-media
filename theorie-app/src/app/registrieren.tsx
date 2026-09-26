@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
 import { router } from "expo-router";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Chip, Eingabe, Knopf, Kopf, T } from "@/components/ui";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
 import { useKonto } from "@/lib/konto";
@@ -85,7 +86,7 @@ export default function Registrieren() {
         <Kopf />
         <View style={{ flex: 1, paddingHorizontal: RAND, justifyContent: "center", gap: abstand(4) }}>
           <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center" }}>
-            <Ionicons name="mail-unread-outline" size={30} color={farben.orange} />
+            <Icon name="mail-unread-outline" size={30} color={farben.orange} />
           </View>
           <T v="titel">Fast geschafft.</T>
           <T v="text">
@@ -117,7 +118,7 @@ export default function Registrieren() {
       <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(8), gap: abstand(4) }} keyboardShouldPersistTaps="handled">
         {!serverVerbunden ? (
           <View style={{ flexDirection: "row", gap: abstand(2), padding: abstand(3.5), borderRadius: radius.m, backgroundColor: farben.gelbSoft }}>
-            <Ionicons name="cloud-offline-outline" size={18} color={farben.gelb} />
+            <Icon name="cloud-offline-outline" size={18} color={farben.gelb} />
             <T v="klein" farbe={farben.gelb} style={{ flex: 1 }}>
               Die App ist noch mit keinem Server verbunden. Registrieren klappt erst danach – bis dahin kannst du ohne Konto lernen.
             </T>
