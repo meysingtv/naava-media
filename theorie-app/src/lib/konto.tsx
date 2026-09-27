@@ -22,6 +22,7 @@ export type Profil = {
   xp_woche: number;
   bundesland: string | null;
   elo: number;
+  bild_pfad: string | null;
 };
 
 type Registrierung = { name: string; benutzername: string; email: string; passwort: string; klasse: string; bundesland: string | null };
@@ -83,12 +84,15 @@ export function KontoProvider({ children }: { children: ReactNode }) {
       setProfil(null);
       return;
     }
-    const { data } = await supabase
-      .from("lern_profil")
-      .select("id, name, benutzername, klasse, avatar_farbe, xp, xp_woche, bundesland, elo")
-      .eq("id", s.user.id)
-      .maybeSingle<Profil>();
-    setProfil(data ?? null);
+    const spalten = "id, name, benutzername, klasse, avatar_farbe, xp, xp_woche, bundesland, elo";
+    const mitBild = await supabase.from("lern_profil").select(`${spalten}, bild_pfad`).eq("id", s.user.id).maybeSingle<Profil>();
+    if (!mitBild.error) {
+      setProfil(mitBild.data ?? null);
+      return;
+    }
+    // Älteres Schema ohne Profilbild-Spalte: trotzdem das Profil laden.
+    const { data } = await supabase.from("lern_profil").select(spalten).eq("id", s.user.id).maybeSingle<Omit<Profil, "bild_pfad">>();
+    setProfil(data ? { ...data, bild_pfad: null } : null);
   }, []);
 
   useEffect(() => {

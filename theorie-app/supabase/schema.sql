@@ -455,6 +455,44 @@ create table if not exists public.lern_clip_meldung (
 alter table public.lern_clip_meldung enable row level security;
 -- Meldungen sieht nur der Inhaber im Supabase-Dashboard.
 
+-- Profilbilder: liegen öffentlich lesbar im Speicher, damit sie im Feed und
+-- in Kommentaren bei allen erscheinen. Jeder schreibt nur in seinen Ordner.
+alter table public.lern_profil add column if not exists bild_pfad text;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('lern-profilbilder', 'lern-profilbilder', true, 2097152, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update
+  set public = excluded.public,
+      file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "lern_profilbild_hochladen" on storage.objects;
+create policy "lern_profilbild_hochladen" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'lern-profilbilder' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "lern_profilbild_eigene_lesen" on storage.objects;
+create policy "lern_profilbild_eigene_lesen" on storage.objects
+  for select to authenticated
+  using (bucket_id = 'lern-profilbilder' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "lern_profilbild_loeschen" on storage.objects;
+create policy "lern_profilbild_loeschen" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'lern-profilbilder' and (storage.foldername(name))[1] = auth.uid()::text);
+
+create or replace function public.lern_profilbild_setzen(p_pfad text)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if auth.uid() is null then raise exception 'Nicht angemeldet'; end if;
+  if p_pfad is not null and split_part(p_pfad, '/', 1) <> auth.uid()::text then raise exception 'Ungültiger Pfad'; end if;
+  update public.lern_profil p set bild_pfad = p_pfad where p.id = auth.uid();
+end;
+$$;
+grant execute on function public.lern_profilbild_setzen(text) to authenticated;
+
 -- Speicher für Videos und Vorschaubilder: öffentlich lesbar, schnell per CDN.
 -- Jeder lädt in seinen eigenen Ordner (<user-id>/...). 50 MB je Datei ist die
 -- Obergrenze im kostenlosen Supabase-Tarif.
@@ -481,18 +519,19 @@ create policy "lern_clips_loeschen" on storage.objects
   using (bucket_id = 'lern-clips' and ((storage.foldername(name))[1] = auth.uid()::text or public.lern_ist_inhaber()));
 
 -- Feed: „entdecken“ (alle, neueste zuerst) oder „folge_ich“. Weiterblättern mit p_vor.
+drop function if exists public.lern_clip_feed(text, timestamptz, integer);
 create or replace function public.lern_clip_feed(p_art text default 'entdecken', p_vor timestamptz default null, p_anzahl integer default 10)
 returns table(
   id uuid, titel text, beschreibung text, video_pfad text, bild_pfad text, breite integer, hoehe integer, dauer real,
   likes integer, kommentare integer, geteilt integer, erstellt_am timestamptz,
-  autor uuid, autor_name text, autor_benutzername text, autor_farbe text,
+  autor uuid, autor_name text, autor_benutzername text, autor_farbe text, autor_bild text,
   gemocht boolean, folge_ich boolean
 )
 language sql stable security definer set search_path = public
 as $$
   select c.id, c.titel, c.beschreibung, c.video_pfad, c.bild_pfad, c.breite, c.hoehe, c.dauer,
          c.likes, c.kommentare, c.geteilt, c.erstellt_am,
-         c.autor, p.name, p.benutzername, p.avatar_farbe,
+         c.autor, p.name, p.benutzername, p.avatar_farbe, p.bild_pfad,
          exists (select 1 from public.lern_clip_like l where l.clip_id = c.id and l.user_id = auth.uid()),
          exists (select 1 from public.lern_folgen f where f.folger = auth.uid() and f.folgt = c.autor)
     from public.lern_clip c
@@ -590,11 +629,12 @@ $$;
 grant execute on function public.lern_folgen_setzen(uuid, boolean) to authenticated;
 
 -- Kommentare eines Clips (neueste zuerst).
+drop function if exists public.lern_clip_kommentare(uuid, timestamptz);
 create or replace function public.lern_clip_kommentare(p_clip uuid, p_vor timestamptz default null)
-returns table(id uuid, inhalt text, erstellt_am timestamptz, autor uuid, autor_name text, autor_benutzername text, autor_farbe text, loeschbar boolean)
+returns table(id uuid, inhalt text, erstellt_am timestamptz, autor uuid, autor_name text, autor_benutzername text, autor_farbe text, autor_bild text, loeschbar boolean)
 language sql stable security definer set search_path = public
 as $$
-  select k.id, k.inhalt, k.erstellt_am, k.autor, p.name, p.benutzername, p.avatar_farbe,
+  select k.id, k.inhalt, k.erstellt_am, k.autor, p.name, p.benutzername, p.avatar_farbe, p.bild_pfad,
          coalesce(k.autor = auth.uid()
                   or public.lern_ist_inhaber()
                   or exists (select 1 from public.lern_clip c where c.id = k.clip_id and c.autor = auth.uid()), false)
@@ -669,15 +709,16 @@ $$;
 grant execute on function public.lern_clip_melden(uuid, text) to authenticated;
 
 -- Inhaber: Ersteller verwalten (per Benutzername oder E-Mail).
+drop function if exists public.lern_clip_ersteller_liste();
 create or replace function public.lern_clip_ersteller_liste()
-returns table(id uuid, name text, benutzername text, avatar_farbe text, hinzugefuegt_am timestamptz)
+returns table(id uuid, name text, benutzername text, avatar_farbe text, bild_pfad text, hinzugefuegt_am timestamptz)
 language plpgsql stable security definer set search_path = public
 as $$
 #variable_conflict use_column
 begin
   if not public.lern_ist_inhaber() then raise exception 'Nur für den Inhaber der App'; end if;
   return query
-    select p.id, p.name, p.benutzername, p.avatar_farbe, e.hinzugefuegt_am
+    select p.id, p.name, p.benutzername, p.avatar_farbe, p.bild_pfad, e.hinzugefuegt_am
       from public.lern_clip_ersteller e
       join public.lern_profil p on p.id = e.user_id
      order by e.hinzugefuegt_am desc;

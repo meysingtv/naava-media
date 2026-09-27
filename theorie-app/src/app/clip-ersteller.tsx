@@ -3,7 +3,8 @@ import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, Sc
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Avatar, Eingabe, Gruppe, Knopf, Kopf, T } from "@/components/ui";
+import { NutzerBild } from "@/components/profilbild";
+import { Eingabe, Gruppe, Knopf, Kopf, T } from "@/components/ui";
 import { erstellerEntfernen, erstellerHinzufuegen, erstellerListe, useClipRechte, type Ersteller } from "@/lib/clips-server";
 import { erfolg, tippen } from "@/lib/haptik";
 import { abstand, farben, RAND } from "@/lib/theme";
@@ -123,7 +124,7 @@ export default function ClipErsteller() {
             <Gruppe>
               {liste.map((p) => (
                 <View key={p.id} style={{ flexDirection: "row", alignItems: "center", gap: abstand(3), paddingVertical: abstand(3), paddingHorizontal: abstand(4) }}>
-                  <Avatar name={p.name || p.benutzername} groesse={38} farbe={p.avatar_farbe || farben.orange} />
+                  <NutzerBild pfad={p.bild_pfad} name={p.benutzername} farbe={p.avatar_farbe} groesse={38} rand={1} />
                   <View style={{ flex: 1 }}>
                     <T v="textStark" numberOfLines={1}>
                       {p.name || p.benutzername}

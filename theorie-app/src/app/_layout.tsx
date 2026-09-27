@@ -15,6 +15,7 @@ import { erfolgVon } from "@/lib/erfolge";
 import { erfolg } from "@/lib/haptik";
 import { KontoProvider, useKonto } from "@/lib/konto";
 import { StandProvider, useStand } from "@/lib/stand";
+import { ProfilbildAbgleich } from "@/lib/profilbild";
 import { SyncBruecke } from "@/lib/sync";
 import { abstand, farben, RAND } from "@/lib/theme";
 
@@ -150,6 +151,7 @@ export default function RootLayout() {
       <KontoProvider>
         <StatusBar style="light" />
         <SyncBruecke />
+        <ProfilbildAbgleich />
         <Navigation />
       </KontoProvider>
     </StandProvider>

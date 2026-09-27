@@ -1,19 +1,27 @@
 import { Image, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { useProfilbild } from "@/lib/profilbild";
+import { useKonto } from "@/lib/konto";
+import { profilbildUrl, useProfilbild } from "@/lib/profilbild";
 import { farben, schrift } from "@/lib/theme";
 
-/** Rundes Profilbild mit heller Kante – ohne Foto mit Initialen. */
-export function ProfilBild({ name, groesse = 52, rand = 2 }: { name: string; groesse?: number; rand?: number }) {
-  const bild = useProfilbild();
-  const kuerzel =
+function kuerzelVon(name: string): string {
+  return (
     name
+      .replace(/^@/, "")
       .trim()
       .split(/\s+/)
       .slice(0, 2)
       .map((w) => w[0]?.toUpperCase() ?? "")
-      .join("") || "?";
+      .join("") || "?"
+  );
+}
+
+/** Eigenes rundes Profilbild mit heller Kante – ohne Foto mit Initialen. */
+export function ProfilBild({ name, groesse = 52, rand = 2 }: { name: string; groesse?: number; rand?: number }) {
+  const lokal = useProfilbild();
+  const { profil } = useKonto();
+  const uri = lokal ?? (profil?.bild_pfad ? profilbildUrl(profil.bild_pfad) : null);
   return (
     <View
       style={{
@@ -26,12 +34,37 @@ export function ProfilBild({ name, groesse = 52, rand = 2 }: { name: string; gro
         backgroundColor: farben.flaeche2,
       }}
     >
-      {bild ? (
-        <Image source={{ uri: bild }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+      {uri ? (
+        <Image source={{ uri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
       ) : (
         <LinearGradient colors={["#FF9A4A", "#E8541C"]} style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ ...schrift.titel, fontSize: groesse * 0.36, color: "#FFFFFF" }}>{kuerzel}</Text>
+          <Text style={{ ...schrift.titel, fontSize: groesse * 0.36, color: "#FFFFFF" }}>{kuerzelVon(name)}</Text>
         </LinearGradient>
+      )}
+    </View>
+  );
+}
+
+/** Profilbild eines anderen Nutzers (Clips, Kommentare) – sonst Initialen in seiner Farbe. */
+export function NutzerBild({ pfad, name, farbe, groesse = 36, rand = 1.5 }: { pfad: string | null | undefined; name: string; farbe?: string; groesse?: number; rand?: number }) {
+  return (
+    <View
+      style={{
+        width: groesse,
+        height: groesse,
+        borderRadius: groesse / 2,
+        borderWidth: rand,
+        borderColor: "rgba(255,255,255,0.9)",
+        overflow: "hidden",
+        backgroundColor: farbe || farben.orange,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {pfad ? (
+        <Image source={{ uri: profilbildUrl(pfad) }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+      ) : (
+        <Text style={{ ...schrift.titel, fontSize: groesse * 0.4, color: "#FFFFFF" }}>{kuerzelVon(name)}</Text>
       )}
     </View>
   );

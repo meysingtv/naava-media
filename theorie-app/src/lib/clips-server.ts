@@ -34,6 +34,7 @@ export type ClipEintrag = {
   autor_name: string;
   autor_benutzername: string;
   autor_farbe: string;
+  autor_bild: string | null;
   gemocht: boolean;
   folge_ich: boolean;
 };
@@ -46,10 +47,11 @@ export type Kommentar = {
   autor_name: string;
   autor_benutzername: string;
   autor_farbe: string;
+  autor_bild: string | null;
   loeschbar: boolean;
 };
 
-export type Ersteller = { id: string; name: string; benutzername: string; avatar_farbe: string; hinzugefuegt_am: string };
+export type Ersteller = { id: string; name: string; benutzername: string; avatar_farbe: string; bild_pfad: string | null; hinzugefuegt_am: string };
 
 function meldung(fehler: unknown): string {
   const text = fehler instanceof Error ? fehler.message : typeof fehler === "object" && fehler && "message" in fehler ? String((fehler as { message: unknown }).message) : String(fehler);
@@ -195,7 +197,9 @@ export function beiNeuenClips(h: () => void) {
   };
 }
 
-async function dateiHochladen(
+/** Datei direkt von der Platte in einen Speicher-Bucket laden (gestreamt). */
+export async function dateiHochladen(
+  bucket: string,
   uri: string,
   pfad: string,
   typ: string,
@@ -204,7 +208,7 @@ async function dateiHochladen(
   abbruch?: { aktuell: (() => void) | null },
 ): Promise<void> {
   const aufgabe = FileSystem.createUploadTask(
-    `${serverAdresse}/storage/v1/object/${CLIP_BUCKET}/${pfad}`,
+    `${serverAdresse}/storage/v1/object/${bucket}/${pfad}`,
     uri,
     {
       httpMethod: "POST",
@@ -261,13 +265,13 @@ export async function clipHochladen(d: {
   let bildPfad: string | null = null;
   try {
     const bild = await VideoThumbnails.getThumbnailAsync(d.videoUri, { time: 300, quality: 0.72 });
-    await dateiHochladen(bild.uri, `${basis}.jpg`, "image/jpeg", session.access_token);
+    await dateiHochladen(CLIP_BUCKET, bild.uri, `${basis}.jpg`, "image/jpeg", session.access_token);
     bildPfad = `${basis}.jpg`;
   } catch {
     bildPfad = null;
   }
 
-  await dateiHochladen(d.videoUri, videoPfad, mov ? "video/quicktime" : "video/mp4", session.access_token, d.onFortschritt, d.abbruch);
+  await dateiHochladen(CLIP_BUCKET, d.videoUri, videoPfad, mov ? "video/quicktime" : "video/mp4", session.access_token, d.onFortschritt, d.abbruch);
 
   const { error } = await supabase.rpc("lern_clip_anlegen", {
     p_video: videoPfad,

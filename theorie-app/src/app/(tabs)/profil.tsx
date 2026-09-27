@@ -11,7 +11,7 @@ import { ERFOLGE } from "@/lib/erfolge";
 import { tausender } from "@/lib/format";
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
-import { profilbildEntfernen, profilbildWaehlen, useProfilbild } from "@/lib/profilbild";
+import { profilbildEntfernen, profilbildHochladen, profilbildServerEntfernen, profilbildWaehlen, useProfilbild } from "@/lib/profilbild";
 import { serieAktuell, useStand } from "@/lib/stand";
 import { farben, schrift } from "@/lib/theme";
 
@@ -63,14 +63,34 @@ export default function Profil() {
   const insets = useSafeAreaInsets();
   const inhaltUnten = useInhaltUnten();
   const { stand } = useStand();
-  const { profil, gast, anzeigeName, abmelden, session } = useKonto();
+  const { profil, gast, anzeigeName, abmelden, session, profilNeuLaden } = useKonto();
   const bild = useProfilbild();
+  const hatBild = Boolean(bild || profil?.bild_pfad);
   const freigeschaltet = ERFOLGE.filter((e) => stand.erfolge[e.id]).length;
   const gemerkteClips = CLIPS.filter((c) => stand.clips.gemerkt.includes(c.id)).length;
 
+  async function fotoWaehlen() {
+    const ok = await profilbildWaehlen();
+    if (!ok || !session) return;
+    try {
+      // Auch auf den Server, damit andere es bei Clips und Kommentaren sehen.
+      await profilbildHochladen(profil?.bild_pfad ?? null);
+      await profilNeuLaden();
+    } catch {
+      Alert.alert("Profilbild", "Das Bild ist auf deinem Handy gespeichert, konnte aber gerade nicht hochgeladen werden. Versuch es gleich noch einmal.");
+    }
+  }
+
+  async function fotoEntfernen() {
+    await profilbildEntfernen();
+    if (!session) return;
+    await profilbildServerEntfernen(profil?.bild_pfad ?? null);
+    await profilNeuLaden();
+  }
+
   function bildAendern() {
-    const optionen: { text: string; onPress?: () => void; style?: "cancel" | "destructive" }[] = [{ text: "Foto auswählen", onPress: () => profilbildWaehlen() }];
-    if (bild) optionen.push({ text: "Foto entfernen", style: "destructive", onPress: () => profilbildEntfernen() });
+    const optionen: { text: string; onPress?: () => void; style?: "cancel" | "destructive" }[] = [{ text: "Foto auswählen", onPress: () => fotoWaehlen() }];
+    if (hatBild) optionen.push({ text: "Foto entfernen", style: "destructive", onPress: () => fotoEntfernen() });
     optionen.push({ text: "Abbrechen", style: "cancel" });
     Alert.alert("Profilbild", undefined, optionen);
   }

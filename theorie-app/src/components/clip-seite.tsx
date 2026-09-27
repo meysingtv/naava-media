@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Easing, Image, Pressable, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
+import { ActivityIndicator, Animated, Easing, Image, Platform, Pressable, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEvent, useEventListener } from "expo";
 import { useVideoPlayer, VideoView, type VideoPlayer } from "expo-video";
@@ -7,19 +7,25 @@ import type { SFSymbol } from "expo-symbols";
 
 import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
-import { Avatar } from "@/components/ui";
+import { NutzerBild } from "@/components/profilbild";
 import { dateiUrl, kurzeZahl, type ClipEintrag } from "@/lib/clips-server";
 import { stoss, tippen } from "@/lib/haptik";
 import { farben, schrift } from "@/lib/theme";
 
-// Eigener Spur-Look: Video im Vollbild, darunter eine Glas-Karte mit Ersteller,
-// Titel und einer Aktionsleiste – orange Akzente statt der üblichen
-// Kurzvideo-Optik mit Symbolspalte am Rand.
+// Eigener Spur-Look: Video im Vollbild, unten Ersteller, Titel und eine
+// schlichte Aktionszeile direkt auf dem Video – orange Akzente, keine
+// Symbolspalte am Rand.
 
 // ---------------------------------------------------------------------------
 // Bausteine
 // ---------------------------------------------------------------------------
 
+const SCHATTEN_TEXT = { textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 6, textShadowOffset: { width: 0, height: 1 } } as const;
+// Schatten folgt auf iOS der Form des Symbols; anderswo wäre es ein Kasten.
+const SCHATTEN_ICON =
+  Platform.OS === "ios" ? ({ shadowColor: "#000000", shadowOpacity: 0.45, shadowRadius: 5, shadowOffset: { width: 0, height: 1 } } as const) : null;
+
+/** Symbol mit Zahl daneben – ohne Fläche, direkt auf dem Video. */
 function Aktion({
   icon,
   sf,
@@ -40,28 +46,16 @@ function Aktion({
   return (
     <Pressable
       onPress={onPress}
-      hitSlop={4}
+      hitSlop={10}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => ({
-        flex: text ? 1 : undefined,
-        width: text ? undefined : 44,
-        height: 40,
-        borderRadius: 20,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 6,
-        backgroundColor: aktiv ? "rgba(252,91,14,0.22)" : pressed ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.08)",
-        borderWidth: 1,
-        borderColor: aktiv ? "rgba(252,91,14,0.55)" : "rgba(255,255,255,0.08)",
-      })}
+      style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 7, minHeight: 34, opacity: pressed ? 0.65 : 1 })}
     >
-      <Animated.View style={skala ? { transform: [{ scale: skala }] } : null}>
-        <Icon name={icon} sf={sf} size={18} color={aktiv ? farben.orange : "#FFFFFF"} weight="semibold" />
+      <Animated.View style={[SCHATTEN_ICON, skala ? { transform: [{ scale: skala }] } : null]}>
+        <Icon name={icon} sf={sf} size={25} color={aktiv ? farben.orange : "#FFFFFF"} weight="semibold" />
       </Animated.View>
       {text != null ? (
-        <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 13.5, color: aktiv ? farben.orangeHell : "#FFFFFF", fontVariant: ["tabular-nums"] }}>
+        <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 14.5, color: "#FFFFFF", fontVariant: ["tabular-nums"], ...SCHATTEN_TEXT }}>
           {text}
         </Text>
       ) : null}
@@ -156,7 +150,7 @@ type Props = {
   onMehr: (clip: ClipEintrag) => void;
 };
 
-const KARTE_RAND = 12;
+const RAND_SEITE = 16;
 
 function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eigen, onLike, onFolgen, onKommentare, onTeilen, onMehr }: Props) {
   const quelle = useMemo(() => ({ uri: dateiUrl(clip.video_pfad), useCaching: true }), [clip.video_pfad]);
@@ -247,7 +241,6 @@ function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eig
 
   const quer = (clip.breite ?? 0) > (clip.hoehe ?? 0);
   const fehler = status === "error";
-  const kartenBreite = breite - KARTE_RAND * 2;
 
   return (
     <View style={{ width: breite, height: hoehe, backgroundColor: "#000000", overflow: "hidden" }}>
@@ -272,7 +265,12 @@ function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eig
       {/* Tippen: Pause, Doppeltippen: Gefällt mir */}
       <Pressable style={StyleSheet.absoluteFill} onPress={beiTipp} accessibilityLabel={pausiert ? "Abspielen" : "Anhalten"} />
 
-      <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.45)"]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 260 }} />
+      <LinearGradient
+        pointerEvents="none"
+        colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.32)", "rgba(0,0,0,0.7)"]}
+        locations={[0, 0.45, 1]}
+        style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: unten + 300 }}
+      />
 
       {!bereit && aktiv && !fehler ? (
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center" }]}>
@@ -310,58 +308,56 @@ function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eig
         <Funke key={f.id} x={f.x} y={f.y} onFertig={() => setFunken((alle) => alle.filter((x) => x.id !== f.id))} />
       ))}
 
-      {/* Glas-Karte: Ersteller, Titel, Beschreibung, Aktionen */}
-      <Glas klar style={{ position: "absolute", left: KARTE_RAND, right: KARTE_RAND, bottom: unten + 10, borderRadius: 26, padding: 14, gap: 10 }}>
-        {aktiv ? <Fortschritt player={player} breite={kartenBreite - 28} /> : <View style={{ height: 3 }} />}
-
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Avatar name={clip.autor_name || clip.autor_benutzername} groesse={36} farbe={clip.autor_farbe || farben.orange} />
-          <View style={{ flex: 1 }}>
-            <Text numberOfLines={1} style={{ ...schrift.textFett, fontSize: 15, color: "#FFFFFF" }}>
-              {clip.autor_name || clip.autor_benutzername}
-            </Text>
-            <Text numberOfLines={1} style={{ ...schrift.textMittel, fontSize: 12.5, color: "rgba(255,255,255,0.7)" }}>
-              @{clip.autor_benutzername}
-            </Text>
-          </View>
+      {/* Unten: Ersteller, Titel, Beschreibung, Aktionen, Fortschritt */}
+      <View pointerEvents="box-none" style={{ position: "absolute", left: RAND_SEITE, right: RAND_SEITE, bottom: unten + 12, gap: 8 }}>
+        <View pointerEvents="box-none" style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <NutzerBild pfad={clip.autor_bild} name={clip.autor_benutzername} farbe={clip.autor_farbe} groesse={36} />
+          <Text numberOfLines={1} style={{ ...schrift.textFett, fontSize: 16, color: "#FFFFFF", flexShrink: 1, ...SCHATTEN_TEXT }}>
+            @{clip.autor_benutzername}
+          </Text>
           {eigen ? null : (
             <Pressable
               onPress={() => {
                 tippen();
                 onFolgen(clip, !clip.folge_ich);
               }}
-              hitSlop={6}
+              hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel={clip.folge_ich ? "Nicht mehr folgen" : "Folgen"}
               style={({ pressed }) => ({
-                height: 32,
-                paddingHorizontal: 14,
-                borderRadius: 16,
+                height: 28,
+                paddingHorizontal: 12,
+                borderRadius: 14,
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 5,
-                backgroundColor: clip.folge_ich ? "rgba(255,255,255,0.12)" : farben.orange,
-                opacity: pressed ? 0.8 : 1,
+                gap: 4,
+                backgroundColor: clip.folge_ich ? "transparent" : farben.orange,
+                borderWidth: clip.folge_ich ? 1.5 : 0,
+                borderColor: "rgba(255,255,255,0.75)",
+                opacity: pressed ? 0.75 : 1,
               })}
             >
-              {clip.folge_ich ? <Icon name="checkmark" size={13} color="#FFFFFF" weight="bold" /> : null}
-              <Text style={{ ...schrift.textHalb, fontSize: 13.5, color: "#FFFFFF" }}>{clip.folge_ich ? "Folge ich" : "Folgen"}</Text>
+              {clip.folge_ich ? <Icon name="checkmark" size={12} color="#FFFFFF" weight="bold" /> : null}
+              <Text style={{ ...schrift.textHalb, fontSize: 13, color: "#FFFFFF" }}>{clip.folge_ich ? "Folge ich" : "Folgen"}</Text>
             </Pressable>
           )}
         </View>
 
-        <View style={{ gap: 3 }}>
-          <Text numberOfLines={2} style={{ ...schrift.textHalb, fontSize: 16, lineHeight: 21, color: "#FFFFFF" }}>
-            {clip.titel}
+        <Text numberOfLines={2} style={{ ...schrift.textHalb, fontSize: 16, lineHeight: 21, color: "#FFFFFF", ...SCHATTEN_TEXT }}>
+          {clip.titel}
+        </Text>
+        {clip.beschreibung ? (
+          <Text
+            numberOfLines={offen ? 8 : 2}
+            onPress={() => setOffen((o) => !o)}
+            suppressHighlighting
+            style={{ ...schrift.text, fontSize: 14, lineHeight: 19, color: "rgba(255,255,255,0.86)", ...SCHATTEN_TEXT }}
+          >
+            {clip.beschreibung}
           </Text>
-          {clip.beschreibung ? (
-            <Text numberOfLines={offen ? 8 : 1} onPress={() => setOffen((o) => !o)} suppressHighlighting style={{ ...schrift.text, fontSize: 14, lineHeight: 19, color: "rgba(255,255,255,0.78)" }}>
-              {clip.beschreibung}
-            </Text>
-          ) : null}
-        </View>
+        ) : null}
 
-        <View style={{ flexDirection: "row", gap: 8 }}>
+        <View pointerEvents="box-none" style={{ flexDirection: "row", alignItems: "center", gap: 24, marginTop: 4 }}>
           <Aktion
             icon="heart"
             sf={clip.gemocht ? "heart.fill" : "heart"}
@@ -377,7 +373,7 @@ function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eig
           />
           <Aktion
             icon="chatbubble-ellipses"
-            sf="bubble.left.and.bubble.right"
+            sf="bubble.left"
             text={kurzeZahl(clip.kommentare)}
             label="Kommentare"
             onPress={() => {
@@ -395,6 +391,7 @@ function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eig
               onTeilen(clip);
             }}
           />
+          <View style={{ flex: 1 }} pointerEvents="none" />
           <Aktion
             icon="ellipsis-horizontal"
             sf="ellipsis"
@@ -405,7 +402,9 @@ function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eig
             }}
           />
         </View>
-      </Glas>
+
+        {aktiv ? <Fortschritt player={player} breite={breite - RAND_SEITE * 2} /> : <View style={{ height: 3 }} />}
+      </View>
     </View>
   );
 }
