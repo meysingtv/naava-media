@@ -50,26 +50,29 @@ export default function ClipHochladen() {
 
   async function auswaehlen() {
     tippen();
-    const erlaubnis = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!erlaubnis.granted) {
-      Alert.alert("Kein Zugriff auf Videos", "Erlaube Spur den Zugriff auf deine Fotos in den iPhone-Einstellungen.");
-      return;
+    try {
+      // Moderner iOS-Picker: braucht keine Fotofreigabe und rechnet das Video
+      // gleich auf 720p (H.264, .mp4) herunter – kleine Datei, ruckelfreier Feed.
+      const r = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["videos"],
+        allowsEditing: false,
+        videoExportPreset: ImagePicker.VideoExportPreset.H264_1280x720,
+        preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
+      });
+      if (r.canceled || !r.assets?.[0]) return;
+      const a = r.assets[0];
+      if (a.duration && a.duration > 180_000) {
+        Alert.alert("Video zu lang", "Höchstens 3 Minuten. Kürze das Video in der Fotos-App und wähle es dann erneut.");
+        return;
+      }
+      if (a.fileSize && a.fileSize > MAX_VIDEO_BYTES) {
+        Alert.alert("Video zu groß", "Höchstens 50 MB. Kürze das Video etwas oder wähle ein kürzeres.");
+        return;
+      }
+      setVideo({ uri: a.uri, breite: a.width || null, hoehe: a.height || null, dauer: a.duration ? a.duration / 1000 : null, groesse: a.fileSize ?? null });
+    } catch (e) {
+      Alert.alert("Video konnte nicht geladen werden", (e as Error).message);
     }
-    const r = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["videos"],
-      allowsEditing: true,
-      videoMaxDuration: 180,
-      // 720p H.264: kleine Dateien, lädt schnell und spielt im Feed ruckelfrei
-      videoExportPreset: ImagePicker.VideoExportPreset.H264_1280x720,
-      preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
-    });
-    if (r.canceled || !r.assets?.[0]) return;
-    const a = r.assets[0];
-    if (a.fileSize && a.fileSize > MAX_VIDEO_BYTES) {
-      Alert.alert("Video zu groß", "Höchstens 50 MB. Kürze das Video etwas oder wähle ein kürzeres.");
-      return;
-    }
-    setVideo({ uri: a.uri, breite: a.width || null, hoehe: a.height || null, dauer: a.duration ? a.duration / 1000 : null, groesse: a.fileSize ?? null });
   }
 
   async function veroeffentlichen() {
@@ -151,7 +154,7 @@ export default function ClipHochladen() {
             </View>
             <Text style={{ ...schrift.textHalb, fontSize: 17, color: "#FFFFFF" }}>Video auswählen</Text>
             <T v="klein" zentriert>
-              Hochkant (9:16) wirkt am besten · bis 3 Minuten
+              Hochkant (9:16) wirkt am besten · bis 3 Minuten · max. 50 MB
             </T>
           </Pressable>
         )}
