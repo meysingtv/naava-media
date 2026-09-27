@@ -116,6 +116,8 @@ function Navigation() {
           <Stack.Screen name="statistik" />
           <Stack.Screen name="clip-hochladen" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="clip-ersteller" />
+          <Stack.Screen name="nutzer/[id]" />
+          <Stack.Screen name="clip-ansicht" options={{ animation: "fade" }} />
           <Stack.Screen name="liga" />
           <Stack.Screen name="favoriten" />
           <Stack.Screen name="kalender" options={{ animation: "slide_from_bottom" }} />

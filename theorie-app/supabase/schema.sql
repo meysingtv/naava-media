@@ -783,4 +783,48 @@ end;
 $$;
 grant execute on function public.lern_benutzername_aendern(text) to authenticated;
 
+-- 12) Ersteller-Profil: Kopf mit Zahlen und alle Clips einer Person ------
+drop function if exists public.lern_ersteller_profil(uuid);
+create or replace function public.lern_ersteller_profil(p_nutzer uuid)
+returns table(
+  id uuid, name text, benutzername text, avatar_farbe text, bild_pfad text,
+  clips integer, follower integer, folgt integer, likes integer, folge_ich boolean, ich boolean
+)
+language sql stable security definer set search_path = public
+as $$
+  select p.id, p.name, p.benutzername, p.avatar_farbe, p.bild_pfad,
+         (select count(*)::int from public.lern_clip c where c.autor = p.id),
+         (select count(*)::int from public.lern_folgen f where f.folgt = p.id),
+         (select count(*)::int from public.lern_folgen f where f.folger = p.id),
+         (select coalesce(sum(c.likes), 0)::int from public.lern_clip c where c.autor = p.id),
+         exists (select 1 from public.lern_folgen f where f.folger = auth.uid() and f.folgt = p.id),
+         coalesce(p.id = auth.uid(), false)
+    from public.lern_profil p
+   where p.id = p_nutzer;
+$$;
+grant execute on function public.lern_ersteller_profil(uuid) to anon, authenticated;
+
+drop function if exists public.lern_clips_von(uuid, timestamptz, integer);
+create or replace function public.lern_clips_von(p_nutzer uuid, p_vor timestamptz default null, p_anzahl integer default 30)
+returns table(
+  id uuid, titel text, beschreibung text, video_pfad text, bild_pfad text, breite integer, hoehe integer, dauer real,
+  likes integer, kommentare integer, geteilt integer, erstellt_am timestamptz,
+  autor uuid, autor_name text, autor_benutzername text, autor_farbe text, autor_bild text,
+  gemocht boolean, folge_ich boolean
+)
+language sql stable security definer set search_path = public
+as $$
+  select c.id, c.titel, c.beschreibung, c.video_pfad, c.bild_pfad, c.breite, c.hoehe, c.dauer,
+         c.likes, c.kommentare, c.geteilt, c.erstellt_am,
+         c.autor, p.name, p.benutzername, p.avatar_farbe, p.bild_pfad,
+         exists (select 1 from public.lern_clip_like l where l.clip_id = c.id and l.user_id = auth.uid()),
+         exists (select 1 from public.lern_folgen f where f.folger = auth.uid() and f.folgt = c.autor)
+    from public.lern_clip c
+    join public.lern_profil p on p.id = c.autor
+   where c.autor = p_nutzer and (p_vor is null or c.erstellt_am < p_vor)
+   order by c.erstellt_am desc
+   limit greatest(1, least(coalesce(p_anzahl, 30), 60));
+$$;
+grant execute on function public.lern_clips_von(uuid, timestamptz, integer) to anon, authenticated;
+
 notify pgrst, 'reload schema';

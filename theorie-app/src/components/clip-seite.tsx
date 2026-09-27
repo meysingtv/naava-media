@@ -148,11 +148,13 @@ type Props = {
   onKommentare: (clip: ClipEintrag) => void;
   onTeilen: (clip: ClipEintrag) => void;
   onMehr: (clip: ClipEintrag) => void;
+  /** Tippen auf Name oder Profilbild – ohne Angabe nicht antippbar. */
+  onProfil?: (clip: ClipEintrag) => void;
 };
 
 const RAND_SEITE = 16;
 
-function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eigen, onLike, onFolgen, onKommentare, onTeilen, onMehr }: Props) {
+function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eigen, onLike, onFolgen, onKommentare, onTeilen, onMehr, onProfil }: Props) {
   const quelle = useMemo(() => ({ uri: dateiUrl(clip.video_pfad), useCaching: true }), [clip.video_pfad]);
   const player = useVideoPlayer(quelle, (p) => {
     p.loop = true;
@@ -311,15 +313,27 @@ function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eig
       {/* Unten: Ersteller, Titel, Beschreibung, Aktionen, Fortschritt */}
       <View pointerEvents="box-none" style={{ position: "absolute", left: RAND_SEITE, right: RAND_SEITE, bottom: unten + 12, gap: 8 }}>
         <View pointerEvents="box-none" style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          {eigen ? (
-            // Eigene Clips: das eigene Profilbild sofort, auch bevor es hochgeladen ist
-            <ProfilBild name={clip.autor_name || clip.autor_benutzername} groesse={36} rand={1.5} />
-          ) : (
-            <NutzerBild pfad={clip.autor_bild} name={clip.autor_name || clip.autor_benutzername} farbe={clip.autor_farbe} groesse={36} />
-          )}
-          <Text numberOfLines={1} style={{ ...schrift.textFett, fontSize: 16, color: "#FFFFFF", flexShrink: 1, ...SCHATTEN_TEXT }}>
-            {clip.autor_name || clip.autor_benutzername}
-          </Text>
+          <Pressable
+            disabled={!onProfil}
+            onPress={() => {
+              tippen();
+              onProfil?.(clip);
+            }}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel={`Profil von ${clip.autor_name || clip.autor_benutzername}`}
+            style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 10, flexShrink: 1, opacity: pressed ? 0.75 : 1 })}
+          >
+            {eigen ? (
+              // Eigene Clips: das eigene Profilbild sofort, auch bevor es hochgeladen ist
+              <ProfilBild name={clip.autor_name || clip.autor_benutzername} groesse={36} rand={1.5} />
+            ) : (
+              <NutzerBild pfad={clip.autor_bild} name={clip.autor_name || clip.autor_benutzername} farbe={clip.autor_farbe} groesse={36} />
+            )}
+            <Text numberOfLines={1} style={{ ...schrift.textFett, fontSize: 16, color: "#FFFFFF", flexShrink: 1, ...SCHATTEN_TEXT }}>
+              {clip.autor_name || clip.autor_benutzername}
+            </Text>
+          </Pressable>
           {eigen ? null : (
             <Pressable
               onPress={() => {

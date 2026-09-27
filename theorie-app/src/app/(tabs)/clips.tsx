@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ActionSheetIOS, ActivityIndicator, Alert, AppState, FlatList, Platform, Pressable, RefreshControl, Share, Text, View, type ViewToken } from "react-native";
+import { ActivityIndicator, AppState, FlatList, Pressable, RefreshControl, Text, View, type ViewToken } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -13,19 +13,8 @@ import { Icon, type IconName } from "@/components/icon";
 import { KommentarBlatt } from "@/components/kommentar-blatt";
 import { useLeistenHoehe } from "@/components/tab-leiste";
 import { Knopf } from "@/components/ui";
-import {
-  beiNeuenClips,
-  clipLoeschen,
-  clipMelden,
-  dateiUrl,
-  feedLaden,
-  folgenSetzen,
-  geteiltMelden,
-  likeSetzen,
-  useClipRechte,
-  type ClipEintrag,
-  type FeedArt,
-} from "@/lib/clips-server";
+import { useClipAktionen } from "@/lib/clip-aktionen";
+import { beiNeuenClips, feedLaden, useClipRechte, type ClipEintrag, type FeedArt } from "@/lib/clips-server";
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { serverVerbunden } from "@/lib/supabase";
@@ -36,30 +25,6 @@ type Feed = { eintraege: ClipEintrag[]; laedt: boolean; mehr: boolean; fehler: s
 const LEER: Feed = { eintraege: [], laedt: false, mehr: true, fehler: null, geladen: false };
 const SEITE = 8;
 const SICHTBAR = { itemVisiblePercentThreshold: 70 };
-
-/** Natives Auswahlmenü (iOS) bzw. Dialog – liefert den gewählten Eintrag oder null. */
-function auswahl(titel: string, optionen: { text: string; gefahr?: boolean }[]): Promise<number | null> {
-  return new Promise((fertig) => {
-    if (Platform.OS === "ios") {
-      const texte = [...optionen.map((o) => o.text), "Abbrechen"];
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          title: titel,
-          options: texte,
-          cancelButtonIndex: texte.length - 1,
-          destructiveButtonIndex: optionen.flatMap((o, i) => (o.gefahr ? [i] : [])),
-          userInterfaceStyle: "dark",
-        },
-        (i) => fertig(i === texte.length - 1 ? null : i),
-      );
-      return;
-    }
-    Alert.alert(titel, undefined, [
-      ...optionen.map((o, i) => ({ text: o.text, style: o.gefahr ? ("destructive" as const) : ("default" as const), onPress: () => fertig(i) })),
-      { text: "Abbrechen", style: "cancel" as const, onPress: () => fertig(null) },
-    ]);
-  });
-}
 
 /** Umschalter „Entdecken / Folge ich“ als Glas-Kapsel mit orangem Schieber. */
 function Umschalter({ wert, onWechsel }: { wert: FeedArt; onWechsel: (a: FeedArt) => void }) {
@@ -142,15 +107,12 @@ export default function Clips() {
   feedsRef.current = feeds;
   const ichRef = useRef(ich);
   ichRef.current = ich;
-  const rechteRef = useRef(rechte);
-  rechteRef.current = rechte;
   const artRef = useRef(art);
   artRef.current = art;
   const laeuft = useRef<Record<FeedArt, boolean>>({ entdecken: false, folge_ich: false });
   // Zählt hoch, wenn die Feeds verworfen werden – späte Antworten werden dann ignoriert.
   const generation = useRef<Record<FeedArt, number>>({ entdecken: 0, folge_ich: 0 });
   const liste = useRef<FlatList<ClipEintrag>>(null);
-  const warteschlange = useRef(new Map<string, Promise<unknown>>());
 
   const feed = feeds[art];
   const aktivId = aktivProFeed[art] ?? feed.eintraege[0]?.id ?? null;
@@ -235,116 +197,28 @@ export default function Clips() {
     }));
   }, []);
 
-  const nacheinander = useCallback((schluessel: string, aufgabe: () => Promise<unknown>) => {
-    const vorher = warteschlange.current.get(schluessel) ?? Promise.resolve();
-    const danach = vorher.catch(() => {}).then(aufgabe);
-    warteschlange.current.set(schluessel, danach);
-    return danach;
-  }, []);
-
-  const anmeldenFragen = useCallback((was: string) => {
-    Alert.alert("Konto nötig", `${was} geht mit einem kostenlosen Konto. Dein Lernstand bleibt dabei erhalten.`, [
-      { text: "Abbrechen", style: "cancel" },
-      { text: "Anmelden", onPress: () => router.push("/anmelden") },
-      { text: "Konto erstellen", onPress: () => router.push("/registrieren") },
-    ]);
-  }, []);
-
-  const onLike = useCallback(
-    (clip: ClipEintrag, an: boolean) => {
-      if (!ichRef.current) {
-        anmeldenFragen("Liken");
-        return;
+  const aktionen = useClipAktionen({
+    aendern: eintragAendern,
+    folgenGesetzt: (autor, wert) => {
+      if (artRef.current !== "folge_ich") {
+        // „Folge ich“ wird beim nächsten Öffnen frisch geladen
+        generation.current = { ...generation.current, folge_ich: generation.current.folge_ich + 1 };
+        laeuft.current.folge_ich = false;
       }
-      eintragAendern(clip.id, (c) => (c.gemocht === an ? {} : { gemocht: an, likes: Math.max(0, c.likes + (an ? 1 : -1)) }));
-      nacheinander(`like-${clip.id}`, () => likeSetzen(clip.id, an))
-        .then((n) => eintragAendern(clip.id, (c) => (c.gemocht === an ? { likes: Number(n) } : {})))
-        .catch(() => eintragAendern(clip.id, (c) => (c.gemocht === an ? { gemocht: !an, likes: Math.max(0, c.likes + (an ? -1 : 1)) } : {})));
+      setFeeds((alt) => ({
+        entdecken: { ...alt.entdecken, eintraege: alt.entdecken.eintraege.map((c) => (c.autor === autor ? { ...c, folge_ich: wert } : c)) },
+        folge_ich:
+          artRef.current === "folge_ich" ? { ...alt.folge_ich, eintraege: alt.folge_ich.eintraege.map((c) => (c.autor === autor ? { ...c, folge_ich: wert } : c)) } : LEER,
+      }));
     },
-    [anmeldenFragen, eintragAendern, nacheinander],
-  );
-
-  const onFolgen = useCallback(
-    (clip: ClipEintrag, an: boolean) => {
-      if (!ichRef.current) {
-        anmeldenFragen("Folgen");
-        return;
-      }
-      const setzen = (wert: boolean) => {
-        if (artRef.current !== "folge_ich") {
-          // „Folge ich“ wird beim nächsten Öffnen frisch geladen
-          generation.current = { ...generation.current, folge_ich: generation.current.folge_ich + 1 };
-          laeuft.current.folge_ich = false;
-        }
-        setFeeds((alt) => ({
-          entdecken: { ...alt.entdecken, eintraege: alt.entdecken.eintraege.map((c) => (c.autor === clip.autor ? { ...c, folge_ich: wert } : c)) },
-          folge_ich: artRef.current === "folge_ich" ? { ...alt.folge_ich, eintraege: alt.folge_ich.eintraege.map((c) => (c.autor === clip.autor ? { ...c, folge_ich: wert } : c)) } : LEER,
-        }));
-      };
-      setzen(an);
-      nacheinander(`folgen-${clip.autor}`, () => folgenSetzen(clip.autor, an)).catch(() => setzen(!an));
-    },
-    [anmeldenFragen, nacheinander],
-  );
+    entfernt: (id) =>
+      setFeeds((alt) => ({
+        entdecken: { ...alt.entdecken, eintraege: alt.entdecken.eintraege.filter((c) => c.id !== id) },
+        folge_ich: { ...alt.folge_ich, eintraege: alt.folge_ich.eintraege.filter((c) => c.id !== id) },
+      })),
+  });
 
   const onKommentare = useCallback((clip: ClipEintrag) => setKommentarId(clip.id), []);
-
-  const onTeilen = useCallback(
-    async (clip: ClipEintrag) => {
-      try {
-        const r = await Share.share({ message: `„${clip.titel}“ – @${clip.autor_benutzername} in der Spur-App`, url: dateiUrl(clip.video_pfad) });
-        if (r.action === Share.sharedAction && ichRef.current) {
-          const n = await geteiltMelden(clip.id);
-          if (n != null) eintragAendern(clip.id, () => ({ geteilt: n }));
-        }
-      } catch {
-        // Teilen abgebrochen
-      }
-    },
-    [eintragAendern],
-  );
-
-  const onMehr = useCallback(
-    async (clip: ClipEintrag) => {
-      const darfLoeschen = clip.autor === ichRef.current || rechteRef.current.inhaber;
-      const wahl = await auswahl(clip.titel, [{ text: "Melden" }, ...(darfLoeschen ? [{ text: "Clip löschen", gefahr: true }] : [])]);
-      if (wahl === 0) {
-        if (!ichRef.current) {
-          anmeldenFragen("Melden");
-          return;
-        }
-        const gruende = ["Unangemessen", "Falsche Information", "Spam", "Etwas anderes"];
-        const g = await auswahl("Warum meldest du den Clip?", gruende.map((text) => ({ text })));
-        if (g == null) return;
-        try {
-          await clipMelden(clip.id, gruende[g]);
-          Alert.alert("Danke!", "Wir schauen uns den Clip an.");
-        } catch (e) {
-          Alert.alert("Nicht gemeldet", (e as Error).message);
-        }
-      } else if (wahl === 1 && darfLoeschen) {
-        Alert.alert("Clip löschen?", "Der Clip verschwindet für alle. Das lässt sich nicht rückgängig machen.", [
-          { text: "Abbrechen", style: "cancel" },
-          {
-            text: "Löschen",
-            style: "destructive",
-            onPress: async () => {
-              try {
-                await clipLoeschen(clip);
-                setFeeds((alt) => ({
-                  entdecken: { ...alt.entdecken, eintraege: alt.entdecken.eintraege.filter((c) => c.id !== clip.id) },
-                  folge_ich: { ...alt.folge_ich, eintraege: alt.folge_ich.eintraege.filter((c) => c.id !== clip.id) },
-                }));
-              } catch (e) {
-                Alert.alert("Nicht gelöscht", (e as Error).message);
-              }
-            },
-          },
-        ]);
-      }
-    },
-    [anmeldenFragen],
-  );
 
   const wechseln = useCallback((neu: FeedArt) => {
     tippen();
@@ -370,14 +244,15 @@ export default function Clips() {
           spielen={spielen}
           stumm={stumm}
           eigen={item.autor === ich}
-          onLike={onLike}
-          onFolgen={onFolgen}
+          onLike={aktionen.onLike}
+          onFolgen={aktionen.onFolgen}
           onKommentare={onKommentare}
-          onTeilen={onTeilen}
-          onMehr={onMehr}
+          onTeilen={aktionen.onTeilen}
+          onMehr={aktionen.onMehr}
+          onProfil={aktionen.onProfil}
         />
       ) : null,
-    [masse, leiste, aktivId, spielen, stumm, ich, onLike, onFolgen, onKommentare, onTeilen, onMehr],
+    [masse, leiste, aktivId, spielen, stumm, ich, aktionen, onKommentare],
   );
 
   const startIndex = useMemo(() => {

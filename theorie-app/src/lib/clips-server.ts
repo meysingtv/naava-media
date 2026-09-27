@@ -78,6 +78,34 @@ export async function feedLaden(art: FeedArt, vor: string | null, anzahl = 8): P
   return (data ?? []) as ClipEintrag[];
 }
 
+export type ErstellerProfil = {
+  id: string;
+  name: string;
+  benutzername: string;
+  avatar_farbe: string;
+  bild_pfad: string | null;
+  clips: number;
+  follower: number;
+  folgt: number;
+  likes: number;
+  folge_ich: boolean;
+  ich: boolean;
+};
+
+export async function erstellerProfilLaden(nutzer: string): Promise<ErstellerProfil | null> {
+  const { data, error } = await supabase.rpc("lern_ersteller_profil", { p_nutzer: nutzer });
+  if (error) throw new Error(meldung(error));
+  const zeile = (Array.isArray(data) ? data[0] : data) as ErstellerProfil | undefined;
+  return zeile ?? null;
+}
+
+/** Alle Clips einer Person, neueste zuerst. */
+export async function clipsVonLaden(nutzer: string, vor: string | null = null, anzahl = 30): Promise<ClipEintrag[]> {
+  const { data, error } = await supabase.rpc("lern_clips_von", { p_nutzer: nutzer, p_vor: vor, p_anzahl: anzahl });
+  if (error) throw new Error(meldung(error));
+  return (data ?? []) as ClipEintrag[];
+}
+
 export async function likeSetzen(clip: string, an: boolean): Promise<number> {
   const { data, error } = await supabase.rpc("lern_clip_liken", { p_clip: clip, p_an: an });
   if (error) throw new Error(meldung(error));
