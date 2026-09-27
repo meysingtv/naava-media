@@ -340,4 +340,384 @@ as $$
 $$;
 grant execute on function public.lern_elo_rangliste() to authenticated;
 
+-- 10) Clips: kurze Videos wie bei TikTok --------------------------------
+-- Ansehen dürfen alle (auch ohne Konto). Hochladen darf der Inhaber der App
+-- (E-Mail in lern_inhaber, bestätigt) und jeder, den er in den
+-- Einstellungen freischaltet. Liken, Kommentieren und Folgen braucht ein Konto.
+
+create table if not exists public.lern_inhaber (
+  email text primary key
+);
+alter table public.lern_inhaber enable row level security;
+-- Keine Policies: nur die Funktionen unten lesen diese Tabelle.
+insert into public.lern_inhaber (email) values ('leon.scheulen@gmail.com') on conflict do nothing;
+
+-- Inhaber = angemeldet mit einer bestätigten E-Mail aus lern_inhaber.
+create or replace function public.lern_ist_inhaber()
+returns boolean
+language sql stable security definer set search_path = public
+as $$
+  select exists (
+    select 1
+      from auth.users u
+      join public.lern_inhaber i on lower(i.email) = lower(u.email)
+     where u.id = auth.uid() and u.email_confirmed_at is not null
+  );
+$$;
+
+create table if not exists public.lern_clip_ersteller (
+  user_id         uuid primary key references public.lern_profil(id) on delete cascade,
+  hinzugefuegt_am timestamptz not null default now()
+);
+alter table public.lern_clip_ersteller enable row level security;
+-- Lesen und Schreiben nur über die Funktionen unten.
+
+create or replace function public.lern_darf_hochladen()
+returns boolean
+language sql stable security definer set search_path = public
+as $$
+  select auth.uid() is not null
+     and (public.lern_ist_inhaber() or exists (select 1 from public.lern_clip_ersteller e where e.user_id = auth.uid()));
+$$;
+
+create or replace function public.lern_clip_rechte()
+returns table(inhaber boolean, ersteller boolean)
+language sql stable security definer set search_path = public
+as $$
+  select public.lern_ist_inhaber(), public.lern_darf_hochladen();
+$$;
+grant execute on function public.lern_clip_rechte() to authenticated;
+
+create table if not exists public.lern_clip (
+  id           uuid primary key default gen_random_uuid(),
+  autor        uuid not null references public.lern_profil(id) on delete cascade,
+  titel        text not null check (char_length(titel) between 1 and 120),
+  beschreibung text not null default '' check (char_length(beschreibung) <= 1000),
+  video_pfad   text not null,
+  bild_pfad    text,
+  breite       integer,
+  hoehe        integer,
+  dauer        real,
+  likes        integer not null default 0,
+  kommentare   integer not null default 0,
+  geteilt      integer not null default 0,
+  erstellt_am  timestamptz not null default now()
+);
+create index if not exists lern_clip_zeit_idx on public.lern_clip(erstellt_am desc);
+create index if not exists lern_clip_autor_idx on public.lern_clip(autor, erstellt_am desc);
+alter table public.lern_clip enable row level security;
+drop policy if exists "lern_clip_lesen" on public.lern_clip;
+create policy "lern_clip_lesen" on public.lern_clip for select to anon, authenticated using (true);
+-- Anlegen, Löschen und Zähler nur über die Funktionen unten.
+
+create table if not exists public.lern_clip_like (
+  clip_id     uuid not null references public.lern_clip(id) on delete cascade,
+  user_id     uuid not null references public.lern_profil(id) on delete cascade,
+  erstellt_am timestamptz not null default now(),
+  primary key (clip_id, user_id)
+);
+create index if not exists lern_clip_like_nutzer_idx on public.lern_clip_like(user_id);
+alter table public.lern_clip_like enable row level security;
+drop policy if exists "lern_clip_like_eigen" on public.lern_clip_like;
+create policy "lern_clip_like_eigen" on public.lern_clip_like for select to authenticated using (user_id = auth.uid());
+
+create table if not exists public.lern_folgen (
+  folger      uuid not null references public.lern_profil(id) on delete cascade,
+  folgt       uuid not null references public.lern_profil(id) on delete cascade,
+  erstellt_am timestamptz not null default now(),
+  primary key (folger, folgt),
+  check (folger <> folgt)
+);
+create index if not exists lern_folgen_folgt_idx on public.lern_folgen(folgt);
+alter table public.lern_folgen enable row level security;
+drop policy if exists "lern_folgen_eigen" on public.lern_folgen;
+create policy "lern_folgen_eigen" on public.lern_folgen for select to authenticated using (folger = auth.uid());
+
+create table if not exists public.lern_clip_kommentar (
+  id          uuid primary key default gen_random_uuid(),
+  clip_id     uuid not null references public.lern_clip(id) on delete cascade,
+  autor       uuid not null references public.lern_profil(id) on delete cascade,
+  inhalt      text not null check (char_length(inhalt) between 1 and 500),
+  erstellt_am timestamptz not null default now()
+);
+create index if not exists lern_clip_kommentar_clip_idx on public.lern_clip_kommentar(clip_id, erstellt_am desc);
+alter table public.lern_clip_kommentar enable row level security;
+-- Lesen über lern_clip_kommentare(), Schreiben über die Funktionen unten.
+
+create table if not exists public.lern_clip_meldung (
+  id          uuid primary key default gen_random_uuid(),
+  clip_id     uuid not null references public.lern_clip(id) on delete cascade,
+  user_id     uuid not null references public.lern_profil(id) on delete cascade,
+  grund       text not null default '',
+  erstellt_am timestamptz not null default now(),
+  unique (clip_id, user_id)
+);
+alter table public.lern_clip_meldung enable row level security;
+-- Meldungen sieht nur der Inhaber im Supabase-Dashboard.
+
+-- Speicher für Videos und Vorschaubilder: öffentlich lesbar, schnell per CDN.
+-- Jeder lädt in seinen eigenen Ordner (<user-id>/...). 50 MB je Datei ist die
+-- Obergrenze im kostenlosen Supabase-Tarif.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('lern-clips', 'lern-clips', true, 52428800, array['video/mp4', 'video/quicktime', 'image/jpeg'])
+on conflict (id) do update
+  set public = excluded.public,
+      file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "lern_clips_hochladen" on storage.objects;
+create policy "lern_clips_hochladen" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'lern-clips' and (storage.foldername(name))[1] = auth.uid()::text and public.lern_darf_hochladen());
+
+drop policy if exists "lern_clips_eigene_lesen" on storage.objects;
+create policy "lern_clips_eigene_lesen" on storage.objects
+  for select to authenticated
+  using (bucket_id = 'lern-clips' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "lern_clips_loeschen" on storage.objects;
+create policy "lern_clips_loeschen" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'lern-clips' and ((storage.foldername(name))[1] = auth.uid()::text or public.lern_ist_inhaber()));
+
+-- Feed: „entdecken“ (alle, neueste zuerst) oder „folge_ich“. Weiterblättern mit p_vor.
+create or replace function public.lern_clip_feed(p_art text default 'entdecken', p_vor timestamptz default null, p_anzahl integer default 10)
+returns table(
+  id uuid, titel text, beschreibung text, video_pfad text, bild_pfad text, breite integer, hoehe integer, dauer real,
+  likes integer, kommentare integer, geteilt integer, erstellt_am timestamptz,
+  autor uuid, autor_name text, autor_benutzername text, autor_farbe text,
+  gemocht boolean, folge_ich boolean
+)
+language sql stable security definer set search_path = public
+as $$
+  select c.id, c.titel, c.beschreibung, c.video_pfad, c.bild_pfad, c.breite, c.hoehe, c.dauer,
+         c.likes, c.kommentare, c.geteilt, c.erstellt_am,
+         c.autor, p.name, p.benutzername, p.avatar_farbe,
+         exists (select 1 from public.lern_clip_like l where l.clip_id = c.id and l.user_id = auth.uid()),
+         exists (select 1 from public.lern_folgen f where f.folger = auth.uid() and f.folgt = c.autor)
+    from public.lern_clip c
+    join public.lern_profil p on p.id = c.autor
+   where (p_vor is null or c.erstellt_am < p_vor)
+     and (coalesce(p_art, 'entdecken') <> 'folge_ich'
+          or exists (select 1 from public.lern_folgen f where f.folger = auth.uid() and f.folgt = c.autor))
+   order by c.erstellt_am desc
+   limit greatest(1, least(coalesce(p_anzahl, 10), 30));
+$$;
+grant execute on function public.lern_clip_feed(text, timestamptz, integer) to anon, authenticated;
+
+-- Neuen Clip anlegen, nachdem Video (und Vorschaubild) hochgeladen sind.
+create or replace function public.lern_clip_anlegen(
+  p_video text, p_bild text, p_titel text, p_beschreibung text, p_breite integer, p_hoehe integer, p_dauer real
+)
+returns uuid
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_ich uuid := auth.uid();
+  v_id  uuid;
+begin
+  if v_ich is null or not public.lern_darf_hochladen() then raise exception 'Keine Berechtigung zum Hochladen'; end if;
+  if split_part(p_video, '/', 1) <> v_ich::text
+     or not exists (select 1 from storage.objects o where o.bucket_id = 'lern-clips' and o.name = p_video) then
+    raise exception 'Video nicht gefunden';
+  end if;
+  if p_bild is not null and split_part(p_bild, '/', 1) <> v_ich::text then raise exception 'Vorschaubild ungültig'; end if;
+  insert into public.lern_clip (autor, titel, beschreibung, video_pfad, bild_pfad, breite, hoehe, dauer)
+  values (v_ich, left(btrim(coalesce(p_titel, '')), 120), left(btrim(coalesce(p_beschreibung, '')), 1000),
+          p_video, p_bild, p_breite, p_hoehe, p_dauer)
+  returning id into v_id;
+  return v_id;
+end;
+$$;
+grant execute on function public.lern_clip_anlegen(text, text, text, text, integer, integer, real) to authenticated;
+
+-- Clip löschen (eigener Clip oder Inhaber). Die Dateien löscht die App.
+create or replace function public.lern_clip_loeschen(p_clip uuid)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  delete from public.lern_clip c where c.id = p_clip and (c.autor = auth.uid() or public.lern_ist_inhaber());
+  if not found then raise exception 'Clip nicht gefunden'; end if;
+end;
+$$;
+grant execute on function public.lern_clip_loeschen(uuid) to authenticated;
+
+-- Gefällt mir setzen oder entfernen; liefert die neue Anzahl.
+create or replace function public.lern_clip_liken(p_clip uuid, p_an boolean)
+returns integer
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_ich    uuid := auth.uid();
+  v_neu    integer;
+  v_anzahl integer;
+begin
+  if v_ich is null then raise exception 'Nicht angemeldet'; end if;
+  if p_an then
+    insert into public.lern_clip_like (clip_id, user_id) values (p_clip, v_ich) on conflict do nothing;
+    get diagnostics v_neu = row_count;
+    if v_neu > 0 then update public.lern_clip c set likes = c.likes + 1 where c.id = p_clip; end if;
+  else
+    delete from public.lern_clip_like l where l.clip_id = p_clip and l.user_id = v_ich;
+    get diagnostics v_neu = row_count;
+    if v_neu > 0 then update public.lern_clip c set likes = greatest(0, c.likes - 1) where c.id = p_clip; end if;
+  end if;
+  select c.likes into v_anzahl from public.lern_clip c where c.id = p_clip;
+  return coalesce(v_anzahl, 0);
+end;
+$$;
+grant execute on function public.lern_clip_liken(uuid, boolean) to authenticated;
+
+-- Jemandem folgen oder entfolgen.
+create or replace function public.lern_folgen_setzen(p_nutzer uuid, p_an boolean)
+returns boolean
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_ich uuid := auth.uid();
+begin
+  if v_ich is null then raise exception 'Nicht angemeldet'; end if;
+  if p_nutzer = v_ich then return false; end if;
+  if p_an then
+    insert into public.lern_folgen (folger, folgt) values (v_ich, p_nutzer) on conflict do nothing;
+  else
+    delete from public.lern_folgen f where f.folger = v_ich and f.folgt = p_nutzer;
+  end if;
+  return p_an;
+end;
+$$;
+grant execute on function public.lern_folgen_setzen(uuid, boolean) to authenticated;
+
+-- Kommentare eines Clips (neueste zuerst).
+create or replace function public.lern_clip_kommentare(p_clip uuid, p_vor timestamptz default null)
+returns table(id uuid, inhalt text, erstellt_am timestamptz, autor uuid, autor_name text, autor_benutzername text, autor_farbe text, loeschbar boolean)
+language sql stable security definer set search_path = public
+as $$
+  select k.id, k.inhalt, k.erstellt_am, k.autor, p.name, p.benutzername, p.avatar_farbe,
+         coalesce(k.autor = auth.uid()
+                  or public.lern_ist_inhaber()
+                  or exists (select 1 from public.lern_clip c where c.id = k.clip_id and c.autor = auth.uid()), false)
+    from public.lern_clip_kommentar k
+    join public.lern_profil p on p.id = k.autor
+   where k.clip_id = p_clip and (p_vor is null or k.erstellt_am < p_vor)
+   order by k.erstellt_am desc
+   limit 50;
+$$;
+grant execute on function public.lern_clip_kommentare(uuid, timestamptz) to anon, authenticated;
+
+create or replace function public.lern_clip_kommentieren(p_clip uuid, p_inhalt text)
+returns uuid
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_ich  uuid := auth.uid();
+  v_text text := left(btrim(coalesce(p_inhalt, '')), 500);
+  v_id   uuid;
+begin
+  if v_ich is null then raise exception 'Nicht angemeldet'; end if;
+  if v_text = '' then raise exception 'Kommentar ist leer'; end if;
+  if (select count(*) from public.lern_clip_kommentar k where k.autor = v_ich and k.erstellt_am > now() - interval '1 minute') >= 10 then
+    raise exception 'Zu viele Kommentare – bitte kurz warten';
+  end if;
+  insert into public.lern_clip_kommentar (clip_id, autor, inhalt) values (p_clip, v_ich, v_text) returning id into v_id;
+  update public.lern_clip c set kommentare = c.kommentare + 1 where c.id = p_clip;
+  return v_id;
+end;
+$$;
+grant execute on function public.lern_clip_kommentieren(uuid, text) to authenticated;
+
+create or replace function public.lern_clip_kommentar_loeschen(p_id uuid)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_clip uuid;
+begin
+  delete from public.lern_clip_kommentar k
+   where k.id = p_id
+     and (k.autor = auth.uid()
+          or public.lern_ist_inhaber()
+          or exists (select 1 from public.lern_clip c where c.id = k.clip_id and c.autor = auth.uid()))
+  returning k.clip_id into v_clip;
+  if v_clip is not null then
+    update public.lern_clip c set kommentare = greatest(0, c.kommentare - 1) where c.id = v_clip;
+  end if;
+end;
+$$;
+grant execute on function public.lern_clip_kommentar_loeschen(uuid) to authenticated;
+
+create or replace function public.lern_clip_geteilt(p_clip uuid)
+returns integer
+language sql security definer set search_path = public
+as $$
+  update public.lern_clip c set geteilt = c.geteilt + 1 where c.id = p_clip returning c.geteilt;
+$$;
+grant execute on function public.lern_clip_geteilt(uuid) to authenticated;
+
+create or replace function public.lern_clip_melden(p_clip uuid, p_grund text)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if auth.uid() is null then raise exception 'Nicht angemeldet'; end if;
+  insert into public.lern_clip_meldung (clip_id, user_id, grund)
+  values (p_clip, auth.uid(), left(coalesce(p_grund, ''), 200))
+  on conflict (clip_id, user_id) do update set grund = excluded.grund, erstellt_am = now();
+end;
+$$;
+grant execute on function public.lern_clip_melden(uuid, text) to authenticated;
+
+-- Inhaber: Ersteller verwalten (per Benutzername oder E-Mail).
+create or replace function public.lern_clip_ersteller_liste()
+returns table(id uuid, name text, benutzername text, avatar_farbe text, hinzugefuegt_am timestamptz)
+language plpgsql stable security definer set search_path = public
+as $$
+#variable_conflict use_column
+begin
+  if not public.lern_ist_inhaber() then raise exception 'Nur für den Inhaber der App'; end if;
+  return query
+    select p.id, p.name, p.benutzername, p.avatar_farbe, e.hinzugefuegt_am
+      from public.lern_clip_ersteller e
+      join public.lern_profil p on p.id = e.user_id
+     order by e.hinzugefuegt_am desc;
+end;
+$$;
+grant execute on function public.lern_clip_ersteller_liste() to authenticated;
+
+create or replace function public.lern_clip_ersteller_hinzufuegen(p_kennung text)
+returns table(id uuid, name text, benutzername text)
+language plpgsql security definer set search_path = public
+as $$
+#variable_conflict use_column
+declare
+  v_kennung text := lower(btrim(coalesce(p_kennung, '')));
+  v_id      uuid;
+begin
+  if not public.lern_ist_inhaber() then raise exception 'Nur für den Inhaber der App'; end if;
+  if position('@' in v_kennung) > 1 then
+    select u.id into v_id from auth.users u where lower(u.email) = v_kennung;
+  else
+    select p.id into v_id from public.lern_profil p where p.benutzername = ltrim(v_kennung, '@');
+  end if;
+  if v_id is null or not exists (select 1 from public.lern_profil p where p.id = v_id) then
+    raise exception 'Kein Konto mit diesem Benutzernamen oder dieser E-Mail gefunden';
+  end if;
+  insert into public.lern_clip_ersteller (user_id) values (v_id) on conflict do nothing;
+  return query select p.id, p.name, p.benutzername from public.lern_profil p where p.id = v_id;
+end;
+$$;
+grant execute on function public.lern_clip_ersteller_hinzufuegen(text) to authenticated;
+
+create or replace function public.lern_clip_ersteller_entfernen(p_id uuid)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not public.lern_ist_inhaber() then raise exception 'Nur für den Inhaber der App'; end if;
+  delete from public.lern_clip_ersteller e where e.user_id = p_id;
+end;
+$$;
+grant execute on function public.lern_clip_ersteller_entfernen(uuid) to authenticated;
+
 notify pgrst, 'reload schema';

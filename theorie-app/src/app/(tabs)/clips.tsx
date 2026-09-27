@@ -1,0 +1,487 @@
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ActionSheetIOS, ActivityIndicator, Alert, AppState, FlatList, Platform, Pressable, RefreshControl, Share, Text, View, type ViewToken } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { router, useNavigation } from "expo-router";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import { useIsFocused } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { SFSymbol } from "expo-symbols";
+
+import { ClipSeite } from "@/components/clip-seite";
+import { Icon, type IconName } from "@/components/icon";
+import { KommentarBlatt } from "@/components/kommentar-blatt";
+import { useLeistenHoehe } from "@/components/tab-leiste";
+import { Knopf } from "@/components/ui";
+import {
+  beiNeuenClips,
+  clipLoeschen,
+  clipMelden,
+  dateiUrl,
+  feedLaden,
+  folgenSetzen,
+  geteiltMelden,
+  likeSetzen,
+  useClipRechte,
+  type ClipEintrag,
+  type FeedArt,
+} from "@/lib/clips-server";
+import { tippen } from "@/lib/haptik";
+import { useKonto } from "@/lib/konto";
+import { serverVerbunden } from "@/lib/supabase";
+import { farben, schrift } from "@/lib/theme";
+
+type Feed = { eintraege: ClipEintrag[]; laedt: boolean; mehr: boolean; fehler: string | null; geladen: boolean };
+
+const LEER: Feed = { eintraege: [], laedt: false, mehr: true, fehler: null, geladen: false };
+const SEITE = 8;
+const SICHTBAR = { itemVisiblePercentThreshold: 70 };
+
+/** Natives Auswahlmenü (iOS) bzw. Dialog – liefert den gewählten Eintrag oder null. */
+function auswahl(titel: string, optionen: { text: string; gefahr?: boolean }[]): Promise<number | null> {
+  return new Promise((fertig) => {
+    if (Platform.OS === "ios") {
+      const texte = [...optionen.map((o) => o.text), "Abbrechen"];
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: titel,
+          options: texte,
+          cancelButtonIndex: texte.length - 1,
+          destructiveButtonIndex: optionen.flatMap((o, i) => (o.gefahr ? [i] : [])),
+          userInterfaceStyle: "dark",
+        },
+        (i) => fertig(i === texte.length - 1 ? null : i),
+      );
+      return;
+    }
+    Alert.alert(titel, undefined, [
+      ...optionen.map((o, i) => ({ text: o.text, style: o.gefahr ? ("destructive" as const) : ("default" as const), onPress: () => fertig(i) })),
+      { text: "Abbrechen", style: "cancel" as const, onPress: () => fertig(null) },
+    ]);
+  });
+}
+
+function Reiter({ titel, aktiv, onPress }: { titel: string; aktiv: boolean; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} hitSlop={10} accessibilityRole="tab" accessibilityState={{ selected: aktiv }} style={{ alignItems: "center", gap: 5 }}>
+      <Text
+        style={{
+          ...schrift.textFett,
+          fontSize: 17,
+          color: aktiv ? "#FFFFFF" : "rgba(255,255,255,0.62)",
+          textShadowColor: "rgba(0,0,0,0.45)",
+          textShadowRadius: 4,
+          textShadowOffset: { width: 0, height: 1 },
+        }}
+      >
+        {titel}
+      </Text>
+      <View style={{ width: 24, height: 3, borderRadius: 1.5, backgroundColor: aktiv ? "#FFFFFF" : "transparent" }} />
+    </Pressable>
+  );
+}
+
+function RundTaste({ icon, sf, label, onPress }: { icon: IconName; sf: SFSymbol; label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={() => {
+        tippen();
+        onPress();
+      }}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: pressed ? "rgba(0,0,0,0.45)" : "rgba(0,0,0,0.28)" })}
+    >
+      <Icon name={icon} sf={sf} size={20} color="#FFFFFF" weight="semibold" />
+    </Pressable>
+  );
+}
+
+function Hinweis({ icon, sf, titel, text, children }: { icon: IconName; sf: SFSymbol; titel: string; text: string; children?: ReactNode }) {
+  return (
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 36, gap: 10 }}>
+      <View style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: "rgba(255,255,255,0.06)", alignItems: "center", justifyContent: "center", marginBottom: 6 }}>
+        <Icon name={icon} sf={sf} size={32} color={farben.orange} />
+      </View>
+      <Text style={{ ...schrift.titelFett, fontSize: 21, color: "#FFFFFF", textAlign: "center" }}>{titel}</Text>
+      <Text style={{ ...schrift.text, fontSize: 15, lineHeight: 21, color: "#AEB3BA", textAlign: "center" }}>{text}</Text>
+      {children ? <View style={{ alignSelf: "stretch", gap: 10, marginTop: 14 }}>{children}</View> : null}
+    </View>
+  );
+}
+
+export default function Clips() {
+  const insets = useSafeAreaInsets();
+  const leiste = useLeistenHoehe();
+  const fokus = useIsFocused();
+  const navigation = useNavigation<BottomTabNavigationProp<Record<string, undefined>>>();
+  const { session } = useKonto();
+  const rechte = useClipRechte();
+  const ich = session?.user.id ?? null;
+
+  const [art, setArt] = useState<FeedArt>("entdecken");
+  const [feeds, setFeeds] = useState<Record<FeedArt, Feed>>({ entdecken: LEER, folge_ich: LEER });
+  const [aktivProFeed, setAktivProFeed] = useState<Record<FeedArt, string | null>>({ entdecken: null, folge_ich: null });
+  const [stumm, setStumm] = useState(false);
+  const [vordergrund, setVordergrund] = useState(AppState.currentState === "active");
+  const [kommentarId, setKommentarId] = useState<string | null>(null);
+  const [masse, setMasse] = useState<{ breite: number; hoehe: number } | null>(null);
+  const [aktualisiert, setAktualisiert] = useState(false);
+
+  const feedsRef = useRef(feeds);
+  feedsRef.current = feeds;
+  const ichRef = useRef(ich);
+  ichRef.current = ich;
+  const rechteRef = useRef(rechte);
+  rechteRef.current = rechte;
+  const artRef = useRef(art);
+  artRef.current = art;
+  const laeuft = useRef<Record<FeedArt, boolean>>({ entdecken: false, folge_ich: false });
+  // Zählt hoch, wenn die Feeds verworfen werden – späte Antworten werden dann ignoriert.
+  const generation = useRef<Record<FeedArt, number>>({ entdecken: 0, folge_ich: 0 });
+  const liste = useRef<FlatList<ClipEintrag>>(null);
+  const warteschlange = useRef(new Map<string, Promise<unknown>>());
+
+  const feed = feeds[art];
+  const aktivId = aktivProFeed[art] ?? feed.eintraege[0]?.id ?? null;
+  const spielen = fokus && vordergrund;
+
+  // ------------------------------------------------------------------ Laden
+  const laden = useCallback(async (welche: FeedArt, neu: boolean) => {
+    const f = feedsRef.current[welche];
+    if (laeuft.current[welche] || (!neu && (!f.mehr || f.eintraege.length === 0))) return;
+    if (welche === "folge_ich" && !ichRef.current) {
+      setFeeds((alt) => ({ ...alt, folge_ich: { ...LEER, geladen: true, mehr: false } }));
+      return;
+    }
+    const gen = generation.current[welche];
+    laeuft.current[welche] = true;
+    setFeeds((alt) => ({ ...alt, [welche]: { ...alt[welche], laedt: true, fehler: null } }));
+    try {
+      const vor = neu ? null : (f.eintraege[f.eintraege.length - 1]?.erstellt_am ?? null);
+      const neue = await feedLaden(welche, vor, SEITE);
+      if (gen !== generation.current[welche]) return;
+      setFeeds((alt) => {
+        const bisher = neu ? [] : alt[welche].eintraege;
+        const da = new Set(bisher.map((c) => c.id));
+        return { ...alt, [welche]: { eintraege: [...bisher, ...neue.filter((c) => !da.has(c.id))], laedt: false, mehr: neue.length === SEITE, fehler: null, geladen: true } };
+      });
+    } catch (e) {
+      if (gen !== generation.current[welche]) return;
+      setFeeds((alt) => ({ ...alt, [welche]: { ...alt[welche], laedt: false, fehler: (e as Error).message, geladen: true } }));
+    } finally {
+      if (gen === generation.current[welche]) laeuft.current[welche] = false;
+    }
+  }, []);
+
+  const verwerfen = useCallback(() => {
+    generation.current = { entdecken: generation.current.entdecken + 1, folge_ich: generation.current.folge_ich + 1 };
+    laeuft.current = { entdecken: false, folge_ich: false };
+    setFeeds({ entdecken: LEER, folge_ich: LEER });
+    setAktivProFeed({ entdecken: null, folge_ich: null });
+  }, []);
+
+  useEffect(() => {
+    if (serverVerbunden && !feed.geladen && !feed.laedt) laden(art, true);
+  }, [art, feed.geladen, feed.laedt, laden]);
+
+  // Anmelden/Abmelden ändert „gefällt mir“ und „folge ich“ → neu laden.
+  const ersterNutzer = useRef(ich);
+  useEffect(() => {
+    if (ersterNutzer.current === ich) return;
+    ersterNutzer.current = ich;
+    verwerfen();
+  }, [ich, verwerfen]);
+
+  // Neuer Clip hochgeladen → frisch laden.
+  useEffect(() => beiNeuenClips(verwerfen), [verwerfen]);
+
+  useEffect(() => {
+    const abo = AppState.addEventListener("change", (s) => setVordergrund(s === "active"));
+    return () => abo.remove();
+  }, []);
+
+  // Nochmal auf „Clips“ tippen: nach oben und neu laden – wie bei TikTok.
+  useEffect(() => {
+    const aus = navigation.addListener("tabPress", () => {
+      if (!fokus) return;
+      liste.current?.scrollToOffset({ offset: 0, animated: true });
+      laden(artRef.current, true);
+    });
+    return aus;
+  }, [navigation, fokus, laden]);
+
+  const neuLaden = useCallback(async () => {
+    setAktualisiert(true);
+    await laden(artRef.current, true);
+    setAktualisiert(false);
+  }, [laden]);
+
+  // ------------------------------------------------------------ Änderungen
+  const eintragAendern = useCallback((id: string, teil: (c: ClipEintrag) => Partial<ClipEintrag>) => {
+    setFeeds((alt) => ({
+      entdecken: { ...alt.entdecken, eintraege: alt.entdecken.eintraege.map((c) => (c.id === id ? { ...c, ...teil(c) } : c)) },
+      folge_ich: { ...alt.folge_ich, eintraege: alt.folge_ich.eintraege.map((c) => (c.id === id ? { ...c, ...teil(c) } : c)) },
+    }));
+  }, []);
+
+  const nacheinander = useCallback((schluessel: string, aufgabe: () => Promise<unknown>) => {
+    const vorher = warteschlange.current.get(schluessel) ?? Promise.resolve();
+    const danach = vorher.catch(() => {}).then(aufgabe);
+    warteschlange.current.set(schluessel, danach);
+    return danach;
+  }, []);
+
+  const anmeldenFragen = useCallback((was: string) => {
+    Alert.alert("Konto nötig", `${was} geht mit einem kostenlosen Konto. Dein Lernstand bleibt dabei erhalten.`, [
+      { text: "Abbrechen", style: "cancel" },
+      { text: "Anmelden", onPress: () => router.push("/anmelden") },
+      { text: "Konto erstellen", onPress: () => router.push("/registrieren") },
+    ]);
+  }, []);
+
+  const onLike = useCallback(
+    (clip: ClipEintrag, an: boolean) => {
+      if (!ichRef.current) {
+        anmeldenFragen("Liken");
+        return;
+      }
+      eintragAendern(clip.id, (c) => (c.gemocht === an ? {} : { gemocht: an, likes: Math.max(0, c.likes + (an ? 1 : -1)) }));
+      nacheinander(`like-${clip.id}`, () => likeSetzen(clip.id, an))
+        .then((n) => eintragAendern(clip.id, (c) => (c.gemocht === an ? { likes: Number(n) } : {})))
+        .catch(() => eintragAendern(clip.id, (c) => (c.gemocht === an ? { gemocht: !an, likes: Math.max(0, c.likes + (an ? -1 : 1)) } : {})));
+    },
+    [anmeldenFragen, eintragAendern, nacheinander],
+  );
+
+  const onFolgen = useCallback(
+    (clip: ClipEintrag, an: boolean) => {
+      if (!ichRef.current) {
+        anmeldenFragen("Folgen");
+        return;
+      }
+      const setzen = (wert: boolean) => {
+        if (artRef.current !== "folge_ich") {
+          // „Folge ich“ wird beim nächsten Öffnen frisch geladen
+          generation.current = { ...generation.current, folge_ich: generation.current.folge_ich + 1 };
+          laeuft.current.folge_ich = false;
+        }
+        setFeeds((alt) => ({
+          entdecken: { ...alt.entdecken, eintraege: alt.entdecken.eintraege.map((c) => (c.autor === clip.autor ? { ...c, folge_ich: wert } : c)) },
+          folge_ich: artRef.current === "folge_ich" ? { ...alt.folge_ich, eintraege: alt.folge_ich.eintraege.map((c) => (c.autor === clip.autor ? { ...c, folge_ich: wert } : c)) } : LEER,
+        }));
+      };
+      setzen(an);
+      nacheinander(`folgen-${clip.autor}`, () => folgenSetzen(clip.autor, an)).catch(() => setzen(!an));
+    },
+    [anmeldenFragen, nacheinander],
+  );
+
+  const onKommentare = useCallback((clip: ClipEintrag) => setKommentarId(clip.id), []);
+
+  const onTeilen = useCallback(
+    async (clip: ClipEintrag) => {
+      try {
+        const r = await Share.share({ message: `„${clip.titel}“ – @${clip.autor_benutzername} in der Spur-App`, url: dateiUrl(clip.video_pfad) });
+        if (r.action === Share.sharedAction && ichRef.current) {
+          const n = await geteiltMelden(clip.id);
+          if (n != null) eintragAendern(clip.id, () => ({ geteilt: n }));
+        }
+      } catch {
+        // Teilen abgebrochen
+      }
+    },
+    [eintragAendern],
+  );
+
+  const onMehr = useCallback(
+    async (clip: ClipEintrag) => {
+      const darfLoeschen = clip.autor === ichRef.current || rechteRef.current.inhaber;
+      const wahl = await auswahl(clip.titel, [{ text: "Melden" }, ...(darfLoeschen ? [{ text: "Clip löschen", gefahr: true }] : [])]);
+      if (wahl === 0) {
+        if (!ichRef.current) {
+          anmeldenFragen("Melden");
+          return;
+        }
+        const gruende = ["Unangemessen", "Falsche Information", "Spam", "Etwas anderes"];
+        const g = await auswahl("Warum meldest du den Clip?", gruende.map((text) => ({ text })));
+        if (g == null) return;
+        try {
+          await clipMelden(clip.id, gruende[g]);
+          Alert.alert("Danke!", "Wir schauen uns den Clip an.");
+        } catch (e) {
+          Alert.alert("Nicht gemeldet", (e as Error).message);
+        }
+      } else if (wahl === 1 && darfLoeschen) {
+        Alert.alert("Clip löschen?", "Der Clip verschwindet für alle. Das lässt sich nicht rückgängig machen.", [
+          { text: "Abbrechen", style: "cancel" },
+          {
+            text: "Löschen",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await clipLoeschen(clip);
+                setFeeds((alt) => ({
+                  entdecken: { ...alt.entdecken, eintraege: alt.entdecken.eintraege.filter((c) => c.id !== clip.id) },
+                  folge_ich: { ...alt.folge_ich, eintraege: alt.folge_ich.eintraege.filter((c) => c.id !== clip.id) },
+                }));
+              } catch (e) {
+                Alert.alert("Nicht gelöscht", (e as Error).message);
+              }
+            },
+          },
+        ]);
+      }
+    },
+    [anmeldenFragen],
+  );
+
+  const wechseln = useCallback((neu: FeedArt) => {
+    tippen();
+    setKommentarId(null);
+    setArt(neu);
+  }, []);
+
+  // --------------------------------------------------------------- Anzeige
+  const sichtbarGeaendert = useRef(({ viewableItems }: { viewableItems: ViewToken<ClipEintrag>[] }) => {
+    const erstes = viewableItems.find((v) => v.isViewable);
+    if (erstes?.item) setAktivProFeed((a) => (a[artRef.current] === erstes.item.id ? a : { ...a, [artRef.current]: erstes.item.id }));
+  }).current;
+
+  const renderItem = useCallback(
+    ({ item }: { item: ClipEintrag }) =>
+      masse ? (
+        <ClipSeite
+          clip={item}
+          hoehe={masse.hoehe}
+          breite={masse.breite}
+          aktiv={item.id === aktivId}
+          spielen={spielen}
+          stumm={stumm}
+          eigen={item.autor === ich}
+          onLike={onLike}
+          onFolgen={onFolgen}
+          onKommentare={onKommentare}
+          onTeilen={onTeilen}
+          onMehr={onMehr}
+        />
+      ) : null,
+    [masse, aktivId, spielen, stumm, ich, onLike, onFolgen, onKommentare, onTeilen, onMehr],
+  );
+
+  const startIndex = useMemo(() => {
+    const i = feed.eintraege.findIndex((c) => c.id === aktivProFeed[art]);
+    return i > 0 ? i : 0;
+    // nur beim Aufbau der Liste (key={art}) relevant
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [art]);
+
+  const kommentarClip = kommentarId ? (feed.eintraege.find((c) => c.id === kommentarId) ?? null) : null;
+
+  let inhalt: ReactNode;
+  if (!serverVerbunden) {
+    inhalt = (
+      <Hinweis icon="film-outline" sf="play.rectangle.on.rectangle" titel="Clips kommen bald" text="Sobald die App mit dem Server verbunden ist, findest du hier kurze Videos rund um die Theorie." />
+    );
+  } else if (art === "folge_ich" && !ich) {
+    inhalt = (
+      <Hinweis icon="people-outline" sf="person.2.fill" titel="Folge deinen Lieblings-Erklärern" text="Mit einem kostenlosen Konto kannst du Erstellern folgen, liken und kommentieren.">
+        <Knopf titel="Konto erstellen" onPress={() => router.push("/registrieren")} />
+        <Knopf titel="Ich habe schon ein Konto" art="sekundaer" onPress={() => router.push("/anmelden")} />
+      </Hinweis>
+    );
+  } else if (feed.eintraege.length === 0 && feed.fehler) {
+    inhalt = (
+      <Hinweis icon="cloud-offline-outline" sf="wifi.exclamationmark" titel="Clips laden gerade nicht" text={feed.fehler}>
+        <Knopf titel="Nochmal versuchen" onPress={() => laden(art, true)} />
+      </Hinweis>
+    );
+  } else if (!feed.geladen || (feed.laedt && feed.eintraege.length === 0)) {
+    inhalt = (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator color="#FFFFFF" />
+      </View>
+    );
+  } else if (feed.eintraege.length === 0) {
+    inhalt =
+      art === "folge_ich" ? (
+        <Hinweis icon="people-outline" sf="person.2" titel="Du folgst noch niemandem" text="Tippe bei einem Clip auf „Folgen“ – dann landen neue Videos dieser Person hier.">
+          <Knopf titel="Clips entdecken" onPress={() => wechseln("entdecken")} />
+        </Hinweis>
+      ) : (
+        <Hinweis
+          icon="film-outline"
+          sf="play.rectangle.on.rectangle"
+          titel="Noch keine Clips"
+          text={rechte.ersteller ? "Lade den ersten Clip hoch – kurze Hochkant-Videos wirken am besten." : "Hier erscheinen bald kurze Videos rund um die Theorie."}
+        >
+          {rechte.ersteller ? <Knopf titel="Clip hochladen" icon="add" onPress={() => router.push("/clip-hochladen")} /> : null}
+        </Hinweis>
+      );
+  } else if (masse) {
+    inhalt = (
+      <FlatList
+        ref={liste}
+        key={art}
+        data={feed.eintraege}
+        keyExtractor={(c) => c.id}
+        renderItem={renderItem}
+        pagingEnabled
+        decelerationRate="fast"
+        disableIntervalMomentum
+        showsVerticalScrollIndicator={false}
+        getItemLayout={(_, i) => ({ length: masse.hoehe, offset: masse.hoehe * i, index: i })}
+        initialScrollIndex={startIndex < feed.eintraege.length ? startIndex : 0}
+        windowSize={3}
+        initialNumToRender={1}
+        maxToRenderPerBatch={2}
+        removeClippedSubviews={false}
+        onViewableItemsChanged={sichtbarGeaendert}
+        viewabilityConfig={SICHTBAR}
+        onEndReached={() => laden(art, false)}
+        onEndReachedThreshold={2}
+        refreshControl={<RefreshControl refreshing={aktualisiert} onRefresh={neuLaden} tintColor="#FFFFFF" progressViewOffset={insets.top + 44} />}
+      />
+    );
+  } else {
+    inhalt = null;
+  }
+
+  return (
+    <View style={{ flex: 1, backgroundColor: "#000000" }}>
+      <View style={{ flex: 1, marginBottom: leiste }} onLayout={(e) => setMasse({ breite: e.nativeEvent.layout.width, hoehe: e.nativeEvent.layout.height })}>
+        {inhalt}
+      </View>
+
+      {/* Kopf über dem Video */}
+      <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top + 84 }} />
+      <View
+        pointerEvents="box-none"
+        style={{ position: "absolute", top: insets.top + 2, left: 0, right: 0, height: 48, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12 }}
+      >
+        <View style={{ width: 40 }}>{rechte.ersteller ? <RundTaste icon="add" sf="plus" label="Clip hochladen" onPress={() => router.push("/clip-hochladen")} /> : null}</View>
+        <View style={{ flexDirection: "row", gap: 24, paddingTop: 6 }}>
+          <Reiter titel="Entdecken" aktiv={art === "entdecken"} onPress={() => wechseln("entdecken")} />
+          <Reiter titel="Folge ich" aktiv={art === "folge_ich"} onPress={() => wechseln("folge_ich")} />
+        </View>
+        <RundTaste
+          icon={stumm ? "volume-mute" : "volume-high"}
+          sf={stumm ? "speaker.slash.fill" : "speaker.wave.2.fill"}
+          label={stumm ? "Ton an" : "Ton aus"}
+          onPress={() => setStumm((s) => !s)}
+        />
+      </View>
+
+      <KommentarBlatt
+        clip={kommentarClip}
+        angemeldet={Boolean(ich)}
+        onSchliessen={() => setKommentarId(null)}
+        onAnzahl={(id, n) => eintragAendern(id, (c) => ({ kommentare: Math.max(0, c.kommentare + n) }))}
+        onAnmelden={() => {
+          setKommentarId(null);
+          router.push("/anmelden");
+        }}
+      />
+    </View>
+  );
+}

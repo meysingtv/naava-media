@@ -45,11 +45,12 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Spur nutzt deine Fotos nur, wenn du ein Profilbild auswählst.",
+          "photosPermission": "Spur greift nur auf deine Fotos und Videos zu, wenn du ein Profilbild oder einen Clip zum Hochladen auswählst.",
           "cameraPermission": false,
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true

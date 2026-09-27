@@ -82,6 +82,19 @@ const SF: Partial<Record<IconName, SFSymbol>> = {
   flag: "flag.fill",
   "trail-sign": "signpost.right.fill",
   "car-outline": "car.fill",
+  // Clips
+  film: "play.rectangle.on.rectangle.fill",
+  "film-outline": "play.rectangle.on.rectangle",
+  "chatbubble-ellipses": "ellipsis.bubble.fill",
+  "arrow-redo": "arrowshape.turn.up.right.fill",
+  "ellipsis-horizontal": "ellipsis",
+  "volume-mute": "speaker.slash.fill",
+  "volume-high": "speaker.wave.2.fill",
+  add: "plus",
+  play: "play.fill",
+  "arrow-up": "arrow.up",
+  "cloud-offline-outline": "icloud.slash",
+  "log-in-outline": "person.crop.circle.badge.checkmark",
 };
 
 export function Icon({

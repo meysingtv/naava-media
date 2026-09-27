@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Abschnitt, Chip, Eingabe, Gruppe, Knopf, Kopf, T, Zeile } from "@/components/ui";
 import { Logo } from "@/components/grafik";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
+import { useClipRechte } from "@/lib/clips-server";
 import { erinnerungPlanen } from "@/lib/erinnerung";
 import { uhrzeit } from "@/lib/format";
 import { useKonto } from "@/lib/konto";
@@ -30,7 +31,8 @@ const AGB = process.env.EXPO_PUBLIC_AGB_URL;
 export default function Einstellungen() {
   const insets = useSafeAreaInsets();
   const { stand, setzen, zuruecksetzen } = useStand();
-  const { session, profil, gast, anzeigeName, profilSpeichern, abmelden, passwortAendern } = useKonto();
+  const { session, profil, gast, anzeigeName, profilSpeichern, passwortAendern } = useKonto();
+  const rechte = useClipRechte();
   const [name, setName] = useState(anzeigeName);
   const [speichert, setSpeichert] = useState(false);
   const [neuesPasswort, setNeuesPasswort] = useState("");
@@ -183,15 +185,25 @@ export default function Einstellungen() {
                 icon="person-add-outline"
                 iconFarbe={farben.orange}
                 titel="Konto erstellen"
-                unter={gast ? "Sichert deinen Fortschritt und schaltet die echte Liga frei" : undefined}
-                onPress={async () => {
-                  await abmelden();
-                  router.replace("/registrieren");
-                }}
+                unter={gast ? "Sichert deinen Fortschritt, schaltet Liga, Likes und Kommentare frei" : undefined}
+                onPress={() => router.push("/registrieren")}
               />
+              <Zeile icon="log-in-outline" titel="Ich habe schon ein Konto" onPress={() => router.push("/anmelden")} />
             </Gruppe>
           )}
         </View>
+
+        {rechte.ersteller ? (
+          <View>
+            <Abschnitt titel="Clips" klein />
+            <Gruppe>
+              <Zeile icon="film-outline" iconFarbe={farben.orange} titel="Clip hochladen" unter="Kurzes Video für alle im Clips-Tab" onPress={() => router.push("/clip-hochladen")} />
+              {rechte.inhaber ? (
+                <Zeile icon="people-outline" titel="Clip-Ersteller verwalten" unter="Wer außer dir Videos hochladen darf" onPress={() => router.push("/clip-ersteller")} />
+              ) : null}
+            </Gruppe>
+          </View>
+        ) : null}
 
         <View>
           <Abschnitt titel="Hilfe & Rechtliches" klein />

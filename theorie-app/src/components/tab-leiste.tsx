@@ -12,6 +12,7 @@ type Reiter = { aus: [IconName, SFSymbol]; an: [IconName, SFSymbol] };
 const REITER: Record<string, Reiter> = {
   heute: { aus: ["home-outline", "house"], an: ["home", "house.fill"] },
   lernen: { aus: ["book-outline", "book"], an: ["book", "book.fill"] },
+  clips: { aus: ["film-outline", "play.rectangle.on.rectangle"], an: ["film", "play.rectangle.on.rectangle.fill"] },
   pruefen: { aus: ["play-circle-outline", "play.square"], an: ["play-circle", "play.square.fill"] },
   statistik: { aus: ["stats-chart-outline", "chart.bar"], an: ["stats-chart", "chart.bar.fill"] },
   profil: { aus: ["person-outline", "person"], an: ["person", "person.fill"] },
@@ -25,9 +26,15 @@ export function useInhaltUnten(): number {
   return LEISTE_HOEHE + Math.max(insets.bottom - 6, 8) + 18;
 }
 
+/** Genaue Höhe der Leiste (für Seiten, die bis direkt an die Leiste reichen). */
+export function useLeistenHoehe(): number {
+  const insets = useSafeAreaInsets();
+  return 4 + LEISTE_HOEHE + Math.max(insets.bottom - 6, 8);
+}
+
 /**
  * Tab-Leiste wie in der Vorlage im klassischen iOS-Stil: dunkle Fläche mit
- * runden oberen Ecken und feiner Kante, fünf Reiter mit SF Symbols, der
+ * runden oberen Ecken und feiner Kante, sechs Reiter mit SF Symbols, der
  * aktive leuchtet orange. Sie liegt über dem Inhalt, der darunter weiterläuft.
  */
 export function TabLeiste({ state, descriptors, navigation }: BottomTabBarProps) {

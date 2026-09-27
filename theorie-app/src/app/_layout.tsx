@@ -93,10 +93,11 @@ function Navigation() {
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: farben.grund }, animation: "slide_from_right" }}>
         <Stack.Screen name="index" options={{ animation: "none" }} />
+        {/* Registrieren und Anmelden gehen auch aus dem Gastmodus heraus */}
+        <Stack.Screen name="registrieren" />
+        <Stack.Screen name="anmelden" />
         <Stack.Protected guard={!drin}>
           <Stack.Screen name="willkommen" options={{ animation: "fade" }} />
-          <Stack.Screen name="registrieren" />
-          <Stack.Screen name="anmelden" />
         </Stack.Protected>
         <Stack.Protected guard={drin}>
           <Stack.Screen name="(tabs)" options={{ animation: "fade" }} />
@@ -104,7 +105,9 @@ function Navigation() {
           <Stack.Screen name="pruefung" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="online-duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
-          <Stack.Screen name="clips" />
+          <Stack.Screen name="kurz-erklaert" />
+          <Stack.Screen name="clip-hochladen" options={{ animation: "slide_from_bottom" }} />
+          <Stack.Screen name="clip-ersteller" />
           <Stack.Screen name="liga" />
           <Stack.Screen name="favoriten" />
           <Stack.Screen name="kalender" options={{ animation: "slide_from_bottom" }} />

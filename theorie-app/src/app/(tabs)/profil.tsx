@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, type IconName } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { useInhaltUnten } from "@/components/tab-leiste";
-import { kopfOben } from "@/components/ui";
+import { Knopf, kopfOben } from "@/components/ui";
 import { CLIPS } from "@/lib/clips";
 import { ERFOLGE } from "@/lib/erfolge";
 import { tausender } from "@/lib/format";
@@ -115,6 +115,26 @@ export default function Profil() {
           </View>
         </View>
 
+        {!session ? (
+          <View style={{ padding: 16, gap: 14, borderRadius: 18, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: "rgba(252,91,14,0.35)" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center" }}>
+                <Icon name="person-add-outline" size={20} color={farben.orange} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...schrift.textHalb, fontSize: 16, color: "#FFFFFF" }}>Kostenloses Konto erstellen</Text>
+                <Text style={{ ...schrift.text, fontSize: 13.5, lineHeight: 18, color: "#AEB3BA", marginTop: 2 }}>
+                  Fortschritt sichern, in der Liga mitspielen, Clips liken und kommentieren.
+                </Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Knopf titel="Konto erstellen" klein onPress={() => router.push("/registrieren")} style={{ flex: 1 }} />
+              <Knopf titel="Anmelden" klein art="sekundaer" onPress={() => router.push("/anmelden")} style={{ flex: 1 }} />
+            </View>
+          </View>
+        ) : null}
+
         <View style={{ flexDirection: "row", borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" }}>
           <Wert wert={tausender(stand.xp)} label="Punkte" />
           <View style={{ width: 1, marginVertical: 12, backgroundColor: "rgba(255,255,255,0.08)" }} />
@@ -125,7 +145,7 @@ export default function Profil() {
 
         <Gruppe>
           <Eintrag icon="trophy" farbe={farben.orange} titel="Rangliste & Duelle" unter="Wochen-Liga, Elo und Freundes-Duelle" onPress={() => router.push("/liga")} />
-          <Eintrag icon="play-circle" farbe={farben.pink} titel="Clips" unter={gemerkteClips > 0 ? `${gemerkteClips} gemerkt` : "Kurz erklärt"} onPress={() => router.push("/clips")} />
+          <Eintrag icon="bulb" farbe={farben.pink} titel="Kurz erklärt" unter={gemerkteClips > 0 ? `${gemerkteClips} gemerkt` : "Regeln in 30 Sekunden"} onPress={() => router.push("/kurz-erklaert")} />
           <Eintrag icon="heart" farbe="#FF8A1E" titel="Favoriten" unter="Gemerkte und schwierige Fragen" onPress={() => router.push("/favoriten")} />
           <Eintrag icon="calculator" farbe={farben.gelb} titel="Formeln" unter="Anhalteweg & Co." onPress={() => router.push("/formeln")} />
         </Gruppe>

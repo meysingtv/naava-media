@@ -26,7 +26,17 @@ const SCHRITTE = ["Name", "Klasse", "Zugang"];
 
 export default function Registrieren() {
   const insets = useSafeAreaInsets();
-  const { registrieren, benutzernameFrei } = useKonto();
+  const { registrieren, benutzernameFrei, gast, session } = useKonto();
+  // Kam man aus dem Gastmodus (z. B. von den Clips), geht es danach dorthin zurück.
+  const [ausGastmodus] = useState(gast);
+  const [fertig, setFertig] = useState(false);
+
+  // Erst weiter, wenn die Anmeldung wirklich da ist (sonst blockiert die Navigation).
+  useEffect(() => {
+    if (!fertig || !session) return;
+    if (ausGastmodus && router.canGoBack()) router.back();
+    else router.replace("/heute");
+  }, [fertig, session, ausGastmodus]);
   const { setzen } = useStand();
 
   const [schritt, setSchritt] = useState(0);
@@ -77,7 +87,11 @@ export default function Registrieren() {
       return;
     }
     setzen({ klasse });
-    if (r.bestaetigen) setBestaetigen(true);
+    if (r.bestaetigen) {
+      setBestaetigen(true);
+      return;
+    }
+    setFertig(true);
   }
 
   if (bestaetigen) {

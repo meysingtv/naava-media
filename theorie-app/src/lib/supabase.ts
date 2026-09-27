@@ -9,6 +9,10 @@ const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 /** Ist ein Server eingetragen? Ohne Server läuft die App im Gastmodus. */
 export const serverVerbunden = Boolean(url && anonKey);
 
+/** Für direkte Uploads (Videos werden gestreamt statt in den Speicher geladen). */
+export const serverAdresse = (url ?? "").replace(/\/+$/, "");
+export const serverSchluessel = anonKey ?? "";
+
 const istServer = Platform.OS === "web" && typeof window === "undefined";
 
 export const supabase = createClient(url ?? "https://nicht-eingerichtet.invalid", anonKey ?? "nicht-eingerichtet", {

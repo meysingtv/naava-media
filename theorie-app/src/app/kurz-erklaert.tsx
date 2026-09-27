@@ -152,7 +152,7 @@ function ClipKarte({ clip, index, anzahl, hoehe, aktiv }: { clip: Clip; index: n
   );
 }
 
-export default function Clips() {
+export default function KurzErklaert() {
   const insets = useSafeAreaInsets();
   const { stand } = useStand();
   const [ansicht, setAnsicht] = useState<"alle" | "gemerkt">("alle");
@@ -188,9 +188,9 @@ export default function Clips() {
         <KopfTaste icon="arrow-back" label="Zurück" onPress={zurueck} />
         <View style={{ flex: 1 }}>
           <T v="h3" style={{ fontSize: 19 }}>
-            Clips
+            Kurz erklärt
           </T>
-          <T v="klein">Kurz erklärt – wisch nach oben</T>
+          <T v="klein">Wisch nach oben für die nächste Regel</T>
         </View>
         <View style={{ flexDirection: "row", gap: abstand(2), paddingRight: 8 }}>
           <Chip text="Für dich" aktiv={ansicht === "alle"} onPress={() => wechsel("alle")} />
