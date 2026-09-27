@@ -1,6 +1,7 @@
 import type { Ionicons } from "@expo/vector-icons";
 
 import { FRAGEN, istZeichen } from "./fragen";
+import { KLASSEN } from "./schild-netz";
 import type { Stand } from "./stand";
 
 export type Erfolg = {
@@ -13,6 +14,8 @@ export type Erfolg = {
 };
 
 const summe = (s: Stand, feld: "r" | "f") => Object.values(s.fragen).reduce((n, f) => n + f[feld], 0);
+const gefunden = (s: Stand) => Object.keys(s.schilder ?? {}).filter((k) => KLASSEN.includes(k)).length;
+const ALBUM_GROESSE = KLASSEN.length - 1;
 
 export const ERFOLGE: Erfolg[] = [
   { id: "erster", titel: "Erster Kilometer", text: "Die erste Frage beantwortet.", icon: "flag", pruefen: (s) => summe(s, "r") + summe(s, "f") >= 1 },
@@ -39,6 +42,9 @@ export const ERFOLGE: Erfolg[] = [
     pruefen: (s) => FRAGEN.filter((f) => f.art === "zahl").every((f) => (s.fragen[f.id]?.r ?? 0) >= 1),
   },
   { id: "nacht", titel: "Nachtfahrt", text: "Nach 22 Uhr noch gelernt.", icon: "moon" },
+  { id: "schild1", titel: "Schilderjäger", text: "Das erste echte Schild mit der Kamera gefunden.", icon: "camera", pruefen: (s) => gefunden(s) >= 1 },
+  { id: "schild10", titel: "Auf der Pirsch", text: "10 verschiedene Schilder gesammelt.", icon: "images", pruefen: (s) => gefunden(s) >= 10 },
+  { id: "schildalle", titel: "Album komplett", text: "Jedes Schild der Schilder-Jagd gefunden.", icon: "medal", pruefen: (s) => gefunden(s) >= ALBUM_GROESSE },
 ];
 
 export function erfolgVon(id: string): Erfolg | undefined {

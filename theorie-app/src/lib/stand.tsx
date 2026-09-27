@@ -47,6 +47,8 @@ export type Stand = {
   zeitTage: Record<string, number>;
   /** Richtig/falsch je Tag und Thema – für Woche und Monat im Fortschritt. */
   themaTage: Record<string, Partial<Record<ThemaId, [number, number]>>>;
+  /** Schilder-Jagd: mit der Kamera gefundene Schilder (Zeichen → Fundzeit, ISO). */
+  schilder: Record<string, string>;
 };
 
 export const LEER: Stand = {
@@ -69,6 +71,7 @@ export const LEER: Stand = {
   clips: { gemocht: [], gemerkt: [] },
   zeitTage: {},
   themaTage: {},
+  schilder: {},
 };
 
 const SPEICHER = "spur-stand-v1";
@@ -374,6 +377,8 @@ type StandKontext = {
   duellFertig: (ergebnis: "sieg" | "remis" | "niederlage", gegnerRating: number) => { xp: number; rating: number };
   setzen: (teil: Partial<Pick<Stand, "tagesziel" | "erinnerung" | "klasse">>) => void;
   clipUmschalten: (id: string, liste: "gemocht" | "gemerkt") => void;
+  /** Schild für das Album verbuchen; gibt zurück, ob es neu war und wie viele XP es gab. */
+  schildGefunden: (key: string, xp: number) => { neu: boolean; xp: number };
   gebuchtSetzen: (g: Stand["gebucht"]) => void;
   ersetzen: (s: Stand) => void;
   zuruecksetzen: () => void;
@@ -522,6 +527,16 @@ export function StandProvider({ children }: { children: ReactNode }) {
     [anwenden],
   );
 
+  const schildGefunden = useCallback(
+    (key: string, xp: number) => {
+      const s = aktuell.current;
+      if (s.schilder[key]) return { neu: false, xp: 0 };
+      anwenden(xpDazu({ ...s, schilder: { ...s.schilder, [key]: new Date().toISOString() } }, xp));
+      return { neu: true, xp };
+    },
+    [anwenden],
+  );
+
   const gebuchtSetzen = useCallback((g: Stand["gebucht"]) => {
     const s = { ...aktuell.current, gebucht: g };
     aktuell.current = s;
@@ -536,7 +551,9 @@ export function StandProvider({ children }: { children: ReactNode }) {
 
   const zuruecksetzen = useCallback(() => {
     // Punkte in der Rangliste bleiben erhalten; neue XP werden ab 0 weiter gemeldet.
-    const neu = { ...LEER, klasse: aktuell.current.klasse, tagesziel: aktuell.current.tagesziel, erinnerung: aktuell.current.erinnerung };
+    // Das Schilder-Album bleibt – die Schilder wurden ja wirklich gefunden.
+    const { klasse, tagesziel, erinnerung, schilder } = aktuell.current;
+    const neu = { ...LEER, klasse, tagesziel, erinnerung, schilder };
     aktuell.current = neu;
     setStand(neu);
   }, []);
@@ -553,13 +570,14 @@ export function StandProvider({ children }: { children: ReactNode }) {
       duellFertig,
       setzen,
       clipUmschalten,
+      schildGefunden,
       gebuchtSetzen,
       ersetzen,
       zuruecksetzen,
       neueErfolge,
       erfolgeGesehen: () => setNeueErfolge([]),
     }),
-    [stand, bereit, antwort, zeitBuchen, merken, trainingFertig, pruefungFertig, duellFertig, setzen, clipUmschalten, gebuchtSetzen, ersetzen, zuruecksetzen, neueErfolge],
+    [stand, bereit, antwort, zeitBuchen, merken, trainingFertig, pruefungFertig, duellFertig, setzen, clipUmschalten, schildGefunden, gebuchtSetzen, ersetzen, zuruecksetzen, neueErfolge],
   );
 
   return <Kontext.Provider value={wert}>{children}</Kontext.Provider>;

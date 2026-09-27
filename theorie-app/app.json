@@ -45,9 +45,17 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Spur greift nur auf deine Fotos und Videos zu, wenn du ein Profilbild oder einen Clip zum Hochladen auswählst.",
-          "cameraPermission": false,
+          "photosPermission": "Spur greift nur auf deine Fotos und Videos zu, wenn du ein Profilbild, einen Clip zum Hochladen oder ein Schildfoto für die Schilder-Jagd auswählst.",
+          "cameraPermission": "Spur nutzt die Kamera für die Schilder-Jagd: Du scannst echte Verkehrsschilder für dein Album. Die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert.",
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Spur nutzt die Kamera für die Schilder-Jagd: Du scannst echte Verkehrsschilder für dein Album. Die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ],
       "expo-video"

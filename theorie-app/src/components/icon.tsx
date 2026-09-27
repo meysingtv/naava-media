@@ -96,6 +96,16 @@ const SF: Partial<Record<IconName, SFSymbol>> = {
   "arrow-up": "arrow.up",
   "cloud-offline-outline": "icloud.slash",
   "log-in-outline": "person.crop.circle.badge.checkmark",
+  // Schilder-Jagd
+  camera: "camera.fill",
+  "camera-outline": "camera",
+  scan: "viewfinder",
+  "image-outline": "photo",
+  "grid-outline": "square.grid.3x3",
+  flashlight: "flashlight.on.fill",
+  "flashlight-outline": "flashlight.off.fill",
+  "help-circle-outline": "questionmark.circle",
+  sparkles: "sparkles",
 };
 
 export function Icon({

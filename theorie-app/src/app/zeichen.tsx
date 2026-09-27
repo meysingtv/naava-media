@@ -62,7 +62,10 @@ export default function Zeichen() {
         </View>
       </ScrollView>
       <View style={{ paddingHorizontal: RAND, paddingTop: abstand(3), paddingBottom: insets.bottom + abstand(3), borderTopWidth: 1, borderColor: farben.linie }}>
-        <Knopf titel="Zeichenfragen üben" icon="arrow-forward" onPress={() => router.push({ pathname: "/training", params: { modus: "zeichen" } })} />
+        <View style={{ flexDirection: "row", gap: abstand(2) }}>
+          <Knopf titel="Schilder-Jagd" art="sekundaer" icon="camera" onPress={() => router.push("/schilder-jagd")} style={{ flex: 1 }} />
+          <Knopf titel="Fragen üben" icon="arrow-forward" onPress={() => router.push({ pathname: "/training", params: { modus: "zeichen" } })} style={{ flex: 1 }} />
+        </View>
       </View>
 
       <Modal visible={offen != null} transparent animationType="fade" onRequestClose={() => setOffen(null)}>

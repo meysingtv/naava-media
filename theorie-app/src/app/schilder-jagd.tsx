@@ -1,0 +1,197 @@
+import { useState } from "react";
+import { Modal, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { Ring } from "@/components/grafik";
+import { Icon } from "@/components/icon";
+import { Knopf, Kopf, T } from "@/components/ui";
+import { Verkehrszeichen, ZEICHEN_INFO, type ZeichenInfo } from "@/components/zeichen";
+import { datumKurz, datumLang } from "@/lib/format";
+import type { ZeichenKey } from "@/lib/fragen";
+import { tippen } from "@/lib/haptik";
+import { ALBUM, XP_JE_SCHILD } from "@/lib/schilder-jagd";
+import { useStand } from "@/lib/stand";
+import { abstand, farben, RAND, schrift } from "@/lib/theme";
+
+const GRUPPEN: { id: ZeichenInfo["gruppe"]; titel: string }[] = [
+  { id: "gefahr", titel: "Gefahrzeichen" },
+  { id: "vorschrift", titel: "Vorschriftzeichen" },
+  { id: "richt", titel: "Richtzeichen" },
+];
+
+function infoVon(key: ZeichenKey): ZeichenInfo | undefined {
+  return ZEICHEN_INFO.find((z) => z.key === key);
+}
+
+export default function SchilderJagd() {
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const { stand } = useStand();
+  const [offen, setOffen] = useState<ZeichenInfo | null>(null);
+  const kachel = Math.floor((width - RAND * 2 - 20) / 3);
+
+  const gefunden = ALBUM.filter((k) => stand.schilder[k]);
+  const anteil = gefunden.length / ALBUM.length;
+  const zuletzt = [...gefunden].sort((a, b) => (stand.schilder[b] ?? "").localeCompare(stand.schilder[a] ?? ""))[0];
+
+  return (
+    <View style={{ flex: 1, backgroundColor: farben.grund }}>
+      <Kopf titel="Schilder-Jagd" />
+      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + 110, gap: abstand(5) }} showsVerticalScrollIndicator={false}>
+        {/* Fortschritt */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 18,
+            padding: 16,
+            borderRadius: 20,
+            backgroundColor: farben.flaeche,
+            borderWidth: 1,
+            borderColor: farben.linie,
+          }}
+        >
+          <Ring anteil={anteil} groesse={86} dicke={8} spur={farben.ringSpur} leuchten>
+            <Text style={{ ...schrift.titel, fontSize: 22, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{gefunden.length}</Text>
+            <Text style={{ ...schrift.textMittel, fontSize: 11.5, color: farben.text3, marginTop: -2 }}>von {ALBUM.length}</Text>
+          </Ring>
+          <View style={{ flex: 1, gap: 4 }}>
+            <T v="h2">{gefunden.length === 0 ? "Dein Album ist noch leer" : gefunden.length === ALBUM.length ? "Album komplett!" : "Schilder gefunden"}</T>
+            <T v="text" style={{ fontSize: 14, lineHeight: 19 }}>
+              {zuletzt
+                ? `Zuletzt: ${infoVon(zuletzt)?.kurz ?? infoVon(zuletzt)?.name ?? ""}`
+                : `Finde echte Schilder in deiner Umgebung und scanne sie. Jedes neue bringt ${XP_JE_SCHILD} XP.`}
+            </T>
+          </View>
+        </View>
+
+        {GRUPPEN.map((g) => {
+          const liste = ALBUM.map(infoVon).filter((z): z is ZeichenInfo => z?.gruppe === g.id);
+          const hier = liste.filter((z) => stand.schilder[z.key]).length;
+          return (
+            <View key={g.id} style={{ gap: abstand(3) }}>
+              <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+                <T v="h3">{g.titel}</T>
+                <Text style={{ ...schrift.textHalb, fontSize: 14, color: hier === liste.length ? farben.orange : farben.text3, fontVariant: ["tabular-nums"] }}>
+                  {hier}/{liste.length}
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+                {liste.map((z) => {
+                  const fund = stand.schilder[z.key];
+                  return (
+                    <Pressable
+                      key={z.key}
+                      accessibilityLabel={`${z.name}${fund ? ", gefunden" : ", noch nicht gefunden"}`}
+                      onPress={() => {
+                        tippen();
+                        setOffen(z);
+                      }}
+                      style={({ pressed }) => ({
+                        width: kachel,
+                        alignItems: "center",
+                        gap: 8,
+                        paddingTop: 14,
+                        paddingBottom: 10,
+                        paddingHorizontal: 6,
+                        borderRadius: 16,
+                        backgroundColor: fund ? farben.flaeche2 : farben.flaeche,
+                        borderWidth: 1,
+                        borderColor: fund ? "rgba(252,91,14,0.35)" : farben.linie,
+                        transform: [{ scale: pressed ? 0.97 : 1 }],
+                      })}
+                    >
+                      <View style={{ opacity: fund ? 1 : 0.16 }}>
+                        <Verkehrszeichen zeichen={z.key} groesse={58} />
+                      </View>
+                      {!fund ? (
+                        <View style={{ position: "absolute", top: 30, width: 30, height: 30, borderRadius: 15, backgroundColor: "rgba(19,26,33,0.92)", borderWidth: 1, borderColor: farben.linieStark, alignItems: "center", justifyContent: "center" }}>
+                          <Text style={{ ...schrift.titelFett, fontSize: 16, color: farben.text3 }}>?</Text>
+                        </View>
+                      ) : null}
+                      <Text numberOfLines={2} style={{ ...schrift.textMittel, fontSize: 12, lineHeight: 15, color: fund ? farben.text : farben.text4, textAlign: "center", minHeight: 30 }}>
+                        {z.kurz ?? z.name}
+                      </Text>
+                      <Text style={{ ...schrift.textHalb, fontSize: 11, color: fund ? farben.orange : "transparent" }}>{fund ? datumKurz(fund) : "–"}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          );
+        })}
+
+        <View style={{ flexDirection: "row", gap: 12, padding: 14, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
+          <Icon name="warning-outline" size={20} color={farben.gelb} />
+          <T v="klein" style={{ flex: 1, fontSize: 13, lineHeight: 18, color: farben.text2 }}>
+            Scanne nur zu Fuß oder als Beifahrer – nie selbst am Steuer. Die Fotos werden nur auf deinem Handy ausgewertet und nicht gespeichert.
+          </T>
+        </View>
+      </ScrollView>
+
+      {/* Scannen */}
+      <LinearGradient
+        pointerEvents="none"
+        colors={["rgba(3,5,7,0)", "rgba(3,5,7,0.86)", farben.grund]}
+        locations={[0, 0.45, 1]}
+        style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: insets.bottom + 120 }}
+      />
+      <View style={{ position: "absolute", left: RAND, right: RAND, bottom: insets.bottom + abstand(3) }}>
+        <Knopf titel="Schild scannen" icon="camera" onPress={() => router.push("/schild-scanner")} />
+      </View>
+
+      <Modal visible={offen != null} transparent animationType="fade" onRequestClose={() => setOffen(null)}>
+        <Pressable onPress={() => setOffen(null)} style={{ flex: 1, backgroundColor: "rgba(3,5,7,0.74)", justifyContent: "flex-end" }}>
+          {offen ? (
+            <Pressable
+              onPress={() => {}}
+              style={{
+                margin: abstand(3),
+                marginBottom: insets.bottom + abstand(3),
+                padding: abstand(6),
+                borderRadius: 28,
+                backgroundColor: farben.flaeche,
+                borderWidth: 1,
+                borderColor: farben.linieStark,
+                alignItems: "center",
+                gap: abstand(4),
+              }}
+            >
+              <View style={{ opacity: stand.schilder[offen.key] ? 1 : 0.35 }}>
+                <Verkehrszeichen zeichen={offen.key} groesse={140} />
+              </View>
+              <View style={{ gap: abstand(2), alignSelf: "stretch" }}>
+                <T v="mini" farbe={stand.schilder[offen.key] ? farben.orange : farben.text3} zentriert>
+                  {stand.schilder[offen.key] ? `Gefunden am ${datumLang(new Date(stand.schilder[offen.key]))}` : "Noch nicht gefunden"}
+                </T>
+                <T v="titel" zentriert>
+                  {offen.name}
+                </T>
+                <T v="text" zentriert>
+                  {offen.bedeutung}
+                </T>
+              </View>
+              {stand.schilder[offen.key] ? (
+                <Knopf titel="Schließen" art="sekundaer" onPress={() => setOffen(null)} style={{ alignSelf: "stretch" }} />
+              ) : (
+                <View style={{ alignSelf: "stretch", gap: abstand(2) }}>
+                  <Knopf
+                    titel="Jetzt suchen"
+                    icon="camera"
+                    onPress={() => {
+                      setOffen(null);
+                      router.push("/schild-scanner");
+                    }}
+                  />
+                  <Knopf titel="Schließen" art="geist" onPress={() => setOffen(null)} />
+                </View>
+              )}
+            </Pressable>
+          ) : null}
+        </Pressable>
+      </Modal>
+    </View>
+  );
+}

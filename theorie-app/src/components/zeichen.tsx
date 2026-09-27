@@ -12,6 +12,7 @@ const BLAU = farben.schildBlau;
 const GELB = farben.schildGelb;
 const WEISS = farben.schildWeiss;
 const SCHWARZ = farben.schildSchwarz;
+const GRUEN = "#0B8A4E";
 
 type Punkt = [number, number];
 
@@ -129,12 +130,122 @@ export function ZeichenGrafik({ zeichen }: { zeichen: ZeichenKey }) {
       );
 
     case "z274_30":
+    case "z274_50":
+    case "z274_70":
       return (
         <Rund fuellung={WEISS} ring={ROT}>
           <SvgText x={50} y={63} fill={SCHWARZ} fontSize={36} fontFamily={svgSchrift.schild} fontWeight="800" textAnchor="middle" letterSpacing={-1}>
-            30
+            {zeichen.slice(5)}
           </SvgText>
         </Rund>
+      );
+
+    case "z250":
+      return <Rund fuellung={WEISS} ring={ROT} />;
+
+    case "z102":
+      return (
+        <Dreieck punkte={SPITZE_OBEN}>
+          <Rect x={46.5} y={40} width={7} height={36} fill={SCHWARZ} />
+          <Rect x={32} y={54.5} width={36} height={7} fill={SCHWARZ} />
+        </Dreieck>
+      );
+
+    case "z131":
+      return (
+        <Dreieck punkte={SPITZE_OBEN}>
+          <Rect x={41.5} y={39} width={17} height={38} rx={3.5} fill={SCHWARZ} />
+          <Circle cx={50} cy={46} r={4.4} fill={ROT} />
+          <Circle cx={50} cy={58} r={4.4} fill={GELB} />
+          <Circle cx={50} cy={70} r={4.4} fill="#1FA055" />
+        </Dreieck>
+      );
+
+    case "z357":
+      return (
+        <Quadrat fuellung={BLAU}>
+          <Rect x={42} y={34} width={16} height={52} fill={WEISS} />
+          <Rect x={22} y={18} width={56} height={14} fill={ROT} stroke={WEISS} strokeWidth={2} />
+        </Quadrat>
+      );
+
+    case "z307":
+      return (
+        <G>
+          <Polygon points="50,2 98,50 50,98 2,50" fill={WEISS} stroke={SCHWARZ} strokeWidth={1.4} strokeLinejoin="round" />
+          <Polygon points="50,16 84,50 50,84 16,50" fill={GELB} stroke={SCHWARZ} strokeWidth={0.8} strokeLinejoin="round" />
+          <G stroke={SCHWARZ} strokeWidth={2.6}>
+            {[-9, -3, 3, 9].map((v) => (
+              <Line key={v} x1={22 + v} y1={28 - v} x2={72 + v} y2={78 - v} />
+            ))}
+          </G>
+        </G>
+      );
+
+    case "z282":
+      return (
+        <G>
+          <Circle cx={50} cy={50} r={47} fill={WEISS} />
+          <Circle cx={50} cy={50} r={44} fill={WEISS} stroke={SCHWARZ} strokeWidth={1.6} />
+          <G stroke={SCHWARZ} strokeWidth={3}>
+            {[-16, -8, 0, 8, 16].map((v) => (
+              <Line key={v} x1={80 + v} y1={20 + v} x2={20 + v} y2={80 + v} />
+            ))}
+          </G>
+        </G>
+      );
+
+    case "z208":
+      return (
+        <Rund fuellung={WEISS} ring={ROT}>
+          <Rect x={35} y={32} width={7} height={34} fill={SCHWARZ} />
+          <Polygon points="30,62 47,62 38.5,76" fill={SCHWARZ} />
+          <Rect x={58} y={34} width={7} height={34} fill={ROT} />
+          <Polygon points="53,38 70,38 61.5,24" fill={ROT} />
+        </Rund>
+      );
+
+    case "z308":
+      return (
+        <Quadrat fuellung={BLAU}>
+          <Rect x={34} y={32} width={7} height={34} fill={ROT} />
+          <Polygon points="29,62 46,62 37.5,76" fill={ROT} />
+          <Rect x={59} y={34} width={7} height={34} fill={WEISS} />
+          <Polygon points="54,38 71,38 62.5,24" fill={WEISS} />
+        </Quadrat>
+      );
+
+    case "z222":
+      return (
+        <Rund fuellung={BLAU}>
+          <G transform="rotate(45 50 50)">
+            <Rect x={27} y={44} width={34} height={12} fill={WEISS} />
+            <Polygon points="58,31 80,50 58,69" fill={WEISS} />
+          </G>
+        </Rund>
+      );
+
+    case "z237":
+      return (
+        <Rund fuellung={BLAU}>
+          <G stroke={WEISS} strokeWidth={4} fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <Circle cx={32} cy={60} r={12} />
+            <Circle cx={68} cy={60} r={12} />
+            <Path d="M32,60 L43,40 L60,40 L68,60 M43,40 L51,60 L60,40 M40,34 L48,34 M58,33 L63,33 L60,40" />
+          </G>
+        </Rund>
+      );
+
+    case "z224":
+      return (
+        <G>
+          <Circle cx={50} cy={50} r={47} fill={WEISS} />
+          <Circle cx={50} cy={50} r={44} fill={GRUEN} />
+          <Circle cx={50} cy={50} r={37} fill={GELB} />
+          <SvgText x={50} y={66} fill={GRUEN} fontSize={46} fontFamily={svgSchrift.schild} fontWeight="800" textAnchor="middle">
+            H
+          </SvgText>
+        </G>
       );
 
     case "z267":
@@ -304,4 +415,17 @@ export const ZEICHEN_INFO: ZeichenInfo[] = [
   { key: "z306", name: "Vorfahrtstraße", gruppe: "vorschrift", bedeutung: "Du hast Vorfahrt, bis ein Zeichen sie aufhebt." },
   { key: "z314", name: "Parken", gruppe: "richt", bedeutung: "Parken ist erlaubt. Zusatzzeichen können es einschränken." },
   { key: "z350", name: "Fußgängerüberweg", gruppe: "richt", bedeutung: "Fußgängern das Überqueren ermöglichen, mäßig heranfahren, nicht überholen." },
+  { key: "z274_50", name: "Höchstgeschwindigkeit 50", kurz: "Tempo 50", gruppe: "vorschrift", bedeutung: "Nicht schneller als 50 km/h fahren – auch wenn innerorts sonst mehr erlaubt wäre." },
+  { key: "z274_70", name: "Höchstgeschwindigkeit 70", kurz: "Tempo 70", gruppe: "vorschrift", bedeutung: "Nicht schneller als 70 km/h fahren, bis das Verbot aufgehoben wird." },
+  { key: "z250", name: "Verbot für Fahrzeuge aller Art", kurz: "Durchfahrt verboten", gruppe: "vorschrift", bedeutung: "Keine Fahrzeuge erlaubt. Fahrräder und Motorräder darf man schieben." },
+  { key: "z102", name: "Kreuzung mit Vorfahrt von rechts", kurz: "Vorfahrt von rechts", gruppe: "gefahr", bedeutung: "An der nächsten Kreuzung gilt rechts vor links – langsam heranfahren." },
+  { key: "z131", name: "Lichtzeichenanlage", kurz: "Ampel voraus", gruppe: "gefahr", bedeutung: "Achtung, eine Ampel kommt – oft schlecht zu sehen, rechtzeitig bremsbereit sein." },
+  { key: "z357", name: "Sackgasse", gruppe: "richt", bedeutung: "Die Straße geht nicht durch. Wenden musst du am Ende." },
+  { key: "z307", name: "Ende der Vorfahrtstraße", gruppe: "vorschrift", bedeutung: "Deine Vorfahrt endet hier. Ab jetzt gelten wieder Zeichen oder rechts vor links." },
+  { key: "z282", name: "Ende sämtlicher Streckenverbote", kurz: "Ende aller Verbote", gruppe: "vorschrift", bedeutung: "Alle vorher angeordneten Tempolimits und Überholverbote sind aufgehoben." },
+  { key: "z208", name: "Vorrang des Gegenverkehrs", kurz: "Gegenverkehr hat Vorrang", gruppe: "vorschrift", bedeutung: "An der Engstelle musst du den Gegenverkehr zuerst durchlassen." },
+  { key: "z308", name: "Vorrang vor dem Gegenverkehr", kurz: "Du hast Vorrang", gruppe: "richt", bedeutung: "An der Engstelle darfst du zuerst fahren – der Gegenverkehr wartet." },
+  { key: "z222", name: "Rechts vorbei", gruppe: "vorschrift", bedeutung: "Am Hindernis (z. B. Verkehrsinsel) rechts vorbeifahren." },
+  { key: "z237", name: "Radweg", gruppe: "vorschrift", bedeutung: "Nur für Radfahrer. Autos dürfen hier nicht fahren oder parken." },
+  { key: "z224", name: "Haltestelle", gruppe: "richt", bedeutung: "Bus- oder Straßenbahn-Haltestelle. 15 m davor und dahinter nicht parken." },
 ];

@@ -125,6 +125,8 @@ function Navigation() {
           <Stack.Screen name="thema/[id]" />
           <Stack.Screen name="formeln" />
           <Stack.Screen name="zeichen" />
+          <Stack.Screen name="schilder-jagd" />
+          <Stack.Screen name="schild-scanner" options={{ animation: "slide_from_bottom", presentation: "fullScreenModal" }} />
           <Stack.Screen name="premium" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="einstellungen" />
           <Stack.Screen name="bildnachweise" />
