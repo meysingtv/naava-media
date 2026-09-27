@@ -1,90 +1,112 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Easing, Image, Platform, Pressable, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
+import { ActivityIndicator, Animated, Easing, Image, Pressable, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEvent, useEventListener } from "expo";
 import { useVideoPlayer, VideoView, type VideoPlayer } from "expo-video";
 import type { SFSymbol } from "expo-symbols";
 
+import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
 import { Avatar } from "@/components/ui";
 import { dateiUrl, kurzeZahl, type ClipEintrag } from "@/lib/clips-server";
 import { stoss, tippen } from "@/lib/haptik";
 import { farben, schrift } from "@/lib/theme";
 
-/** Rot für „Gefällt mir“ wie bei TikTok. */
-export const LIKE_ROT = "#FF3B5C";
-
-const TEXT_SCHATTEN = { textShadowColor: "rgba(0,0,0,0.55)", textShadowRadius: 5, textShadowOffset: { width: 0, height: 1 } } as const;
-const ICON_SCHATTEN =
-  Platform.OS === "ios" ? ({ shadowColor: "#000", shadowOpacity: 0.35, shadowRadius: 4, shadowOffset: { width: 0, height: 1 } } as const) : null;
+// Eigener Spur-Look: Video im Vollbild, darunter eine Glas-Karte mit Ersteller,
+// Titel und einer Aktionsleiste – orange Akzente statt der üblichen
+// Kurzvideo-Optik mit Symbolspalte am Rand.
 
 // ---------------------------------------------------------------------------
-// Kleine Bausteine
+// Bausteine
 // ---------------------------------------------------------------------------
 
 function Aktion({
   icon,
   sf,
-  farbe = "#FFFFFF",
-  zahl,
+  text,
+  aktiv,
   label,
   onPress,
   skala,
 }: {
   icon: IconName;
   sf: SFSymbol;
-  farbe?: string;
-  zahl?: string;
+  text?: string;
+  aktiv?: boolean;
   label: string;
   onPress: () => void;
   skala?: Animated.Value;
 }) {
   return (
-    <Pressable onPress={onPress} hitSlop={8} accessibilityRole="button" accessibilityLabel={label} style={({ pressed }) => ({ alignItems: "center", gap: 3, opacity: pressed ? 0.7 : 1 })}>
-      <Animated.View style={[ICON_SCHATTEN, skala ? { transform: [{ scale: skala }] } : null]}>
-        <Icon name={icon} sf={sf} size={33} color={farbe} weight="semibold" />
+    <Pressable
+      onPress={onPress}
+      hitSlop={4}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => ({
+        flex: text ? 1 : undefined,
+        width: text ? undefined : 44,
+        height: 40,
+        borderRadius: 20,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        backgroundColor: aktiv ? "rgba(252,91,14,0.22)" : pressed ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.08)",
+        borderWidth: 1,
+        borderColor: aktiv ? "rgba(252,91,14,0.55)" : "rgba(255,255,255,0.08)",
+      })}
+    >
+      <Animated.View style={skala ? { transform: [{ scale: skala }] } : null}>
+        <Icon name={icon} sf={sf} size={18} color={aktiv ? farben.orange : "#FFFFFF"} weight="semibold" />
       </Animated.View>
-      {zahl != null ? <Text style={{ ...schrift.textHalb, fontSize: 13, color: "#FFFFFF", ...TEXT_SCHATTEN }}>{zahl}</Text> : null}
+      {text != null ? (
+        <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 13.5, color: aktiv ? farben.orangeHell : "#FFFFFF", fontVariant: ["tabular-nums"] }}>
+          {text}
+        </Text>
+      ) : null}
     </Pressable>
   );
 }
 
-/** Herz, das beim Doppeltippen an der Stelle des Fingers aufploppt. */
-function FliegendesHerz({ x, y, dreh, onFertig }: { x: number; y: number; dreh: number; onFertig: () => void }) {
+/** Beim Doppeltippen: oranges Herz mit Ring, genau am Finger. */
+function Funke({ x, y, onFertig }: { x: number; y: number; onFertig: () => void }) {
   const a = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.sequence([
-      Animated.spring(a, { toValue: 1, useNativeDriver: true, damping: 9, stiffness: 280, mass: 0.6 }),
-      Animated.timing(a, { toValue: 2, duration: 420, delay: 160, easing: Easing.in(Easing.quad), useNativeDriver: true }),
-    ]).start(onFertig);
+    Animated.timing(a, { toValue: 1, duration: 720, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(onFertig);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const G = 104;
+  const G = 120;
   return (
-    <Animated.View
-      pointerEvents="none"
-      style={{
-        position: "absolute",
-        left: x - G / 2,
-        top: y - G / 2,
-        width: G,
-        height: G,
-        alignItems: "center",
-        justifyContent: "center",
-        opacity: a.interpolate({ inputRange: [0, 0.15, 1, 2], outputRange: [0, 1, 1, 0] }),
-        transform: [
-          { translateY: a.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 0, -70] }) },
-          { rotate: `${dreh}deg` },
-          { scale: a.interpolate({ inputRange: [0, 1, 2], outputRange: [0.25, 1, 1.35] }) },
-        ],
-      }}
-    >
-      <Icon name="heart" size={G} color={LIKE_ROT} />
-    </Animated.View>
+    <View pointerEvents="none" style={{ position: "absolute", left: x - G / 2, top: y - G / 2, width: G, height: G, alignItems: "center", justifyContent: "center" }}>
+      <Animated.View
+        style={{
+          position: "absolute",
+          width: G,
+          height: G,
+          borderRadius: G / 2,
+          borderWidth: 3,
+          borderColor: farben.orange,
+          opacity: a.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 0.9, 0] }),
+          transform: [{ scale: a.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1.25] }) }],
+        }}
+      />
+      <Animated.View
+        style={{
+          opacity: a.interpolate({ inputRange: [0, 0.12, 0.7, 1], outputRange: [0, 1, 1, 0] }),
+          transform: [
+            { scale: a.interpolate({ inputRange: [0, 0.25, 0.45, 1], outputRange: [0.4, 1.15, 1, 0.9] }) },
+            { translateY: a.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 0, -26] }) },
+          ],
+        }}
+      >
+        <Icon name="heart" size={64} color={farben.orange} />
+      </Animated.View>
+    </View>
   );
 }
 
-/** Dünne Fortschrittslinie unten – läuft flüssig zwischen den Zeitmeldungen. */
+/** Fortschritt als orange Linie oben in der Karte – läuft flüssig mit. */
 function Fortschritt({ player, breite }: { player: VideoPlayer; breite: number }) {
   const anteil = useRef(new Animated.Value(0)).current;
   const letzter = useRef(0);
@@ -97,12 +119,13 @@ function Fortschritt({ player, breite }: { player: VideoPlayer; breite: number }
     letzter.current = neu;
   });
   return (
-    <View pointerEvents="none" style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 2.5, backgroundColor: "rgba(255,255,255,0.16)", overflow: "hidden" }}>
+    <View pointerEvents="none" style={{ height: 3, borderRadius: 1.5, backgroundColor: "rgba(255,255,255,0.14)", overflow: "hidden" }}>
       <Animated.View
         style={{
           width: breite,
           height: "100%",
-          backgroundColor: "rgba(255,255,255,0.9)",
+          borderRadius: 1.5,
+          backgroundColor: farben.orange,
           transform: [{ translateX: anteil.interpolate({ inputRange: [0, 1], outputRange: [-breite / 2, 0] }) }, { scaleX: anteil }],
         }}
       />
@@ -118,6 +141,8 @@ type Props = {
   clip: ClipEintrag;
   hoehe: number;
   breite: number;
+  /** Platz unten für die schwebende Tab-Leiste. */
+  unten: number;
   /** Diese Seite ist gerade zu sehen. */
   aktiv: boolean;
   /** Tab sichtbar und App im Vordergrund. */
@@ -131,7 +156,9 @@ type Props = {
   onMehr: (clip: ClipEintrag) => void;
 };
 
-function ClipSeiteInnen({ clip, hoehe, breite, aktiv, spielen, stumm, eigen, onLike, onFolgen, onKommentare, onTeilen, onMehr }: Props) {
+const KARTE_RAND = 12;
+
+function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eigen, onLike, onFolgen, onKommentare, onTeilen, onMehr }: Props) {
   const quelle = useMemo(() => ({ uri: dateiUrl(clip.video_pfad), useCaching: true }), [clip.video_pfad]);
   const player = useVideoPlayer(quelle, (p) => {
     p.loop = true;
@@ -142,7 +169,7 @@ function ClipSeiteInnen({ clip, hoehe, breite, aktiv, spielen, stumm, eigen, onL
   const [bereit, setBereit] = useState(false);
   const [pausiert, setPausiert] = useState(false);
   const [offen, setOffen] = useState(false);
-  const [herzen, setHerzen] = useState<{ id: number; x: number; y: number; dreh: number }[]>([]);
+  const [funken, setFunken] = useState<{ id: number; x: number; y: number }[]>([]);
   const bildDeckkraft = useRef(new Animated.Value(1)).current;
   const likeSkala = useRef(new Animated.Value(1)).current;
   const letzterTipp = useRef(0);
@@ -189,7 +216,7 @@ function ClipSeiteInnen({ clip, hoehe, breite, aktiv, spielen, stumm, eigen, onL
   }, [bildDeckkraft]);
 
   function likeAnimation() {
-    likeSkala.setValue(0.7);
+    likeSkala.setValue(0.6);
     Animated.spring(likeSkala, { toValue: 1, useNativeDriver: true, damping: 7, stiffness: 320, mass: 0.6 }).start();
   }
 
@@ -197,14 +224,14 @@ function ClipSeiteInnen({ clip, hoehe, breite, aktiv, spielen, stumm, eigen, onL
     const { locationX, locationY } = e.nativeEvent;
     const jetzt = Date.now();
     if (jetzt - letzterTipp.current < 280) {
-      // Doppeltippen: Herz + Gefällt mir (nie wieder entliken)
+      // Doppeltippen: Funke + Gefällt mir (nie wieder entliken)
       if (tippTimer.current) {
         clearTimeout(tippTimer.current);
         tippTimer.current = null;
       }
       letzterTipp.current = jetzt;
       stoss();
-      setHerzen((h) => [...h.slice(-4), { id: jetzt, x: locationX, y: locationY, dreh: Math.round(Math.random() * 36 - 18) }]);
+      setFunken((f) => [...f.slice(-3), { id: jetzt, x: locationX, y: locationY }]);
       if (!clip.gemocht) {
         likeAnimation();
         onLike(clip, true);
@@ -220,6 +247,7 @@ function ClipSeiteInnen({ clip, hoehe, breite, aktiv, spielen, stumm, eigen, onL
 
   const quer = (clip.breite ?? 0) > (clip.hoehe ?? 0);
   const fehler = status === "error";
+  const kartenBreite = breite - KARTE_RAND * 2;
 
   return (
     <View style={{ width: breite, height: hoehe, backgroundColor: "#000000", overflow: "hidden" }}>
@@ -244,7 +272,7 @@ function ClipSeiteInnen({ clip, hoehe, breite, aktiv, spielen, stumm, eigen, onL
       {/* Tippen: Pause, Doppeltippen: Gefällt mir */}
       <Pressable style={StyleSheet.absoluteFill} onPress={beiTipp} accessibilityLabel={pausiert ? "Abspielen" : "Anhalten"} />
 
-      <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.28)", "rgba(0,0,0,0.62)"]} locations={[0, 0.45, 1]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 300 }} />
+      <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.45)"]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 260 }} />
 
       {!bereit && aktiv && !fehler ? (
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center" }]}>
@@ -253,86 +281,49 @@ function ClipSeiteInnen({ clip, hoehe, breite, aktiv, spielen, stumm, eigen, onL
       ) : null}
 
       {fehler ? (
-        <View style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center", gap: 12 }]}>
-          <Icon name="alert-circle-outline" size={34} color="#FFFFFF" />
-          <Text style={{ ...schrift.textHalb, fontSize: 15, color: "#FFFFFF" }}>Video lädt gerade nicht</Text>
-          <Pressable
-            onPress={() => {
-              tippen();
-              player.replaceAsync(quelle).catch(() => {});
-            }}
-            style={{ paddingHorizontal: 16, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.16)", alignItems: "center", justifyContent: "center" }}
-          >
-            <Text style={{ ...schrift.textHalb, fontSize: 14, color: "#FFFFFF" }}>Nochmal versuchen</Text>
-          </Pressable>
+        <View style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center" }]} pointerEvents="box-none">
+          <Glas style={{ alignItems: "center", gap: 10, paddingHorizontal: 22, paddingVertical: 18, borderRadius: 22 }}>
+            <Icon name="alert-circle-outline" size={30} color="#FFFFFF" />
+            <Text style={{ ...schrift.textHalb, fontSize: 15, color: "#FFFFFF" }}>Video lädt gerade nicht</Text>
+            <Pressable
+              onPress={() => {
+                tippen();
+                player.replaceAsync(quelle).catch(() => {});
+              }}
+              style={{ paddingHorizontal: 16, height: 36, borderRadius: 18, backgroundColor: farben.orange, alignItems: "center", justifyContent: "center" }}
+            >
+              <Text style={{ ...schrift.textHalb, fontSize: 14, color: "#FFFFFF" }}>Nochmal versuchen</Text>
+            </Pressable>
+          </Glas>
         </View>
       ) : null}
 
       {pausiert && aktiv ? (
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center" }]}>
-          <View style={ICON_SCHATTEN}>
-            <Icon name="play" sf="play.fill" size={64} color="rgba(255,255,255,0.88)" />
-          </View>
+          <Glas pointerEvents="none" style={{ width: 78, height: 78, borderRadius: 39, alignItems: "center", justifyContent: "center" }}>
+            <Icon name="play" sf="play.fill" size={34} color="#FFFFFF" style={{ marginLeft: 4 }} />
+          </Glas>
         </View>
       ) : null}
 
-      {herzen.map((h) => (
-        <FliegendesHerz key={h.id} x={h.x} y={h.y} dreh={h.dreh} onFertig={() => setHerzen((alle) => alle.filter((x) => x.id !== h.id))} />
+      {funken.map((f) => (
+        <Funke key={f.id} x={f.x} y={f.y} onFertig={() => setFunken((alle) => alle.filter((x) => x.id !== f.id))} />
       ))}
 
-      {/* Rechte Leiste: Gefällt mir, Kommentare, Teilen, Mehr */}
-      <View style={{ position: "absolute", right: 8, bottom: 22, width: 64, alignItems: "center", gap: 20 }}>
-        <Aktion
-          icon="heart"
-          sf="heart.fill"
-          farbe={clip.gemocht ? LIKE_ROT : "#FFFFFF"}
-          zahl={kurzeZahl(clip.likes)}
-          label={clip.gemocht ? "Gefällt mir nicht mehr" : "Gefällt mir"}
-          skala={likeSkala}
-          onPress={() => {
-            tippen();
-            if (!clip.gemocht) likeAnimation();
-            onLike(clip, !clip.gemocht);
-          }}
-        />
-        <Aktion
-          icon="chatbubble-ellipses"
-          sf="ellipsis.bubble.fill"
-          zahl={kurzeZahl(clip.kommentare)}
-          label="Kommentare"
-          onPress={() => {
-            tippen();
-            onKommentare(clip);
-          }}
-        />
-        <Aktion
-          icon="arrow-redo"
-          sf="arrowshape.turn.up.right.fill"
-          zahl={clip.geteilt > 0 ? kurzeZahl(clip.geteilt) : "Teilen"}
-          label="Teilen"
-          onPress={() => {
-            tippen();
-            onTeilen(clip);
-          }}
-        />
-        <Aktion
-          icon="ellipsis-horizontal"
-          sf="ellipsis"
-          label="Mehr"
-          onPress={() => {
-            tippen();
-            onMehr(clip);
-          }}
-        />
-      </View>
+      {/* Glas-Karte: Ersteller, Titel, Beschreibung, Aktionen */}
+      <Glas klar style={{ position: "absolute", left: KARTE_RAND, right: KARTE_RAND, bottom: unten + 10, borderRadius: 26, padding: 14, gap: 10 }}>
+        {aktiv ? <Fortschritt player={player} breite={kartenBreite - 28} /> : <View style={{ height: 3 }} />}
 
-      {/* Unten links: Nutzer, Folgen, Titel, Beschreibung */}
-      <View style={{ position: "absolute", left: 14, right: 84, bottom: 20, gap: 7 }} pointerEvents="box-none">
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }} pointerEvents="box-none">
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Avatar name={clip.autor_name || clip.autor_benutzername} groesse={36} farbe={clip.autor_farbe || farben.orange} />
-          <Text numberOfLines={1} style={{ ...schrift.textFett, fontSize: 16, color: "#FFFFFF", flexShrink: 1, ...TEXT_SCHATTEN }}>
-            @{clip.autor_benutzername}
-          </Text>
+          <View style={{ flex: 1 }}>
+            <Text numberOfLines={1} style={{ ...schrift.textFett, fontSize: 15, color: "#FFFFFF" }}>
+              {clip.autor_name || clip.autor_benutzername}
+            </Text>
+            <Text numberOfLines={1} style={{ ...schrift.textMittel, fontSize: 12.5, color: "rgba(255,255,255,0.7)" }}>
+              @{clip.autor_benutzername}
+            </Text>
+          </View>
           {eigen ? null : (
             <Pressable
               onPress={() => {
@@ -343,37 +334,78 @@ function ClipSeiteInnen({ clip, hoehe, breite, aktiv, spielen, stumm, eigen, onL
               accessibilityRole="button"
               accessibilityLabel={clip.folge_ich ? "Nicht mehr folgen" : "Folgen"}
               style={({ pressed }) => ({
-                height: 28,
-                paddingHorizontal: 13,
-                borderRadius: 8,
+                height: 32,
+                paddingHorizontal: 14,
+                borderRadius: 16,
+                flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: clip.folge_ich ? "rgba(255,255,255,0.14)" : farben.orange,
-                borderWidth: clip.folge_ich ? 1 : 0,
-                borderColor: "rgba(255,255,255,0.38)",
+                gap: 5,
+                backgroundColor: clip.folge_ich ? "rgba(255,255,255,0.12)" : farben.orange,
                 opacity: pressed ? 0.8 : 1,
               })}
             >
-              <Text style={{ ...schrift.textHalb, fontSize: 13.5, color: "#FFFFFF" }}>{clip.folge_ich ? "Gefolgt" : "Folgen"}</Text>
+              {clip.folge_ich ? <Icon name="checkmark" size={13} color="#FFFFFF" weight="bold" /> : null}
+              <Text style={{ ...schrift.textHalb, fontSize: 13.5, color: "#FFFFFF" }}>{clip.folge_ich ? "Folge ich" : "Folgen"}</Text>
             </Pressable>
           )}
         </View>
-        <Text numberOfLines={2} style={{ ...schrift.textHalb, fontSize: 15.5, lineHeight: 20, color: "#FFFFFF", ...TEXT_SCHATTEN }}>
-          {clip.titel}
-        </Text>
-        {clip.beschreibung ? (
-          <Text
-            numberOfLines={offen ? 10 : 2}
-            onPress={() => setOffen((o) => !o)}
-            suppressHighlighting
-            style={{ ...schrift.text, fontSize: 14, lineHeight: 19, color: "#ECEEF0", ...TEXT_SCHATTEN }}
-          >
-            {clip.beschreibung}
-          </Text>
-        ) : null}
-      </View>
 
-      {aktiv ? <Fortschritt player={player} breite={breite} /> : null}
+        <View style={{ gap: 3 }}>
+          <Text numberOfLines={2} style={{ ...schrift.textHalb, fontSize: 16, lineHeight: 21, color: "#FFFFFF" }}>
+            {clip.titel}
+          </Text>
+          {clip.beschreibung ? (
+            <Text numberOfLines={offen ? 8 : 1} onPress={() => setOffen((o) => !o)} suppressHighlighting style={{ ...schrift.text, fontSize: 14, lineHeight: 19, color: "rgba(255,255,255,0.78)" }}>
+              {clip.beschreibung}
+            </Text>
+          ) : null}
+        </View>
+
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <Aktion
+            icon="heart"
+            sf={clip.gemocht ? "heart.fill" : "heart"}
+            text={kurzeZahl(clip.likes)}
+            aktiv={clip.gemocht}
+            label={clip.gemocht ? "Gefällt mir nicht mehr" : "Gefällt mir"}
+            skala={likeSkala}
+            onPress={() => {
+              tippen();
+              if (!clip.gemocht) likeAnimation();
+              onLike(clip, !clip.gemocht);
+            }}
+          />
+          <Aktion
+            icon="chatbubble-ellipses"
+            sf="bubble.left.and.bubble.right"
+            text={kurzeZahl(clip.kommentare)}
+            label="Kommentare"
+            onPress={() => {
+              tippen();
+              onKommentare(clip);
+            }}
+          />
+          <Aktion
+            icon="share-outline"
+            sf="square.and.arrow.up"
+            text={clip.geteilt > 0 ? kurzeZahl(clip.geteilt) : "Teilen"}
+            label="Teilen"
+            onPress={() => {
+              tippen();
+              onTeilen(clip);
+            }}
+          />
+          <Aktion
+            icon="ellipsis-horizontal"
+            sf="ellipsis"
+            label="Mehr"
+            onPress={() => {
+              tippen();
+              onMehr(clip);
+            }}
+          />
+        </View>
+      </Glas>
     </View>
   );
 }

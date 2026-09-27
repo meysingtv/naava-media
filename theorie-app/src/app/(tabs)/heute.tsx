@@ -179,7 +179,7 @@ export default function Home() {
           ziele={[
             { id: "themen", titel: "Themen", onPress: () => router.navigate("/lernen") },
             { id: "pruefung", titel: "Prüfung", onPress: () => router.navigate("/pruefen") },
-            { id: "statistik", titel: "Statistiken", onPress: () => router.navigate("/statistik") },
+            { id: "statistik", titel: "Statistiken", onPress: () => router.push("/statistik") },
             { id: "favoriten", titel: "Favoriten", onPress: () => router.push("/favoriten") },
           ]}
         />
@@ -192,7 +192,7 @@ export default function Home() {
           <Pressable
             onPress={() => {
               tippen();
-              router.navigate("/statistik");
+              router.push("/statistik");
             }}
             hitSlop={8}
             style={{ flexDirection: "row", alignItems: "center", gap: 4 }}

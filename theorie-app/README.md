@@ -34,7 +34,14 @@ Ohne Server läuft die App im Gastmodus – der Lernstand bleibt auf dem Gerät.
    Dann öffnen die Links aus der Bestätigungs- und der Passwort-Mail direkt die
    App (auf dem iPhone) und melden an.
 
-## Clips (Videos wie bei TikTok)
+## Tab-Leiste
+
+Die Leiste unten ist die native iOS-Tab-Leiste (ab iOS 26 im Liquid-Glass-Look,
+schwebend und beim Scrollen kleiner). iOS zeigt höchstens fünf Reiter:
+Home, Lernen, Clips, Prüfung, Profil. „Mein Fortschritt“ (Statistiken) ist
+über Home → „Alle ansehen“, die Statistik-Kachel und das Profil erreichbar.
+
+## Clips (kurze Videos)
 
 Der Reiter „Clips“ zeigt kurze Videos: oben „Entdecken“ und „Folge ich“,
 rechts Gefällt mir, Kommentare, Teilen und Mehr, oben rechts Ton an/aus.

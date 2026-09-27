@@ -144,7 +144,8 @@ export default function Profil() {
         </View>
 
         <Gruppe>
-          <Eintrag icon="trophy" farbe={farben.orange} titel="Rangliste & Duelle" unter="Wochen-Liga, Elo und Freundes-Duelle" onPress={() => router.push("/liga")} />
+          <Eintrag icon="stats-chart" farbe={farben.orange} titel="Mein Fortschritt" unter="Statistiken, Stärken & Schwächen" onPress={() => router.push("/statistik")} />
+          <Eintrag icon="trophy" farbe={farben.gelb} titel="Rangliste & Duelle" unter="Wochen-Liga, Elo und Freundes-Duelle" onPress={() => router.push("/liga")} />
           <Eintrag icon="bulb" farbe={farben.pink} titel="Kurz erklärt" unter={gemerkteClips > 0 ? `${gemerkteClips} gemerkt` : "Regeln in 30 Sekunden"} onPress={() => router.push("/kurz-erklaert")} />
           <Eintrag icon="heart" farbe="#FF8A1E" titel="Favoriten" unter="Gemerkte und schwierige Fragen" onPress={() => router.push("/favoriten")} />
           <Eintrag icon="calculator" farbe={farben.gelb} titel="Formeln" unter="Anhalteweg & Co." onPress={() => router.push("/formeln")} />

@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { SFSymbol } from "expo-symbols";
 
 import { ClipSeite } from "@/components/clip-seite";
+import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
 import { KommentarBlatt } from "@/components/kommentar-blatt";
 import { useLeistenHoehe } from "@/components/tab-leiste";
@@ -60,23 +61,29 @@ function auswahl(titel: string, optionen: { text: string; gefahr?: boolean }[]):
   });
 }
 
-function Reiter({ titel, aktiv, onPress }: { titel: string; aktiv: boolean; onPress: () => void }) {
+/** Umschalter „Entdecken / Folge ich“ als Glas-Kapsel mit orangem Schieber. */
+function Umschalter({ wert, onWechsel }: { wert: FeedArt; onWechsel: (a: FeedArt) => void }) {
+  const optionen: { id: FeedArt; titel: string }[] = [
+    { id: "entdecken", titel: "Entdecken" },
+    { id: "folge_ich", titel: "Folge ich" },
+  ];
   return (
-    <Pressable onPress={onPress} hitSlop={10} accessibilityRole="tab" accessibilityState={{ selected: aktiv }} style={{ alignItems: "center", gap: 5 }}>
-      <Text
-        style={{
-          ...schrift.textFett,
-          fontSize: 17,
-          color: aktiv ? "#FFFFFF" : "rgba(255,255,255,0.62)",
-          textShadowColor: "rgba(0,0,0,0.45)",
-          textShadowRadius: 4,
-          textShadowOffset: { width: 0, height: 1 },
-        }}
-      >
-        {titel}
-      </Text>
-      <View style={{ width: 24, height: 3, borderRadius: 1.5, backgroundColor: aktiv ? "#FFFFFF" : "transparent" }} />
-    </Pressable>
+    <Glas style={{ flexDirection: "row", padding: 3, borderRadius: 21, gap: 2 }}>
+      {optionen.map((o) => {
+        const aktiv = o.id === wert;
+        return (
+          <Pressable
+            key={o.id}
+            onPress={() => !aktiv && onWechsel(o.id)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: aktiv }}
+            style={{ height: 34, paddingHorizontal: 16, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: aktiv ? farben.orange : "transparent" }}
+          >
+            <Text style={{ ...(aktiv ? schrift.textFett : schrift.textHalb), fontSize: 14.5, color: aktiv ? "#FFFFFF" : "rgba(255,255,255,0.78)" }}>{o.titel}</Text>
+          </Pressable>
+        );
+      })}
+    </Glas>
   );
 }
 
@@ -90,9 +97,12 @@ function RundTaste({ icon, sf, label, onPress }: { icon: IconName; sf: SFSymbol;
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: pressed ? "rgba(0,0,0,0.45)" : "rgba(0,0,0,0.28)" })}
     >
-      <Icon name={icon} sf={sf} size={20} color="#FFFFFF" weight="semibold" />
+      {({ pressed }) => (
+        <Glas interaktiv style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
+          <Icon name={icon} sf={sf} size={18} color="#FFFFFF" weight="semibold" />
+        </Glas>
+      )}
     </Pressable>
   );
 }
@@ -355,6 +365,7 @@ export default function Clips() {
           clip={item}
           hoehe={masse.hoehe}
           breite={masse.breite}
+          unten={leiste}
           aktiv={item.id === aktivId}
           spielen={spielen}
           stumm={stumm}
@@ -366,7 +377,7 @@ export default function Clips() {
           onMehr={onMehr}
         />
       ) : null,
-    [masse, aktivId, spielen, stumm, ich, onLike, onFolgen, onKommentare, onTeilen, onMehr],
+    [masse, leiste, aktivId, spielen, stumm, ich, onLike, onFolgen, onKommentare, onTeilen, onMehr],
   );
 
   const startIndex = useMemo(() => {
@@ -449,21 +460,18 @@ export default function Clips() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#000000" }}>
-      <View style={{ flex: 1, marginBottom: leiste }} onLayout={(e) => setMasse({ breite: e.nativeEvent.layout.width, hoehe: e.nativeEvent.layout.height })}>
+      <View style={{ flex: 1 }} onLayout={(e) => setMasse({ breite: e.nativeEvent.layout.width, hoehe: e.nativeEvent.layout.height })}>
         {inhalt}
       </View>
 
       {/* Kopf über dem Video */}
-      <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top + 84 }} />
+      <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.42)", "rgba(0,0,0,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top + 90 }} />
       <View
         pointerEvents="box-none"
-        style={{ position: "absolute", top: insets.top + 2, left: 0, right: 0, height: 48, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12 }}
+        style={{ position: "absolute", top: insets.top + 4, left: 0, right: 0, height: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12 }}
       >
         <View style={{ width: 40 }}>{rechte.ersteller ? <RundTaste icon="add" sf="plus" label="Clip hochladen" onPress={() => router.push("/clip-hochladen")} /> : null}</View>
-        <View style={{ flexDirection: "row", gap: 24, paddingTop: 6 }}>
-          <Reiter titel="Entdecken" aktiv={art === "entdecken"} onPress={() => wechseln("entdecken")} />
-          <Reiter titel="Folge ich" aktiv={art === "folge_ich"} onPress={() => wechseln("folge_ich")} />
-        </View>
+        <Umschalter wert={art} onWechsel={wechseln} />
         <RundTaste
           icon={stumm ? "volume-mute" : "volume-high"}
           sf={stumm ? "speaker.slash.fill" : "speaker.wave.2.fill"}

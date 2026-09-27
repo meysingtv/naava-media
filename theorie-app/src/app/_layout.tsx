@@ -112,6 +112,7 @@ function Navigation() {
           <Stack.Screen name="duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="online-duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="kurz-erklaert" />
+          <Stack.Screen name="statistik" />
           <Stack.Screen name="clip-hochladen" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="clip-ersteller" />
           <Stack.Screen name="liga" />

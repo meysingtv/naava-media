@@ -8,8 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "@/components/icon";
 import { KategorieMini } from "@/components/foto";
 import { Ring } from "@/components/grafik";
-import { useInhaltUnten } from "@/components/tab-leiste";
-import { KopfTaste, Segment, kopfOben } from "@/components/ui";
+import { KopfTaste, Segment, kopfOben, zurueck } from "@/components/ui";
 import { THEMEN, themaVon, type ThemaId } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
 import { auswertung, fortschritt, lernzeitText, serieAktuell, tagKey, useStand, wochenStart, type Stand, type Zeitraum } from "@/lib/stand";
@@ -173,7 +172,6 @@ function Diagramm({ saeulen }: { saeulen: Saeule[] }) {
 
 export default function MeinFortschritt() {
   const insets = useSafeAreaInsets();
-  const inhaltUnten = useInhaltUnten();
   const { stand } = useStand();
   const [zeitraum, setZeitraum] = useState<Zeitraum>("woche");
   const [alle, setAlle] = useState(false);
@@ -201,7 +199,7 @@ export default function MeinFortschritt() {
           <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
             <Text style={{ ...schrift.titelFett, fontSize: 20, color: "#FFFFFF" }}>Mein Fortschritt</Text>
           </View>
-          <KopfTaste icon="arrow-back" label="Zur Startseite" onPress={() => router.navigate("/heute")} />
+          <KopfTaste icon="arrow-back" label="Zurück" onPress={zurueck} />
           <Pressable
             onPress={() => {
               tippen();
@@ -216,7 +214,7 @@ export default function MeinFortschritt() {
         </View>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: inhaltUnten }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: insets.bottom + 28 }} showsVerticalScrollIndicator={false}>
         <Segment<Zeitraum>
           wert={zeitraum}
           onWechsel={setZeitraum}

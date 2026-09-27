@@ -720,4 +720,26 @@ end;
 $$;
 grant execute on function public.lern_clip_ersteller_entfernen(uuid) to authenticated;
 
+-- 11) Benutzernamen ändern (Einstellungen) ------------------------------
+create or replace function public.lern_benutzername_aendern(p_name text)
+returns text
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_ich  uuid := auth.uid();
+  v_name text := lower(btrim(coalesce(p_name, '')));
+begin
+  if v_ich is null then raise exception 'Nicht angemeldet'; end if;
+  if v_name !~ '^[a-z0-9_.]{3,20}$' then
+    raise exception 'Benutzername: 3–20 Zeichen, nur Buchstaben, Zahlen, Punkt und Unterstrich';
+  end if;
+  if exists (select 1 from public.lern_profil p where p.benutzername = v_name and p.id <> v_ich) then
+    raise exception 'Dieser Benutzername ist schon vergeben';
+  end if;
+  update public.lern_profil p set benutzername = v_name where p.id = v_ich;
+  return v_name;
+end;
+$$;
+grant execute on function public.lern_benutzername_aendern(text) to authenticated;
+
 notify pgrst, 'reload schema';

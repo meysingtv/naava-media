@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Linking, ScrollView, Switch, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -31,10 +31,45 @@ const AGB = process.env.EXPO_PUBLIC_AGB_URL;
 export default function Einstellungen() {
   const insets = useSafeAreaInsets();
   const { stand, setzen, zuruecksetzen } = useStand();
-  const { session, profil, gast, anzeigeName, profilSpeichern, passwortAendern } = useKonto();
+  const { session, profil, gast, anzeigeName, profilSpeichern, passwortAendern, benutzernameFrei, benutzernameAendern } = useKonto();
   const rechte = useClipRechte();
   const [name, setName] = useState(anzeigeName);
+  const [nameAngefasst, setNameAngefasst] = useState(false);
   const [speichert, setSpeichert] = useState(false);
+  const [benutzer, setBenutzer] = useState(profil?.benutzername ?? "");
+  const [benutzerAngefasst, setBenutzerAngefasst] = useState(false);
+  const [frei, setFrei] = useState<boolean | null>(null);
+  const [speichertBenutzer, setSpeichertBenutzer] = useState(false);
+
+  // Werte übernehmen, sobald das Profil geladen ist (solange nichts getippt wurde).
+  useEffect(() => {
+    if (!nameAngefasst) setName(anzeigeName);
+  }, [anzeigeName, nameAngefasst]);
+  useEffect(() => {
+    if (!benutzerAngefasst) setBenutzer(profil?.benutzername ?? "");
+  }, [profil?.benutzername, benutzerAngefasst]);
+
+  const benutzerGueltig = /^[a-z0-9_.]{3,20}$/.test(benutzer);
+  const benutzerGeaendert = Boolean(profil) && benutzer !== profil?.benutzername;
+
+  // Verfügbarkeit prüfen, kurz nachdem man aufgehört hat zu tippen.
+  useEffect(() => {
+    setFrei(null);
+    if (!benutzerGeaendert || !benutzerGueltig) return;
+    const t = setTimeout(async () => setFrei(await benutzernameFrei(benutzer)), 450);
+    return () => clearTimeout(t);
+  }, [benutzer, benutzerGeaendert, benutzerGueltig, benutzernameFrei]);
+
+  async function benutzerSpeichern() {
+    setSpeichertBenutzer(true);
+    const f = await benutzernameAendern(benutzer);
+    setSpeichertBenutzer(false);
+    if (f) Alert.alert("Nicht gespeichert", f);
+    else {
+      setBenutzerAngefasst(false);
+      Alert.alert("Gespeichert", `Du heißt jetzt @${benutzer}.`);
+    }
+  }
   const [neuesPasswort, setNeuesPasswort] = useState("");
   const [aendertPasswort, setAendertPasswort] = useState(false);
 
@@ -69,6 +104,7 @@ export default function Einstellungen() {
     const f = await profilSpeichern({ name: name.trim() });
     setSpeichert(false);
     if (f) Alert.alert("Nicht gespeichert", f);
+    else setNameAngefasst(false);
   }
 
   function zuruecksetzenFragen() {
@@ -158,13 +194,63 @@ export default function Einstellungen() {
         </View>
 
         <View>
+          <Abschnitt titel="Profil" klein />
+          <View style={{ gap: abstand(2) }}>
+            <T v="klein">Name – so begrüßt dich die App</T>
+            <Eingabe
+              icon="person-outline"
+              value={name}
+              onChangeText={(t) => {
+                setNameAngefasst(true);
+                setName(t);
+              }}
+              placeholder="Dein Name"
+              autoCapitalize="words"
+              maxLength={40}
+            />
+            {name.trim() && name.trim() !== anzeigeName ? <Knopf titel="Namen speichern" klein laedt={speichert} onPress={nameSpeichern} /> : null}
+
+            {profil ? (
+              <>
+                <T v="klein" style={{ marginTop: abstand(3) }}>
+                  Benutzername – für Rangliste, Clips und Kommentare
+                </T>
+                <Eingabe
+                  icon="at"
+                  value={benutzer}
+                  onChangeText={(t) => {
+                    setBenutzerAngefasst(true);
+                    setBenutzer(t.toLowerCase().replace(/[^a-z0-9_.]/g, "").slice(0, 20));
+                  }}
+                  placeholder="benutzername"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  fehler={benutzerGeaendert && (!benutzerGueltig || frei === false)}
+                />
+                {benutzerGeaendert ? (
+                  <T v="klein" farbe={!benutzerGueltig || frei === false ? farben.rot : frei ? farben.gruen : farben.text3}>
+                    {!benutzerGueltig
+                      ? "3–20 Zeichen: Buchstaben, Zahlen, Punkt und Unterstrich."
+                      : frei === false
+                        ? "Dieser Benutzername ist schon vergeben."
+                        : frei
+                          ? "Der Benutzername ist frei."
+                          : "Prüfe, ob der Name frei ist …"}
+                  </T>
+                ) : null}
+                {benutzerGeaendert ? (
+                  <Knopf titel="Benutzernamen speichern" klein laedt={speichertBenutzer} deaktiviert={!benutzerGueltig || frei !== true} onPress={benutzerSpeichern} />
+                ) : null}
+              </>
+            ) : null}
+          </View>
+        </View>
+
+        <View>
           <Abschnitt titel="Konto" klein />
           {session ? (
             <View style={{ gap: abstand(3) }}>
-              <Eingabe icon="person-outline" value={name} onChangeText={setName} placeholder="Vorname" autoCapitalize="words" />
-              {name.trim() && name.trim() !== anzeigeName ? <Knopf titel="Namen speichern" klein laedt={speichert} onPress={nameSpeichern} /> : null}
               <Gruppe>
-                {profil ? <Zeile icon="at" titel={`@${profil.benutzername}`} unter="Benutzername" /> : null}
                 <Zeile icon="mail-outline" titel={session.user.email ?? ""} unter="E-Mail" />
               </Gruppe>
               <PasswortEingabe value={neuesPasswort} onChangeText={setNeuesPasswort} placeholder="Neues Passwort (mind. 8 Zeichen)" />

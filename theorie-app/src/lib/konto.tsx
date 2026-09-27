@@ -41,6 +41,7 @@ type KontoKontext = {
   alsGast: (name: string) => Promise<void>;
   profilSpeichern: (teil: { name?: string; klasse?: string; bundesland?: string | null }) => Promise<string | null>;
   benutzernameFrei: (name: string) => Promise<boolean | null>;
+  benutzernameAendern: (neu: string) => Promise<string | null>;
   profilNeuLaden: () => Promise<void>;
   /** Über den Link „Passwort zurücksetzen“ angemeldet – neues Passwort fällig. */
   passwortNeuFaellig: boolean;
@@ -224,6 +225,17 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     return () => abo.remove();
   }, []);
 
+  const benutzernameAendern = useCallback(
+    async (neu: string) => {
+      if (!session) return "Bitte melde dich an.";
+      const { error } = await supabase.rpc("lern_benutzername_aendern", { p_name: neu.trim().toLowerCase() });
+      if (error) return /duplicate|vergeben/i.test(error.message) ? "Dieser Benutzername ist schon vergeben." : fehlerText(error.message);
+      await profilLaden(session);
+      return null;
+    },
+    [session, profilLaden],
+  );
+
   const wert = useMemo<KontoKontext>(() => {
     const gast = !session && gastName != null;
     return {
@@ -241,11 +253,12 @@ export function KontoProvider({ children }: { children: ReactNode }) {
       alsGast,
       profilSpeichern,
       benutzernameFrei,
+      benutzernameAendern,
       profilNeuLaden: () => profilLaden(session),
       passwortNeuFaellig,
       passwortNeuErledigt: () => setPasswortNeuFaellig(false),
     };
-  }, [laedt, session, profil, gastName, registrieren, anmelden, passwortVergessen, passwortAendern, abmelden, alsGast, profilSpeichern, benutzernameFrei, profilLaden, passwortNeuFaellig]);
+  }, [laedt, session, profil, gastName, registrieren, anmelden, passwortVergessen, passwortAendern, abmelden, alsGast, profilSpeichern, benutzernameFrei, benutzernameAendern, profilLaden, passwortNeuFaellig]);
 
   return <Kontext.Provider value={wert}>{children}</Kontext.Provider>;
 }
