@@ -362,9 +362,6 @@ function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eig
           )}
         </View>
 
-        <Text numberOfLines={2} style={{ ...schrift.textHalb, fontSize: 16, lineHeight: 21, color: "#FFFFFF", ...SCHATTEN_TEXT }}>
-          {clip.titel}
-        </Text>
         {clip.beschreibung ? (
           <Text
             numberOfLines={offen ? 8 : 2}

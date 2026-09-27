@@ -6,7 +6,7 @@ import { useVideoPlayer, VideoView } from "expo-video";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Eingabe, Knopf, Kopf, T } from "@/components/ui";
+import { Knopf, Kopf, T } from "@/components/ui";
 import { clipHochladen, MAX_VIDEO_BYTES, useClipRechte } from "@/lib/clips-server";
 import { erfolg, tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
@@ -40,7 +40,6 @@ export default function ClipHochladen() {
   const { session } = useKonto();
   const rechte = useClipRechte();
   const [video, setVideo] = useState<Video | null>(null);
-  const [titel, setTitel] = useState("");
   const [beschreibung, setBeschreibung] = useState("");
   const [fortschritt, setFortschritt] = useState<number | null>(null);
   const abbruch = useRef<{ aktuell: (() => void) | null }>({ aktuell: null });
@@ -76,7 +75,7 @@ export default function ClipHochladen() {
   }
 
   async function veroeffentlichen() {
-    if (!video || !titel.trim() || fortschritt != null) return;
+    if (!video || fortschritt != null) return;
     setFortschritt(0);
     try {
       await clipHochladen({
@@ -84,7 +83,8 @@ export default function ClipHochladen() {
         breite: video.breite,
         hoehe: video.hoehe,
         dauer: video.dauer,
-        titel,
+        // Kein Titel im Video – intern (Teilen, Menü) die erste Zeile der Beschreibung.
+        titel: beschreibung.trim().split("\n")[0].slice(0, 60) || "Clip",
         beschreibung,
         onFortschritt: (a) => setFortschritt(a),
         abbruch: abbruch.current,
@@ -160,20 +160,12 @@ export default function ClipHochladen() {
         )}
 
         <View style={{ gap: abstand(2) }}>
-          <T v="h3">Titel</T>
-          <Eingabe value={titel} onChangeText={setTitel} placeholder="Worum geht es? z. B. „Rechts vor links“" maxLength={120} editable={!laedtHoch} returnKeyType="next" />
-          <T v="klein" style={{ alignSelf: "flex-end" }}>
-            {titel.length}/120
-          </T>
-        </View>
-
-        <View style={{ gap: abstand(2) }}>
           <T v="h3">Beschreibung (optional)</T>
           <View style={{ minHeight: 110, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linieStark, paddingHorizontal: abstand(4), paddingVertical: abstand(3) }}>
             <TextInput
               value={beschreibung}
               onChangeText={setBeschreibung}
-              placeholder="Kurz erklären, was man im Clip lernt …"
+              placeholder="Worum geht es im Clip? z. B. „Rechts vor links in 30 Sekunden“"
               placeholderTextColor={farben.text4}
               selectionColor={farben.orange}
               keyboardAppearance="dark"
@@ -207,7 +199,7 @@ export default function ClipHochladen() {
             />
           </View>
         ) : (
-          <Knopf titel="Veröffentlichen" icon="arrow-up" deaktiviert={!video || !titel.trim()} onPress={veroeffentlichen} />
+          <Knopf titel="Veröffentlichen" icon="arrow-up" deaktiviert={!video} onPress={veroeffentlichen} />
         )}
       </ScrollView>
     </KeyboardAvoidingView>
