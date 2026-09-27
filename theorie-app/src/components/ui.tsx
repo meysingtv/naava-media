@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { tippen } from "@/lib/haptik";
-import { abstand, farben, radius, RAND, schrift } from "@/lib/theme";
+import { abstand, farben, radius, RAND, schrift, verlauf } from "@/lib/theme";
 
 export type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -197,8 +197,8 @@ export function Knopf({
     >
       {art === "primaer" ? (
         <LinearGradient
-          colors={["#FF8418", farben.orange, farben.orangeTief]}
-          locations={[0, 0.55, 1]}
+          colors={verlauf.knopf}
+          locations={[0, 0.5, 1]}
           style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: rund }}
           pointerEvents="none"
         />
@@ -367,7 +367,7 @@ export function Segment<W extends string>({
             shadowOffset: { width: 0, height: 3 },
           }}
         >
-          <LinearGradient colors={["#FFA022", farben.orangeHell]} style={{ flex: 1, borderRadius: 17 }} />
+          <LinearGradient colors={verlauf.segment} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ flex: 1, borderRadius: 17 }} />
         </Animated.View>
       ) : null}
       {optionen.map((o) => {

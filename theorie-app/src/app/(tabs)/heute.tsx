@@ -1,5 +1,4 @@
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Image, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,13 +7,14 @@ import Svg, { Path } from "react-native-svg";
 import { Icon } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { Ring } from "@/components/grafik";
+import { Schnellzugriff } from "@/components/schnellzugriff";
 import { useInhaltUnten } from "@/components/tab-leiste";
 import { T } from "@/components/ui";
 import { FOTOS } from "@/lib/fotos";
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { fortschritt, heuteBeantwortet, serieAktuell, useStand, wocheTage } from "@/lib/stand";
-import { farben, handschrift, orangeVerlauf, schrift } from "@/lib/theme";
+import { farben, handschrift, schrift, verlauf } from "@/lib/theme";
 
 const RAND = 16;
 
@@ -29,39 +29,8 @@ const ZITATE: [string, string][] = [
 function Pinselstrich() {
   return (
     <Svg width={104} height={22} viewBox="0 0 104 22">
-      <Path d="M3 18 C 28 12, 58 7, 101 3 C 70 8.5, 38 14, 5 20.5 Z" fill={farben.orange} />
+      <Path d="M3 18 C 28 12, 58 7, 101 3 C 70 8.5, 38 14, 5 20.5 Z" fill="#F66A16" />
     </Svg>
-  );
-}
-
-function Kachel({
-  titel,
-  verlauf,
-  rand,
-  onPress,
-  children,
-}: {
-  titel: string;
-  verlauf: [string, string];
-  rand: string;
-  onPress: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <Pressable
-      onPress={() => {
-        tippen();
-        onPress();
-      }}
-      style={({ pressed }) => ({ flex: 1, height: 90, borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: rand, transform: [{ scale: pressed ? 0.96 : 1 }] })}
-    >
-      <LinearGradient colors={verlauf} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 8 }}>
-        {children}
-        <Text style={{ ...schrift.textHalb, fontSize: 15, color: "#FFFFFF" }} numberOfLines={1}>
-          {titel}
-        </Text>
-      </LinearGradient>
-    </Pressable>
   );
 }
 
@@ -69,11 +38,11 @@ function Punkt({ zustand }: { zustand: "voll" | "halb" | "leer" }) {
   if (zustand === "halb") {
     return (
       <View style={{ width: 13, height: 13, borderRadius: 6.5, overflow: "hidden", flexDirection: "row", backgroundColor: "#3F4650" }}>
-        <View style={{ width: 6.5, height: 13, backgroundColor: farben.orange }} />
+        <View style={{ width: 6.5, height: 13, backgroundColor: farben.orangeHell }} />
       </View>
     );
   }
-  return <View style={{ width: 13, height: 13, borderRadius: 6.5, backgroundColor: zustand === "voll" ? farben.orange : "#3F4650" }} />;
+  return <View style={{ width: 13, height: 13, borderRadius: 6.5, backgroundColor: zustand === "voll" ? farben.orangeHell : "#3F4650" }} />;
 }
 
 export default function Home() {
@@ -175,10 +144,10 @@ export default function Home() {
             router.push({ pathname: "/training", params: { modus: "smart" } });
           }}
           style={({ pressed }) => ({
-            marginTop: -62,
-            marginHorizontal: 24,
-            height: 58,
-            borderRadius: 29,
+            marginTop: -64,
+            marginHorizontal: 29,
+            height: 60,
+            borderRadius: 30,
             overflow: "hidden",
             transform: [{ scale: pressed ? 0.98 : 1 }],
             shadowColor: farben.orange,
@@ -187,29 +156,33 @@ export default function Home() {
             shadowOffset: { width: 0, height: 6 },
           })}
         >
-          <LinearGradient colors={orangeVerlauf} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ flex: 1, flexDirection: "row", alignItems: "center", paddingLeft: 32, paddingRight: 5 }}>
+          <LinearGradient colors={verlauf.knopf} locations={[0, 0.5, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+          <LinearGradient
+            colors={verlauf.knopfSchein}
+            locations={[0, 0.1, 0.25, 0.36]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          />
+          <View style={{ flex: 1, flexDirection: "row", alignItems: "center", paddingLeft: 32 }}>
             <Text style={{ ...schrift.textHalb, fontSize: 20, color: "#FFFFFF", flex: 1 }}>Lernen starten</Text>
-            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(255,255,255,0.22)", alignItems: "center", justifyContent: "center" }}>
+            {/* Heller Kreis bildet das rechte Ende des Knopfs */}
+            <LinearGradient colors={["#FE9145", "#FD8538"]} style={{ width: 60, height: 60, borderRadius: 30, alignItems: "center", justifyContent: "center" }}>
               <Icon name="arrow-forward" size={25} color="#FFFFFF" weight="semibold" />
-            </View>
-          </LinearGradient>
+            </LinearGradient>
+          </View>
         </Pressable>
 
         {/* Schnellzugriff */}
-        <View style={{ flexDirection: "row", gap: 9, paddingHorizontal: RAND, marginTop: 18 }}>
-          <Kachel titel="Themen" verlauf={["#4E3013", "#2A1B0D"]} rand="rgba(255,160,80,0.32)" onPress={() => router.navigate("/lernen")}>
-            <Icon name="book" size={34} color="#FFA83A" />
-          </Kachel>
-          <Kachel titel="Prüfung" verlauf={["#2F1B2C", "#1A1119"]} rand="rgba(255,90,140,0.2)" onPress={() => router.navigate("/pruefen")}>
-            <MaterialCommunityIcons name="bullseye-arrow" size={34} color={farben.pink} />
-          </Kachel>
-          <Kachel titel="Statistiken" verlauf={["#1F212A", "#14161C"]} rand="rgba(255,255,255,0.09)" onPress={() => router.navigate("/statistik")}>
-            <Icon name="stats-chart" size={32} color="#E3E6EA" />
-          </Kachel>
-          <Kachel titel="Favoriten" verlauf={["#181B1F", "#0F1215"]} rand="rgba(255,255,255,0.08)" onPress={() => router.push("/favoriten")}>
-            <Icon name="heart" size={32} color="#FF8A1E" />
-          </Kachel>
-        </View>
+        <Schnellzugriff
+          style={{ marginTop: 20 }}
+          ziele={[
+            { id: "themen", titel: "Themen", onPress: () => router.navigate("/lernen") },
+            { id: "pruefung", titel: "Prüfung", onPress: () => router.navigate("/pruefen") },
+            { id: "statistik", titel: "Statistiken", onPress: () => router.navigate("/statistik") },
+            { id: "favoriten", titel: "Favoriten", onPress: () => router.push("/favoriten") },
+          ]}
+        />
 
         {/* Dein Fortschritt */}
         <View style={{ paddingHorizontal: RAND, marginTop: 22, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
@@ -245,15 +218,17 @@ export default function Home() {
             gap: 18,
           }}
         >
-          <Ring anteil={gesamt.anteil} groesse={72} dicke={8} spur={farben.ringSpur}>
-            <Text style={{ ...schrift.titel, fontSize: 19, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{Math.round(gesamt.anteil * 100)}%</Text>
-          </Ring>
+          <View style={Platform.OS === "ios" ? { shadowColor: farben.orange, shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 0 } } : undefined}>
+            <Ring anteil={gesamt.anteil} groesse={72} dicke={8} spur={farben.ringSpur}>
+              <Text style={{ ...schrift.titel, fontSize: 19, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{Math.round(gesamt.anteil * 100)}%</Text>
+            </Ring>
+          </View>
           <View style={{ flex: 1, gap: 12 }}>
             <Text style={{ ...schrift.text, fontSize: 16, color: "#FFFFFF" }}>
               {gesamt.richtig} von {gesamt.gesamt} Fragen
             </Text>
             <View style={{ height: 10, borderRadius: 5, backgroundColor: farben.flaeche3, overflow: "hidden" }}>
-              <LinearGradient colors={orangeVerlauf} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ width: `${Math.max(2, gesamt.anteil * 100)}%`, height: "100%", borderRadius: 5 }} />
+              <LinearGradient colors={verlauf.balken} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ width: `${Math.max(2, gesamt.anteil * 100)}%`, height: "100%", borderRadius: 5 }} />
             </View>
           </View>
         </View>
@@ -261,7 +236,7 @@ export default function Home() {
         {/* Serie und Woche */}
         <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: RAND, marginTop: 10 }}>
           <View style={{ flex: 0.86, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, height: 64, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
-            <Icon name="flame" size={34} color={farben.orange} />
+            <Icon name="flame" size={34} color={farben.flamme} />
             <View>
               <Text style={{ ...schrift.titel, fontSize: 23, lineHeight: 27, color: "#FFFFFF" }}>{serie}</Text>
               <Text style={{ ...schrift.text, fontSize: 14, color: "#D3D7DC" }}>{serie === 1 ? "Tag in Folge" : "Tage in Folge"}</Text>

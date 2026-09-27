@@ -11,8 +11,8 @@ const TAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
 function farbeFuer(n: number): string {
   if (n <= 0) return "#161C22";
-  if (n < 10) return "rgba(250,106,28,0.35)";
-  if (n < 30) return "rgba(250,106,28,0.65)";
+  if (n < 10) return "rgba(252,91,14,0.35)";
+  if (n < 30) return "rgba(252,91,14,0.65)";
   return farben.orange;
 }
 
@@ -78,7 +78,7 @@ export default function Kalender() {
 
         <View style={{ flexDirection: "row", gap: 10 }}>
           {[
-            { icon: "flame" as const, farbe: farben.orange, wert: String(serieAktuell(stand)), label: "Tage in Folge" },
+            { icon: "flame" as const, farbe: farben.flamme, wert: String(serieAktuell(stand)), label: "Tage in Folge" },
             { icon: "calendar-outline" as const, farbe: farben.blau, wert: String(gelernteTage), label: "Lerntage" },
             { icon: "checkmark-circle" as const, farbe: farben.gruen, wert: String(summe), label: "Antworten" },
           ].map((k) => (

@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
 import { Animated, Easing, Text, View } from "react-native";
-import Svg, { Circle, Polygon, Rect } from "react-native-svg";
+import Svg, { Circle, Defs, LinearGradient, Path, Polygon, Rect, Stop } from "react-native-svg";
 
 import { farben, svgSchrift } from "@/lib/theme";
 
-const AnimCircle = Animated.createAnimatedComponent(Circle);
+const AnimPath = Animated.createAnimatedComponent(Path);
 
 // ---------------------------------------------------------------------------
 // Logo: Straße in Perspektive + Wortmarke
@@ -38,6 +38,7 @@ export function Ring({
   dicke = 6,
   farbe = farben.orange,
   spur = farben.flaeche3,
+  verlauf,
   animiert = true,
   children,
 }: {
@@ -46,11 +47,17 @@ export function Ring({
   dicke?: number;
   farbe?: string;
   spur?: string;
+  /** Verlauf des Bogens von oben nach unten (statt einer Farbe). */
+  verlauf?: readonly [string, string];
   animiert?: boolean;
   children?: React.ReactNode;
 }) {
   const r = (groesse - dicke) / 2;
   const umfang = 2 * Math.PI * r;
+  const m = groesse / 2;
+  // Kreis als Pfad, der oben beginnt und im Uhrzeigersinn läuft (ohne Drehung,
+  // damit der Verlauf wirklich von oben nach unten geht).
+  const bogen = `M ${m} ${m - r} A ${r} ${r} 0 1 1 ${m} ${m + r} A ${r} ${r} 0 1 1 ${m} ${m - r}`;
   const wert = useRef(new Animated.Value(animiert ? 0 : anteil)).current;
 
   useEffect(() => {
@@ -60,18 +67,23 @@ export function Ring({
   return (
     <View style={{ width: groesse, height: groesse, alignItems: "center", justifyContent: "center" }}>
       <Svg width={groesse} height={groesse} style={{ position: "absolute" }}>
+        {verlauf ? (
+          <Defs>
+            <LinearGradient id={`ring-${groesse}`} gradientUnits="userSpaceOnUse" x1={0} y1={0} x2={0} y2={groesse}>
+              <Stop offset="0" stopColor={verlauf[0]} />
+              <Stop offset="1" stopColor={verlauf[1]} />
+            </LinearGradient>
+          </Defs>
+        ) : null}
         <Circle cx={groesse / 2} cy={groesse / 2} r={r} stroke={spur} strokeWidth={dicke} fill="none" />
-        <AnimCircle
-          cx={groesse / 2}
-          cy={groesse / 2}
-          r={r}
-          stroke={farbe}
+        <AnimPath
+          d={bogen}
+          stroke={verlauf ? `url(#ring-${groesse})` : farbe}
           strokeWidth={dicke}
           fill="none"
           strokeLinecap="round"
           strokeDasharray={`${umfang} ${umfang}`}
           strokeDashoffset={wert.interpolate({ inputRange: [0, 1], outputRange: [umfang, 0] })}
-          transform={`rotate(-90 ${groesse / 2} ${groesse / 2})`}
         />
       </Svg>
       {children}

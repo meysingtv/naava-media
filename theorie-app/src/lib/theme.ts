@@ -20,13 +20,16 @@ export const farben = {
   text3: "#8F959D",
   text4: "#5C626A",
 
-  orange: "#FA6A1C",
-  orangeHell: "#FF8A2B",
-  orangeTief: "#F4501A",
-  orangeSoft: "rgba(250,106,28,0.15)",
-  orangeLinie: "rgba(250,106,28,0.6)",
+  // Orange aus der Vorlage gemessen: kräftiges Rot-Orange für Knöpfe, Ring
+  // und Tab-Leiste, wärmeres Orange für Punkte, Balken und Flamme.
+  orange: "#FC5B0E",
+  orangeHell: "#F97A1A",
+  orangeTief: "#F8470D",
+  orangeSoft: "rgba(252,91,14,0.15)",
+  orangeLinie: "rgba(252,91,14,0.6)",
   orangeDunkel: "#2A1A0B",
   aufOrange: "#FFFFFF",
+  flamme: "#FC6F14",
 
   blau: "#4DA3FF",
   blauSoft: "rgba(77,163,255,0.14)",
@@ -63,8 +66,25 @@ export const farben = {
   gelaende: "#0C1014",
 } as const;
 
-/** Orangener Verlauf der Buttons: links heller, rechts ins Rote. */
-export const orangeVerlauf = ["#FF8A2B", "#FA6A1C", "#F4501A"] as const;
+/** Orange Verläufe, Element für Element aus der Vorlage gemessen. */
+export const verlauf = {
+  /** Große Knöpfe, von oben nach unten: oben heller, unten tiefer. */
+  knopf: ["#FE7212", "#FC5D0D", "#F9490D"],
+  /** Heller Schein am linken Ende von „Lernen starten“, von links nach rechts. */
+  knopfSchein: ["rgba(255,150,60,0.68)", "rgba(255,150,60,0.4)", "rgba(255,150,60,0.06)", "rgba(255,150,60,0)"],
+  /** Aktiver Filter-Chip, von links nach rechts. */
+  chip: ["#FC8A22", "#FC6C12", "#FC540B"],
+  /** Aktives Segment, von links nach rechts. */
+  segment: ["#FD8A25", "#FC6619"],
+  /** Fortschrittsbalken auf der Startseite, von links nach rechts. */
+  balken: ["#FB5412", "#FE6616"],
+  /** Balken in den Kategorien, von links nach rechts. */
+  kategorie: ["#FC7822", "#FD711C"],
+  /** Säulen im Diagramm, von oben nach unten. */
+  saeule: ["#FCA422", "#FE8E12", "#FC6A0C", "#F9570A"],
+  /** Großer Ring in der Statistik, von oben nach unten. */
+  ring: ["#FE8324", "#FD5406"],
+} as const;
 
 type Gewicht = "400" | "500" | "600" | "700" | "800";
 
@@ -111,5 +131,5 @@ export const RAND = 16;
 
 /** Farbe für eine Erfolgsquote wie in der Vorlage: grün ab 75 %, sonst orange. */
 export function quoteFarbe(anteil: number): string {
-  return anteil >= 0.75 ? farben.gruen : farben.orange;
+  return anteil >= 0.75 ? farben.gruen : farben.orangeHell;
 }

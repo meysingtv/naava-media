@@ -13,7 +13,7 @@ import { KopfTaste, Segment, kopfOben } from "@/components/ui";
 import { THEMEN, themaVon, type ThemaId } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
 import { auswertung, fortschritt, lernzeitText, serieAktuell, tagKey, useStand, wochenStart, type Stand, type Zeitraum } from "@/lib/stand";
-import { farben, orangeVerlauf, quoteFarbe, schrift } from "@/lib/theme";
+import { farben, quoteFarbe, schrift, verlauf } from "@/lib/theme";
 
 /** Diese Bereiche stehen immer da – in der Reihenfolge der Vorlage. */
 const HAUPTBEREICHE: ThemaId[] = ["zeichen", "vorfahrt", "gefahren", "umwelt", "technik", "manoever"];
@@ -153,7 +153,7 @@ function Diagramm({ saeulen }: { saeulen: Saeule[] }) {
                     ...(aktiv ? { shadowColor: farben.orange, shadowOpacity: 0.8, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } } : null),
                   }}
                 >
-                  <LinearGradient colors={aktiv ? ["#FFB24A", "#FF8A2B", "#F4501A"] : ["#FF9A3A", "#F4501A"]} style={{ flex: 1 }} />
+                  <LinearGradient colors={verlauf.saeule} locations={[0, 0.4, 0.75, 1]} style={{ flex: 1 }} />
                 </View>
               </Pressable>
             );
@@ -230,7 +230,7 @@ export default function MeinFortschritt() {
         {/* Ring und Kennzahlen */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 20 }}>
           <View style={Platform.OS === "ios" ? { shadowColor: farben.orange, shadowOpacity: 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 0 } } : undefined}>
-            <Ring anteil={gesamt.anteil} groesse={172} dicke={16} spur="#23282E">
+            <Ring anteil={gesamt.anteil} groesse={172} dicke={16} spur="#23282E" verlauf={verlauf.ring}>
               <Text style={{ ...schrift.titel, fontSize: 40, lineHeight: 46, color: "#FFFFFF", letterSpacing: -0.8, fontVariant: ["tabular-nums"] }}>
                 {Math.round(gesamt.anteil * 100)}%
               </Text>
@@ -247,7 +247,7 @@ export default function MeinFortschritt() {
               wertFarbe={trendPositiv ? farben.gruen : farben.rot}
               label={trendLabel}
             />
-            <StatKarte symbol={<Icon name="flame" size={28} color={farben.orange} />} wert={String(serieAktuell(stand))} label="Tage in Folge" />
+            <StatKarte symbol={<Icon name="flame" size={28} color={farben.flamme} />} wert={String(serieAktuell(stand))} label="Tage in Folge" />
             <StatKarte
               symbol={
                 <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: "#5AA9F0", alignItems: "center", justifyContent: "center" }}>

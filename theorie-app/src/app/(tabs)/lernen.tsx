@@ -12,7 +12,7 @@ import { FOTOS, themaFoto } from "@/lib/fotos";
 import { FRAGEN, THEMEN, fragenZuThema, themaVon, type ThemaId } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
 import { fortschritt, useStand } from "@/lib/stand";
-import { farben, orangeVerlauf, schrift } from "@/lib/theme";
+import { farben, schrift, verlauf } from "@/lib/theme";
 
 type Stufe = "alle" | "leicht" | "mittel" | "schwer";
 
@@ -57,7 +57,7 @@ function Filter({ wert, onWechsel }: { wert: Stufe; onWechsel: (s: Stufe) => voi
             }}
           >
             {aktiv ? (
-              <LinearGradient colors={orangeVerlauf} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+              <LinearGradient colors={verlauf.chip} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
                 <Text style={{ ...schrift.textHalb, fontSize: 15, color: "#FFFFFF" }}>{s.titel}</Text>
               </LinearGradient>
             ) : (

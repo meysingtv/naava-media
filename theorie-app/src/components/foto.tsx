@@ -8,7 +8,7 @@ import { Balken, PfeilKreis, T } from "@/components/ui";
 import { TempoZeichen, Verkehrszeichen } from "@/components/zeichen";
 import type { ThemaId } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
-import { abstand, farben, orangeVerlauf, schrift } from "@/lib/theme";
+import { abstand, farben, schrift, verlauf } from "@/lib/theme";
 
 const DUNKEL = "rgba(3,5,7,";
 
@@ -331,7 +331,7 @@ export function KategorieZeile({
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 8 }}>
           <View style={{ width: 112, height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.16)", overflow: "hidden" }}>
             <LinearGradient
-              colors={orangeVerlauf}
+              colors={verlauf.kategorie}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
               style={{ width: `${Math.max(0, Math.min(1, anteil)) * 100}%`, height: "100%", borderRadius: 4 }}
