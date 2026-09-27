@@ -39,6 +39,7 @@ export function Ring({
   farbe = farben.orange,
   spur = farben.flaeche3,
   verlauf,
+  leuchten,
   animiert = true,
   children,
 }: {
@@ -49,12 +50,17 @@ export function Ring({
   spur?: string;
   /** Verlauf des Bogens von oben nach unten (statt einer Farbe). */
   verlauf?: readonly [string, string];
+  /** Weiches Leuchten nur entlang des farbigen Bogens (nicht um den ganzen Ring). */
+  leuchten?: boolean;
   animiert?: boolean;
   children?: React.ReactNode;
 }) {
   const r = (groesse - dicke) / 2;
   const umfang = 2 * Math.PI * r;
-  const m = groesse / 2;
+  // Rand um die Zeichenfläche, damit das Leuchten nicht abgeschnitten wird.
+  const rand = leuchten ? Math.round(dicke * 1.2 + 6) : 0;
+  const flaeche = groesse + rand * 2;
+  const m = flaeche / 2;
   // Kreis als Pfad, der oben beginnt und im Uhrzeigersinn läuft (ohne Drehung,
   // damit der Verlauf wirklich von oben nach unten geht).
   const bogen = `M ${m} ${m - r} A ${r} ${r} 0 1 1 ${m} ${m + r} A ${r} ${r} 0 1 1 ${m} ${m - r}`;
@@ -64,27 +70,49 @@ export function Ring({
     Animated.timing(wert, { toValue: Math.max(0, Math.min(1, anteil)), duration: animiert ? 900 : 0, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
   }, [anteil, animiert, wert]);
 
+  const strich = verlauf ? `url(#ring-${groesse})` : farbe;
+  const versatz = wert.interpolate({ inputRange: [0, 1], outputRange: [umfang, 0] });
+  const sichtbar = anteil > 0.001;
+
   return (
     <View style={{ width: groesse, height: groesse, alignItems: "center", justifyContent: "center" }}>
-      <Svg width={groesse} height={groesse} style={{ position: "absolute" }}>
+      <Svg width={flaeche} height={flaeche} style={{ position: "absolute", top: -rand, left: -rand }}>
         {verlauf ? (
           <Defs>
-            <LinearGradient id={`ring-${groesse}`} gradientUnits="userSpaceOnUse" x1={0} y1={0} x2={0} y2={groesse}>
+            <LinearGradient id={`ring-${groesse}`} gradientUnits="userSpaceOnUse" x1={0} y1={rand} x2={0} y2={rand + groesse}>
               <Stop offset="0" stopColor={verlauf[0]} />
               <Stop offset="1" stopColor={verlauf[1]} />
             </LinearGradient>
           </Defs>
         ) : null}
-        <Circle cx={groesse / 2} cy={groesse / 2} r={r} stroke={spur} strokeWidth={dicke} fill="none" />
-        <AnimPath
-          d={bogen}
-          stroke={verlauf ? `url(#ring-${groesse})` : farbe}
-          strokeWidth={dicke}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={`${umfang} ${umfang}`}
-          strokeDashoffset={wert.interpolate({ inputRange: [0, 1], outputRange: [umfang, 0] })}
-        />
+        <Circle cx={m} cy={m} r={r} stroke={spur} strokeWidth={dicke} fill="none" />
+        {/* Leuchten: breitere, sehr transparente Kopien genau hinter dem Bogen */}
+        {sichtbar && leuchten
+          ? [0.1, 0.07, 0.045, 0.025, 0.012].map((deckkraft, i) => (
+              <AnimPath
+                key={i}
+                d={bogen}
+                stroke={strich}
+                strokeOpacity={deckkraft}
+                strokeWidth={dicke + ((i + 1) * rand * 2) / 5}
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray={`${umfang} ${umfang}`}
+                strokeDashoffset={versatz}
+              />
+            ))
+          : null}
+        {sichtbar ? (
+          <AnimPath
+            d={bogen}
+            stroke={strich}
+            strokeWidth={dicke}
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={`${umfang} ${umfang}`}
+            strokeDashoffset={versatz}
+          />
+        ) : null}
       </Svg>
       {children}
     </View>

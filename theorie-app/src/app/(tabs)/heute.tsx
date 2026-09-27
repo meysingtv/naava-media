@@ -218,8 +218,8 @@ export default function Home() {
             gap: 18,
           }}
         >
-          <View style={Platform.OS === "ios" ? { shadowColor: farben.orange, shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 0 } } : undefined}>
-            <Ring anteil={gesamt.anteil} groesse={72} dicke={8} spur={farben.ringSpur}>
+          <View>
+            <Ring anteil={gesamt.anteil} groesse={72} dicke={8} spur={farben.ringSpur} leuchten>
               <Text style={{ ...schrift.titel, fontSize: 19, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{Math.round(gesamt.anteil * 100)}%</Text>
             </Ring>
           </View>

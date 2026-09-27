@@ -227,8 +227,8 @@ export default function MeinFortschritt() {
 
         {/* Ring und Kennzahlen */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 20 }}>
-          <View style={Platform.OS === "ios" ? { shadowColor: farben.orange, shadowOpacity: 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 0 } } : undefined}>
-            <Ring anteil={gesamt.anteil} groesse={172} dicke={16} spur="#23282E" verlauf={verlauf.ring}>
+          <View>
+            <Ring anteil={gesamt.anteil} groesse={172} dicke={16} spur="#23282E" verlauf={verlauf.ring} leuchten>
               <Text style={{ ...schrift.titel, fontSize: 40, lineHeight: 46, color: "#FFFFFF", letterSpacing: -0.8, fontVariant: ["tabular-nums"] }}>
                 {Math.round(gesamt.anteil * 100)}%
               </Text>

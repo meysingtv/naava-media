@@ -41,6 +41,8 @@ export type ClipEintrag = {
 
 export type Kommentar = {
   id: string;
+  /** Oberster Kommentar, auf den geantwortet wurde (null = selbst oben). */
+  antwort_auf: string | null;
   inhalt: string;
   erstellt_am: string;
   autor: string;
@@ -49,7 +51,15 @@ export type Kommentar = {
   autor_farbe: string;
   autor_bild: string | null;
   loeschbar: boolean;
+  likes: number;
+  gemocht: boolean;
+  /** Anzahl je Emoji, z. B. { "😂": 3 }. */
+  reaktionen: Record<string, number>;
+  meine_reaktion: string | null;
 };
+
+/** Feste Auswahl für Reaktionen – identisch mit der Prüfung auf dem Server. */
+export const REAKTIONEN = ["👍", "❤️", "😂", "😮", "🔥", "👏"] as const;
 
 export type Ersteller = { id: string; name: string; benutzername: string; avatar_farbe: string; bild_pfad: string | null; hinzugefuegt_am: string };
 
@@ -144,14 +154,29 @@ export async function kommentareLaden(clip: string): Promise<Kommentar[]> {
   return (data ?? []) as Kommentar[];
 }
 
-export async function kommentieren(clip: string, inhalt: string): Promise<void> {
-  const { error } = await supabase.rpc("lern_clip_kommentieren", { p_clip: clip, p_inhalt: inhalt });
+export async function kommentieren(clip: string, inhalt: string, antwortAuf: string | null = null): Promise<void> {
+  const { error } = await supabase.rpc("lern_clip_kommentieren", { p_clip: clip, p_inhalt: inhalt, p_antwort_auf: antwortAuf });
   if (error) throw new Error(meldung(error));
 }
 
-export async function kommentarLoeschen(id: string): Promise<void> {
-  const { error } = await supabase.rpc("lern_clip_kommentar_loeschen", { p_id: id });
+/** Löscht einen Kommentar samt Antworten; liefert, wie viele es insgesamt waren. */
+export async function kommentarLoeschen(id: string): Promise<number> {
+  const { data, error } = await supabase.rpc("lern_clip_kommentar_loeschen", { p_id: id });
   if (error) throw new Error(meldung(error));
+  return Number(data ?? 1);
+}
+
+export async function kommentarLiken(id: string, an: boolean): Promise<number> {
+  const { data, error } = await supabase.rpc("lern_kommentar_liken", { p_kommentar: id, p_an: an });
+  if (error) throw new Error(meldung(error));
+  return Number(data ?? 0);
+}
+
+/** Reaktion setzen (null entfernt sie); liefert die neuen Zahlen je Emoji. */
+export async function kommentarReagieren(id: string, emoji: string | null): Promise<Record<string, number>> {
+  const { data, error } = await supabase.rpc("lern_kommentar_reagieren", { p_kommentar: id, p_emoji: emoji });
+  if (error) throw new Error(meldung(error));
+  return (data ?? {}) as Record<string, number>;
 }
 
 // ---------------------------------------------------------------------------

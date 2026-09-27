@@ -444,6 +444,32 @@ create index if not exists lern_clip_kommentar_clip_idx on public.lern_clip_komm
 alter table public.lern_clip_kommentar enable row level security;
 -- Lesen über lern_clip_kommentare(), Schreiben über die Funktionen unten.
 
+-- Antworten (eine Ebene: Antworten hängen am obersten Kommentar) und Likes.
+alter table public.lern_clip_kommentar
+  add column if not exists antwort_auf uuid references public.lern_clip_kommentar(id) on delete cascade,
+  add column if not exists likes integer not null default 0;
+create index if not exists lern_clip_kommentar_antwort_idx on public.lern_clip_kommentar(antwort_auf);
+
+create table if not exists public.lern_kommentar_like (
+  kommentar_id uuid not null references public.lern_clip_kommentar(id) on delete cascade,
+  user_id      uuid not null references public.lern_profil(id) on delete cascade,
+  erstellt_am  timestamptz not null default now(),
+  primary key (kommentar_id, user_id)
+);
+alter table public.lern_kommentar_like enable row level security;
+
+-- Emoji-Reaktionen: eine je Person und Kommentar, feste Auswahl.
+create table if not exists public.lern_kommentar_reaktion (
+  kommentar_id uuid not null references public.lern_clip_kommentar(id) on delete cascade,
+  user_id      uuid not null references public.lern_profil(id) on delete cascade,
+  emoji        text not null check (emoji in ('👍', '❤️', '😂', '😮', '🔥', '👏')),
+  erstellt_am  timestamptz not null default now(),
+  primary key (kommentar_id, user_id)
+);
+create index if not exists lern_kommentar_reaktion_idx on public.lern_kommentar_reaktion(kommentar_id);
+alter table public.lern_kommentar_reaktion enable row level security;
+-- Beide Tabellen: Lesen und Schreiben nur über die Funktionen unten.
+
 create table if not exists public.lern_clip_meldung (
   id          uuid primary key default gen_random_uuid(),
   clip_id     uuid not null references public.lern_clip(id) on delete cascade,
@@ -628,64 +654,138 @@ end;
 $$;
 grant execute on function public.lern_folgen_setzen(uuid, boolean) to authenticated;
 
--- Kommentare eines Clips (neueste zuerst).
+-- Kommentare eines Clips samt Antworten (neueste zuerst), mit Likes und Reaktionen.
 drop function if exists public.lern_clip_kommentare(uuid, timestamptz);
 create or replace function public.lern_clip_kommentare(p_clip uuid, p_vor timestamptz default null)
-returns table(id uuid, inhalt text, erstellt_am timestamptz, autor uuid, autor_name text, autor_benutzername text, autor_farbe text, autor_bild text, loeschbar boolean)
+returns table(
+  id uuid, antwort_auf uuid, inhalt text, erstellt_am timestamptz,
+  autor uuid, autor_name text, autor_benutzername text, autor_farbe text, autor_bild text,
+  loeschbar boolean, likes integer, gemocht boolean, reaktionen jsonb, meine_reaktion text
+)
 language sql stable security definer set search_path = public
 as $$
-  select k.id, k.inhalt, k.erstellt_am, k.autor, p.name, p.benutzername, p.avatar_farbe, p.bild_pfad,
+  select k.id, k.antwort_auf, k.inhalt, k.erstellt_am, k.autor, p.name, p.benutzername, p.avatar_farbe, p.bild_pfad,
          coalesce(k.autor = auth.uid()
                   or public.lern_ist_inhaber()
-                  or exists (select 1 from public.lern_clip c where c.id = k.clip_id and c.autor = auth.uid()), false)
+                  or exists (select 1 from public.lern_clip c where c.id = k.clip_id and c.autor = auth.uid()), false),
+         k.likes,
+         exists (select 1 from public.lern_kommentar_like l where l.kommentar_id = k.id and l.user_id = auth.uid()),
+         coalesce((select jsonb_object_agg(x.emoji, x.anzahl)
+                     from (select r.emoji, count(*) as anzahl
+                             from public.lern_kommentar_reaktion r
+                            where r.kommentar_id = k.id
+                            group by r.emoji) x), '{}'::jsonb),
+         (select r.emoji from public.lern_kommentar_reaktion r where r.kommentar_id = k.id and r.user_id = auth.uid())
     from public.lern_clip_kommentar k
     join public.lern_profil p on p.id = k.autor
    where k.clip_id = p_clip and (p_vor is null or k.erstellt_am < p_vor)
    order by k.erstellt_am desc
-   limit 50;
+   limit 200;
 $$;
 grant execute on function public.lern_clip_kommentare(uuid, timestamptz) to anon, authenticated;
 
-create or replace function public.lern_clip_kommentieren(p_clip uuid, p_inhalt text)
+drop function if exists public.lern_clip_kommentieren(uuid, text);
+create or replace function public.lern_clip_kommentieren(p_clip uuid, p_inhalt text, p_antwort_auf uuid default null)
 returns uuid
 language plpgsql security definer set search_path = public
 as $$
 declare
-  v_ich  uuid := auth.uid();
-  v_text text := left(btrim(coalesce(p_inhalt, '')), 500);
-  v_id   uuid;
+  v_ich    uuid := auth.uid();
+  v_text   text := left(btrim(coalesce(p_inhalt, '')), 500);
+  v_eltern uuid;
+  v_id     uuid;
 begin
   if v_ich is null then raise exception 'Nicht angemeldet'; end if;
   if v_text = '' then raise exception 'Kommentar ist leer'; end if;
   if (select count(*) from public.lern_clip_kommentar k where k.autor = v_ich and k.erstellt_am > now() - interval '1 minute') >= 10 then
     raise exception 'Zu viele Kommentare – bitte kurz warten';
   end if;
-  insert into public.lern_clip_kommentar (clip_id, autor, inhalt) values (p_clip, v_ich, v_text) returning id into v_id;
+  if p_antwort_auf is not null then
+    -- Antworten hängen immer am obersten Kommentar.
+    select coalesce(k.antwort_auf, k.id) into v_eltern
+      from public.lern_clip_kommentar k
+     where k.id = p_antwort_auf and k.clip_id = p_clip;
+    if v_eltern is null then raise exception 'Kommentar nicht gefunden'; end if;
+  end if;
+  insert into public.lern_clip_kommentar (clip_id, autor, inhalt, antwort_auf) values (p_clip, v_ich, v_text, v_eltern) returning id into v_id;
   update public.lern_clip c set kommentare = c.kommentare + 1 where c.id = p_clip;
   return v_id;
 end;
 $$;
-grant execute on function public.lern_clip_kommentieren(uuid, text) to authenticated;
+grant execute on function public.lern_clip_kommentieren(uuid, text, uuid) to authenticated;
 
+drop function if exists public.lern_clip_kommentar_loeschen(uuid);
 create or replace function public.lern_clip_kommentar_loeschen(p_id uuid)
-returns void
+returns integer
 language plpgsql security definer set search_path = public
 as $$
 declare
-  v_clip uuid;
+  v_clip   uuid;
+  v_anzahl integer;
 begin
-  delete from public.lern_clip_kommentar k
+  select k.clip_id, 1 + (select count(*)::int from public.lern_clip_kommentar a where a.antwort_auf = k.id)
+    into v_clip, v_anzahl
+    from public.lern_clip_kommentar k
    where k.id = p_id
      and (k.autor = auth.uid()
           or public.lern_ist_inhaber()
-          or exists (select 1 from public.lern_clip c where c.id = k.clip_id and c.autor = auth.uid()))
-  returning k.clip_id into v_clip;
-  if v_clip is not null then
-    update public.lern_clip c set kommentare = greatest(0, c.kommentare - 1) where c.id = v_clip;
-  end if;
+          or exists (select 1 from public.lern_clip c where c.id = k.clip_id and c.autor = auth.uid()));
+  if v_clip is null then return 0; end if;
+  delete from public.lern_clip_kommentar k where k.id = p_id; -- Antworten fallen mit weg
+  update public.lern_clip c set kommentare = greatest(0, c.kommentare - v_anzahl) where c.id = v_clip;
+  return v_anzahl;
 end;
 $$;
 grant execute on function public.lern_clip_kommentar_loeschen(uuid) to authenticated;
+
+-- Kommentar liken; liefert die neue Anzahl.
+create or replace function public.lern_kommentar_liken(p_kommentar uuid, p_an boolean)
+returns integer
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_ich    uuid := auth.uid();
+  v_neu    integer;
+  v_anzahl integer;
+begin
+  if v_ich is null then raise exception 'Nicht angemeldet'; end if;
+  if p_an then
+    insert into public.lern_kommentar_like (kommentar_id, user_id) values (p_kommentar, v_ich) on conflict do nothing;
+    get diagnostics v_neu = row_count;
+    if v_neu > 0 then update public.lern_clip_kommentar k set likes = k.likes + 1 where k.id = p_kommentar; end if;
+  else
+    delete from public.lern_kommentar_like l where l.kommentar_id = p_kommentar and l.user_id = v_ich;
+    get diagnostics v_neu = row_count;
+    if v_neu > 0 then update public.lern_clip_kommentar k set likes = greatest(0, k.likes - 1) where k.id = p_kommentar; end if;
+  end if;
+  select k.likes into v_anzahl from public.lern_clip_kommentar k where k.id = p_kommentar;
+  return coalesce(v_anzahl, 0);
+end;
+$$;
+grant execute on function public.lern_kommentar_liken(uuid, boolean) to authenticated;
+
+-- Mit Emoji reagieren (null entfernt die eigene Reaktion); liefert alle Reaktionen.
+create or replace function public.lern_kommentar_reagieren(p_kommentar uuid, p_emoji text)
+returns jsonb
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_ich uuid := auth.uid();
+  v_ergebnis jsonb;
+begin
+  if v_ich is null then raise exception 'Nicht angemeldet'; end if;
+  if coalesce(p_emoji, '') = '' then
+    delete from public.lern_kommentar_reaktion r where r.kommentar_id = p_kommentar and r.user_id = v_ich;
+  else
+    insert into public.lern_kommentar_reaktion (kommentar_id, user_id, emoji) values (p_kommentar, v_ich, p_emoji)
+    on conflict (kommentar_id, user_id) do update set emoji = excluded.emoji, erstellt_am = now();
+  end if;
+  select coalesce(jsonb_object_agg(x.emoji, x.anzahl), '{}'::jsonb) into v_ergebnis
+    from (select r.emoji, count(*) as anzahl from public.lern_kommentar_reaktion r where r.kommentar_id = p_kommentar group by r.emoji) x;
+  return v_ergebnis;
+end;
+$$;
+grant execute on function public.lern_kommentar_reagieren(uuid, text) to authenticated;
 
 create or replace function public.lern_clip_geteilt(p_clip uuid)
 returns integer
