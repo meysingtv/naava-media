@@ -127,10 +127,10 @@ export function KommentarBlatt({
                 keyboardShouldPersistTaps="handled"
                 renderItem={({ item: k }) => (
                   <Pressable onLongPress={() => loeschenFragen(k)} delayLongPress={350} style={({ pressed }) => ({ flexDirection: "row", gap: 11, paddingHorizontal: 16, paddingVertical: 9, backgroundColor: pressed && k.loeschbar ? "rgba(255,255,255,0.04)" : "transparent" })}>
-                    <NutzerBild pfad={k.autor_bild} name={k.autor_benutzername} farbe={k.autor_farbe} groesse={34} rand={1} />
+                    <NutzerBild pfad={k.autor_bild} name={k.autor_name || k.autor_benutzername} farbe={k.autor_farbe} groesse={34} rand={1} />
                     <View style={{ flex: 1, gap: 2 }}>
                       <Text style={{ ...schrift.textMittel, fontSize: 13, color: farben.text3 }}>
-                        @{k.autor_benutzername} · {vorZeit(k.erstellt_am)}
+                        {k.autor_name || k.autor_benutzername} · {vorZeit(k.erstellt_am)}
                       </Text>
                       <Text style={{ ...schrift.text, fontSize: 15, lineHeight: 20, color: "#FFFFFF" }}>{k.inhalt}</Text>
                     </View>

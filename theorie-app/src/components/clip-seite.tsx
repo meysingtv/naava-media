@@ -7,7 +7,7 @@ import type { SFSymbol } from "expo-symbols";
 
 import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
-import { NutzerBild } from "@/components/profilbild";
+import { NutzerBild, ProfilBild } from "@/components/profilbild";
 import { dateiUrl, kurzeZahl, type ClipEintrag } from "@/lib/clips-server";
 import { stoss, tippen } from "@/lib/haptik";
 import { farben, schrift } from "@/lib/theme";
@@ -311,9 +311,14 @@ function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eig
       {/* Unten: Ersteller, Titel, Beschreibung, Aktionen, Fortschritt */}
       <View pointerEvents="box-none" style={{ position: "absolute", left: RAND_SEITE, right: RAND_SEITE, bottom: unten + 12, gap: 8 }}>
         <View pointerEvents="box-none" style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <NutzerBild pfad={clip.autor_bild} name={clip.autor_benutzername} farbe={clip.autor_farbe} groesse={36} />
+          {eigen ? (
+            // Eigene Clips: das eigene Profilbild sofort, auch bevor es hochgeladen ist
+            <ProfilBild name={clip.autor_name || clip.autor_benutzername} groesse={36} rand={1.5} />
+          ) : (
+            <NutzerBild pfad={clip.autor_bild} name={clip.autor_name || clip.autor_benutzername} farbe={clip.autor_farbe} groesse={36} />
+          )}
           <Text numberOfLines={1} style={{ ...schrift.textFett, fontSize: 16, color: "#FFFFFF", flexShrink: 1, ...SCHATTEN_TEXT }}>
-            @{clip.autor_benutzername}
+            {clip.autor_name || clip.autor_benutzername}
           </Text>
           {eigen ? null : (
             <Pressable
