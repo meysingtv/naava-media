@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Chip, Eingabe, Knopf, Kopf, T } from "@/components/ui";
+import { Chip, Eingabe, Knopf, Kopf, PasswortEingabe, T } from "@/components/ui";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
 import { useKonto } from "@/lib/konto";
 import { tippen } from "@/lib/haptik";
@@ -236,14 +236,8 @@ export default function Registrieren() {
               textContentType="emailAddress"
               autoFocus
             />
-            <Eingabe
-              icon="lock-closed-outline"
-              value={passwort}
-              onChangeText={setPasswort}
-              placeholder="Passwort (mind. 8 Zeichen)"
-              secureTextEntry
-              textContentType="newPassword"
-            />
+            <PasswortEingabe value={passwort} onChangeText={setPasswort} placeholder="Passwort (mind. 8 Zeichen)" />
+            <T v="klein">Tipp: Mit dem Auge siehst du, was du eingetippt hast.</T>
             {fehler ? (
               <T v="klein" farbe={farben.rot} style={{ ...schrift.textHalb }}>
                 {fehler}

@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Linking from "expo-linking";
 import type { Session } from "@supabase/supabase-js";
 
 import { serverVerbunden, supabase } from "./supabase";
@@ -40,14 +42,26 @@ type KontoKontext = {
   profilSpeichern: (teil: { name?: string; klasse?: string; bundesland?: string | null }) => Promise<string | null>;
   benutzernameFrei: (name: string) => Promise<boolean | null>;
   profilNeuLaden: () => Promise<void>;
+  /** Über den Link „Passwort zurücksetzen“ angemeldet – neues Passwort fällig. */
+  passwortNeuFaellig: boolean;
+  passwortNeuErledigt: () => void;
 };
 
 const GAST = "spur-gast";
+/**
+ * Links aus Bestätigungs- und Passwort-Mails öffnen die App. In Supabase unter
+ * Authentication → URL Configuration → Redirect URLs „spur://**“ eintragen.
+ */
+const APP_LINK = "spur://";
 const Kontext = createContext<KontoKontext | null>(null);
+
+function email(roh: string): string {
+  return roh.trim().toLowerCase();
+}
 
 function fehlerText(meldung: string): string {
   if (/already registered|already exists/i.test(meldung)) return "Diese E-Mail ist schon registriert. Melde dich einfach an.";
-  if (/invalid login credentials/i.test(meldung)) return "E-Mail oder Passwort stimmt nicht.";
+  if (/invalid login credentials/i.test(meldung)) return "E-Mail oder Passwort stimmt nicht. Tippe auf das Auge, um dein Passwort zu prüfen.";
   if (/email not confirmed/i.test(meldung)) return "Bitte bestätige zuerst deine E-Mail-Adresse.";
   if (/password/i.test(meldung) && /(short|least|characters)/i.test(meldung)) return "Das Passwort braucht mindestens 8 Zeichen.";
   if (/valid email|invalid email/i.test(meldung)) return "Bitte gib eine gültige E-Mail-Adresse ein.";
@@ -61,6 +75,7 @@ export function KontoProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profil, setProfil] = useState<Profil | null>(null);
   const [gastName, setGastName] = useState<string | null>(null);
+  const [passwortNeuFaellig, setPasswortNeuFaellig] = useState(false);
 
   const profilLaden = useCallback(async (s: Session | null) => {
     if (!s) {
@@ -108,29 +123,36 @@ export function KontoProvider({ children }: { children: ReactNode }) {
   const registrieren = useCallback(async (d: Registrierung) => {
     if (!serverVerbunden) return { fehler: "Die App ist noch mit keinem Server verbunden. Du kannst sie vorerst ohne Konto nutzen." };
     const { data, error } = await supabase.auth.signUp({
-      email: d.email.trim(),
+      email: email(d.email),
       password: d.passwort,
-      options: { data: { name: d.name.trim(), benutzername: d.benutzername.trim().toLowerCase(), klasse: d.klasse, bundesland: d.bundesland } },
+      options: {
+        emailRedirectTo: APP_LINK,
+        data: { name: d.name.trim(), benutzername: d.benutzername.trim().toLowerCase(), klasse: d.klasse, bundesland: d.bundesland },
+      },
     });
     if (error) return { fehler: fehlerText(error.message) };
+    // Supabase meldet ein schon vorhandenes Konto nicht als Fehler, sondern mit leerer Identitätsliste.
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      return { fehler: "Mit dieser E-Mail gibt es schon ein Konto. Melde dich an – oder setz dein Passwort über „Passwort vergessen?“ zurück." };
+    }
     if (!data.session) return { bestaetigen: true };
     await AsyncStorage.removeItem(GAST).catch(() => {});
     setGastName(null);
     return {};
   }, []);
 
-  const anmelden = useCallback(async (email: string, passwort: string) => {
+  const anmelden = useCallback(async (adresse: string, passwort: string) => {
     if (!serverVerbunden) return "Die App ist noch mit keinem Server verbunden.";
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: passwort });
+    const { error } = await supabase.auth.signInWithPassword({ email: email(adresse), password: passwort });
     if (error) return fehlerText(error.message);
     await AsyncStorage.removeItem(GAST).catch(() => {});
     setGastName(null);
     return null;
   }, []);
 
-  const passwortVergessen = useCallback(async (email: string) => {
+  const passwortVergessen = useCallback(async (adresse: string) => {
     if (!serverVerbunden) return "Die App ist noch mit keinem Server verbunden.";
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    const { error } = await supabase.auth.resetPasswordForEmail(email(adresse), { redirectTo: APP_LINK });
     return error ? fehlerText(error.message) : null;
   }, []);
 
@@ -174,6 +196,34 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     return error ? null : Boolean(data);
   }, []);
 
+  // Links aus den Mails (Bestätigung, Passwort zurücksetzen) melden direkt an.
+  useEffect(() => {
+    if (!serverVerbunden) return;
+    async function verarbeiten(url: string | null) {
+      if (!url || !url.includes("#")) return;
+      const p = new URLSearchParams(url.slice(url.indexOf("#") + 1));
+      const fehler = p.get("error_description");
+      if (fehler) {
+        Alert.alert("Link abgelaufen", `${fehler.replace(/\+/g, " ")}\n\nFordere einfach einen neuen an.`);
+        return;
+      }
+      const access_token = p.get("access_token");
+      const refresh_token = p.get("refresh_token");
+      if (!access_token || !refresh_token) return;
+      const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+      if (error) {
+        Alert.alert("Anmeldung fehlgeschlagen", fehlerText(error.message));
+        return;
+      }
+      await AsyncStorage.removeItem(GAST).catch(() => {});
+      setGastName(null);
+      if (p.get("type") === "recovery") setPasswortNeuFaellig(true);
+    }
+    Linking.getInitialURL().then(verarbeiten);
+    const abo = Linking.addEventListener("url", ({ url }) => verarbeiten(url));
+    return () => abo.remove();
+  }, []);
+
   const wert = useMemo<KontoKontext>(() => {
     const gast = !session && gastName != null;
     return {
@@ -192,8 +242,10 @@ export function KontoProvider({ children }: { children: ReactNode }) {
       profilSpeichern,
       benutzernameFrei,
       profilNeuLaden: () => profilLaden(session),
+      passwortNeuFaellig,
+      passwortNeuErledigt: () => setPasswortNeuFaellig(false),
     };
-  }, [laedt, session, profil, gastName, registrieren, anmelden, passwortVergessen, passwortAendern, abmelden, alsGast, profilSpeichern, benutzernameFrei, profilLaden]);
+  }, [laedt, session, profil, gastName, registrieren, anmelden, passwortVergessen, passwortAendern, abmelden, alsGast, profilSpeichern, benutzernameFrei, profilLaden, passwortNeuFaellig]);
 
   return <Kontext.Provider value={wert}>{children}</Kontext.Provider>;
 }

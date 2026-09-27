@@ -3,7 +3,7 @@ import { Alert, Linking, ScrollView, Switch, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Abschnitt, Chip, Eingabe, Gruppe, Knopf, Kopf, T, Zeile } from "@/components/ui";
+import { Abschnitt, Chip, Eingabe, Gruppe, Knopf, Kopf, PasswortEingabe, T, Zeile } from "@/components/ui";
 import { Logo } from "@/components/grafik";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
 import { useClipRechte } from "@/lib/clips-server";
@@ -167,14 +167,7 @@ export default function Einstellungen() {
                 {profil ? <Zeile icon="at" titel={`@${profil.benutzername}`} unter="Benutzername" /> : null}
                 <Zeile icon="mail-outline" titel={session.user.email ?? ""} unter="E-Mail" />
               </Gruppe>
-              <Eingabe
-                icon="lock-closed-outline"
-                value={neuesPasswort}
-                onChangeText={setNeuesPasswort}
-                placeholder="Neues Passwort (mind. 8 Zeichen)"
-                secureTextEntry
-                textContentType="newPassword"
-              />
+              <PasswortEingabe value={neuesPasswort} onChangeText={setNeuesPasswort} placeholder="Neues Passwort (mind. 8 Zeichen)" />
               {neuesPasswort.length > 0 ? (
                 <Knopf titel="Passwort ändern" klein art="sekundaer" laedt={aendertPasswort} deaktiviert={neuesPasswort.length < 8} onPress={passwortSpeichern} />
               ) : null}

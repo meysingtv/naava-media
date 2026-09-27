@@ -30,6 +30,9 @@ Ohne Server läuft die App im Gastmodus – der Lernstand bleibt auf dem Gerät.
 3. `.env.example` nach `.env` kopieren und URL + anon key eintragen.
 4. Authentication → Sign In / Providers → Email → „Confirm email“ **anlassen**:
    Nur wer seine E-Mail bestätigt, bekommt Sonderrechte (z. B. als Inhaber).
+5. Authentication → URL Configuration → Redirect URLs: `spur://**` eintragen.
+   Dann öffnen die Links aus der Bestätigungs- und der Passwort-Mail direkt die
+   App (auf dem iPhone) und melden an.
 
 ## Clips (Videos wie bei TikTok)
 

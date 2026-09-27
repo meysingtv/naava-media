@@ -3,7 +3,7 @@ import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } fr
 import { router } from "expo-router";
 
 import { Icon } from "@/components/icon";
-import { Eingabe, Knopf, Kopf, T } from "@/components/ui";
+import { Eingabe, Knopf, Kopf, PasswortEingabe, T } from "@/components/ui";
 import { useKonto } from "@/lib/konto";
 import { serverVerbunden } from "@/lib/supabase";
 import { abstand, farben, RAND, schrift } from "@/lib/theme";
@@ -73,16 +73,7 @@ export default function Anmelden() {
             textContentType="username"
             autoFocus
           />
-          <Eingabe
-            icon="lock-closed-outline"
-            value={passwort}
-            onChangeText={setPasswort}
-            placeholder="Passwort"
-            secureTextEntry
-            textContentType="password"
-            returnKeyType="go"
-            onSubmitEditing={los}
-          />
+          <PasswortEingabe value={passwort} onChangeText={setPasswort} placeholder="Passwort" returnKeyType="go" onSubmitEditing={los} />
         </View>
         {fehler ? (
           <T v="klein" farbe={farben.rot} style={{ ...schrift.textHalb }}>

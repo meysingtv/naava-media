@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, View } from "react-native";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as Notifications from "expo-notifications";
 import { StatusBar } from "expo-status-bar";
@@ -79,13 +79,18 @@ function ErfolgHinweis() {
 }
 
 function Navigation() {
-  const { drin, laedt } = useKonto();
+  const { drin, laedt, session, passwortNeuFaellig } = useKonto();
   const { bereit } = useStand();
   const fertig = !laedt && bereit;
 
   useEffect(() => {
     if (fertig) SplashScreen.hideAsync().catch(() => {});
   }, [fertig]);
+
+  // Über den Link „Passwort zurücksetzen“ gekommen → neues Passwort festlegen.
+  useEffect(() => {
+    if (fertig && session && passwortNeuFaellig) router.push("/passwort-neu");
+  }, [fertig, session, passwortNeuFaellig]);
 
   if (!fertig) return <View style={{ flex: 1, backgroundColor: farben.grund }} />;
 
@@ -96,6 +101,7 @@ function Navigation() {
         {/* Registrieren und Anmelden gehen auch aus dem Gastmodus heraus */}
         <Stack.Screen name="registrieren" />
         <Stack.Screen name="anmelden" />
+        <Stack.Screen name="passwort-neu" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
         <Stack.Protected guard={!drin}>
           <Stack.Screen name="willkommen" options={{ animation: "fade" }} />
         </Stack.Protected>

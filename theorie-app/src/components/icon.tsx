@@ -56,6 +56,7 @@ const SF: Partial<Record<IconName, SFSymbol>> = {
   "shield-checkmark": "checkmark.shield.fill",
   "shield-checkmark-outline": "checkmark.shield",
   "eye-off-outline": "eye.slash",
+  "eye-outline": "eye",
   refresh: "arrow.clockwise",
   bookmark: "bookmark.fill",
   "bookmark-outline": "bookmark",
