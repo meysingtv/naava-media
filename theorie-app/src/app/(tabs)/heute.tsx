@@ -284,11 +284,11 @@ export default function Home() {
         <View style={{ marginHorizontal: RAND, marginTop: 10, height: 74, borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: farben.linie, backgroundColor: farben.flaeche }}>
           <Image source={FOTOS.zitat} style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "72%", height: "100%" }} resizeMode="cover" />
           <LinearGradient
-            colors={[farben.flaeche, "rgba(13,19,23,0.85)", "rgba(13,19,23,0.2)"]}
-            locations={[0.25, 0.5, 1]}
+            colors={["rgba(13,19,23,1)", "rgba(13,19,23,0.95)", "rgba(13,19,23,0.8)", "rgba(13,19,23,0.55)", "rgba(13,19,23,0.3)", "rgba(13,19,23,0.12)", "rgba(13,19,23,0)"]}
+            locations={[0, 0.12, 0.26, 0.42, 0.6, 0.8, 1]}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
-            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+            style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "72%" }}
           />
           <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 18 }}>
             <Text style={{ ...schrift.titel, fontSize: 40, lineHeight: 44, color: "#FFFFFF", marginTop: 14 }}>“</Text>

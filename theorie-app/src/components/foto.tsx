@@ -12,6 +12,22 @@ import { abstand, farben, orangeVerlauf, schrift } from "@/lib/theme";
 
 const DUNKEL = "rgba(3,5,7,";
 
+/**
+ * Weicher Übergang von der Kartenfläche ins Foto: am linken Fotorand voll
+ * deckend, dann in einer sanften Kurve durchsichtig – so ist keine Kante zu sehen.
+ */
+const VERBLENDEN = [
+  "rgba(13,19,23,1)",
+  "rgba(13,19,23,0.97)",
+  "rgba(13,19,23,0.88)",
+  "rgba(13,19,23,0.68)",
+  "rgba(13,19,23,0.44)",
+  "rgba(13,19,23,0.22)",
+  "rgba(13,19,23,0.08)",
+  "rgba(13,19,23,0)",
+] as const;
+const VERBLENDEN_STOPS = [0, 0.1, 0.22, 0.36, 0.5, 0.64, 0.8, 1] as const;
+
 /** Foto als Hintergrund mit Verlauf – Grundlage aller Bildkarten. */
 export function FotoFlaeche({
   quelle,
@@ -296,13 +312,13 @@ export function KategorieZeile({
         transform: [{ scale: pressed ? 0.985 : 1 }],
       })}
     >
-      <Image source={quelle} style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "58%", height: "100%" }} resizeMode="cover" />
+      <Image source={quelle} style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "60%", height: "100%" }} resizeMode="cover" />
       <LinearGradient
-        colors={[farben.flaeche, "rgba(13,19,23,0.8)", "rgba(13,19,23,0.22)", "rgba(13,19,23,0)"]}
-        locations={[0, 0.26, 0.6, 1]}
+        colors={VERBLENDEN}
+        locations={VERBLENDEN_STOPS}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
-        style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "66%" }}
+        style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "60%" }}
       />
       <View style={{ width: 86, alignItems: "center", justifyContent: "center" }}>
         <KategorieIcon id={id} />
