@@ -1,16 +1,16 @@
 import type { ReactNode } from "react";
-import { Image, Pressable, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from "react-native";
+import { Image, Pressable, Text, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { Icon } from "@/components/icon";
 import { Balken, PfeilKreis, T } from "@/components/ui";
-import { Verkehrszeichen } from "@/components/zeichen";
+import { TempoZeichen, Verkehrszeichen } from "@/components/zeichen";
 import type { ThemaId } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
-import { abstand, farben, schrift } from "@/lib/theme";
+import { abstand, farben, orangeVerlauf, schrift } from "@/lib/theme";
 
-const DUNKEL = "rgba(11,12,15,";
+const DUNKEL = "rgba(3,5,7,";
 
 /** Foto als Hintergrund mit Verlauf – Grundlage aller Bildkarten. */
 export function FotoFlaeche({
@@ -163,72 +163,106 @@ export function LeuchtSaeulen({ hoehe = 84 }: { hoehe?: number }) {
 export type KategorieId = ThemaId | "grundstoff";
 
 function Kreis({ children }: { children: ReactNode }) {
-  return <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: farben.iconKreis, alignItems: "center", justifyContent: "center" }}>{children}</View>;
+  return <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: farben.iconKreis, alignItems: "center", justifyContent: "center" }}>{children}</View>;
 }
 
-/** Symbol einer Kategorie – Zeichen, wo es eins gibt, sonst ein ruhiges Icon. */
+/** Symbol einer Kategorie wie in der Vorlage – Verkehrszeichen, wo es eins gibt. */
 export function KategorieIcon({ id }: { id: KategorieId }) {
   switch (id) {
     case "grundstoff":
       return (
         <Kreis>
-          <Icon name="school-outline" size={28} color="#E4E6EA" />
+          <Icon name="car-outline" sf="car.fill" size={32} color="#FFFFFF" fallback={<MaterialCommunityIcons name="car" size={34} color="#FFFFFF" />} />
         </Kreis>
       );
     case "gefahren":
-      return <Icon name="warning-outline" size={40} color="#FF5A1F" weight="semibold" />;
+      return (
+        <Kreis>
+          <Icon name="warning-outline" size={36} color="#FF3B2F" weight="semibold" />
+        </Kreis>
+      );
     case "vorfahrt":
-      return <Verkehrszeichen zeichen="z306" groesse={46} />;
+      return <Verkehrszeichen zeichen="z306" groesse={52} />;
     case "zeichen":
-      return <Verkehrszeichen zeichen="z101" groesse={46} />;
+      return <TempoZeichen zahl={50} groesse={52} />;
     case "umwelt":
       return (
         <Kreis>
-          <Icon name="leaf" size={28} color={farben.gruen} />
+          <Icon name="leaf" size={34} color={farben.gruen} />
         </Kreis>
       );
     case "technik":
       return (
         <Kreis>
-          <Icon name="settings" size={30} color="#B4B9C1" />
+          <Icon name="settings" size={34} color="#E6E8EB" />
         </Kreis>
       );
     case "manoever":
       return (
         <Kreis>
-          <Icon name="walk" size={28} color="#B4B9C1" fallback={<MaterialCommunityIcons name="human-cane" size={32} color="#B4B9C1" />} />
+          <Icon name="walk" size={34} color="#FFFFFF" fallback={<MaterialCommunityIcons name="walk" size={36} color="#FFFFFF" />} />
         </Kreis>
       );
     case "tempo":
       return (
         <Kreis>
-          <Icon name="speedometer" size={28} color={farben.orange} />
+          <Icon name="speedometer" size={32} color={farben.orange} />
         </Kreis>
       );
     case "parken":
-      return <Verkehrszeichen zeichen="z314" groesse={44} />;
+      return <Verkehrszeichen zeichen="z314" groesse={48} />;
     case "autobahn":
       return (
         <Kreis>
-          <Icon name="car-outline" sf="road.lanes" size={26} color={farben.blau} fallback={<MaterialCommunityIcons name="highway" size={28} color={farben.blau} />} />
+          <Icon name="car-outline" sf="road.lanes" size={30} color={farben.blau} fallback={<MaterialCommunityIcons name="highway" size={30} color={farben.blau} />} />
         </Kreis>
       );
     case "mensch":
       return (
         <Kreis>
-          <Icon name="person" size={26} color="#B4B9C1" />
+          <Icon name="person" size={30} color="#E6E8EB" />
         </Kreis>
       );
     case "zahlen":
       return (
         <Kreis>
-          <Icon name="calculator" size={27} color={farben.gelb} />
+          <Icon name="calculator" size={30} color={farben.gelb} />
         </Kreis>
       );
   }
 }
 
-/** Zeile der Kategorienliste: Symbol, Titel, Anzahl, Balken und Foto rechts. */
+/** Kleines Symbol für Listen (Stärken & Schwächen). */
+export function KategorieMini({ id }: { id: KategorieId }) {
+  switch (id) {
+    case "zeichen":
+      return <Verkehrszeichen zeichen="z101" groesse={26} />;
+    case "vorfahrt":
+      return <Verkehrszeichen zeichen="z306" groesse={26} />;
+    case "gefahren":
+      return <Icon name="warning" size={24} color="#FF3B2F" />;
+    case "umwelt":
+      return <Icon name="leaf" size={24} color={farben.gruen} />;
+    case "technik":
+      return <Icon name="settings" size={24} color="#FFFFFF" />;
+    case "manoever":
+      return <Icon name="walk" size={24} color="#FFFFFF" />;
+    case "tempo":
+      return <Icon name="speedometer" size={23} color={farben.orange} />;
+    case "parken":
+      return <Verkehrszeichen zeichen="z314" groesse={24} />;
+    case "autobahn":
+      return <Icon name="car-outline" sf="road.lanes" size={22} color={farben.blau} />;
+    case "mensch":
+      return <Icon name="person" size={22} color="#FFFFFF" />;
+    case "zahlen":
+      return <Icon name="calculator" size={22} color={farben.gelb} />;
+    default:
+      return <Icon name="car-outline" sf="car.fill" size={22} color="#FFFFFF" />;
+  }
+}
+
+/** Zeile der Kategorienliste: Symbol, Titel, Anzahl, Balken mit Prozent und Foto rechts. */
 export function KategorieZeile({
   id,
   titel,
@@ -251,52 +285,60 @@ export function KategorieZeile({
         onPress();
       }}
       style={({ pressed }) => ({
-        height: 81,
-        borderRadius: 14,
+        height: 84,
+        borderRadius: 16,
         overflow: "hidden",
         backgroundColor: farben.flaeche,
         borderWidth: 1,
-        borderColor: farben.linie,
+        borderColor: "rgba(255,255,255,0.09)",
         flexDirection: "row",
         alignItems: "center",
         transform: [{ scale: pressed ? 0.985 : 1 }],
       })}
     >
-      <Image source={quelle} style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "54%", height: "100%" }} resizeMode="cover" />
+      <Image source={quelle} style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "58%", height: "100%" }} resizeMode="cover" />
       <LinearGradient
-        colors={[farben.flaeche, "rgba(22,24,28,0.86)", "rgba(22,24,28,0.25)", "rgba(22,24,28,0)"]}
-        locations={[0, 0.3, 0.72, 1]}
+        colors={[farben.flaeche, "rgba(13,19,23,0.8)", "rgba(13,19,23,0.22)", "rgba(13,19,23,0)"]}
+        locations={[0, 0.26, 0.6, 1]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
-        style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "62%" }}
+        style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "66%" }}
       />
-      <View style={{ width: 74, alignItems: "center", justifyContent: "center" }}>
+      <View style={{ width: 86, alignItems: "center", justifyContent: "center" }}>
         <KategorieIcon id={id} />
       </View>
       <View style={{ flex: 1, paddingRight: 56 }}>
-        <T v="h3" numberOfLines={1} style={{ fontSize: 17, lineHeight: 21, ...schrift.textHalb, textShadowColor: "rgba(0,0,0,0.7)", textShadowRadius: 6 }}>
+        <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 17.5, lineHeight: 22, color: "#FFFFFF", textShadowColor: "rgba(0,0,0,0.7)", textShadowRadius: 6 }}>
           {titel}
-        </T>
-        <T v="klein" farbe={farben.text2} style={{ ...schrift.text, fontSize: 14, lineHeight: 18, marginTop: 1 }}>
-          {anzahl === 1 ? "1 Frage" : `${anzahl} Fragen`}
-        </T>
-        <View style={{ width: 118, marginTop: 7 }}>
-          <Balken wert={anteil} hoehe={7} hintergrund="rgba(255,255,255,0.13)" />
+        </Text>
+        <Text style={{ ...schrift.text, fontSize: 15, lineHeight: 19, color: "#D3D7DC", marginTop: 2 }}>{anzahl === 1 ? "1 Frage" : `${anzahl} Fragen`}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 8 }}>
+          <View style={{ width: 112, height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.16)", overflow: "hidden" }}>
+            <LinearGradient
+              colors={orangeVerlauf}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={{ width: `${Math.max(0, Math.min(1, anteil)) * 100}%`, height: "100%", borderRadius: 4 }}
+            />
+          </View>
+          <Text style={{ ...schrift.textHalb, fontSize: 15, color: "#FFFFFF", textShadowColor: "rgba(0,0,0,0.7)", textShadowRadius: 4, fontVariant: ["tabular-nums"] }}>
+            {Math.round(anteil * 100)}%
+          </Text>
         </View>
       </View>
       <View
         style={{
           position: "absolute",
-          right: 10,
-          width: 32,
-          height: 32,
-          borderRadius: 16,
-          backgroundColor: "rgba(0,0,0,0.5)",
+          right: 12,
+          width: 38,
+          height: 38,
+          borderRadius: 19,
+          backgroundColor: "rgba(10,14,18,0.62)",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <Icon name="chevron-forward" size={18} color="#FFFFFF" />
+        <Icon name="chevron-forward" size={19} color="#FFFFFF" weight="semibold" />
       </View>
     </Pressable>
   );

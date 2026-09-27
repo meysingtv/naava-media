@@ -4,8 +4,7 @@ import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Abschnitt, Avatar, Chip, Eingabe, Gruppe, Karte, Knopf, kopfOben, KopfTaste, Segment, T, Zeile } from "@/components/ui";
-import { useInhaltUnten } from "@/components/tab-leiste";
+import { Abschnitt, Avatar, Chip, Eingabe, Gruppe, Karte, Knopf, kopfOben, KopfTaste, Segment, T, Zeile, zurueck } from "@/components/ui";
 import { GEGNER } from "@/lib/duell";
 import { tausender } from "@/lib/format";
 import { tippen } from "@/lib/haptik";
@@ -68,7 +67,6 @@ function duellStatus(d: DuellMitNamen, ich: string) {
 
 export default function Liga() {
   const insets = useSafeAreaInsets();
-  const inhaltUnten = useInhaltUnten();
   const { stand } = useStand();
   const { session, profil, gast, anzeigeName, abmelden, profilNeuLaden } = useKonto();
   const ich = session?.user.id ?? "";
@@ -140,7 +138,7 @@ export default function Liga() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: farben.grund }}
-      contentContainerStyle={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND, paddingBottom: inhaltUnten, gap: abstand(4) }}
+      contentContainerStyle={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND, paddingBottom: insets.bottom + 24, gap: abstand(4) }}
       keyboardShouldPersistTaps="handled"
     >
       <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginHorizontal: -8 }}>
@@ -149,7 +147,7 @@ export default function Liga() {
             Rangliste
           </T>
         </View>
-        <KopfTaste icon="arrow-back" label="Zur Startseite" onPress={() => router.navigate("/heute")} />
+        <KopfTaste icon="arrow-back" label="Zurück" onPress={zurueck} />
         <Pressable
           onPress={() => {
             tippen();

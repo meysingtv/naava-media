@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { Image, View } from "react-native";
+import { Image, Modal, Pressable, useWindowDimensions, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Circle, Path } from "react-native-svg";
 
 import type { BildKey, LageKey, LeuchteKey, ThemaId, ZeichenKey } from "@/lib/fragen";
 import { themaVon } from "@/lib/fragen";
 import { FOTOS, strassenFoto, themaFoto } from "@/lib/fotos";
+import { tippen } from "@/lib/haptik";
 import { farben, schrift } from "@/lib/theme";
+import { Icon } from "./icon";
 import { T } from "./ui";
 import { Lageplan } from "./lagen";
 import { Kontrollleuchte } from "./leuchten";
@@ -97,22 +100,25 @@ export function ThemaBanner({ thema, breite, punkte }: { thema: ThemaId; breite:
  */
 export function FrageBild({ bild, thema, punkte, kompakt }: { bild?: BildKey; thema: ThemaId; punkte?: number; kompakt?: boolean }) {
   const [breite, setBreite] = useState(0);
+  const [gross, setGross] = useState(false);
+  const fenster = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const istLage = bild?.startsWith("lage_");
   const istLeuchte = bild?.startsWith("leuchte_");
 
-  let inhalt: React.ReactNode = null;
-  if (breite > 0) {
-    if (!bild) inhalt = <ThemaBanner thema={thema} breite={breite} punkte={punkte} />;
-    else if (istLage) inhalt = <Lageplan lage={bild as LageKey} breite={breite} />;
-    else if (istLeuchte) inhalt = <Instrument leuchte={bild as LeuchteKey} breite={breite} />;
-    else if (kompakt)
-      inhalt = (
-        <View style={{ width: breite, paddingVertical: 14, alignItems: "center" }}>
+  const inhaltFuer = (b: number): React.ReactNode => {
+    if (b <= 0) return null;
+    if (!bild) return <ThemaBanner thema={thema} breite={b} punkte={punkte} />;
+    if (istLage) return <Lageplan lage={bild as LageKey} breite={b} />;
+    if (istLeuchte) return <Instrument leuchte={bild as LeuchteKey} breite={b} />;
+    if (kompakt)
+      return (
+        <View style={{ width: b, paddingVertical: 14, alignItems: "center" }}>
           <Verkehrszeichen zeichen={bild as ZeichenKey} groesse={96} />
         </View>
       );
-    else inhalt = <Fahrersicht zeichen={bild as ZeichenKey} breite={breite} />;
-  }
+    return <Fahrersicht zeichen={bild as ZeichenKey} breite={b} />;
+  };
 
   return (
     <View
@@ -126,7 +132,46 @@ export function FrageBild({ bild, thema, punkte, kompakt }: { bild?: BildKey; th
         minHeight: breite > 0 ? undefined : 180,
       }}
     >
-      {inhalt}
+      {inhaltFuer(breite)}
+      {bild && !kompakt && breite > 0 ? (
+        <Pressable
+          onPress={() => {
+            tippen();
+            setGross(true);
+          }}
+          accessibilityLabel="Bild vergrößern"
+          hitSlop={8}
+          style={({ pressed }) => ({
+            position: "absolute",
+            right: 10,
+            bottom: 10,
+            width: 38,
+            height: 38,
+            borderRadius: 19,
+            backgroundColor: "rgba(8,11,14,0.72)",
+            borderWidth: 1,
+            borderColor: "rgba(255,255,255,0.12)",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: pressed ? 0.8 : 1,
+          })}
+        >
+          <Icon name="expand-outline" sf="arrow.up.left.and.arrow.down.right" size={17} color="#FFFFFF" weight="semibold" />
+        </Pressable>
+      ) : null}
+
+      <Modal visible={gross} animationType="fade" transparent onRequestClose={() => setGross(false)} supportedOrientations={["portrait", "landscape"]}>
+        <Pressable onPress={() => setGross(false)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.96)", justifyContent: "center" }}>
+          <View style={{ borderRadius: 10, overflow: "hidden", marginHorizontal: 0 }}>{inhaltFuer(fenster.width)}</View>
+          <Pressable
+            onPress={() => setGross(false)}
+            accessibilityLabel="Schließen"
+            style={{ position: "absolute", top: insets.top + 8, right: 14, width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.14)", alignItems: "center", justifyContent: "center" }}
+          >
+            <Icon name="close" size={22} color="#FFFFFF" />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }

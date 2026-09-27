@@ -6,6 +6,7 @@ import * as Notifications from "expo-notifications";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Archivo_800ExtraBold, useFonts } from "@expo-google-fonts/archivo";
+import { MarckScript_400Regular } from "@expo-google-fonts/marck-script";
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 
 import { Icon } from "@/components/icon";
@@ -104,6 +105,9 @@ function Navigation() {
           <Stack.Screen name="duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="online-duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="clips" />
+          <Stack.Screen name="liga" />
+          <Stack.Screen name="favoriten" />
+          <Stack.Screen name="kalender" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="elo" />
           <Stack.Screen name="thema/[id]" />
           <Stack.Screen name="formeln" />
@@ -121,6 +125,7 @@ function Navigation() {
 export default function RootLayout() {
   const [schriftenGeladen] = useFonts({
     Archivo_800ExtraBold,
+    MarckScript_400Regular,
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,

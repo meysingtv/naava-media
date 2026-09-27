@@ -9,6 +9,11 @@ import { abstand, farben, schrift } from "@/lib/theme";
 
 type Zustand = "offen" | "gewaehlt" | "richtig" | "verpasst" | "falsch" | "aus";
 
+/** Antworten enden wie in der Prüfung mit Punkt. */
+function mitPunkt(text: string): string {
+  return /[.!?…)]$/.test(text.trim()) ? text : `${text}.`;
+}
+
 function Auswahlkreis({ zustand }: { zustand: Zustand }) {
   const gefuellt = zustand === "gewaehlt" || zustand === "richtig" || zustand === "falsch";
   const farbe =
@@ -16,9 +21,9 @@ function Auswahlkreis({ zustand }: { zustand: Zustand }) {
   return (
     <View
       style={{
-        width: 22,
-        height: 22,
-        borderRadius: 11,
+        width: 23,
+        height: 23,
+        borderRadius: 11.5,
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: gefuellt ? farbe : "transparent",
@@ -43,7 +48,7 @@ export function Rueckmeldung({ richtig, text }: { richtig: boolean; text: string
       style={{
         flexDirection: "row",
         gap: 12,
-        padding: 13,
+        padding: 14,
         borderRadius: 14,
         backgroundColor: richtig ? farben.gruenDunkel : "#2A1615",
         borderWidth: 1,
@@ -67,10 +72,10 @@ export function Rueckmeldung({ richtig, text }: { richtig: boolean; text: string
         <Icon name={richtig ? "checkmark" : "close"} size={22} color="#FFFFFF" />
       </View>
       <View style={{ flex: 1, gap: 3 }}>
-        <T v="h3" farbe={farbe} style={{ fontSize: 17, lineHeight: 21 }}>
+        <T v="h3" farbe={farbe} style={{ fontSize: 18, lineHeight: 22 }}>
           {richtig ? "Richtig!" : "Leider falsch"}
         </T>
-        <T v="text" farbe={farben.text} style={{ fontSize: 14, lineHeight: 19 }}>
+        <T v="text" farbe="#E6E8EB" style={{ fontSize: 15, lineHeight: 21 }}>
           {text}
         </T>
       </View>
@@ -111,7 +116,7 @@ export function FrageAnsicht({
   const metaZeigen = !ohneMeta && Boolean(kompakt) && !frage.bild;
 
   return (
-    <View style={{ gap: 16 }}>
+    <View style={{ gap: 14 }}>
       {mitBild ? <FrageBild bild={frage.bild} thema={frage.thema} punkte={frage.punkte} kompakt={kompakt} /> : null}
 
       <View style={{ gap: abstand(1.5) }}>
@@ -120,7 +125,7 @@ export function FrageAnsicht({
             {thema.titel} · {frage.punkte} Punkte
           </T>
         ) : null}
-        <T v="h2" style={{ fontSize: 18.5, lineHeight: 25 }}>
+        <T v="h2" style={{ fontSize: 20, lineHeight: 26, marginTop: 4 }}>
           {frage.text}
         </T>
       </View>
@@ -153,10 +158,10 @@ export function FrageAnsicht({
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 13,
-                  minHeight: 47,
+                  minHeight: 50,
                   paddingVertical: 11,
                   paddingHorizontal: 13,
-                  borderRadius: 11,
+                  borderRadius: 13,
                   borderWidth: 1.5,
                   borderColor: rand,
                   backgroundColor: flaeche,
@@ -166,7 +171,7 @@ export function FrageAnsicht({
               >
                 <Auswahlkreis zustand={zustand} />
                 <T v="textStark" style={{ flex: 1, ...schrift.text, fontSize: 15.5, lineHeight: 21 }}>
-                  {antwort.text}
+                  {mitPunkt(antwort.text)}
                 </T>
               </Pressable>
             );

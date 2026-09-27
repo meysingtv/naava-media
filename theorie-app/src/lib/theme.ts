@@ -5,37 +5,38 @@ import { Platform, type TextStyle } from "react-native";
 // feine helle Kante; Fotos bringen die Farbe in die Oberfläche.
 
 export const farben = {
-  // Werte direkt aus der Vorlage gemessen: bläuliches Schwarz, dunkle Karten
-  grund: "#06090D",
-  grundHoch: "#0A0E13",
-  flaeche: "#10151A",
-  flaeche2: "#1A1E24",
-  flaeche3: "#353A42",
-  option: "#18212A",
+  // Werte aus der Vorlage gemessen: fast schwarzer Grund, sehr dunkle Karten
+  grund: "#030507",
+  grundHoch: "#07090C",
+  flaeche: "#0D1317",
+  flaeche2: "#131A21",
+  flaeche3: "#2B3138",
+  option: "#111A20",
   linie: "rgba(255,255,255,0.08)",
-  linieStark: "rgba(255,255,255,0.16)",
+  linieStark: "rgba(255,255,255,0.14)",
 
   text: "#FFFFFF",
-  text2: "#D6D9DE",
-  text3: "#959AA2",
-  text4: "#62676F",
+  text2: "#D3D7DC",
+  text3: "#8F959D",
+  text4: "#5C626A",
 
-  orange: "#FC7400",
-  orangeHell: "#FF9105",
-  orangeTief: "#EC6600",
-  orangeSoft: "rgba(252,116,0,0.15)",
-  orangeLinie: "rgba(252,116,0,0.6)",
+  orange: "#FA6A1C",
+  orangeHell: "#FF8A2B",
+  orangeTief: "#F4501A",
+  orangeSoft: "rgba(250,106,28,0.15)",
+  orangeLinie: "rgba(250,106,28,0.6)",
   orangeDunkel: "#2A1A0B",
   aufOrange: "#FFFFFF",
 
   blau: "#4DA3FF",
   blauSoft: "rgba(77,163,255,0.14)",
-  gruen: "#62D149",
-  gruenSoft: "rgba(98,209,73,0.15)",
-  gruenDunkel: "#14231D",
-  gruenOption: "#22351F",
-  rot: "#FF5A4E",
-  rotSoft: "rgba(255,90,78,0.14)",
+  gruen: "#4ED053",
+  gruenSoft: "rgba(78,208,83,0.15)",
+  gruenDunkel: "#0B1B13",
+  gruenOption: "#132E1C",
+  rot: "#FF4A3D",
+  rotSoft: "rgba(255,74,61,0.14)",
+  pink: "#FF4D6D",
   gelb: "#FFB400",
   gelbSoft: "rgba(255,180,0,0.14)",
   bernstein: "#FD9E02",
@@ -45,10 +46,11 @@ export const farben = {
   kreisFlamme: "#3A2313",
   kreisSaeulen: "#141A1F",
   kreisStern: "#3D2A10",
-  iconKreis: "#202328",
+  iconKreis: "#1B262D",
   tipp: "#261A10",
-  ringSpur: "#46484C",
+  ringSpur: "#262B31",
   kachelWeiss: "#FFFBF5",
+  tabLeiste: "rgba(9,13,16,0.97)",
 
   // Verkehrszeichen und Lagepläne
   schildRot: "#C8102E",
@@ -58,8 +60,11 @@ export const farben = {
   schildSchwarz: "#111111",
   asphalt: "#2B2E35",
   asphaltRand: "#3B3F48",
-  gelaende: "#10141A",
+  gelaende: "#0C1014",
 } as const;
+
+/** Orangener Verlauf der Buttons: links heller, rechts ins Rote. */
+export const orangeVerlauf = ["#FF8A2B", "#FA6A1C", "#F4501A"] as const;
 
 type Gewicht = "400" | "500" | "600" | "700" | "800";
 
@@ -87,6 +92,9 @@ export const schrift = {
 };
 
 /** Schriften für SVG-Grafiken (brauchen einen festen Namen). */
+/** Handschrift für den Slogan auf der Startseite. */
+export const handschrift = "MarckScript_400Regular";
+
 export const svgSchrift = {
   text: "Inter_600SemiBold",
   fett: "Inter_700Bold",
@@ -101,9 +109,7 @@ export const abstand = (n: number) => n * 4;
 /** Seitenrand links/rechts. */
 export const RAND = 16;
 
-/** Farbe für eine Erfolgsquote: grün ab 75 %, bernstein ab 60 %, sonst orange. */
+/** Farbe für eine Erfolgsquote wie in der Vorlage: grün ab 75 %, sonst orange. */
 export function quoteFarbe(anteil: number): string {
-  if (anteil >= 0.75) return farben.gruen;
-  if (anteil >= 0.6) return farben.bernstein;
-  return farben.orange;
+  return anteil >= 0.75 ? farben.gruen : farben.orange;
 }

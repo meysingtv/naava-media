@@ -7,8 +7,11 @@
     "icon": "./assets/images/icon.png",
     "scheme": "spur",
     "userInterfaceStyle": "dark",
-    "backgroundColor": "#0B0C0F",
-    "platforms": ["ios", "android"],
+    "backgroundColor": "#030507",
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "ios": {
       "icon": "./assets/images/icon.png",
       "supportsTablet": false,
@@ -20,7 +23,7 @@
     "android": {
       "package": "de.spur.theorie",
       "adaptiveIcon": {
-        "backgroundColor": "#0B0C0F",
+        "backgroundColor": "#030507",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -32,13 +35,21 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0B0C0F",
+          "backgroundColor": "#030507",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 140
         }
       ],
       "expo-font",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Spur nutzt deine Fotos nur, wenn du ein Profilbild auswählst.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

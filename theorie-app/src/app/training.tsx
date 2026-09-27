@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Alert, Animated, Keyboard, KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import { Alert, Animated, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -8,9 +8,10 @@ import { Abschnitt, Chip, Gruppe, Knopf, kopfOben, KopfTaste, Plakette, T, Zeile
 import { FrageAnsicht } from "@/components/frage-ansicht";
 import { Ring } from "@/components/grafik";
 import { antwortRichtig, frageVon, FRAGEN, fragenZuThema, istBildfrage, istZeichen, themaVon, zahlLesen, type ThemaId } from "@/lib/fragen";
-import { erfolg, fehler } from "@/lib/haptik";
+import { erfolg, fehler, tippen } from "@/lib/haptik";
+import { frageMelden } from "@/lib/melden";
 import { fehlerIds, gemerktIds, gemischt, heuteBeantwortet, schwierigeIds, serieAktuell, smartAuswahl, useStand, type Stand } from "@/lib/stand";
-import { abstand, farben, RAND } from "@/lib/theme";
+import { abstand, farben, RAND, schrift } from "@/lib/theme";
 
 type Params = { modus?: string; thema?: string; start?: string };
 
@@ -199,11 +200,11 @@ export default function Training() {
       <View style={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND - 8, paddingBottom: abstand(3), gap: abstand(2.5) }}>
         <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
-            <T v="h3" style={{ fontSize: 19, fontVariant: ["tabular-nums"] }}>
-              Frage {index + 1}/{ids.length}
-            </T>
+            <Text style={{ ...schrift.textMittel, fontSize: 18, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>
+              Frage {index + 1} von {ids.length}
+            </Text>
           </View>
-          <KopfTaste icon="arrow-back" label="Training beenden" onPress={schliessen} />
+          <KopfTaste icon="close" label="Training beenden" onPress={schliessen} />
           <KopfTaste
             icon={gemerkt ? "heart" : "heart-outline"}
             farbe={gemerkt ? farben.orange : farben.text}
@@ -211,16 +212,16 @@ export default function Training() {
             onPress={() => merken(frage.id)}
           />
         </View>
-        <View style={{ marginHorizontal: 8, height: 10, borderRadius: 5, backgroundColor: farben.flaeche3 }}>
+        <View style={{ marginHorizontal: 12, height: 6, borderRadius: 3, backgroundColor: "#1C232B" }}>
           <View
             style={{
-              width: `${Math.max(4, ((index + (aufgedeckt ? 1 : 0)) / ids.length) * 100)}%`,
+              width: `${Math.max(3, ((index + (aufgedeckt ? 1 : 0)) / ids.length) * 100)}%`,
               height: "100%",
-              borderRadius: 5,
+              borderRadius: 3,
               backgroundColor: farben.orange,
               shadowColor: farben.orange,
               shadowOpacity: 0.7,
-              shadowRadius: 8,
+              shadowRadius: 6,
               shadowOffset: { width: 0, height: 0 },
             }}
           />
@@ -228,14 +229,34 @@ export default function Training() {
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <ScrollView ref={scroll} contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: abstand(8) }} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={scroll} contentContainerStyle={{ paddingHorizontal: 12, paddingTop: abstand(1), paddingBottom: abstand(6) }} keyboardShouldPersistTaps="handled">
           <FrageAnsicht frage={frage} auswahl={auswahl} onAuswahl={setAuswahl} eingabe={eingabe} onEingabe={setEingabe} aufgedeckt={aufgedeckt} />
         </ScrollView>
-        <View style={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: insets.bottom + abstand(3), backgroundColor: farben.grund }}>
+        <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: 12, paddingTop: abstand(2), paddingBottom: insets.bottom + abstand(3), backgroundColor: farben.grund }}>
+          <Pressable
+            onPress={() => {
+              tippen();
+              frageMelden(frage.id);
+            }}
+            accessibilityLabel="Frage melden"
+            style={({ pressed }) => ({
+              width: 54,
+              height: 54,
+              borderRadius: 17,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#1F262E",
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.1)",
+              opacity: pressed ? 0.8 : 1,
+            })}
+          >
+            <Icon name="flag-outline" sf="flag" size={22} color="#E6E8EB" />
+          </Pressable>
           {aufgedeckt ? (
-            <Knopf titel={letzte ? "Auswertung" : "Nächste Frage"} icon="arrow-forward" onPress={weiter} />
+            <Knopf titel={letzte ? "Auswertung" : "Nächste Frage"} icon="arrow-forward" onPress={weiter} style={{ flex: 1, height: 54 }} />
           ) : (
-            <Knopf titel="Antwort prüfen" deaktiviert={!kannPruefen} onPress={pruefen} />
+            <Knopf titel="Antwort prüfen" deaktiviert={!kannPruefen} onPress={pruefen} style={{ flex: 1, height: 54 }} />
           )}
         </View>
       </KeyboardAvoidingView>

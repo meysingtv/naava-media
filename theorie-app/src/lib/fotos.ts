@@ -28,6 +28,8 @@ export const FOTOS = {
   strasse2: require("../../assets/images/fotos/strasse2.jpg"),
   strasse3: require("../../assets/images/fotos/strasse3.jpg"),
   baeume: require("../../assets/images/fotos/baeume.jpg"),
+  held: require("../../assets/images/fotos/held.jpg"),
+  zitat: require("../../assets/images/fotos/zitat.jpg"),
 } satisfies Record<string, ImageSourcePropType>;
 
 export type FotoKey = keyof typeof FOTOS;
@@ -80,13 +82,13 @@ const roh: [FotoKey, string, string, string, string][] = [
   ["lernen", "Winding Road @ Sunset", "tan ah beng", "by 2.0", "https://www.flickr.com/photos/38243549@N02/4272752951"],
   ["simulation", "Examiner filling in driver's license road test form", "f0976531950157", "pdm 1.0", "https://www.flickr.com/photos/203928447@N02/54999169448"],
   ["pruefung", "View windscreen Audi interior two-lane", "rawpixel", "cc0 1.0", "https://www.rawpixel.com/image/3300549/free-photo-image-automobile-car-images-pictures"],
-  ["grundstoff", "The road to Cusco, Peru", "Dimitry B", "by 2.0", "https://www.flickr.com/photos/61533954@N00/15001243695"],
-  ["gefahren", "long way down", "paul bica", "by 2.0", "https://www.flickr.com/photos/99771506@N00/14319678044"],
+  ["grundstoff", "Gray SUV driving along bended road", "rawpixel", "cc0 1.0", "https://www.rawpixel.com/image/3300684/free-photo-image-car-outdoors-nature-abies-asphalt"],
+  ["gefahren", "Winding Road", "Ashley Knedler", "cc0 1.0", "https://stocksnap.io/photo/winding-road-NLG3251QQZ"],
   ["vorfahrt", "MS19 MS35 North Signs - Yield Intersection MS14", "formulanone", "by-sa 2.0", "https://www.flickr.com/photos/30552029@N00/27027102147"],
-  ["zeichen", "Speed Limit: 30 mph", "mikecogh", "by 2.0", "https://www.flickr.com/photos/89165847@N00/2442970873"],
-  ["umwelt", "Mecklenburg-Vorpommern", "ThomasKohler", "by 2.0", "https://www.flickr.com/photos/28077296@N02/5632654454"],
-  ["technik", "1974 SAAB 99LE engine", "liftarn", "by-sa 2.0", "https://www.flickr.com/photos/8543480@N06/1437963023"],
-  ["verhalten", "Bus Stop on the Dunsmuir Separated Bike Lane", "Paul Krueger", "by 2.0", "https://www.flickr.com/photos/30604571@N00/5134405164"],
+  ["zeichen", "Rural Winding", "Jordan Whitt", "cc0 1.0", "https://stocksnap.io/photo/rural-winding-CRR8H6RSRI"],
+  ["umwelt", "Winding Road", "Burst", "cc0 1.0", "https://stocksnap.io/photo/winding-road-CKBWHDZT4F"],
+  ["technik", "Vintage US car engine", "Markus Spiske", "cc0 1.0", "https://www.rawpixel.com/image/560250/vintage-car-engine"],
+  ["verhalten", "Cycling City", "Burst", "cc0 1.0", "https://stocksnap.io/photo/cycling-city-E5BW2K6ZYK"],
   ["tempo", "speedometer", "Sean MacEntee", "by 2.0", "https://www.flickr.com/photos/18090920@N07/5546966357"],
   ["parken", "Electric Car License Plates", "jurvetson", "by 2.0", "https://www.flickr.com/photos/44124348109@N01/3391637194"],
   ["autobahn", "Curve 80", "96dpi", "by 2.0", "https://www.flickr.com/photos/67499195@N00/2778343149"],
@@ -95,6 +97,8 @@ const roh: [FotoKey, string, string, string, string][] = [
   ["strasse1", "Country road", "prague.czech.photo", "by 2.0", "https://www.flickr.com/photos/99424477@N04/15214051925"],
   ["strasse2", "Euro Road Trip 2012 - 090", "Kyle Taylor, Dream It. Do It.", "by 2.0", "https://www.flickr.com/photos/95672737@N00/7345496698"],
   ["strasse3", "Landstrasse", "ThomasKohler", "by 2.0", "https://www.flickr.com/photos/28077296@N02/8586132860"],
+  ["held", "SUV driving curve mountain road (farblich angepasst)", "rawpixel", "cc0 1.0", "https://www.rawpixel.com/image/3286346/free-photo-image-driving-suv-cars-automobile"],
+  ["zitat", "Nature Landscape", "Hoach Le Dinh", "cc0 1.0", "https://stocksnap.io/photo/nature-landscape-O4DWC2WG2U"],
   ["baeume", "The drive from Arbury Hall - North Lodge", "ell brown", "by-sa 2.0", "https://www.flickr.com/photos/39415781@N06/33556283563"],
 ];
 
