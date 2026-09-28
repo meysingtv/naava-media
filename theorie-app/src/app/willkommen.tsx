@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, useWindowDimensions, View } from "react-native";
+import { Image, KeyboardAvoidingView, Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,7 +20,7 @@ export default function Willkommen() {
   const bildHoehe = Math.min(width * 0.92, 420);
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: farben.grund }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: farben.grund }} behavior="padding">
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + abstand(6) }} keyboardShouldPersistTaps="handled" bounces={false}>
         <View style={{ height: bildHoehe + insets.top, overflow: "hidden" }}>
           <Image source={FOTOS.tagesziel} style={{ position: "absolute", top: 0, left: 0, width, height: bildHoehe + insets.top }} resizeMode="cover" />

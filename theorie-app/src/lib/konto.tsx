@@ -1,7 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Alert, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as AppleAuthentication from "expo-apple-authentication";
+import * as Crypto from "expo-crypto";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import type { Session } from "@supabase/supabase-js";
@@ -96,19 +97,38 @@ function fehlerText(meldung: string): string {
   if (/network|fetch/i.test(meldung)) return "Keine Verbindung. Bitte prüfe dein Internet.";
   if (/rate limit/i.test(meldung)) return "Zu viele Versuche. Bitte warte kurz.";
   if (/provider is not enabled|unsupported provider/i.test(meldung)) return "Diese Anmeldung ist auf dem Server noch nicht eingeschaltet.";
+  if (/lern_profil_name_laenge/.test(meldung)) return "Der Name darf höchstens 40 Zeichen lang sein.";
+  if (/lern_profil_bundesland_gueltig/.test(meldung)) return "Bitte wähle ein Bundesland aus der Liste.";
+  if (/code verifier/i.test(meldung))
+    return "Öffne den Link bitte auf dem Handy, auf dem du ihn angefordert hast. War es die Bestätigungs-Mail, ist deine Adresse trotzdem bestätigt – melde dich einfach an.";
   return meldung;
 }
 
-/** Tokens aus einem Rückkehr-Link (…#access_token=…&refresh_token=…) lesen. */
-function tokensAus(url: string): { access_token: string; refresh_token: string; type: string | null; fehler: string | null } | null {
-  const teil = url.includes("#") ? url.slice(url.indexOf("#") + 1) : url.includes("?") ? url.slice(url.indexOf("?") + 1) : "";
-  if (!teil) return null;
-  const p = new URLSearchParams(teil);
+/** Parameter eines Rückkehr-Links – aus „?…“ und „#…“ zusammen. */
+function linkParameter(url: string): URLSearchParams {
+  const frage = url.indexOf("?");
+  const raute = url.indexOf("#");
+  const abfrage = frage >= 0 ? url.slice(frage + 1, raute > frage ? raute : undefined) : "";
+  const anker = raute >= 0 ? url.slice(raute + 1) : "";
+  const p = new URLSearchParams(abfrage);
+  new URLSearchParams(anker).forEach((wert, name) => p.set(name, wert));
+  return p;
+}
+
+/**
+ * Einmal-Code aus einem Rückkehr-Link einlösen (PKCE). Das klappt nur mit
+ * dem Geheimnis, das diese App beim Start der Anmeldung gespeichert hat –
+ * fremde oder abgefangene Links melden niemanden an. null = kein Anmelde-Link.
+ */
+async function codeEinloesen(url: string): Promise<{ fehler: string | null } | null> {
+  const p = linkParameter(url);
   const fehler = p.get("error_description");
-  const access_token = p.get("access_token");
-  const refresh_token = p.get("refresh_token");
-  if (!fehler && (!access_token || !refresh_token)) return null;
-  return { access_token: access_token ?? "", refresh_token: refresh_token ?? "", type: p.get("type"), fehler: fehler ? fehler.replace(/\+/g, " ") : null };
+  if (fehler) return { fehler: fehler.replace(/\+/g, " ") };
+  const code = p.get("code");
+  if (!code) return null;
+  const flowId = p.get("sb_flow_id");
+  const { error } = await supabase.auth.exchangeCodeForSession(code, flowId ? { flowId } : undefined);
+  return { fehler: error ? fehlerText(error.message) : null };
 }
 
 export function KontoProvider({ children }: { children: ReactNode }) {
@@ -117,6 +137,8 @@ export function KontoProvider({ children }: { children: ReactNode }) {
   const [profil, setProfil] = useState<Profil | null>(null);
   const [gastName, setGastName] = useState<string | null>(null);
   const [passwortNeuFaellig, setPasswortNeuFaellig] = useState(false);
+  /** Läuft gerade eine Anmeldung im Browser? Dann löst imBrowser() den Rückkehr-Link ein. */
+  const imBrowserAktiv = useRef(false);
 
   const profilLaden = useCallback(async (s: Session | null) => {
     if (!s) {
@@ -158,9 +180,11 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     })();
 
     const { data: abo } = serverVerbunden
-      ? supabase.auth.onAuthStateChange((_ereignis, s) => {
+      ? supabase.auth.onAuthStateChange((ereignis, s) => {
           setSession(s);
           profilLaden(s);
+          // Über den Link „Passwort zurücksetzen“ angemeldet → neues Passwort fällig.
+          if (ereignis === "PASSWORD_RECOVERY") setPasswortNeuFaellig(true);
         })
       : { data: null };
     return () => {
@@ -241,13 +265,14 @@ export function KontoProvider({ children }: { children: ReactNode }) {
         options: { redirectTo: ziel, skipBrowserRedirect: true, queryParams: anbieter === "google" ? { prompt: "select_account" } : undefined },
       });
       if (error || !data?.url) return { fehler: fehlerText(error?.message ?? `${name}-Anmeldung konnte nicht starten.`) };
-      const antwort = await WebBrowser.openAuthSessionAsync(data.url, ziel);
+      imBrowserAktiv.current = true;
+      const antwort = await WebBrowser.openAuthSessionAsync(data.url, ziel).finally(() => {
+        imBrowserAktiv.current = false;
+      });
       if (antwort.type !== "success") return { abgebrochen: true };
-      const t = tokensAus(antwort.url);
-      if (!t) return { fehler: `${name} hat keine Anmeldung zurückgegeben. Bitte versuch es noch einmal.` };
-      if (t.fehler) return { fehler: t.fehler };
-      const { error: fehler } = await supabase.auth.setSession({ access_token: t.access_token, refresh_token: t.refresh_token });
-      if (fehler) return { fehler: fehlerText(fehler.message) };
+      const e = await codeEinloesen(antwort.url);
+      if (!e) return { fehler: `${name} hat keine Anmeldung zurückgegeben. Bitte versuch es noch einmal.` };
+      if (e.fehler) return { fehler: e.fehler };
       await nachSozialAnmeldung(rolle);
       return {};
     },
@@ -263,11 +288,16 @@ export function KontoProvider({ children }: { children: ReactNode }) {
       const nativ = Platform.OS === "ios" && (await AppleAuthentication.isAvailableAsync().catch(() => false));
       if (!nativ) return imBrowser("apple", rolle);
       try {
+        // Einmalwert gegen wiederverwendete Apple-Anmeldungen: Apple bekommt
+        // den Hash, der Server prüft ihn gegen den Rohwert.
+        const nonce = Crypto.randomUUID();
+        const nonceHash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, nonce);
         const cred = await AppleAuthentication.signInAsync({
           requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
+          nonce: nonceHash,
         });
         if (!cred.identityToken) return { fehler: "Apple hat keine Anmeldung zurückgegeben." };
-        const { data, error } = await supabase.auth.signInWithIdToken({ provider: "apple", token: cred.identityToken });
+        const { data, error } = await supabase.auth.signInWithIdToken({ provider: "apple", token: cred.identityToken, nonce });
         if (error) return { fehler: fehlerText(error.message) };
         // Den Namen gibt Apple nur beim allerersten Mal heraus – dann gleich übernehmen.
         const vorname = cred.fullName?.givenName?.trim();
@@ -331,26 +361,23 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     return error ? null : Boolean(data);
   }, []);
 
-  // Links aus den Mails (Bestätigung, Passwort zurücksetzen) melden direkt an.
+  // Links aus den Mails (Bestätigung, Passwort zurücksetzen) melden direkt an –
+  // aber nur mit dem Einmal-Code, den diese App selbst angefordert hat.
   useEffect(() => {
     if (!serverVerbunden) return;
     async function verarbeiten(url: string | null) {
-      if (!url || !url.includes("#")) return;
-      const t = tokensAus(url);
-      if (!t) return;
-      if (t.fehler) {
-        Alert.alert("Link abgelaufen", `${t.fehler}\n\nFordere einfach einen neuen an.`);
-        return;
-      }
-      const { access_token, refresh_token } = t;
-      const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-      if (error) {
-        Alert.alert("Anmeldung fehlgeschlagen", fehlerText(error.message));
+      if (!url) return;
+      // Google/Apple im Browser löst imBrowser() selbst ein – außer die App
+      // wurde währenddessen beendet und startet mit dem Rückkehr-Link neu.
+      if (url.includes("auth-callback") && imBrowserAktiv.current) return;
+      const e = await codeEinloesen(url);
+      if (!e) return;
+      if (e.fehler) {
+        Alert.alert("Link nicht gültig", `${e.fehler}\n\nFordere sonst einfach einen neuen Link an.`);
         return;
       }
       await AsyncStorage.removeItem(GAST).catch(() => {});
       setGastName(null);
-      if (t.type === "recovery") setPasswortNeuFaellig(true);
     }
     Linking.getInitialURL().then(verarbeiten);
     const abo = Linking.addEventListener("url", ({ url }) => verarbeiten(url));

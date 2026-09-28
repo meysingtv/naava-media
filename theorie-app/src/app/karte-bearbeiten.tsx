@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -11,6 +11,7 @@ import type { ZeichenKey } from "@/lib/fragen";
 import { erfolg, tippen } from "@/lib/haptik";
 import { useStand } from "@/lib/stand";
 import { abstand, farben, RAND, schrift } from "@/lib/theme";
+import { useZurueckTaste } from "@/lib/zurueck-taste";
 
 const MAX_VORNE = 200;
 const MAX_HINTEN = 400;
@@ -103,6 +104,8 @@ export default function KarteBearbeiten() {
     ]);
   }
 
+  useZurueckTaste(schliessen);
+
   function loeschen() {
     if (!altEigen) return;
     Alert.alert("Karte löschen?", "Die Karte ist danach weg.", [
@@ -126,7 +129,7 @@ export default function KarteBearbeiten() {
         onZurueck={schliessen}
         rechts={altEigen ? <KopfTaste icon="trash-outline" farbe={farben.rot} label="Karte löschen" onPress={loeschen} /> : undefined}
       />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: abstand(8), gap: 20 }} keyboardShouldPersistTaps="handled">
           <Feld titel="Vorderseite" wert={vorne} onWechsel={setVorne} platzhalter="Frage oder Begriff, z. B. „Was gilt bei Zeichen 205?“" max={MAX_VORNE} hoehe={96} autoFocus={!altEigen} />
           <Feld titel="Rückseite" wert={hinten} onWechsel={setHinten} platzhalter="Antwort oder Merksatz" max={MAX_HINTEN} hoehe={120} />

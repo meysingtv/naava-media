@@ -1,6 +1,6 @@
 # Fahrschule Pro – Theorie-App
 
-Eigenständige iOS-App zum Lernen der Führerschein-Theorie in Schwarz und
+Eigenständige App (iPhone und Android) zum Lernen der Führerschein-Theorie in Schwarz und
 Orange mit Fotokarten: Home mit Tagesziel und Schnellstart, Kategorien mit
 Favoriten und schwierigen Fragen, Fragen in der Fahrersicht, Training mit
 Lernfächern, Prüfungssimulation mit Fehlerpunkten, „Mein Fortschritt“ mit
@@ -17,8 +17,11 @@ Einstellungen → Bildnachweise.
 ```
 cd theorie-app
 npm install
-npx expo run:ios
+npx expo run:ios      # oder: npx expo run:android
 ```
+
+Android (Unterschiede, Testen, Play Store): `docs/android.md`.
+Sicherheit (was geschützt ist, was in Supabase einzustellen ist): `docs/sicherheit.md`.
 
 Ohne Server läuft die App im Gastmodus – der Lernstand bleibt auf dem Gerät.
 

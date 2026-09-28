@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
@@ -317,7 +317,7 @@ export function KommentarBlatt({
     <Modal visible={clip != null} transparent animationType="slide" onRequestClose={onSchliessen} statusBarTranslucent>
       <View style={{ flex: 1, justifyContent: "flex-end" }}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onSchliessen} accessibilityLabel="Kommentare schließen" />
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <KeyboardAvoidingView behavior="padding">
           <View style={{ height: Math.round(height * 0.68), backgroundColor: BLATT, borderTopLeftRadius: 18, borderTopRightRadius: 18, overflow: "hidden" }}>
             {/* Kopf */}
             <View style={{ height: 50, alignItems: "center", justifyContent: "center", borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.06)" }}>

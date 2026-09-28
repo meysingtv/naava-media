@@ -12,7 +12,7 @@ import { KopfTaste, Segment, kopfOben, zurueck } from "@/components/ui";
 import { THEMEN, themaVon, type ThemaId } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
 import { auswertung, fortschritt, lernzeitText, serieAktuell, tagKey, useStand, wochenStart, type Stand, type Zeitraum } from "@/lib/stand";
-import { farben, quoteFarbe, schrift, verlauf } from "@/lib/theme";
+import { farben, leuchten, quoteFarbe, schrift, verlauf } from "@/lib/theme";
 
 /** Diese Bereiche stehen immer da – in der Reihenfolge der Vorlage. */
 const HAUPTBEREICHE: ThemaId[] = ["zeichen", "vorfahrt", "gefahren", "umwelt", "technik", "manoever"];
@@ -149,7 +149,7 @@ function Diagramm({ saeulen }: { saeulen: Saeule[] }) {
                     borderRadius: 6,
                     overflow: "hidden",
                     opacity: s.wert > 0 ? 1 : 0.35,
-                    ...(aktiv ? { shadowColor: farben.orange, shadowOpacity: 0.8, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } } : null),
+                    ...(aktiv ? { ...leuchten(farben.orange, 0.8, 10, 0) } : null),
                   }}
                 >
                   <LinearGradient colors={verlauf.saeule} locations={[0, 0.4, 0.75, 1]} style={{ flex: 1 }} />

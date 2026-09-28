@@ -22,8 +22,10 @@ import { farben, schrift } from "@/lib/theme";
 
 const SCHATTEN_TEXT = { textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 6, textShadowOffset: { width: 0, height: 1 } } as const;
 // Schatten folgt auf iOS der Form des Symbols; anderswo wäre es ein Kasten.
+// Auf Android ist das Symbol ein Schriftzeichen – dort bekommt es den Textschatten.
 const SCHATTEN_ICON =
   Platform.OS === "ios" ? ({ shadowColor: "#000000", shadowOpacity: 0.45, shadowRadius: 5, shadowOffset: { width: 0, height: 1 } } as const) : null;
+const SCHATTEN_GLYPHE = Platform.OS === "ios" ? undefined : SCHATTEN_TEXT;
 
 /** Symbol mit Zahl daneben – ohne Fläche, direkt auf dem Video. */
 function Aktion({
@@ -52,7 +54,7 @@ function Aktion({
       style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 7, minHeight: 34, opacity: pressed ? 0.65 : 1 })}
     >
       <Animated.View style={[SCHATTEN_ICON, skala ? { transform: [{ scale: skala }] } : null]}>
-        <Icon name={icon} sf={sf} size={25} color={aktiv ? farben.orange : "#FFFFFF"} weight="semibold" />
+        <Icon name={icon} sf={sf} size={25} color={aktiv ? farben.orange : "#FFFFFF"} weight="semibold" style={SCHATTEN_GLYPHE} />
       </Animated.View>
       {text != null ? (
         <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 14.5, color: "#FFFFFF", fontVariant: ["tabular-nums"], ...SCHATTEN_TEXT }}>

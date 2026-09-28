@@ -14,7 +14,7 @@ import { FOTOS } from "@/lib/fotos";
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { fortschritt, heuteBeantwortet, serieAktuell, useStand, wocheTage } from "@/lib/stand";
-import { farben, handschrift, schrift, verlauf } from "@/lib/theme";
+import { farben, handschrift, leuchten, schrift, verlauf } from "@/lib/theme";
 
 const RAND = 16;
 
@@ -150,10 +150,7 @@ export default function Home() {
             borderRadius: 30,
             overflow: "hidden",
             transform: [{ scale: pressed ? 0.98 : 1 }],
-            shadowColor: farben.orange,
-            shadowOpacity: 0.45,
-            shadowRadius: 18,
-            shadowOffset: { width: 0, height: 6 },
+            ...leuchten(farben.orange, 0.45, 18, 6),
           })}
         >
           <LinearGradient colors={verlauf.knopf} locations={[0, 0.5, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />

@@ -10,7 +10,7 @@ import { Chip, Knopf, kopfOben, KopfTaste, Plakette, T } from "@/components/ui";
 import { erfolg, tippen } from "@/lib/haptik";
 import { karteInhalt, lernListe, stapelIds, stapelTitel, type LernAuswahl, type StapelId } from "@/lib/karteikarten";
 import { KARTEN_ABSTAENDE, karteFaellig, useStand } from "@/lib/stand";
-import { abstand, farben, RAND, schrift } from "@/lib/theme";
+import { abstand, farben, leuchten, RAND, schrift } from "@/lib/theme";
 
 type Params = { stapel?: string; alle?: string };
 
@@ -187,10 +187,7 @@ export default function KartenLernen() {
               height: "100%",
               borderRadius: 3,
               backgroundColor: farben.orangeHell,
-              shadowColor: farben.orangeHell,
-              shadowOpacity: 0.7,
-              shadowRadius: 6,
-              shadowOffset: { width: 0, height: 0 },
+              ...leuchten(farben.orangeHell, 0.7, 6, 0),
             }}
           />
         </View>

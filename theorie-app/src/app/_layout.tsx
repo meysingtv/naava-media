@@ -9,6 +9,7 @@ import { Archivo_800ExtraBold, useFonts } from "@expo-google-fonts/archivo";
 import { MarckScript_400Regular } from "@expo-google-fonts/marck-script";
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 
+import { AuswahlBlattHost } from "@/components/auswahl-blatt";
 import { Icon } from "@/components/icon";
 import { T } from "@/components/ui";
 import { erfolgVon } from "@/lib/erfolge";
@@ -138,6 +139,7 @@ function Navigation() {
         </Stack.Protected>
       </Stack>
       <ErfolgHinweis />
+      <AuswahlBlattHost />
     </View>
   );
 }

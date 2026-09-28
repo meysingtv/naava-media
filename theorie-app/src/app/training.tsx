@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Keyboard, KeyboardAvoidingView, Pressable, ScrollView, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -13,7 +13,8 @@ import { antwortRichtig, frageVon, FRAGEN, fragenZuThema, istBildfrage, istZeich
 import { erfolg, fehler, tippen } from "@/lib/haptik";
 import { frageMelden } from "@/lib/melden";
 import { fehlerIds, gemerktIds, gemischt, heuteBeantwortet, schwierigeIds, serieAktuell, smartAuswahl, useStand, type Stand } from "@/lib/stand";
-import { abstand, farben, RAND, schrift } from "@/lib/theme";
+import { abstand, farben, leuchten, RAND, schrift } from "@/lib/theme";
+import { useZurueckTaste } from "@/lib/zurueck-taste";
 
 type Params = { modus?: string; thema?: string; start?: string };
 
@@ -88,6 +89,8 @@ export default function Training() {
       { text: "Beenden", style: "destructive", onPress: () => router.back() },
     ]);
   }
+
+  useZurueckTaste(schliessen);
 
   function pruefen() {
     if (!frage) return;
@@ -235,16 +238,13 @@ export default function Training() {
               height: "100%",
               borderRadius: 3,
               backgroundColor: farben.orangeHell,
-              shadowColor: farben.orangeHell,
-              shadowOpacity: 0.7,
-              shadowRadius: 6,
-              shadowOffset: { width: 0, height: 0 },
+              ...leuchten(farben.orangeHell, 0.7, 6, 0),
             }}
           />
         </View>
       </View>
 
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <ScrollView ref={scroll} contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(1), paddingBottom: abstand(6) }} keyboardShouldPersistTaps="handled">
           <FrageAnsicht
             frage={frage}

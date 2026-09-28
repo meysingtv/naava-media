@@ -12,6 +12,7 @@ import { useKonto } from "@/lib/konto";
 import { duellLaden, ergebnisMelden, ONLINE_SEKUNDEN, sicht, type DuellMitNamen, type OnlineDuell } from "@/lib/online-duell";
 import { useStand } from "@/lib/stand";
 import { abstand, farben, radius, RAND, schrift } from "@/lib/theme";
+import { useZurueckTaste } from "@/lib/zurueck-taste";
 
 type Phase = "laden" | "start" | "runde" | "senden" | "ende";
 
@@ -120,6 +121,8 @@ export default function OnlineDuellSeite() {
       { text: "Verlassen", style: "destructive", onPress: () => router.back() },
     ]);
   }
+
+  useZurueckTaste(schliessen);
 
   // ------------------------------------------------------------------ Laden / Senden
   if (phase === "laden" || phase === "senden") {

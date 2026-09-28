@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
+import { Alert, Keyboard, KeyboardAvoidingView, Pressable, ScrollView, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -14,7 +14,8 @@ import { antwortRichtig, frageVon, FRAGEN, THEMEN, themaVon, type Frage } from "
 import { datumKurz, dauer } from "@/lib/format";
 import { erfolg, fehler, tippen } from "@/lib/haptik";
 import { gemischt, useStand } from "@/lib/stand";
-import { abstand, farben, RAND, schrift } from "@/lib/theme";
+import { abstand, farben, leuchten, RAND, schrift } from "@/lib/theme";
+import { useZurueckTaste } from "@/lib/zurueck-taste";
 
 const FRAGEN_ANZAHL = 30;
 const MAX_FEHLERPUNKTE = 10;
@@ -113,6 +114,18 @@ export default function Pruefung() {
       ],
     );
   }
+
+  function abbrechenFragen() {
+    if (phase !== "laeuft") {
+      router.back();
+      return;
+    }
+    Alert.alert("Simulation abbrechen?", "Diese Simulation wird nicht gewertet.", [
+      { text: "Weiter prüfen", style: "cancel" },
+      { text: "Abbrechen", style: "destructive", onPress: () => router.back() },
+    ]);
+  }
+  useZurueckTaste(abbrechenFragen);
 
   // ------------------------------------------------------------------ Start
   if (phase === "start") {
@@ -287,12 +300,7 @@ export default function Pruefung() {
           <KopfTaste
             icon="close"
             label="Simulation abbrechen"
-            onPress={() =>
-              Alert.alert("Simulation abbrechen?", "Diese Simulation wird nicht gewertet.", [
-                { text: "Weiter prüfen", style: "cancel" },
-                { text: "Abbrechen", style: "destructive", onPress: () => router.back() },
-              ])
-            }
+            onPress={abbrechenFragen}
           />
           <Pressable onPress={abgebenFragen} hitSlop={10} style={{ paddingHorizontal: abstand(2), height: 40, justifyContent: "center" }}>
             <T v="textStark" farbe={farben.orange}>
@@ -307,10 +315,7 @@ export default function Pruefung() {
               height: "100%",
               borderRadius: 5,
               backgroundColor: farben.orange,
-              shadowColor: farben.orange,
-              shadowOpacity: 0.7,
-              shadowRadius: 8,
-              shadowOffset: { width: 0, height: 0 },
+              ...leuchten(farben.orange, 0.7, 8, 0),
             }}
           />
         </View>
@@ -348,7 +353,7 @@ export default function Pruefung() {
         })}
       </ScrollView>
 
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <ScrollView ref={scroll} contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(1), paddingBottom: abstand(8) }} keyboardShouldPersistTaps="handled">
           <FrageAnsicht
             frage={frage}

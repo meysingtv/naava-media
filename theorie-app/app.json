@@ -23,6 +23,8 @@
     },
     "android": {
       "package": "de.spur.theorie",
+      "allowBackup": false,
+      "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW", "android.permission.WRITE_EXTERNAL_STORAGE"],
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -42,7 +44,13 @@
         }
       ],
       "expo-font",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/benachrichtigung.png",
+          "color": "#FC5B0E"
+        }
+      ],
       [
         "expo-image-picker",
         {
@@ -61,7 +69,9 @@
       ],
       "expo-video",
       "expo-web-browser",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "./plugins/android-sicherheit",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Pressable, ScrollView, Text, TextInput, useWindowDimensions, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useVideoPlayer, VideoView } from "expo-video";
@@ -122,7 +122,7 @@ export default function ClipHochladen() {
   const vorschauBreite = Math.min(width * 0.46, 190);
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: farben.grund }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: farben.grund }} behavior="padding">
       <Kopf titel="Clip hochladen" schliessen />
       <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(8), gap: abstand(5) }} keyboardShouldPersistTaps="handled">
         {video ? (

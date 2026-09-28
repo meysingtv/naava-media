@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { tippen } from "@/lib/haptik";
-import { abstand, farben, radius, RAND, schrift, verlauf } from "@/lib/theme";
+import { abstand, farben, leuchten, radius, RAND, schrift, verlauf } from "@/lib/theme";
 
 export type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -190,7 +190,7 @@ export function Knopf({
           transform: [{ scale: pressed && !aus ? 0.985 : 1 }],
         },
         art === "primaer" && !deaktiviert
-          ? { shadowColor: farben.orange, shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 0, height: 6 } }
+          ? { ...leuchten(farben.orange, 0.35, 14, 6) }
           : null,
         style,
       ]}
@@ -276,10 +276,7 @@ export function PfeilKreis({ groesse = 28 }: { groesse?: number }) {
         backgroundColor: farben.orange,
         alignItems: "center",
         justifyContent: "center",
-        shadowColor: farben.orange,
-        shadowOpacity: 0.5,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 2 },
+        ...leuchten(farben.orange, 0.5, 8, 2),
       }}
     >
       <Icon name="chevron-forward" size={groesse * 0.55} color="#FFFFFF" style={{ marginLeft: 1 }} />
@@ -361,10 +358,7 @@ export function Segment<W extends string>({
             borderRadius: 17,
             overflow: "hidden",
             transform: [{ translateX: x.interpolate({ inputRange: [0, 1], outputRange: [0, teil] }) }],
-            shadowColor: farben.orange,
-            shadowOpacity: 0.4,
-            shadowRadius: 10,
-            shadowOffset: { width: 0, height: 3 },
+            ...leuchten(farben.orange, 0.4, 10, 3),
           }}
         >
           <LinearGradient colors={verlauf.segment} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ flex: 1, borderRadius: 17 }} />

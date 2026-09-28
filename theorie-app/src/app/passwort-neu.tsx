@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { Alert, KeyboardAvoidingView, ScrollView } from "react-native";
 import { router } from "expo-router";
 
 import { Knopf, Kopf, PasswortEingabe, T } from "@/components/ui";
@@ -28,7 +28,7 @@ export default function PasswortNeu() {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: farben.grund }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: farben.grund }} behavior="padding">
       <Kopf titel="Neues Passwort" ohneZurueck />
       <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(4), gap: abstand(4) }} keyboardShouldPersistTaps="handled">
         <T v="titel">Leg ein neues Passwort fest.</T>

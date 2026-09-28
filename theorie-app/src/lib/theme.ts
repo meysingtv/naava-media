@@ -1,4 +1,4 @@
-import { Platform, type TextStyle } from "react-native";
+import { Platform, type TextStyle, type ViewStyle } from "react-native";
 
 // Design-Tokens von „Fahrschule Pro“: tiefes Schwarz als Grund, kräftiges Orange als
 // Signalfarbe, Grün für richtig. Karten sind leicht angehoben und tragen eine
@@ -96,9 +96,15 @@ const INTER: Record<Gewicht, string> = {
   "800": "Inter_800ExtraBold",
 };
 
-/** Auf dem iPhone die Systemschrift (San Francisco) wie in der Vorlage, sonst Inter. */
+/**
+ * Auf dem iPhone die Systemschrift (San Francisco) wie in der Vorlage, sonst
+ * Inter. Android setzt über und unter Text sonst zusätzlichen Innenabstand –
+ * ohne ihn sitzen Texte wie auf dem iPhone.
+ */
 function schnitt(g: Gewicht): TextStyle {
-  return Platform.OS === "ios" ? { fontFamily: "System", fontWeight: g } : { fontFamily: INTER[g] };
+  if (Platform.OS === "ios") return { fontFamily: "System", fontWeight: g };
+  if (Platform.OS === "android") return { fontFamily: INTER[g], includeFontPadding: false };
+  return { fontFamily: INTER[g] };
 }
 
 export const schrift = {
@@ -121,6 +127,21 @@ export const svgSchrift = {
   /** Schmale Schrift für Zahlen auf Verkehrszeichen und das Logo. */
   schild: "Archivo_800ExtraBold",
 } as const;
+
+/** „#RRGGBB“ mit Deckkraft als rgba(). */
+function mitDeckkraft(hex: string, a: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+/**
+ * Farbiges Leuchten bzw. Schatten. Auf dem iPhone wie gehabt über shadow*,
+ * auf Android (und im Web) als boxShadow – iOS-Schatten zeichnet Android nicht.
+ */
+export function leuchten(farbe: string, deckkraft: number, radius: number, y = 0): ViewStyle {
+  if (Platform.OS === "ios") return { shadowColor: farbe, shadowOpacity: deckkraft, shadowRadius: radius, shadowOffset: { width: 0, height: y } };
+  return { boxShadow: `0px ${y}px ${radius * 2}px ${mitDeckkraft(farbe, deckkraft)}` };
+}
 
 export const radius = { s: 10, m: 14, l: 18, xl: 24, voll: 999 } as const;
 

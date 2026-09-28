@@ -16,7 +16,7 @@ import type { ZeichenKey } from "@/lib/fragen";
 import { erfolg, fehler, stoss, tippen } from "@/lib/haptik";
 import { ALBUM, mittelQuadrat, rahmenImFoto, schildErkennen, schildInfo, XP_JE_SCHILD, XP_QUIZ, type Erkennung } from "@/lib/schilder-jagd";
 import { gemischt, useStand } from "@/lib/stand";
-import { farben, schrift } from "@/lib/theme";
+import { farben, leuchten, schrift } from "@/lib/theme";
 
 type Quiz = { optionen: string[]; richtig: number };
 
@@ -319,10 +319,7 @@ export default function SchildScanner() {
                         height: 3,
                         borderRadius: 2,
                         backgroundColor: farben.orange,
-                        shadowColor: farben.orange,
-                        shadowOpacity: 0.9,
-                        shadowRadius: 10,
-                        shadowOffset: { width: 0, height: 0 },
+                        ...leuchten(farben.orange, 0.9, 10, 0),
                         transform: [{ translateY: linie.interpolate({ inputRange: [0, 1], outputRange: [10, groesse - 12] }) }],
                       }}
                     />

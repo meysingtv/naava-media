@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Platform, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
+import { Platform, type StyleProp, type TextStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SymbolView, type SFSymbol, type SymbolWeight } from "expo-symbols";
 
@@ -132,12 +132,12 @@ export function Icon({
   size?: number;
   color: string;
   weight?: SymbolWeight;
-  style?: StyleProp<ViewStyle>;
+  style?: StyleProp<TextStyle>;
 }) {
   const symbol = Platform.OS === "ios" ? sf ?? SF[name] : undefined;
   if (symbol) {
     return <SymbolView name={symbol} size={size} tintColor={color} weight={weight} type="monochrome" style={[{ width: size, height: size }, style]} />;
   }
   if (fallback) return <>{fallback}</>;
-  return <Ionicons name={name} size={size} color={color} style={style as StyleProp<TextStyle>} />;
+  return <Ionicons name={name} size={size} color={color} style={style} />;
 }

@@ -31,6 +31,10 @@ Supabase → Authentication → URL Configuration → Redirect URLs:
 2. Supabase → Authentication → Providers → **Apple** einschalten und bei
    **Client IDs** `de.spur.theorie` eintragen.
 
+## 4b. Mit Apple anmelden auf Android
+
+Siehe `docs/android.md` → „Mit Apple anmelden auf Android“ (Services ID und Secret).
+
 ## 5. Neuer Build
 
 Die App braucht einen neuen Build (EAS), weil zwei native Module dazugekommen sind
@@ -38,6 +42,11 @@ Die App braucht einen neuen Build (EAS), weil zwei native Module dazugekommen si
 Fähigkeit in der App stehen muss.
 
 ## Gut zu wissen
+
+- Anmelde-Links laufen über PKCE (Einmal-Code): Den Link aus „Passwort
+  vergessen“ bitte auf dem Handy öffnen, auf dem er angefordert wurde.
+  Die Bestätigungs-Mail bestätigt die Adresse auch auf einem anderen Gerät –
+  danach einfach anmelden.
 
 - Jeder kann sich als „Fahrlehrer“ eintragen – eine Prüfung gibt es noch nicht.
   Clips kannst du als Inhaber weiterhin löschen.

@@ -2,7 +2,6 @@ import { useRef, useState, type ReactNode } from "react";
 import {
   Image,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -45,7 +44,7 @@ export function AuthRahmen({ titel, unter, onZurueck, children }: { titel: strin
   return (
     <View style={{ flex: 1, backgroundColor: BILD_GRUND }}>
       <Image source={HINTERGRUND} style={{ position: "absolute", top: 0, left: 0, width, height }} resizeMode="cover" />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <ScrollView
           contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + 4, paddingBottom: insets.bottom + abstand(8), paddingHorizontal: RAND + 4 }}
           keyboardShouldPersistTaps="handled"

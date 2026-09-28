@@ -12,6 +12,7 @@ import { erfolg, fehler, stoss } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { gemischt, useStand } from "@/lib/stand";
 import { abstand, farben, radius, RAND, schrift } from "@/lib/theme";
+import { useZurueckTaste } from "@/lib/zurueck-taste";
 
 type Phase = "intro" | "runde" | "ende";
 type Ende = { ergebnis: "sieg" | "remis" | "niederlage"; xp: number; rating: number };
@@ -140,6 +141,8 @@ export default function Duell() {
       { text: "Aufgeben", style: "destructive", onPress: () => router.back() },
     ]);
   }
+
+  useZurueckTaste(schliessen);
 
   // ------------------------------------------------------------------ Intro
   if (phase === "intro") {

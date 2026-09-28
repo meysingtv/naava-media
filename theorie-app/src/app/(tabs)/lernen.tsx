@@ -14,7 +14,7 @@ import { FOTOS, themaFoto } from "@/lib/fotos";
 import { FRAGEN, THEMEN, fragenZuThema, themaVon, type ThemaId } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
 import { fortschritt, useStand } from "@/lib/stand";
-import { farben, schrift, verlauf } from "@/lib/theme";
+import { farben, leuchten, schrift, verlauf } from "@/lib/theme";
 
 type Stufe = "alle" | "leicht" | "mittel" | "schwer";
 
@@ -55,7 +55,7 @@ function Filter({ wert, onWechsel }: { wert: Stufe; onWechsel: (s: Stufe) => voi
               borderWidth: aktiv ? 0 : 1,
               borderColor: "rgba(255,255,255,0.1)",
               backgroundColor: aktiv ? undefined : farben.flaeche2,
-              ...(aktiv ? { shadowColor: farben.orange, shadowOpacity: 0.45, shadowRadius: 10, shadowOffset: { width: 0, height: 3 } } : null),
+              ...(aktiv ? { ...leuchten(farben.orange, 0.45, 10, 3) } : null),
             }}
           >
             {aktiv ? (

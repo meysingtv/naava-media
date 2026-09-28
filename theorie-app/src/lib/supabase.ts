@@ -1,7 +1,9 @@
 import "react-native-url-polyfill/auto";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import "./krypto";
 import { AppState, Platform } from "react-native";
 import { createClient } from "@supabase/supabase-js";
+
+import { sichererSpeicher } from "./sicherer-speicher";
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -17,10 +19,15 @@ const istServer = Platform.OS === "web" && typeof window === "undefined";
 
 export const supabase = createClient(url ?? "https://nicht-eingerichtet.invalid", anonKey ?? "nicht-eingerichtet", {
   auth: {
-    storage: istServer ? undefined : AsyncStorage,
+    // Anmeldung verschlüsselt im Schlüsselbund/Keystore.
+    storage: istServer ? undefined : sichererSpeicher,
     autoRefreshToken: !istServer,
     persistSession: !istServer,
     detectSessionInUrl: false,
+    // PKCE: Links aus Mails und vom Google-/Apple-Login tragen nur einen
+    // Einmal-Code, der nur mit dem Geheimnis auf diesem Gerät einlösbar ist.
+    // Abgefangene oder untergeschobene Links melden so niemanden an.
+    flowType: "pkce",
   },
 });
 

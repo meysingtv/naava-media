@@ -6,7 +6,7 @@ import { T } from "@/components/ui";
 import { FrageBild } from "@/components/frage-bild";
 import { antwortReihenfolge, antwortRichtig, themaVon, zahlLesen, zahlText, type Frage } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
-import { abstand, farben, schrift } from "@/lib/theme";
+import { abstand, farben, leuchten, schrift } from "@/lib/theme";
 
 type Zustand = "offen" | "gewaehlt" | "richtig" | "verpasst" | "falsch" | "aus";
 
@@ -129,10 +129,7 @@ function Erklaerung({ frage, richtig }: { frage: Frage; richtig: boolean }) {
         backgroundColor: farben.flaeche,
         borderWidth: 1,
         borderColor: "rgba(252,91,14,0.4)",
-        shadowColor: farben.orange,
-        shadowOpacity: 0.18,
-        shadowRadius: 16,
-        shadowOffset: { width: 0, height: 0 },
+        ...leuchten(farben.orange, 0.18, 16, 0),
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -306,7 +303,7 @@ export function FrageAnsicht({
                   borderColor: rand,
                   backgroundColor: flaeche,
                   opacity: zustand === "aus" ? 0.55 : pressed ? 0.85 : 1,
-                  ...(zustand === "richtig" ? { shadowColor: farben.gruen, shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } } : null),
+                  ...(zustand === "richtig" ? { ...leuchten(farben.gruen, 0.25, 10, 0) } : null),
                 })}
               >
                 <Kaestchen zustand={zustand} />

@@ -60,7 +60,11 @@ export async function freundDuellErstellen(): Promise<Antwort<OnlineDuell>> {
 
 export async function freundDuellBeitreten(code: string): Promise<Antwort<OnlineDuell>> {
   const { data, error } = await supabase.rpc("lern_duell_beitreten", { p_code: code.trim().toUpperCase() });
-  return error ? { daten: null, fehler: fehlerText(error.message) } : { daten: data as OnlineDuell, fehler: null };
+  if (error) return { daten: null, fehler: fehlerText(error.message) };
+  // Falscher Code: Der Server liefert ein leeres Duell (so zählt er Rate-Versuche mit).
+  const duell = data as OnlineDuell | null;
+  if (!duell?.id) return { daten: null, fehler: fehlerText("Code ungültig") };
+  return { daten: duell, fehler: null };
 }
 
 export async function ergebnisMelden(id: string, punkte: number, zeit: number): Promise<Antwort<OnlineDuell>> {

@@ -8,7 +8,7 @@ import { Balken, PfeilKreis, T } from "@/components/ui";
 import { TempoZeichen, Verkehrszeichen } from "@/components/zeichen";
 import type { ThemaId } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
-import { abstand, farben, schrift, verlauf } from "@/lib/theme";
+import { abstand, farben, leuchten, schrift, verlauf } from "@/lib/theme";
 
 const DUNKEL = "rgba(3,5,7,";
 
@@ -159,10 +159,7 @@ export function LeuchtSaeulen({ hoehe = 84 }: { hoehe?: number }) {
             height: hoehe * w,
             borderRadius: 4,
             overflow: "hidden",
-            shadowColor: farben.orange,
-            shadowOpacity: 0.8,
-            shadowRadius: 10,
-            shadowOffset: { width: 0, height: 0 },
+            ...leuchten(farben.orange, 0.8, 10, 0),
           }}
         >
           <LinearGradient colors={["#FFB45C", farben.orange, "#B94A00"]} locations={[0, 0.5, 1]} style={{ flex: 1 }} />

@@ -2,10 +2,12 @@ import { useCallback, useRef } from "react";
 import { ActionSheetIOS, Alert, Platform, Share } from "react-native";
 import { router } from "expo-router";
 
+import { auswahlBlatt } from "@/components/auswahl-blatt";
+
 import { clipLoeschen, clipMelden, dateiUrl, folgenSetzen, geteiltMelden, likeSetzen, useClipRechte, type ClipEintrag } from "./clips-server";
 import { useKonto } from "./konto";
 
-/** Natives Auswahlmenü (iOS) bzw. Dialog – liefert den gewählten Eintrag oder null. */
+/** Natives Auswahlmenü (iOS) bzw. Auswahlblatt – liefert den gewählten Eintrag oder null. */
 export function auswahl(titel: string, optionen: { text: string; gefahr?: boolean }[]): Promise<number | null> {
   return new Promise((fertig) => {
     if (Platform.OS === "ios") {
@@ -22,10 +24,8 @@ export function auswahl(titel: string, optionen: { text: string; gefahr?: boolea
       );
       return;
     }
-    Alert.alert(titel, undefined, [
-      ...optionen.map((o, i) => ({ text: o.text, style: o.gefahr ? ("destructive" as const) : ("default" as const), onPress: () => fertig(i) })),
-      { text: "Abbrechen", style: "cancel" as const, onPress: () => fertig(null) },
-    ]);
+    // Android: eigenes Blatt – ein Dialog zeigt dort höchstens drei Knöpfe.
+    auswahlBlatt(titel, optionen).then(fertig);
   });
 }
 
@@ -96,7 +96,10 @@ export function useClipAktionen(liste: Liste) {
 
   const onTeilen = useCallback(async (clip: ClipEintrag) => {
     try {
-      const r = await Share.share({ message: `„${clip.titel}“ – ${clip.autor_name || clip.autor_benutzername} in Fahrschule Pro`, url: dateiUrl(clip.video_pfad) });
+      const text = `„${clip.titel}“ – ${clip.autor_name || clip.autor_benutzername} in Fahrschule Pro`;
+      const link = dateiUrl(clip.video_pfad);
+      // Android übernimmt nur „message“, iOS zeigt den Link als eigenen Anhang.
+      const r = await Share.share(Platform.OS === "ios" ? { message: text, url: link } : { message: `${text}\n${link}` });
       if (r.action === Share.sharedAction && ich.current) {
         const n = await geteiltMelden(clip.id);
         if (n != null) l.current.aendern(clip.id, () => ({ geteilt: n }));
