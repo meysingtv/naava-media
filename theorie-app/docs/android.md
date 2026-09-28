@@ -6,7 +6,7 @@ gibt es nur da, wo Android etwas nicht hat oder anders macht:
 
 | Was | iPhone | Android |
 | --- | --- | --- |
-| Tab-Leiste unten | native Liquid-Glass-Leiste | eigene dunkle Leiste im App-Look, orange Kapsel hinter dem aktiven Symbol |
+| Tab-Leiste unten | native Liquid-Glass-Leiste | nachgebautes Liquid Glass: schwebende Kapsel mit echter Unschärfe, Glanzkante und einer Glasblase, die zum aktiven Reiter gleitet (ohne das Verkleinern beim Scrollen) |
 | Symbole | Apple-Symbole (SF Symbols) | Ionicons (sehen fast gleich aus) |
 | Schrift | San Francisco | Inter |
 | Leuchten/Schatten | iOS-Schatten | boxShadow (gleiche Werte) |
