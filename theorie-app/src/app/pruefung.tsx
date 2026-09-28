@@ -6,8 +6,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { Abschnitt, Chip, Gruppe, Karte, Knopf, Kopf, kopfOben, KopfTaste, T, Zeile } from "@/components/ui";
+import { FrageAktionen } from "@/components/frage-aktionen";
 import { FrageAnsicht } from "@/components/frage-ansicht";
 import { Ring } from "@/components/grafik";
+import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { antwortRichtig, frageVon, FRAGEN, THEMEN, themaVon, type Frage } from "@/lib/fragen";
 import { datumKurz, dauer } from "@/lib/format";
 import { erfolg, fehler, tippen } from "@/lib/haptik";
@@ -46,6 +48,7 @@ export default function Pruefung() {
   const [sekunden, setSekunden] = useState(0);
   const [ergebnis, setErgebnis] = useState<{ fehlerpunkte: number; bestanden: boolean; richtig: number; falsche: string[]; xp: number; fuenfer: number } | null>(null);
   const scroll = useRef<ScrollView>(null);
+  const hinweis = useHinweis();
 
   useEffect(() => {
     if (phase !== "laeuft") return;
@@ -168,9 +171,15 @@ export default function Pruefung() {
             {ergebnis.falsche.map((id) => {
               const f = frageVon(id);
               const a = antworten[id] ?? { auswahl: [], eingabe: "" };
-              return f ? <FrageAnsicht key={id} frage={f} auswahl={a.auswahl} onAuswahl={() => {}} eingabe={a.eingabe} onEingabe={() => {}} aufgedeckt /> : null;
+              return f ? (
+                <View key={id} style={{ gap: 14 }}>
+                  <FrageAnsicht frage={f} auswahl={a.auswahl} onAuswahl={() => {}} eingabe={a.eingabe} onEingabe={() => {}} aufgedeckt />
+                  <FrageAktionen frageId={id} onHinweis={hinweis.zeigen} />
+                </View>
+              ) : null;
             })}
           </ScrollView>
+          <HinweisAnzeige wert={hinweis.wert} inhalt={hinweis.inhalt} oben={insets.top + 56} />
         </View>
       );
     }

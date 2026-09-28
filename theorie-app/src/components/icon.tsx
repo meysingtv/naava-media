@@ -108,6 +108,11 @@ const SF: Partial<Record<IconName, SFSymbol>> = {
   sparkles: "sparkles",
   albums: "rectangle.stack.fill",
   "location-outline": "mappin.and.ellipse",
+  // Karteikarten
+  "albums-outline": "rectangle.stack",
+  "create-outline": "square.and.pencil",
+  "trash-outline": "trash",
+  "sync-outline": "arrow.triangle.2.circlepath",
 };
 
 export function Icon({

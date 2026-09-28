@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { ERFOLGE } from "./erfolge";
-import { FRAGEN, type Frage, type ThemaId } from "./fragen";
+import { FRAGEN, type Frage, type ThemaId, type ZeichenKey } from "./fragen";
 
 /**
  * Lernstand – lokal gespeichert, damit die App offline und ohne Konto
@@ -20,6 +20,14 @@ export type FrageStand = {
   l: 0 | 1; // letzte Antwort richtig?
   m?: boolean; // gemerkt
 };
+
+/** Karteikarte: aus einer Frage erstellt oder selbst geschrieben. */
+export type Karte =
+  | { id: string; art: "frage"; frageId: string; erstellt: string }
+  | { id: string; art: "eigen"; vorne: string; hinten: string; zeichen?: ZeichenKey; erstellt: string };
+
+/** Lernfach einer Karte (Leitner): 0 = nicht gewusst, 1–5 = immer größere Abstände. */
+export type KartenFach = { fach: number; faellig: string; n: number };
 
 export type Pruefung = { datum: string; fehlerpunkte: number; bestanden: boolean; richtig: number; gesamt: number };
 
@@ -49,6 +57,8 @@ export type Stand = {
   themaTage: Record<string, Partial<Record<ThemaId, [number, number]>>>;
   /** Schilder-Jagd: mit der Kamera gefundene Schilder (Zeichen → Fundzeit, ISO). */
   schilder: Record<string, string>;
+  /** Eigene Karteikarten und die Lernfächer aller Karten (auch der eingebauten Zeichen-Karten). */
+  karteikarten: { karten: Karte[]; faecher: Record<string, KartenFach> };
 };
 
 export const LEER: Stand = {
@@ -72,6 +82,7 @@ export const LEER: Stand = {
   zeitTage: {},
   themaTage: {},
   schilder: {},
+  karteikarten: { karten: [], faecher: {} },
 };
 
 const SPEICHER = "spur-stand-v1";
@@ -86,7 +97,7 @@ export function tagKey(d = new Date()): string {
   return `${d.getFullYear()}-${zwei(d.getMonth() + 1)}-${zwei(d.getDate())}`;
 }
 
-function tagVerschoben(tage: number): string {
+export function tagVerschoben(tage: number): string {
   const d = new Date();
   d.setDate(d.getDate() + tage);
   return tagKey(d);
@@ -98,6 +109,37 @@ export function wochenStart(d = new Date()): Date {
   const tag = (m.getDay() + 6) % 7; // Mo = 0
   m.setDate(m.getDate() - tag);
   return m;
+}
+
+// ---------------------------------------------------------------------------
+// Karteikarten
+// ---------------------------------------------------------------------------
+
+/** Tage bis zur nächsten Wiederholung je Lernfach. */
+export const KARTEN_ABSTAENDE = [0, 1, 3, 7, 14, 30];
+/** Ab diesem Fach sitzt eine Karte. */
+export const KARTE_SICHER = 3;
+/** Punkte, wenn eine fällige Karte gewusst wird. */
+export const XP_JE_KARTE = 3;
+
+export const frageKarteId = (frageId: string) => `f:${frageId}`;
+
+/** Ist die Karte heute dran? Karten ohne Lernfach sind neu und damit auch dran. */
+export function karteFaellig(s: Stand, id: string, heute = tagKey()): boolean {
+  const f = s.karteikarten.faecher[id];
+  return !f || f.faellig <= heute;
+}
+
+/** Gelesenen oder vom Server geholten Stand vervollständigen. */
+function vollstaendig(gelesen: Partial<Stand>): Stand {
+  return {
+    ...LEER,
+    ...gelesen,
+    duell: { ...LEER.duell, ...gelesen.duell },
+    gebucht: { ...LEER.gebucht, ...gelesen.gebucht },
+    clips: { ...LEER.clips, ...gelesen.clips },
+    karteikarten: { ...LEER.karteikarten, ...gelesen.karteikarten },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -320,6 +362,7 @@ function tagGelernt(s: Stand): Stand {
 
 /** Höchstens so viele Sekunden zählen pro Antwort – wer das Handy weglegt, lernt nicht. */
 const MAX_SEKUNDEN_JE_FRAGE = 90;
+const MAX_SEKUNDEN_JE_KARTE = 45;
 const TAGE_MERKEN = 120;
 
 function aufraeumen<T>(tage: Record<string, T>): Record<string, T> {
@@ -381,6 +424,13 @@ type StandKontext = {
   schildGefunden: (key: string, xp: number) => { neu: boolean; xp: number };
   /** Zusätzliche XP gutschreiben (z. B. Quiz nach einem Schild-Fund). */
   bonus: (xp: number) => void;
+  /** Karteikarte aus einer Frage anlegen oder wieder entfernen; gibt zurück, ob sie jetzt da ist. */
+  frageKarteUmschalten: (frageId: string) => boolean;
+  /** Eigene Karte anlegen oder ändern; gibt die Id zurück. */
+  eigeneKarteSpeichern: (k: { id?: string; vorne: string; hinten: string; zeichen?: ZeichenKey }) => string;
+  karteLoeschen: (id: string) => void;
+  /** Karte beim Lernen bewerten; gibt die gutgeschriebenen XP zurück. */
+  karteBewerten: (id: string, gewusst: boolean, sekunden?: number) => number;
   gebuchtSetzen: (g: Stand["gebucht"]) => void;
   ersetzen: (s: Stand) => void;
   zuruecksetzen: () => void;
@@ -401,14 +451,7 @@ export function StandProvider({ children }: { children: ReactNode }) {
     AsyncStorage.getItem(SPEICHER)
       .then((roh) => {
         if (roh) {
-          const gelesen = JSON.parse(roh) as Partial<Stand>;
-          setStand({
-            ...LEER,
-            ...gelesen,
-            duell: { ...LEER.duell, ...gelesen.duell },
-            gebucht: { ...LEER.gebucht, ...gelesen.gebucht },
-            clips: { ...LEER.clips, ...gelesen.clips },
-          });
+          setStand(vollstaendig(JSON.parse(roh) as Partial<Stand>));
         }
       })
       .catch(() => {})
@@ -541,6 +584,86 @@ export function StandProvider({ children }: { children: ReactNode }) {
 
   const bonus = useCallback((xp: number) => anwenden(xpDazu(aktuell.current, xp)), [anwenden]);
 
+  const frageKarteUmschalten = useCallback(
+    (frageId: string) => {
+      const s = aktuell.current;
+      const id = frageKarteId(frageId);
+      const da = s.karteikarten.karten.some((k) => k.id === id);
+      if (da) {
+        const { [id]: _weg, ...faecher } = s.karteikarten.faecher;
+        anwenden({ ...s, karteikarten: { karten: s.karteikarten.karten.filter((k) => k.id !== id), faecher } });
+        return false;
+      }
+      const karte: Karte = { id, art: "frage", frageId, erstellt: new Date().toISOString() };
+      anwenden({ ...s, karteikarten: { ...s.karteikarten, karten: [...s.karteikarten.karten, karte] } });
+      return true;
+    },
+    [anwenden],
+  );
+
+  const eigeneKarteSpeichern = useCallback(
+    (k: { id?: string; vorne: string; hinten: string; zeichen?: ZeichenKey }) => {
+      const s = aktuell.current;
+      const alt = k.id ? s.karteikarten.karten.find((x) => x.id === k.id && x.art === "eigen") : undefined;
+      const id = alt?.id ?? `e:${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+      const karte: Karte = {
+        id,
+        art: "eigen",
+        vorne: k.vorne.trim(),
+        hinten: k.hinten.trim(),
+        ...(k.zeichen ? { zeichen: k.zeichen } : null),
+        erstellt: alt?.erstellt ?? new Date().toISOString(),
+      };
+      const karten = alt ? s.karteikarten.karten.map((x) => (x.id === id ? karte : x)) : [...s.karteikarten.karten, karte];
+      anwenden({ ...s, karteikarten: { ...s.karteikarten, karten } });
+      return id;
+    },
+    [anwenden],
+  );
+
+  const karteLoeschen = useCallback(
+    (id: string) => {
+      const s = aktuell.current;
+      const { [id]: _weg, ...faecher } = s.karteikarten.faecher;
+      anwenden({ ...s, karteikarten: { karten: s.karteikarten.karten.filter((k) => k.id !== id), faecher } });
+    },
+    [anwenden],
+  );
+
+  const karteBewerten = useCallback(
+    (id: string, gewusst: boolean, sekunden = 0) => {
+      let s = aktuell.current;
+      const heute = tagKey();
+      const alt = s.karteikarten.faecher[id];
+      const faellig = karteFaellig(s, id, heute);
+      let fach = alt?.fach ?? 0;
+      let naechste = alt?.faellig ?? heute;
+      if (!gewusst) {
+        // Nicht gewusst: zurück ins erste Fach, heute noch einmal.
+        fach = 0;
+        naechste = heute;
+      } else if (faellig) {
+        fach = Math.min(KARTEN_ABSTAENDE.length - 1, fach + 1);
+        naechste = tagVerschoben(KARTEN_ABSTAENDE[fach]);
+      }
+      // Gewusst, aber gar nicht fällig (alle Karten durchgehen): Fach bleibt.
+      s = {
+        ...s,
+        karteikarten: { ...s.karteikarten, faecher: { ...s.karteikarten.faecher, [id]: { fach, faellig: naechste, n: (alt?.n ?? 0) + 1 } } },
+      };
+      s = zeitDazu(s, Math.min(MAX_SEKUNDEN_JE_KARTE, sekunden));
+      const vorher = s.antwortenTage[heute] ?? 0;
+      s = { ...s, antwortenTage: { ...s.antwortenTage, [heute]: vorher + 1 } };
+      s = tagGelernt(s);
+      let xp = gewusst && faellig ? XP_JE_KARTE : 0;
+      if (vorher < s.tagesziel && vorher + 1 >= s.tagesziel) xp += 25;
+      if (xp > 0) s = xpDazu(s, xp);
+      anwenden(s, new Date().getHours() >= 22 ? ["nacht"] : []);
+      return xp;
+    },
+    [anwenden],
+  );
+
   const gebuchtSetzen = useCallback((g: Stand["gebucht"]) => {
     const s = { ...aktuell.current, gebucht: g };
     aktuell.current = s;
@@ -548,7 +671,7 @@ export function StandProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const ersetzen = useCallback((s: Stand) => {
-    const neu = { ...LEER, ...s };
+    const neu = vollstaendig(s);
     aktuell.current = neu;
     setStand(neu);
   }, []);
@@ -556,8 +679,9 @@ export function StandProvider({ children }: { children: ReactNode }) {
   const zuruecksetzen = useCallback(() => {
     // Punkte in der Rangliste bleiben erhalten; neue XP werden ab 0 weiter gemeldet.
     // Das Schilder-Album bleibt – die Schilder wurden ja wirklich gefunden.
-    const { klasse, tagesziel, erinnerung, schilder } = aktuell.current;
-    const neu = { ...LEER, klasse, tagesziel, erinnerung, schilder };
+    // Selbst erstellte Karteikarten bleiben auch, nur ihre Lernfächer beginnen neu.
+    const { klasse, tagesziel, erinnerung, schilder, karteikarten } = aktuell.current;
+    const neu = { ...LEER, klasse, tagesziel, erinnerung, schilder, karteikarten: { karten: karteikarten.karten, faecher: {} } };
     aktuell.current = neu;
     setStand(neu);
   }, []);
@@ -576,13 +700,38 @@ export function StandProvider({ children }: { children: ReactNode }) {
       clipUmschalten,
       schildGefunden,
       bonus,
+      frageKarteUmschalten,
+      eigeneKarteSpeichern,
+      karteLoeschen,
+      karteBewerten,
       gebuchtSetzen,
       ersetzen,
       zuruecksetzen,
       neueErfolge,
       erfolgeGesehen: () => setNeueErfolge([]),
     }),
-    [stand, bereit, antwort, zeitBuchen, merken, trainingFertig, pruefungFertig, duellFertig, setzen, clipUmschalten, schildGefunden, bonus, gebuchtSetzen, ersetzen, zuruecksetzen, neueErfolge],
+    [
+      stand,
+      bereit,
+      antwort,
+      zeitBuchen,
+      merken,
+      trainingFertig,
+      pruefungFertig,
+      duellFertig,
+      setzen,
+      clipUmschalten,
+      schildGefunden,
+      bonus,
+      frageKarteUmschalten,
+      eigeneKarteSpeichern,
+      karteLoeschen,
+      karteBewerten,
+      gebuchtSetzen,
+      ersetzen,
+      zuruecksetzen,
+      neueErfolge,
+    ],
   );
 
   return <Kontext.Provider value={wert}>{children}</Kontext.Provider>;

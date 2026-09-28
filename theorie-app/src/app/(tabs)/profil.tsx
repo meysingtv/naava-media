@@ -11,6 +11,7 @@ import { ERFOLGE } from "@/lib/erfolge";
 import { tausender } from "@/lib/format";
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
+import { heuteDran, kartenZahlen } from "@/lib/karteikarten";
 import { ALBUM } from "@/lib/schilder-jagd";
 import { profilbildEntfernen, profilbildHochladen, profilbildServerEntfernen, profilbildWaehlen, useProfilbild } from "@/lib/profilbild";
 import { serieAktuell, useStand } from "@/lib/stand";
@@ -70,6 +71,8 @@ export default function Profil() {
   const freigeschaltet = ERFOLGE.filter((e) => stand.erfolge[e.id]).length;
   const gemerkteClips = CLIPS.filter((c) => stand.clips.gemerkt.includes(c.id)).length;
   const schilderGefunden = ALBUM.filter((k) => stand.schilder[k]).length;
+  const kartenDran = heuteDran(stand).gesamt;
+  const eigeneKarten = kartenZahlen(stand).eigene;
 
   async function fotoWaehlen() {
     const ok = await profilbildWaehlen();
@@ -173,6 +176,13 @@ export default function Profil() {
             titel="Schilder-Jagd"
             unter={schilderGefunden > 0 ? `${schilderGefunden} von ${ALBUM.length} Schildern gefunden` : "Echte Schilder mit der Kamera sammeln"}
             onPress={() => router.push("/schilder-jagd")}
+          />
+          <Eintrag
+            icon="albums"
+            farbe={farben.gruen}
+            titel="Karteikarten"
+            unter={kartenDran > 0 ? `${kartenDran} ${kartenDran === 1 ? "Karte" : "Karten"} heute dran` : eigeneKarten > 0 ? `${eigeneKarten} eigene ${eigeneKarten === 1 ? "Karte" : "Karten"}` : "Fragen als Karten lernen"}
+            onPress={() => router.push("/karteikarten")}
           />
           <Eintrag icon="trophy" farbe={farben.gelb} titel="Rangliste & Duelle" unter="Wochen-Liga, Elo und Freundes-Duelle" onPress={() => router.push("/liga")} />
           <Eintrag icon="bulb" farbe={farben.pink} titel="Kurz erklärt" unter={gemerkteClips > 0 ? `${gemerkteClips} gemerkt` : "Regeln in 30 Sekunden"} onPress={() => router.push("/kurz-erklaert")} />

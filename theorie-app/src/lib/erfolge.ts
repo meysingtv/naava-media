@@ -46,6 +46,14 @@ export const ERFOLGE: Erfolg[] = [
   { id: "schild10", titel: "Auf der Pirsch", text: "10 verschiedene Schilder gesammelt.", icon: "images", pruefen: (s) => gefunden(s) >= 10 },
   { id: "schild50", titel: "Schilder-Profi", text: "50 verschiedene Schilder gesammelt.", icon: "albums", pruefen: (s) => gefunden(s) >= 50 },
   { id: "schildalle", titel: "Album komplett", text: "Jedes Schild der Schilder-Jagd gefunden.", icon: "medal", pruefen: (s) => gefunden(s) >= ALBUM_GROESSE },
+  { id: "karte1", titel: "Kartenschreiber", text: "Die erste Karteikarte erstellt.", icon: "albums", pruefen: (s) => (s.karteikarten?.karten.length ?? 0) >= 1 },
+  {
+    id: "karten25",
+    titel: "Karten-Könner",
+    text: "25 Karteikarten sitzen (ab Fach 3).",
+    icon: "layers",
+    pruefen: (s) => Object.values(s.karteikarten?.faecher ?? {}).filter((f) => f.fach >= 3).length >= 25,
+  },
 ];
 
 export function erfolgVon(id: string): Erfolg | undefined {

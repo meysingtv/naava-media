@@ -127,6 +127,10 @@ function Navigation() {
           <Stack.Screen name="zeichen" />
           <Stack.Screen name="schilder-jagd" />
           <Stack.Screen name="schild-scanner" options={{ animation: "slide_from_bottom", presentation: "fullScreenModal" }} />
+          <Stack.Screen name="karteikarten" />
+          <Stack.Screen name="stapel/[id]" />
+          <Stack.Screen name="karten-lernen" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
+          <Stack.Screen name="karte-bearbeiten" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="premium" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="einstellungen" />
           <Stack.Screen name="bildnachweise" />

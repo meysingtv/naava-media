@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { KategorieZeile } from "@/components/foto";
 import { FrageZeile, LeerHinweis } from "@/components/frage-liste";
+import { KarteikartenKarte } from "@/components/karteikarten-karte";
 import { SchilderJagdKarte } from "@/components/schilder-jagd-karte";
 import { useInhaltUnten } from "@/components/tab-leiste";
 import { Eingabe, KopfTaste, kopfOben } from "@/components/ui";
@@ -124,6 +125,7 @@ export default function Kategorien() {
           <>
             <Filter wert={stufe} onWechsel={setStufe} />
             {stufe === "alle" ? <SchilderJagdKarte /> : null}
+            {stufe === "alle" ? <KarteikartenKarte /> : null}
             {stufe === "alle" ? (
               <KategorieZeile
                 id="grundstoff"

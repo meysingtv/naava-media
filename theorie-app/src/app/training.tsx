@@ -1,11 +1,13 @@
 import { useRef, useState } from "react";
-import { Alert, Animated, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { Abschnitt, Chip, Gruppe, Knopf, kopfOben, KopfTaste, Plakette, T, Zeile } from "@/components/ui";
+import { FrageAktionen } from "@/components/frage-aktionen";
 import { FrageAnsicht } from "@/components/frage-ansicht";
+import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { Ring } from "@/components/grafik";
 import { antwortRichtig, frageVon, FRAGEN, fragenZuThema, istBildfrage, istZeichen, themaVon, zahlLesen, type ThemaId } from "@/lib/fragen";
 import { erfolg, fehler, tippen } from "@/lib/haptik";
@@ -68,8 +70,7 @@ export default function Training() {
   const [ergebnisse, setErgebnisse] = useState<{ id: string; richtig: boolean }[]>([]);
   const [xpSumme, setXpSumme] = useState(0);
   const [fertig, setFertig] = useState(false);
-  const [toastXp, setToastXp] = useState(0);
-  const toast = useRef(new Animated.Value(0)).current;
+  const hinweis = useHinweis();
   const scroll = useRef<ScrollView>(null);
   const frageSeit = useRef(Date.now());
 
@@ -97,13 +98,7 @@ export default function Training() {
     setErgebnisse((e) => [...e, { id: frage.id, richtig: ok }]);
     setXpSumme((s) => s + xp);
     setAufgedeckt(true);
-    setToastXp(xp);
-    toast.setValue(0);
-    Animated.sequence([
-      Animated.timing(toast, { toValue: 1, duration: 220, useNativeDriver: true }),
-      Animated.delay(900),
-      Animated.timing(toast, { toValue: 2, duration: 260, useNativeDriver: true }),
-    ]).start();
+    hinweis.zeigen({ icon: "flash", text: `+${xp} XP`, textFarbe: farben.orange });
     setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 120);
   }
 
@@ -231,6 +226,9 @@ export default function Training() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView ref={scroll} contentContainerStyle={{ paddingHorizontal: 12, paddingTop: abstand(1), paddingBottom: abstand(6) }} keyboardShouldPersistTaps="handled">
           <FrageAnsicht frage={frage} auswahl={auswahl} onAuswahl={setAuswahl} eingabe={eingabe} onEingabe={setEingabe} aufgedeckt={aufgedeckt} />
+          <View style={{ marginTop: 16 }}>
+            <FrageAktionen frageId={frage.id} onHinweis={hinweis.zeigen} />
+          </View>
         </ScrollView>
         <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: 12, paddingTop: abstand(2), paddingBottom: insets.bottom + abstand(3), backgroundColor: farben.grund }}>
           <Pressable
@@ -261,31 +259,8 @@ export default function Training() {
         </View>
       </KeyboardAvoidingView>
 
-      {/* +XP */}
-      <Animated.View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          top: insets.top + 64,
-          alignSelf: "center",
-          paddingHorizontal: abstand(3.5),
-          paddingVertical: abstand(1.5),
-          borderRadius: 999,
-          backgroundColor: farben.flaeche2,
-          borderWidth: 1,
-          borderColor: farben.orangeLinie,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 5,
-          opacity: toast.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 0] }),
-          transform: [{ translateY: toast.interpolate({ inputRange: [0, 1, 2], outputRange: [8, 0, -10] }) }],
-        }}
-      >
-        <Icon name="flash" size={14} color={farben.orange} />
-        <T v="textStark" farbe={farben.orange} style={{ fontSize: 14 }}>
-          +{toastXp} XP
-        </T>
-      </Animated.View>
+      {/* +XP, Karteikarte erstellt … */}
+      <HinweisAnzeige wert={hinweis.wert} inhalt={hinweis.inhalt} oben={insets.top + 64} />
     </View>
   );
 }
