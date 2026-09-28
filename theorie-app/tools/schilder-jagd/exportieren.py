@@ -19,22 +19,28 @@ teile = []
 i = 0
 while True:
     try:
-        conv = m.get_layer(f"c{i}")
+        schicht = m.get_layer(f"L{i}")
     except ValueError:
         break
     bn = m.get_layer(f"bn{i}")
-    w = conv.get_weights()[0].astype(np.float64)  # (3,3,ein,aus)
     gamma, beta, mean, var = [a.astype(np.float64) for a in bn.get_weights()]
     faktor = gamma / np.sqrt(var + bn.epsilon)
-    w = w * faktor
     b = beta - mean * faktor
-    pool = True
     try:
         m.get_layer(f"p{i}")
+        pool = True
     except ValueError:
         pool = False
-    schichten.append({"art": "conv", "ein": int(w.shape[2]), "aus": int(w.shape[3]), "pool": pool})
-    teile += [w.astype(np.float16).ravel(), b.astype(np.float16).ravel()]
+    if isinstance(schicht, keras.layers.SeparableConv2D):
+        tief, punkt = [w.astype(np.float64) for w in schicht.get_weights()]  # (3,3,ein,1), (1,1,ein,aus)
+        tief = tief[..., 0]  # [ky][kx][ein]
+        punkt = punkt[0, 0] * faktor  # [ein][aus], BatchNorm eingerechnet
+        schichten.append({"art": "sep", "ein": int(punkt.shape[0]), "aus": int(punkt.shape[1]), "pool": pool})
+        teile += [tief.astype(np.float16).ravel(), punkt.astype(np.float16).ravel(), b.astype(np.float16).ravel()]
+    else:
+        w = schicht.get_weights()[0].astype(np.float64) * faktor  # (3,3,ein,aus)
+        schichten.append({"art": "conv", "ein": int(w.shape[2]), "aus": int(w.shape[3]), "pool": pool})
+        teile += [w.astype(np.float16).ravel(), b.astype(np.float16).ravel()]
     i += 1
 kopf = m.get_layer("kopf")
 w, b = kopf.get_weights()
@@ -50,12 +56,14 @@ with open(ZIEL, "w") as f:
     f.write("// Trainiert mit den eigenen Schildzeichnungen der App vor App-Fotos und gemeinfreien\n")
     f.write("// Fotos (CC0/PD). Neu erzeugen: siehe tools/schilder-jagd/README.md.\n")
     f.write("// Format: float16 (little endian), je Schicht erst Gewichte, dann Bias.\n")
-    f.write("// Faltung: [ky][kx][ein][aus], Dense: [ein][aus]. BatchNorm ist eingerechnet.\n\n")
+    f.write("// conv: [ky][kx][ein][aus]; sep: tiefenweise [ky][kx][ein], dann punktweise [ein][aus];\n")
+    f.write("// dense: [ein][aus]. BatchNorm ist eingerechnet.\n\n")
+    f.write(f"export const SCHILD_GROESSE = {int(m.input_shape[1])};\n\n")
     f.write(f"export const SCHILD_KLASSEN = {json.dumps(KLASSEN)} as const;\n\n")
     f.write("export const SCHILD_SCHICHTEN = [\n")
     for s in schichten:
-        if s["art"] == "conv":
-            f.write(f'  {{ art: "conv", ein: {s["ein"]}, aus: {s["aus"]}, pool: {"true" if s["pool"] else "false"} }},\n')
+        if s["art"] in ("conv", "sep"):
+            f.write(f'  {{ art: "{s["art"]}", ein: {s["ein"]}, aus: {s["aus"]}, pool: {"true" if s["pool"] else "false"} }},\n')
         else:
             f.write(f'  {{ art: "dense", ein: {s["ein"]}, aus: {s["aus"]} }},\n')
     f.write("] as const;\n\n")

@@ -106,6 +106,8 @@ const SF: Partial<Record<IconName, SFSymbol>> = {
   "flashlight-outline": "flashlight.off.fill",
   "help-circle-outline": "questionmark.circle",
   sparkles: "sparkles",
+  albums: "rectangle.stack.fill",
+  "location-outline": "mappin.and.ellipse",
 };
 
 export function Icon({

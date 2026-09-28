@@ -14,15 +14,27 @@ import { Knopf, T } from "@/components/ui";
 import { Verkehrszeichen, ZEICHEN_INFO } from "@/components/zeichen";
 import type { ZeichenKey } from "@/lib/fragen";
 import { erfolg, fehler, stoss, tippen } from "@/lib/haptik";
-import { ALBUM, mittelQuadrat, rahmenImFoto, schildErkennen, XP_JE_SCHILD, type Erkennung } from "@/lib/schilder-jagd";
-import { useStand } from "@/lib/stand";
+import { ALBUM, mittelQuadrat, rahmenImFoto, schildErkennen, schildInfo, XP_JE_SCHILD, XP_QUIZ, type Erkennung } from "@/lib/schilder-jagd";
+import { gemischt, useStand } from "@/lib/stand";
 import { farben, schrift } from "@/lib/theme";
 
+type Quiz = { optionen: string[]; richtig: number };
+
 type Ergebnis =
-  | { art: "schild"; key: ZeichenKey; neu: boolean; xp: number }
-  | { art: "vermutung"; key: ZeichenKey }
+  | { art: "schild"; key: ZeichenKey; neu: boolean; xp: number; quiz: Quiz | null }
+  | { art: "auswahl"; keys: ZeichenKey[] }
   | { art: "keins" }
   | { art: "fehler"; text: string };
+
+/** Nach einem neuen Fund: Was bedeutet das Schild? Drei Antworten aus derselben Gruppe. */
+function quizErstellen(key: ZeichenKey): Quiz | null {
+  const info = schildInfo(key);
+  if (!info) return null;
+  const tempo = (k: string) => /^z274_\d{2,3}$/.test(k);
+  const andere = ZEICHEN_INFO.filter((z) => z.key !== key && z.gruppe === info.gruppe && z.bedeutung !== info.bedeutung && !(tempo(key) && tempo(z.key)));
+  const optionen = gemischt([info.bedeutung, ...gemischt(andere).slice(0, 2).map((z) => z.bedeutung)]);
+  return { optionen, richtig: optionen.indexOf(info.bedeutung) };
+}
 
 const MASKE = "rgba(0,0,0,0.46)";
 /** Breite des Abdunklungs-Rands – groß genug für jeden Bildschirm. */
@@ -98,7 +110,7 @@ function Hinweis({ icon, titel, text, children }: { icon: IconName; titel: strin
 export default function SchildScanner() {
   const insets = useSafeAreaInsets();
   const fokus = useIsFocused();
-  const { stand, schildGefunden } = useStand();
+  const { stand, schildGefunden, bonus } = useStand();
   const [erlaubnis, erlaubnisAnfragen] = useCameraPermissions();
   const kamera = useRef<CameraView>(null);
   const [flaeche, setFlaeche] = useState({ breite: 0, hoehe: 0 });
@@ -107,6 +119,7 @@ export default function SchildScanner() {
   const [laeuft, setLaeuft] = useState(false);
   const [ergebnis, setErgebnis] = useState<Ergebnis | null>(null);
   const [licht, setLicht] = useState(false);
+  const [quizWahl, setQuizWahl] = useState<number | null>(null);
   const [zoom, setZoom] = useState(0);
   const zoomStart = useRef(0);
   const linie = useRef(new Animated.Value(0)).current;
@@ -137,6 +150,7 @@ export default function SchildScanner() {
 
   // Ergebnis-Karte einblenden.
   useEffect(() => {
+    setQuizWahl(null);
     karte.setValue(0);
     if (ergebnis) Animated.spring(karte, { toValue: 1, useNativeDriver: true, damping: 18, stiffness: 190 }).start();
   }, [ergebnis, karte]);
@@ -144,18 +158,29 @@ export default function SchildScanner() {
   function verbuchen(key: ZeichenKey) {
     const { neu, xp } = schildGefunden(key, XP_JE_SCHILD);
     erfolg();
-    setErgebnis({ art: "schild", key, neu, xp });
+    setErgebnis({ art: "schild", key, neu, xp, quiz: neu ? quizErstellen(key) : null });
   }
 
   function auswerten(e: Erkennung) {
     if (e.key) {
       verbuchen(e.key);
-    } else if (e.vermutung) {
+    } else if (e.vorschlaege.length > 0) {
       tippen();
-      setErgebnis({ art: "vermutung", key: e.vermutung });
+      setErgebnis({ art: "auswahl", keys: e.vorschlaege });
     } else {
       fehler();
       setErgebnis({ art: "keins" });
+    }
+  }
+
+  function quizAntwort(i: number) {
+    if (quizWahl != null || ergebnis?.art !== "schild" || !ergebnis.quiz) return;
+    setQuizWahl(i);
+    if (i === ergebnis.quiz.richtig) {
+      erfolg();
+      bonus(XP_QUIZ);
+    } else {
+      fehler();
     }
   }
 
@@ -241,7 +266,9 @@ export default function SchildScanner() {
           <Knopf titel="Foto aus der Mediathek" art="sekundaer" icon="image-outline" onPress={ausMediathek} />
         </Hinweis>
         {oben}
-        {laeuft || ergebnis ? <ErgebnisKarte ergebnis={ergebnis} laeuft={laeuft} karte={karte} unten={insets.bottom} onWeiter={() => setErgebnis(null)} onBestaetigen={verbuchen} /> : null}
+        {laeuft || ergebnis ? (
+          <ErgebnisKarte ergebnis={ergebnis} laeuft={laeuft} karte={karte} unten={insets.bottom} onWeiter={() => setErgebnis(null)} onBestaetigen={verbuchen} quizWahl={quizWahl} onQuiz={quizAntwort} />
+        ) : null}
       </View>
     );
   }
@@ -365,7 +392,7 @@ export default function SchildScanner() {
               </View>
             </View>
           ) : (
-            <ErgebnisKarte ergebnis={ergebnis} laeuft={false} karte={karte} unten={insets.bottom} onWeiter={() => setErgebnis(null)} onBestaetigen={verbuchen} />
+            <ErgebnisKarte ergebnis={ergebnis} laeuft={false} karte={karte} unten={insets.bottom} onWeiter={() => setErgebnis(null)} onBestaetigen={verbuchen} quizWahl={quizWahl} onQuiz={quizAntwort} />
           )}
         </View>
       </GestureDetector>
@@ -380,6 +407,8 @@ function ErgebnisKarte({
   unten,
   onWeiter,
   onBestaetigen,
+  quizWahl,
+  onQuiz,
 }: {
   ergebnis: Ergebnis | null;
   laeuft: boolean;
@@ -387,8 +416,10 @@ function ErgebnisKarte({
   unten: number;
   onWeiter: () => void;
   onBestaetigen: (key: ZeichenKey) => void;
+  quizWahl: number | null;
+  onQuiz: (i: number) => void;
 }) {
-  const info = ergebnis?.art === "schild" || ergebnis?.art === "vermutung" ? ZEICHEN_INFO.find((z) => z.key === ergebnis.key) : undefined;
+  const info = ergebnis?.art === "schild" ? schildInfo(ergebnis.key) : undefined;
   return (
     <Animated.View
       style={{
@@ -414,7 +445,7 @@ function ErgebnisKarte({
       ) : ergebnis?.art === "schild" && info ? (
         <>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-            <Verkehrszeichen zeichen={ergebnis.key} groesse={78} />
+            <Verkehrszeichen zeichen={ergebnis.key} groesse={74} />
             <View style={{ flex: 1, gap: 5 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                 <Icon name={ergebnis.neu ? "sparkles" : "checkmark-circle"} size={14} color={ergebnis.neu ? farben.orange : farben.gruen} weight="semibold" />
@@ -425,30 +456,84 @@ function ErgebnisKarte({
               <T v="h2">{info.name}</T>
             </View>
           </View>
-          <T v="text">{info.bedeutung}</T>
+          {ergebnis.quiz ? (
+            <View style={{ gap: 8 }}>
+              <T v="textStark">
+                {quizWahl == null ? `Weißt du, was es bedeutet? (+${XP_QUIZ} XP)` : quizWahl === ergebnis.quiz.richtig ? `Richtig! +${XP_QUIZ} XP` : "Nicht ganz – richtig ist die grüne Antwort."}
+              </T>
+              {ergebnis.quiz.optionen.map((text, i) => {
+                const aufgedeckt = quizWahl != null;
+                const richtig = i === ergebnis.quiz!.richtig;
+                const gewaehlt = i === quizWahl;
+                const farbe = aufgedeckt && richtig ? farben.gruen : aufgedeckt && gewaehlt ? farben.rot : null;
+                return (
+                  <Pressable
+                    key={i}
+                    disabled={aufgedeckt}
+                    onPress={() => onQuiz(i)}
+                    style={({ pressed }) => ({
+                      paddingHorizontal: 14,
+                      paddingVertical: 10,
+                      borderRadius: 14,
+                      borderWidth: 1.5,
+                      borderColor: farbe ?? farben.linieStark,
+                      backgroundColor: farbe === farben.gruen ? farben.gruenSoft : farbe === farben.rot ? farben.rotSoft : pressed ? farben.flaeche2 : "transparent",
+                      opacity: aufgedeckt && !richtig && !gewaehlt ? 0.5 : 1,
+                    })}
+                  >
+                    <Text style={{ ...schrift.textMittel, fontSize: 14, lineHeight: 19, color: "#FFFFFF" }}>{text}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : (
+            <T v="text">{info.bedeutung}</T>
+          )}
           <View style={{ flexDirection: "row", gap: 10 }}>
             <Knopf titel="Album" art="sekundaer" onPress={zumAlbum} style={{ flex: 1 }} />
             <Knopf titel="Weiter scannen" onPress={onWeiter} style={{ flex: 1.5 }} />
           </View>
         </>
-      ) : ergebnis?.art === "vermutung" && info ? (
+      ) : ergebnis?.art === "auswahl" ? (
         <>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-            <Verkehrszeichen zeichen={ergebnis.key} groesse={78} />
-            <View style={{ flex: 1, gap: 5 }}>
-              <T v="mini" farbe={farben.gelb}>
-                Nicht ganz sicher
-              </T>
-              <T v="h2">Meintest du „{info.kurz ?? info.name}“?</T>
-            </View>
+          <View style={{ gap: 4 }}>
+            <T v="mini" farbe={farben.gelb}>
+              Nicht ganz sicher
+            </T>
+            <T v="h2">{ergebnis.keys.length > 1 ? "Welches Schild ist es?" : "Ist es dieses Schild?"}</T>
           </View>
-          <T v="klein" style={{ fontSize: 13.5, lineHeight: 18 }}>
-            Vergleiche mit dem Bild: Ist es genau dieses Schild? Sonst geh etwas näher ran und scanne nochmal.
-          </T>
           <View style={{ flexDirection: "row", gap: 10 }}>
-            <Knopf titel="Nein" art="sekundaer" onPress={onWeiter} style={{ flex: 1 }} />
-            <Knopf titel="Ja, genau das" onPress={() => onBestaetigen(ergebnis.key)} style={{ flex: 1.5 }} />
+            {ergebnis.keys.map((key) => {
+              const z = schildInfo(key);
+              return (
+                <Pressable
+                  key={key}
+                  onPress={() => onBestaetigen(key)}
+                  accessibilityLabel={`${z?.name ?? key} auswählen`}
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    alignItems: "center",
+                    gap: 8,
+                    paddingVertical: 12,
+                    paddingHorizontal: 8,
+                    borderRadius: 18,
+                    borderWidth: 1.5,
+                    borderColor: farben.orangeLinie,
+                    backgroundColor: pressed ? farben.orangeSoft : farben.flaeche2,
+                  })}
+                >
+                  <Verkehrszeichen zeichen={key} groesse={66} />
+                  <Text numberOfLines={2} style={{ ...schrift.textHalb, fontSize: 13, lineHeight: 17, color: "#FFFFFF", textAlign: "center" }}>
+                    {z?.kurz ?? z?.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
+          <T v="klein" style={{ fontSize: 13, lineHeight: 18 }}>
+            Tippe auf das passende Schild. Keins davon? Geh etwas näher ran und scanne nochmal.
+          </T>
+          <Knopf titel="Keins davon" art="sekundaer" onPress={onWeiter} />
         </>
       ) : (
         <>

@@ -156,7 +156,16 @@ def schild_positiv(bild, key, rng):
             p2 = (rng.randint(0, ARBEIT), rng.randint(0, ARBEIT))
             ton = rng.uniform(20, 90)
             cv2.line(bild, p1, p2, (ton * 0.8, ton, ton * 0.7), rng.randint(2, 6))
-    if rng.random() < 0.04:
+    # Hände oder Gegenstände verdecken den Rand (Schild wird gehalten, Äste …)
+    if rng.random() < 0.12:
+        for _ in range(rng.randint(1, 2)):
+            winkel = rng.uniform(0, 2 * np.pi)
+            abstand = groesse * rng.uniform(0.35, 0.5)
+            c = (int(mitte[0] + np.cos(winkel) * abstand), int(mitte[1] + np.sin(winkel) * abstand))
+            haut = rng.choice([(150, 175, 225), (110, 140, 190), (70, 95, 140), (40, 50, 70), (180, 190, 200)])
+            cv2.ellipse(bild, c, (int(groesse * rng.uniform(0.08, 0.16)), int(groesse * rng.uniform(0.06, 0.12))), rng.uniform(0, 180), 0, 360, haut, -1)
+    # selten Schwarzweiß (alte Fotos) – nicht öfter, sonst verlernt das Netz, auf Rot zu achten
+    if rng.random() < 0.015:
         grau = bild.mean(axis=2, keepdims=True)
         bild = np.repeat(grau, 3, axis=2)
     return bild
@@ -196,7 +205,8 @@ def muster(bild, rng):
                 cv2.rectangle(bild, (x, y), (x + fx - rand, y + fy - rand), farbe, -1 if rng.random() < 0.7 else 2)
     else:
         # Textschild (Straßenname, Hinweis, Wegweiser)
-        grund = rng.choice([(245, 245, 245), (160, 90, 20), (0, 200, 250), (40, 120, 30), (235, 235, 235)])
+        # kein Gelb (Ortstafel) – Textschilder in Weiß, Blau, Grün, Braun
+        grund = rng.choice([(245, 245, 245), (160, 90, 20), (40, 120, 30), (235, 235, 235), (40, 70, 120)])
         text = (20, 20, 20) if sum(grund) > 500 else (250, 250, 250)
         b = rng.randint(60, 128)
         h = rng.randint(28, 110)
@@ -208,7 +218,7 @@ def muster(bild, rng):
         for i in range(zeilen):
             wort = "".join(rng.choice("ABCDEFGHIKLMNOPRSTUVWZaeinrstu") for _ in range(rng.randint(3, 10)))
             cv2.putText(bild, wort, (x0 + 6, y0 + 20 + i * 24), cv2.FONT_HERSHEY_SIMPLEX, rng.uniform(0.4, 0.8), text, rng.randint(1, 2))
-        if rng.random() < 0.3:
+        if rng.random() < 0.3 and grund != (160, 90, 20):
             cv2.arrowedLine(bild, (x0 + 8, y0 + h - 10), (x0 + b - 8, y0 + h - 10), text, 4, tipLength=0.3)
     return bild.astype(np.float32)
 

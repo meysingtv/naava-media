@@ -3,6 +3,7 @@ import { Modal, Pressable, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
 import { Chip, Knopf, Kopf, T } from "@/components/ui";
 import { Verkehrszeichen, ZEICHEN_INFO, type ZeichenInfo } from "@/components/zeichen";
 import { tippen } from "@/lib/haptik";
@@ -24,7 +25,7 @@ export default function Zeichen() {
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
       <Kopf titel="Verkehrszeichen" />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: RAND, gap: abstand(2), paddingBottom: abstand(4) }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, flexShrink: 0 }} contentContainerStyle={{ paddingHorizontal: RAND, gap: abstand(2), paddingBottom: abstand(4) }}>
         {GRUPPEN.map((g) => (
           <Chip key={g.id} text={g.titel} aktiv={g.id === gruppe} onPress={() => setGruppe(g.id)} />
         ))}
@@ -63,8 +64,26 @@ export default function Zeichen() {
       </ScrollView>
       <View style={{ paddingHorizontal: RAND, paddingTop: abstand(3), paddingBottom: insets.bottom + abstand(3), borderTopWidth: 1, borderColor: farben.linie }}>
         <View style={{ flexDirection: "row", gap: abstand(2) }}>
-          <Knopf titel="Schilder-Jagd" art="sekundaer" icon="camera" onPress={() => router.push("/schilder-jagd")} style={{ flex: 1 }} />
-          <Knopf titel="Fragen üben" icon="arrow-forward" onPress={() => router.push({ pathname: "/training", params: { modus: "zeichen" } })} style={{ flex: 1 }} />
+          <Pressable
+            onPress={() => {
+              tippen();
+              router.push("/schilder-jagd");
+            }}
+            accessibilityLabel="Schilder-Jagd: echte Schilder mit der Kamera sammeln"
+            style={({ pressed }) => ({
+              width: 52,
+              height: 52,
+              borderRadius: 26,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: pressed ? farben.flaeche3 : farben.flaeche2,
+              borderWidth: 1,
+              borderColor: farben.linieStark,
+            })}
+          >
+            <Icon name="camera" size={22} color={farben.orange} />
+          </Pressable>
+          <Knopf titel="Zeichenfragen üben" icon="arrow-forward" onPress={() => router.push({ pathname: "/training", params: { modus: "zeichen" } })} style={{ flex: 1 }} />
         </View>
       </View>
 

@@ -1,31 +1,43 @@
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { decode } from "jpeg-js";
 
+import { ZEICHEN_INFO, type ZeichenInfo } from "@/components/zeichen";
+
 import type { ZeichenKey } from "./fragen";
 import { ausschnittVerkleinern, base64Bytes, KLASSEN, vorhersagen } from "./schild-netz";
 
-/** Alle Schilder, die die Kamera erkennt – zugleich das Sammelalbum. */
-export const ALBUM = KLASSEN.filter((k) => k !== "nichts") as ZeichenKey[];
+/** Alle Schilder, die die Kamera erkennt – zugleich das Sammelalbum (in Katalog-Reihenfolge). */
+export const ALBUM: ZeichenKey[] = ZEICHEN_INFO.map((z) => z.key).filter((k) => KLASSEN.includes(k));
+
+export function schildInfo(key: ZeichenKey): ZeichenInfo | undefined {
+  return ZEICHEN_INFO.find((z) => z.key === key);
+}
 
 /** Punkte für ein neu gefundenes Schild. */
 export const XP_JE_SCHILD = 15;
+/** Bonus, wenn man nach dem Fund die Bedeutung richtig tippt. */
+export const XP_QUIZ = 10;
 
 /** Seitenlänge des Analysebilds (das Quadrat aus dem Sucherrahmen). */
-const ANALYSE = 192;
+const ANALYSE = 224;
 /** Mittige Ausschnitte relativ zum Rahmen – deckt Schilder von etwa 30 bis 100 % der Rahmengröße ab. */
-const AUSSCHNITTE = [1, 0.78, 0.6];
+const AUSSCHNITTE = [1, 0.8, 0.62];
 /** Ab dieser Wahrscheinlichkeit gilt ein Schild als erkannt … */
 const SCHWELLE = 0.8;
-/** … ab dieser fragt die App nach („Meintest du …?“). */
-const VERMUTUNG = 0.35;
+/** … ab dieser schlägt die App Schilder zur Auswahl vor. */
+const VERMUTUNG = 0.3;
+/** Zweiter Vorschlag nur, wenn er noch einigermaßen wahrscheinlich ist. */
+const ZWEITER = 0.12;
+/** So eindeutig, dass die übrigen Ausschnitte nicht mehr gerechnet werden müssen. */
+const EINDEUTIG = 0.93;
 
 export type Rahmen = { x: number; y: number; groesse: number };
 
 export type Erkennung = {
   /** Sicher erkanntes Schild – oder null. */
   key: ZeichenKey | null;
-  /** Unsicherer Treffer, bei dem die App nachfragt – oder null. */
-  vermutung: ZeichenKey | null;
+  /** Unsicher: bis zu zwei Schilder zur Auswahl („Welches ist es?“). */
+  vorschlaege: ZeichenKey[];
   sicherheit: number;
 };
 
@@ -79,24 +91,30 @@ export function rahmenImFoto(foto: { breite: number; hoehe: number }, ansicht: {
 /** Schild im Rahmen erkennen – komplett auf dem Gerät. */
 export async function schildErkennen(uri: string, rahmen: Rahmen): Promise<Erkennung> {
   const { rgba, breite, hoehe } = await analysebild(uri, rahmen);
-  let beste = -1;
-  let sicherheit = 0;
+  // Höchste Wahrscheinlichkeit je Schild über alle Ausschnitte
+  const beste = new Float32Array(KLASSEN.length);
   for (const anteil of AUSSCHNITTE) {
     await pause();
     const s = Math.min(breite, hoehe) * anteil;
     const p = vorhersagen(ausschnittVerkleinern(rgba, breite, hoehe, (breite - s) / 2, (hoehe - s) / 2, s));
+    let top = 0;
     for (let k = 0; k < p.length; k++) {
-      if (KLASSEN[k] === "nichts") continue;
-      if (p[k] > sicherheit) {
-        sicherheit = p[k];
-        beste = k;
-      }
+      if (p[k] > beste[k]) beste[k] = p[k];
+      if (KLASSEN[k] !== "nichts" && p[k] > top) top = p[k];
     }
+    // Eindeutig erkannt – die kleineren Ausschnitte sparen wir uns.
+    if (top >= EINDEUTIG) break;
   }
-  const kandidat = beste >= 0 ? (KLASSEN[beste] as ZeichenKey) : null;
-  return {
-    key: sicherheit >= SCHWELLE ? kandidat : null,
-    vermutung: sicherheit < SCHWELLE && sicherheit >= VERMUTUNG ? kandidat : null,
-    sicherheit,
-  };
+  const rangfolge = KLASSEN.map((k, i) => ({ k, p: beste[i] }))
+    .filter((e) => e.k !== "nichts")
+    .sort((a, b) => b.p - a.p);
+  const [erster, zweiter] = rangfolge;
+  const sicherheit = erster?.p ?? 0;
+  if (sicherheit >= SCHWELLE) return { key: erster.k as ZeichenKey, vorschlaege: [], sicherheit };
+  const vorschlaege: ZeichenKey[] = [];
+  if (sicherheit >= VERMUTUNG) {
+    vorschlaege.push(erster.k as ZeichenKey);
+    if (zweiter && zweiter.p >= ZWEITER) vorschlaege.push(zweiter.k as ZeichenKey);
+  }
+  return { key: null, vorschlaege, sicherheit };
 }

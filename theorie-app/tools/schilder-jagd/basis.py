@@ -18,7 +18,7 @@ import numpy as np
 
 S = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.abspath(os.path.join(S, "..", ".."))
-GROESSE = 48          # Eingabe des Netzes
+GROESSE = 64          # Eingabe des Netzes
 ARBEIT = 128          # Arbeitsauflösung
 
 KEYS = json.load(open(f"{S}/schild-keys.json"))
@@ -204,25 +204,10 @@ def _pfeil(bild, mitte, laenge, winkel_grad, farbe, dicke):
     cv2.fillPoly(bild, [spitze], farbe)
 
 
-def _zufallsformen(bild, rng, mitte, radius, farbe):
-    """2–4 zufällige Flächen wie ein Piktogramm (keine Linie, kein Kreuz, kein Ausrufezeichen)."""
-    for _ in range(rng.randint(2, 4)):
-        art = rng.random()
-        cx = int(mitte[0] + rng.uniform(-0.4, 0.4) * radius)
-        cy = int(mitte[1] + rng.uniform(-0.3, 0.35) * radius)
-        if art < 0.4:
-            cv2.ellipse(bild, (cx, cy), (int(radius * rng.uniform(0.2, 0.5)), int(radius * rng.uniform(0.12, 0.35))), rng.uniform(0, 180), 0, 360, farbe, -1)
-        elif art < 0.75:
-            pts = np.array([[cx + rng.uniform(-0.6, 0.6) * radius, cy + rng.uniform(-0.5, 0.5) * radius] for _ in range(rng.randint(4, 7))], np.int32)
-            cv2.fillPoly(bild, [cv2.convexHull(pts)], farbe)
-        else:
-            w, h = int(radius * rng.uniform(0.4, 0.9)), int(radius * rng.uniform(0.18, 0.4))
-            cv2.rectangle(bild, (cx - w // 2, cy - h // 2), (cx + w // 2, cy + h // 2), farbe, -1)
-
-
 def faelschungen():
-    """Schilder, die es im Katalog nicht gibt (Tempo 60, andere Warnzeichen, …).
-    Sie gehören zur Klasse "nichts", damit das Netz auf den Inhalt achtet."""
+    """Schilder, die es im Katalog nicht gibt (Tempo 90, Buchstaben statt Piktogramm, …).
+    Sie gehören zur Klasse "nichts", damit das Netz auf den Inhalt achtet. Nur Inhalte,
+    die mit keinem der 100 Katalog-Schilder verwechselt werden können."""
     global FAELSCHUNGEN
     if FAELSCHUNGEN:
         return FAELSCHUNGEN
@@ -243,35 +228,20 @@ def faelschungen():
 
     SCHWARZ = (20, 20, 20, 255)
     WEISS = (255, 255, 255, 255)
-    zahlen = ["10", "20", "40", "60", "60", "80", "80", "100", "100", "120", "5", "7", "3,8", "6t", "7,5t", "2m", "5,5", "90", "15", "25"]
+    zahlen = ["5", "7", "15", "25", "35", "45", "90", "110", "3", "8", "95", "65"]
     for z in zahlen:
         FAELSCHUNGEN.append(_text(ring.copy(), z, (248, 252), 150, SCHWARZ))
     for _ in range(14):
-        b = ring.copy()
-        if rng.random() < 0.5:
-            b = _text(b, rng.choice("ABEFGKLMNRSUVWXZ"), (248, 250), 170, SCHWARZ)
-        else:
-            _zufallsformen(b, rng, (248, 250), 150, SCHWARZ)
-        FAELSCHUNGEN.append(b)
+        FAELSCHUNGEN.append(_text(ring.copy(), rng.choice("ABEFGKLMNRSUVWZ"), (248, 250), 170, SCHWARZ))
     for _ in range(18):
-        b = dreieck.copy()
-        if rng.random() < 0.4:
-            b = _text(b, rng.choice("AEGKMNRSUVWZ"), (252, 300), 120, SCHWARZ)
-        else:
-            _zufallsformen(b, rng, (252, 305), 95, SCHWARZ)
-        FAELSCHUNGEN.append(b)
-    # Pfeile in Richtungen, die es im Katalog nicht gibt (rechts = 209, rechts unten = 222)
-    for w in [90, 90, 180, 180, 135, 45, 225, 90, 180, 135]:
+        FAELSCHUNGEN.append(_text(dreieck.copy(), rng.choice("AEGKMNRSUVWZ"), (252, 300), 120, SCHWARZ))
+    # Pfeile schräg nach oben – die gibt es im Katalog nicht (rechts, links, geradeaus, schräg unten schon)
+    for w in [45, 135, 45, 135, 60, 120, 50, 130]:
         b = blau.copy()
         _pfeil(b, (248, 248), rng.uniform(250, 320), w + rng.uniform(-4, 4), WEISS, rng.randint(34, 46))
         FAELSCHUNGEN.append(b)
     for _ in range(10):
-        b = blau.copy()
-        if rng.random() < 0.5:
-            b = _text(b, rng.choice("AEGKMNRSUVWZ"), (248, 250), 170, WEISS)
-        else:
-            _zufallsformen(b, rng, (248, 250), 150, WEISS)
-        FAELSCHUNGEN.append(b)
+        FAELSCHUNGEN.append(_text(blau.copy(), rng.choice("AEGKMNRSUVWZ"), (248, 250), 170, WEISS))
     for _ in range(10):
         b = quadrat.copy()
         b = _text(b, rng.choice(["i", "A", "E", "H", "K", "U", "W", "Z", "M", "R"]), (246, 246), 230, WEISS)

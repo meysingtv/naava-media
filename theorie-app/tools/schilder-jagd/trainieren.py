@@ -1,4 +1,8 @@
-"""Kleines CNN für die Schilder-Jagd trainieren (48x48 RGB, 29 Schilder + "nichts")."""
+"""Kleines, schnelles CNN für die Schilder-Jagd trainieren (64×64 RGB, alle Schilder + "nichts").
+
+Aufbau: eine normale 3×3-Faltung, danach tiefenweise separierbare Faltungen
+(wie bei MobileNet) – viel Kapazität bei wenig Rechenaufwand auf dem Handy.
+"""
 import json
 import os
 import sys
@@ -12,7 +16,8 @@ from tensorflow.keras import layers
 S = os.path.dirname(os.path.abspath(__file__))
 KLASSEN = json.load(open(f"{S}/schild-keys.json")) + ["nichts"]
 N = len(KLASSEN)
-FILTER = [int(v) for v in os.environ.get("FILTER", "16,32,64,96").split(",")]
+# c = normale Faltung, s = separierbare Faltung, Zahl = Kanäle, p = danach 2×2-Pooling
+ARCH = os.environ.get("ARCH", "c24p,s48p,s96,s96p,s160,s160").split(",")
 EPOCHEN = int(os.environ.get("EPOCHEN", "32"))
 NAME = os.environ.get("NAME", "modell")
 
@@ -21,23 +26,28 @@ tr = np.load(f"{S}/{DATEN}_train.npz")
 va = np.load(f"{S}/{DATEN}_val.npz")
 Xtr, ytr = tr["X"], tr["y"]
 Xva, yva = va["X"], va["y"]
-print("train", Xtr.shape, "val", Xva.shape, "Klassen", N, "Filter", FILTER)
+GROESSE = Xtr.shape[1]
+print("train", Xtr.shape, "val", Xva.shape, "Klassen", N, "Aufbau", ARCH)
 
 
 def modell():
-    ein = keras.Input((48, 48, 3), name="bild")
+    ein = keras.Input((GROESSE, GROESSE, 3), name="bild")
     x = ein
     # leichte zusätzliche Variation nur beim Training
     x = layers.RandomTranslation(0.05, 0.05, fill_mode="reflect", name="aug_verschieben")(x)
     x = layers.RandomZoom((-0.08, 0.08), fill_mode="reflect", name="aug_zoom")(x)
-    for i, f in enumerate(FILTER):
-        x = layers.Conv2D(f, 3, padding="same", use_bias=False, name=f"c{i}")(x)
+    for i, teil in enumerate(ARCH):
+        kanaele = int(teil[1:].rstrip("p"))
+        if teil[0] == "c":
+            x = layers.Conv2D(kanaele, 3, padding="same", use_bias=False, name=f"L{i}")(x)
+        else:
+            x = layers.SeparableConv2D(kanaele, 3, padding="same", use_bias=False, name=f"L{i}")(x)
         x = layers.BatchNormalization(name=f"bn{i}")(x)
         x = layers.ReLU(name=f"r{i}")(x)
-        if i < len(FILTER) - 1:
+        if teil.endswith("p"):
             x = layers.MaxPooling2D(2, name=f"p{i}")(x)
     x = layers.GlobalAveragePooling2D(name="gap")(x)
-    x = layers.Dropout(0.25, name="drop")(x)
+    x = layers.Dropout(0.3, name="drop")(x)
     aus = layers.Dense(N, name="kopf")(x)
     return keras.Model(ein, aus)
 

@@ -6,14 +6,21 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Ring } from "@/components/grafik";
 import { Icon } from "@/components/icon";
-import { Knopf, Kopf, T } from "@/components/ui";
+import { Chip, Knopf, Kopf, T } from "@/components/ui";
 import { Verkehrszeichen, ZEICHEN_INFO, type ZeichenInfo } from "@/components/zeichen";
 import { datumKurz, datumLang } from "@/lib/format";
 import type { ZeichenKey } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
-import { ALBUM, XP_JE_SCHILD } from "@/lib/schilder-jagd";
+import { ALBUM, XP_JE_SCHILD, XP_QUIZ } from "@/lib/schilder-jagd";
 import { useStand } from "@/lib/stand";
 import { abstand, farben, RAND, schrift } from "@/lib/theme";
+
+type Filter = "alle" | "gefunden" | "offen";
+const FILTER: { id: Filter; titel: string }[] = [
+  { id: "alle", titel: "Alle" },
+  { id: "gefunden", titel: "Gefunden" },
+  { id: "offen", titel: "Noch offen" },
+];
 
 const GRUPPEN: { id: ZeichenInfo["gruppe"]; titel: string }[] = [
   { id: "gefahr", titel: "Gefahrzeichen" },
@@ -30,11 +37,16 @@ export default function SchilderJagd() {
   const { width } = useWindowDimensions();
   const { stand } = useStand();
   const [offen, setOffen] = useState<ZeichenInfo | null>(null);
+  const [filter, setFilter] = useState<Filter>("alle");
   const kachel = Math.floor((width - RAND * 2 - 20) / 3);
 
   const gefunden = ALBUM.filter((k) => stand.schilder[k]);
   const anteil = gefunden.length / ALBUM.length;
   const zuletzt = [...gefunden].sort((a, b) => (stand.schilder[b] ?? "").localeCompare(stand.schilder[a] ?? ""))[0];
+  // Heutiges Ziel: jeden Tag ein anderes Schild, das noch fehlt
+  const offene = ALBUM.map(infoVon).filter((z): z is ZeichenInfo => Boolean(z) && !stand.schilder[z!.key]);
+  const tag = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);
+  const ziel = offene.length > 0 ? offene[(tag * 7) % offene.length] : null;
 
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
@@ -62,20 +74,61 @@ export default function SchilderJagd() {
             <T v="text" style={{ fontSize: 14, lineHeight: 19 }}>
               {zuletzt
                 ? `Zuletzt: ${infoVon(zuletzt)?.kurz ?? infoVon(zuletzt)?.name ?? ""}`
-                : `Finde echte Schilder in deiner Umgebung und scanne sie. Jedes neue bringt ${XP_JE_SCHILD} XP.`}
+                : `Finde echte Schilder in deiner Umgebung und scanne sie – jedes neue bringt ${XP_JE_SCHILD} XP, das Quiz danach ${XP_QUIZ} mehr.`}
             </T>
           </View>
         </View>
 
+        {ziel ? (
+          <Pressable
+            onPress={() => {
+              tippen();
+              setOffen(ziel);
+            }}
+            accessibilityLabel={`Heutiges Ziel: ${ziel.name}`}
+            style={({ pressed }) => ({
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 14,
+              padding: 14,
+              borderRadius: 18,
+              backgroundColor: farben.flaeche,
+              borderWidth: 1,
+              borderColor: "rgba(252,91,14,0.35)",
+              transform: [{ scale: pressed ? 0.985 : 1 }],
+            })}
+          >
+            <Verkehrszeichen zeichen={ziel.key} groesse={54} />
+            <View style={{ flex: 1, gap: 2 }}>
+              <T v="mini" farbe={farben.orange}>
+                Heutiges Ziel
+              </T>
+              <T v="h3">{ziel.kurz ?? ziel.name}</T>
+              <T v="klein" style={{ fontSize: 13, lineHeight: 17 }} numberOfLines={2}>
+                {ziel.fundort}
+              </T>
+            </View>
+            <Icon name="chevron-forward" size={18} color={farben.text3} />
+          </Pressable>
+        ) : null}
+
+        <View style={{ flexDirection: "row", gap: abstand(2) }}>
+          {FILTER.map((f) => (
+            <Chip key={f.id} text={f.titel} aktiv={f.id === filter} onPress={() => setFilter(f.id)} />
+          ))}
+        </View>
+
         {GRUPPEN.map((g) => {
-          const liste = ALBUM.map(infoVon).filter((z): z is ZeichenInfo => z?.gruppe === g.id);
-          const hier = liste.filter((z) => stand.schilder[z.key]).length;
+          const gruppe = ALBUM.map(infoVon).filter((z): z is ZeichenInfo => z?.gruppe === g.id);
+          const hier = gruppe.filter((z) => stand.schilder[z.key]).length;
+          const liste = gruppe.filter((z) => filter === "alle" || (filter === "gefunden") === Boolean(stand.schilder[z.key]));
+          if (liste.length === 0) return null;
           return (
             <View key={g.id} style={{ gap: abstand(3) }}>
               <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
                 <T v="h3">{g.titel}</T>
-                <Text style={{ ...schrift.textHalb, fontSize: 14, color: hier === liste.length ? farben.orange : farben.text3, fontVariant: ["tabular-nums"] }}>
-                  {hier}/{liste.length}
+                <Text style={{ ...schrift.textHalb, fontSize: 14, color: hier === gruppe.length ? farben.orange : farben.text3, fontVariant: ["tabular-nums"] }}>
+                  {hier}/{gruppe.length}
                 </Text>
               </View>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
@@ -172,6 +225,13 @@ export default function SchilderJagd() {
                 <T v="text" zentriert>
                   {offen.bedeutung}
                 </T>
+              </View>
+              <View style={{ alignSelf: "stretch", flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 12, borderRadius: 14, backgroundColor: farben.flaeche2 }}>
+                <Icon name="location-outline" size={18} color={farben.orange} />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={{ ...schrift.textHalb, fontSize: 13, color: farben.orange }}>Wo findest du es?</Text>
+                  <Text style={{ ...schrift.text, fontSize: 13.5, lineHeight: 18, color: farben.text2 }}>{offen.fundort}</Text>
+                </View>
               </View>
               {stand.schilder[offen.key] ? (
                 <Knopf titel="Schließen" art="sekundaer" onPress={() => setOffen(null)} style={{ alignSelf: "stretch" }} />

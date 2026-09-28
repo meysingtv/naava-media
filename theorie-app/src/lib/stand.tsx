@@ -379,6 +379,8 @@ type StandKontext = {
   clipUmschalten: (id: string, liste: "gemocht" | "gemerkt") => void;
   /** Schild für das Album verbuchen; gibt zurück, ob es neu war und wie viele XP es gab. */
   schildGefunden: (key: string, xp: number) => { neu: boolean; xp: number };
+  /** Zusätzliche XP gutschreiben (z. B. Quiz nach einem Schild-Fund). */
+  bonus: (xp: number) => void;
   gebuchtSetzen: (g: Stand["gebucht"]) => void;
   ersetzen: (s: Stand) => void;
   zuruecksetzen: () => void;
@@ -537,6 +539,8 @@ export function StandProvider({ children }: { children: ReactNode }) {
     [anwenden],
   );
 
+  const bonus = useCallback((xp: number) => anwenden(xpDazu(aktuell.current, xp)), [anwenden]);
+
   const gebuchtSetzen = useCallback((g: Stand["gebucht"]) => {
     const s = { ...aktuell.current, gebucht: g };
     aktuell.current = s;
@@ -571,13 +575,14 @@ export function StandProvider({ children }: { children: ReactNode }) {
       setzen,
       clipUmschalten,
       schildGefunden,
+      bonus,
       gebuchtSetzen,
       ersetzen,
       zuruecksetzen,
       neueErfolge,
       erfolgeGesehen: () => setNeueErfolge([]),
     }),
-    [stand, bereit, antwort, zeitBuchen, merken, trainingFertig, pruefungFertig, duellFertig, setzen, clipUmschalten, schildGefunden, gebuchtSetzen, ersetzen, zuruecksetzen, neueErfolge],
+    [stand, bereit, antwort, zeitBuchen, merken, trainingFertig, pruefungFertig, duellFertig, setzen, clipUmschalten, schildGefunden, bonus, gebuchtSetzen, ersetzen, zuruecksetzen, neueErfolge],
   );
 
   return <Kontext.Provider value={wert}>{children}</Kontext.Provider>;
