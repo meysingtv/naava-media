@@ -3,7 +3,6 @@ import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } fr
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Logo } from "@/components/grafik";
 import { Icon } from "@/components/icon";
 import { Oder, SozialAnmeldung } from "@/components/sozial-anmeldung";
 import { Eingabe, Knopf, Kopf, PasswortEingabe, T } from "@/components/ui";
@@ -55,11 +54,7 @@ export default function Anmelden() {
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: farben.grund }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <Kopf />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: insets.bottom + abstand(8), gap: abstand(4) }} keyboardShouldPersistTaps="handled">
-        <View style={{ alignItems: "center", marginBottom: abstand(2) }}>
-          <Logo groesse={34} />
-        </View>
-
+      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(4), paddingBottom: insets.bottom + abstand(8), gap: abstand(4) }} keyboardShouldPersistTaps="handled">
         {!serverVerbunden ? (
           <View style={{ flexDirection: "row", gap: abstand(2), padding: abstand(3.5), borderRadius: 14, backgroundColor: farben.gelbSoft }}>
             <Icon name="cloud-offline-outline" size={18} color={farben.gelb} />
@@ -68,15 +63,11 @@ export default function Anmelden() {
             </T>
           </View>
         ) : null}
-
-        <View style={{ gap: abstand(1) }}>
-          <T v="display">Anmelden</T>
-          <T v="text">Willkommen zurück! Mach da weiter, wo du aufgehört hast.</T>
-        </View>
-
+        <T v="titel">Willkommen zurück.</T>
+        <T v="text">Melde dich an und mach da weiter, wo du aufgehört hast.</T>
         <View style={{ gap: abstand(3), marginTop: abstand(2) }}>
           <Eingabe
-            icon="person-outline"
+            icon="mail-outline"
             value={kennung}
             onChangeText={setKennung}
             placeholder="E-Mail oder Benutzername"
@@ -85,27 +76,27 @@ export default function Anmelden() {
             keyboardType="email-address"
             textContentType="username"
             autoComplete="username"
-            returnKeyType="next"
           />
           <PasswortEingabe value={passwort} onChangeText={setPasswort} placeholder="Passwort" returnKeyType="go" onSubmitEditing={los} />
-          <Pressable onPress={vergessen} hitSlop={8} style={{ alignSelf: "flex-end", paddingVertical: abstand(1) }}>
-            <T v="klein" farbe={farben.orange} style={{ ...schrift.textHalb, fontSize: 14 }}>
-              Passwort vergessen?
-            </T>
-          </Pressable>
         </View>
-
         {fehler ? (
           <T v="klein" farbe={farben.rot} style={{ ...schrift.textHalb }}>
             {fehler}
           </T>
         ) : null}
-
         <Knopf titel="Anmelden" laedt={laedt} deaktiviert={!kennung.trim() || !passwort} onPress={los} />
+        <Pressable onPress={vergessen} hitSlop={8} style={{ alignSelf: "center", paddingVertical: abstand(2) }}>
+          <T v="klein" farbe={farben.text2} style={{ ...schrift.textHalb }}>
+            Passwort vergessen?
+          </T>
+        </Pressable>
 
-        <View style={{ flexDirection: "row", justifyContent: "center", gap: 6, paddingVertical: abstand(1) }}>
-          <T v="text" farbe={farben.text3}>
-            Kein Konto?
+        <Oder />
+        <SozialAnmeldung onAngemeldet={() => setFertig(true)} onFehler={setFehler} />
+
+        <View style={{ flexDirection: "row", justifyContent: "center", gap: 6, paddingVertical: abstand(2) }}>
+          <T v="klein" style={{ fontSize: 14 }}>
+            Noch kein Konto?
           </T>
           <Pressable
             onPress={() => {
@@ -114,14 +105,11 @@ export default function Anmelden() {
             }}
             hitSlop={8}
           >
-            <T v="textStark" farbe={farben.orange}>
+            <T v="klein" farbe={farben.orange} style={{ ...schrift.textHalb, fontSize: 14 }}>
               Registrieren
             </T>
           </Pressable>
         </View>
-
-        <Oder />
-        <SozialAnmeldung onAngemeldet={() => setFertig(true)} onFehler={setFehler} />
       </ScrollView>
     </KeyboardAvoidingView>
   );

@@ -9,6 +9,9 @@ import { useKonto, type Rolle } from "@/lib/konto";
 import { serverVerbunden } from "@/lib/supabase";
 import { abstand, farben, schrift } from "@/lib/theme";
 
+/** Rand der dunklen Anmelde-Knöpfe (Googles Vorgabe für die dunkle Variante). */
+const RAHMEN = "#8E918F";
+
 /** Das bunte „G“ von Google. */
 function GoogleLogo({ groesse = 20 }: { groesse?: number }) {
   return (
@@ -80,26 +83,28 @@ export function SozialAnmeldung({ rolle, onAngemeldet, onFehler }: { rolle?: Rol
           alignItems: "center",
           justifyContent: "center",
           gap: 10,
-          backgroundColor: "#FFFFFF",
-          opacity: pressed ? 0.85 : 1,
+          backgroundColor: "#131314",
+          borderWidth: 1,
+          borderColor: RAHMEN,
+          opacity: pressed ? 0.8 : 1,
         })}
       >
         {laeuft === "google" ? (
-          <ActivityIndicator color="#1F1F1F" />
+          <ActivityIndicator color="#E3E3E3" />
         ) : (
           <>
             <GoogleLogo />
-            <Text style={{ ...schrift.textHalb, fontSize: 17, color: "#1F1F1F" }}>Mit Google anmelden</Text>
+            <Text style={{ ...schrift.textHalb, fontSize: 16.5, color: "#E3E3E3" }}>Mit Google anmelden</Text>
           </>
         )}
       </Pressable>
       {apple ? (
-        <View style={{ opacity: laeuft === "apple" ? 0.6 : 1 }}>
+        <View style={{ height: 52, borderRadius: 14, borderWidth: 1, borderColor: RAHMEN, overflow: "hidden", opacity: laeuft === "apple" ? 0.6 : 1 }}>
           <AppleAuthentication.AppleAuthenticationButton
             buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
-            cornerRadius={14}
-            style={{ height: 52, width: "100%" }}
+            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+            cornerRadius={13}
+            style={{ flex: 1, width: "100%" }}
             onPress={() => los("apple")}
           />
         </View>
