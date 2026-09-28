@@ -4,6 +4,7 @@ import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as Notifications from "expo-notifications";
 import { StatusBar } from "expo-status-bar";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Archivo_800ExtraBold, useFonts } from "@expo-google-fonts/archivo";
 import { MarckScript_400Regular } from "@expo-google-fonts/marck-script";
@@ -158,13 +159,15 @@ export default function RootLayout() {
   if (!schriftenGeladen) return null;
 
   return (
-    <StandProvider>
-      <KontoProvider>
-        <StatusBar style="light" />
-        <SyncBruecke />
-        <ProfilbildAbgleich />
-        <Navigation />
-      </KontoProvider>
-    </StandProvider>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: farben.grund }}>
+      <StandProvider>
+        <KontoProvider>
+          <StatusBar style="light" />
+          <SyncBruecke />
+          <ProfilbildAbgleich />
+          <Navigation />
+        </KontoProvider>
+      </StandProvider>
+    </GestureHandlerRootView>
   );
 }

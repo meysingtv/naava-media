@@ -15,6 +15,7 @@ import { FRAGEN, THEMEN, fragenZuThema, themaVon, type ThemaId } from "@/lib/fra
 import { tippen } from "@/lib/haptik";
 import { fortschritt, useStand } from "@/lib/stand";
 import { farben, leuchten, schrift, verlauf } from "@/lib/theme";
+import { useLeistenScroll } from "@/lib/leisten-scroll";
 
 type Stufe = "alle" | "leicht" | "mittel" | "schwer";
 
@@ -77,6 +78,7 @@ function Filter({ wert, onWechsel }: { wert: Stufe; onWechsel: (s: Stufe) => voi
 export default function Kategorien() {
   const insets = useSafeAreaInsets();
   const inhaltUnten = useInhaltUnten();
+  const leistenScroll = useLeistenScroll();
   const { stand } = useStand();
   const [stufe, setStufe] = useState<Stufe>("alle");
   const [suche, setSuche] = useState<string | null>(null);
@@ -103,6 +105,7 @@ export default function Kategorien() {
       </View>
 
       <ScrollView
+        {...leistenScroll}
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: inhaltUnten, gap: 8 }}
         keyboardShouldPersistTaps="handled"

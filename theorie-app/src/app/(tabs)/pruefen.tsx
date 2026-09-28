@@ -12,6 +12,7 @@ import { FRAGEN } from "@/lib/fragen";
 import { datumKurz } from "@/lib/format";
 import { fortschritt, useStand } from "@/lib/stand";
 import { abstand, farben, RAND } from "@/lib/theme";
+import { useLeistenScroll } from "@/lib/leisten-scroll";
 
 const REGELN: { icon: IconName; text: string }[] = [
   { icon: "layers-outline", text: "30 Fragen aus allen Themen, gemischt" },
@@ -36,6 +37,7 @@ function Wert({ wert, label, farbe }: { wert: string; label: string; farbe?: str
 export default function Pruefen() {
   const insets = useSafeAreaInsets();
   const inhaltUnten = useInhaltUnten();
+  const leistenScroll = useLeistenScroll();
   const { stand } = useStand();
   const reife = fortschritt(stand).anteil;
   const bestanden = stand.pruefungen.filter((p) => p.bestanden).length;
@@ -56,6 +58,7 @@ export default function Pruefen() {
       </View>
 
       <ScrollView
+        {...leistenScroll}
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: inhaltUnten, gap: abstand(5) }}
         showsVerticalScrollIndicator={false}

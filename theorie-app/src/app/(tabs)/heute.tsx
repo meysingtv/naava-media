@@ -15,6 +15,7 @@ import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { fortschritt, heuteBeantwortet, serieAktuell, useStand, wocheTage } from "@/lib/stand";
 import { farben, handschrift, leuchten, schrift, verlauf } from "@/lib/theme";
+import { useLeistenScroll } from "@/lib/leisten-scroll";
 
 const RAND = 16;
 
@@ -48,6 +49,7 @@ function Punkt({ zustand }: { zustand: "voll" | "halb" | "leer" }) {
 export default function Home() {
   const insets = useSafeAreaInsets();
   const inhaltUnten = useInhaltUnten();
+  const leistenScroll = useLeistenScroll();
   const { stand } = useStand();
   const { anzeigeName } = useKonto();
 
@@ -62,7 +64,7 @@ export default function Home() {
 
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: inhaltUnten }} showsVerticalScrollIndicator={false}>
+      <ScrollView {...leistenScroll} contentContainerStyle={{ paddingBottom: inhaltUnten }} showsVerticalScrollIndicator={false}>
         {/* Titelbild, weich ins Schwarz verblendet */}
         <View style={{ height: heroHoehe, overflow: "hidden" }}>
           <Image source={FOTOS.held} style={{ position: "absolute", top: 0, left: 0, right: 0, height: heroHoehe, width: "100%" }} resizeMode="cover" />

@@ -16,6 +16,7 @@ import { ALBUM } from "@/lib/schilder-jagd";
 import { profilbildEntfernen, profilbildHochladen, profilbildServerEntfernen, profilbildWaehlen, useProfilbild } from "@/lib/profilbild";
 import { serieAktuell, useStand } from "@/lib/stand";
 import { farben, schrift } from "@/lib/theme";
+import { useLeistenScroll } from "@/lib/leisten-scroll";
 
 function Wert({ wert, label }: { wert: string; label: string }) {
   return (
@@ -64,6 +65,7 @@ function Gruppe({ children }: { children: React.ReactNode }) {
 export default function Profil() {
   const insets = useSafeAreaInsets();
   const inhaltUnten = useInhaltUnten();
+  const leistenScroll = useLeistenScroll();
   const { stand } = useStand();
   const { profil, gast, anzeigeName, abmelden, session, profilNeuLaden } = useKonto();
   const bild = useProfilbild();
@@ -113,7 +115,7 @@ export default function Profil() {
 
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <ScrollView contentContainerStyle={{ paddingTop: kopfOben(insets.top) + 8, paddingHorizontal: 16, paddingBottom: inhaltUnten, gap: 16 }} showsVerticalScrollIndicator={false}>
+      <ScrollView {...leistenScroll} contentContainerStyle={{ paddingTop: kopfOben(insets.top) + 8, paddingHorizontal: 16, paddingBottom: inhaltUnten, gap: 16 }} showsVerticalScrollIndicator={false}>
         <Text style={{ ...schrift.titel, fontSize: 30, color: "#FFFFFF", letterSpacing: -0.4 }}>Profil</Text>
 
         {/* Kopf mit Profilbild */}
