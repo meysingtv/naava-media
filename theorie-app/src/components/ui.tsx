@@ -597,6 +597,44 @@ export function KopfTaste({ icon, onPress, label, farbe = farben.text }: { icon:
   );
 }
 
+/** Kopf-Taste mit eigener Fläche: rund (Schließen) oder eckig (Merken) – für den Fragen-Bildschirm. */
+export function KopfKnopf({
+  icon,
+  onPress,
+  label,
+  farbe = farben.text,
+  eckig,
+}: {
+  icon: IconName;
+  onPress: () => void;
+  label: string;
+  farbe?: string;
+  eckig?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={() => {
+        tippen();
+        onPress();
+      }}
+      hitSlop={8}
+      accessibilityLabel={label}
+      style={({ pressed }) => ({
+        width: 42,
+        height: 42,
+        borderRadius: eckig ? 13 : 21,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: pressed ? farben.flaeche3 : farben.flaeche2,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.1)",
+      })}
+    >
+      <Icon name={icon} size={20} color={farbe} />
+    </Pressable>
+  );
+}
+
 /** Abstand der Kopfzeile von oben – knapp unter der Statusleiste wie in der Vorlage. */
 export function kopfOben(inset: number): number {
   return Math.max(inset - 6, 10);

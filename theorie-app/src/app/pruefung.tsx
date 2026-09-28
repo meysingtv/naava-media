@@ -173,7 +173,7 @@ export default function Pruefung() {
               const a = antworten[id] ?? { auswahl: [], eingabe: "" };
               return f ? (
                 <View key={id} style={{ gap: 14 }}>
-                  <FrageAnsicht frage={f} auswahl={a.auswahl} onAuswahl={() => {}} eingabe={a.eingabe} onEingabe={() => {}} aufgedeckt />
+                  <FrageAnsicht frage={f} auswahl={a.auswahl} onAuswahl={() => {}} eingabe={a.eingabe} onEingabe={() => {}} aufgedeckt etikett="Prüfung" />
                   <FrageAktionen frageId={id} onHinweis={hinweis.zeigen} />
                 </View>
               ) : null;
@@ -356,6 +356,7 @@ export default function Pruefung() {
             eingabe={a.eingabe}
             onEingabe={(eingabe) => setzeAntwort({ eingabe })}
             aufgedeckt={false}
+            etikett="Prüfung"
           />
         </ScrollView>
         <View style={{ flexDirection: "row", gap: abstand(3), paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: insets.bottom + abstand(3) }}>

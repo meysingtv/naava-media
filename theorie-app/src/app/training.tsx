@@ -3,8 +3,8 @@ import { Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView,
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Icon } from "@/components/icon";
-import { Abschnitt, Chip, Gruppe, Knopf, kopfOben, KopfTaste, Plakette, T, Zeile } from "@/components/ui";
+import { Icon, type IconName } from "@/components/icon";
+import { Abschnitt, Chip, Gruppe, Knopf, KopfKnopf, kopfOben, Plakette, T, Zeile } from "@/components/ui";
 import { FrageAktionen } from "@/components/frage-aktionen";
 import { FrageAnsicht } from "@/components/frage-ansicht";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
@@ -192,22 +192,42 @@ export default function Training() {
   // ------------------------------------------------------------------ Frage
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <View style={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND - 8, paddingBottom: abstand(3), gap: abstand(2.5) }}>
-        <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
-            <Text style={{ ...schrift.textMittel, fontSize: 18, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>
-              Frage {index + 1} von {ids.length}
+      <View style={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND, paddingBottom: abstand(3), gap: 12 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <KopfKnopf icon="close" label="Training beenden" onPress={schliessen} />
+          <View style={{ flex: 1, alignItems: "center", gap: 5 }}>
+            <Text style={{ ...schrift.titelFett, fontSize: 17, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>
+              Frage {index + 1}/{ids.length}
             </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+                maxWidth: "100%",
+                height: 24,
+                paddingHorizontal: 10,
+                borderRadius: 12,
+                backgroundColor: farben.orangeSoft,
+                borderWidth: 1,
+                borderColor: "rgba(252,91,14,0.35)",
+              }}
+            >
+              <Icon name={themaVon(frage.thema).icon as IconName} size={12} color={farben.orange} />
+              <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 12, color: farben.orange, flexShrink: 1 }}>
+                {themaVon(frage.thema).titel}
+              </Text>
+            </View>
           </View>
-          <KopfTaste icon="close" label="Training beenden" onPress={schliessen} />
-          <KopfTaste
+          <KopfKnopf
             icon={gemerkt ? "heart" : "heart-outline"}
+            eckig
             farbe={gemerkt ? farben.orange : farben.text}
             label={gemerkt ? "Aus den Favoriten entfernen" : "Zu den Favoriten"}
             onPress={() => merken(frage.id)}
           />
         </View>
-        <View style={{ marginHorizontal: 12, height: 6, borderRadius: 3, backgroundColor: "#1C232B" }}>
+        <View style={{ height: 5, borderRadius: 3, backgroundColor: "#1C232B" }}>
           <View
             style={{
               width: `${Math.max(3, ((index + (aufgedeckt ? 1 : 0)) / ids.length) * 100)}%`,
@@ -224,13 +244,13 @@ export default function Training() {
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <ScrollView ref={scroll} contentContainerStyle={{ paddingHorizontal: 12, paddingTop: abstand(1), paddingBottom: abstand(6) }} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={scroll} contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(1), paddingBottom: abstand(6) }} keyboardShouldPersistTaps="handled">
           <FrageAnsicht frage={frage} auswahl={auswahl} onAuswahl={setAuswahl} eingabe={eingabe} onEingabe={setEingabe} aufgedeckt={aufgedeckt} />
-          <View style={{ marginTop: 16 }}>
+          <View style={{ marginTop: 12 }}>
             <FrageAktionen frageId={frage.id} onHinweis={hinweis.zeigen} />
           </View>
         </ScrollView>
-        <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: 12, paddingTop: abstand(2), paddingBottom: insets.bottom + abstand(3), backgroundColor: farben.grund }}>
+        <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: insets.bottom + abstand(3), backgroundColor: farben.grund }}>
           <Pressable
             onPress={() => {
               tippen();
