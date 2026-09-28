@@ -31,11 +31,14 @@ Ohne Server läuft die App im Gastmodus – der Lernstand bleibt auf dem Gerät.
 2. Im SQL-Editor `supabase/schema.sql` ausführen (bei Updates einfach erneut –
    das Skript ist wiederholbar).
 3. `.env.example` nach `.env` kopieren und URL + anon key eintragen.
-4. Authentication → Sign In / Providers → Email → „Confirm email“ **anlassen**:
-   Nur wer seine E-Mail bestätigt, bekommt Sonderrechte (z. B. als Inhaber).
+4. Authentication → Sign In / Providers → Email → „Confirm email“ **ausschalten**:
+   Nach der Registrierung ist man sofort angemeldet, ohne Bestätigungs-Mail.
+   `schema.sql` (Abschnitt 15) bestätigt neue Konten ohnehin automatisch. Weil
+   die Adresse dabei nie geprüft wird, gibt es Inhaber-Rechte über die E-Mail nur
+   für Konten von vor der Umstellung oder mit Google/Apple-Anmeldung.
 5. Authentication → URL Configuration → Redirect URLs: `spur://**` eintragen.
-   Dann öffnen die Links aus der Bestätigungs- und der Passwort-Mail direkt die
-   App (auf dem iPhone) und melden an.
+   Dann öffnen die Links aus der Passwort-Mail direkt die App (auf dem iPhone)
+   und melden an.
 
 ## Tab-Leiste
 
@@ -53,8 +56,9 @@ Ansehen geht für alle, Liken, Kommentieren und Folgen mit Konto.
 - `supabase/schema.sql` (Abschnitt 10) legt Tabellen, Rechte und den Speicher
   `lern-clips` an. Das Skript einfach erneut ausführen – es ist wiederholbar.
 - Inhaber ist, wer mit einer E-Mail aus der Tabelle `lern_inhaber` angemeldet
-  ist (bestätigt). Eingetragen ist `leon.scheulen@gmail.com`. Mit dieser
-  E-Mail registrieren, E-Mail bestätigen, anmelden – dann erscheint im
+  ist. Eingetragen ist `leon.scheulen@gmail.com`. Das bestehende Konto mit
+  dieser Adresse ist Inhaber; ein neues Konto mit einer Inhaber-Adresse nur,
+  wenn es sich mit Google/Apple anmeldet (Adresse geprüft). Dann erscheint im
   Clips-Reiter oben links das „+“ zum Hochladen.
 - Andere freischalten: Einstellungen → Clips → „Clip-Ersteller verwalten“,
   Benutzername oder E-Mail eingeben.

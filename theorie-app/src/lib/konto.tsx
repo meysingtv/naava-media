@@ -220,7 +220,12 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
       return { fehler: "Mit dieser E-Mail gibt es schon ein Konto. Melde dich an – oder setz dein Passwort über „Passwort vergessen?“ zurück." };
     }
-    if (!data.session) return { bestaetigen: true };
+    if (!data.session) {
+      // Ohne E-Mail-Bestätigung gleich anmelden. Klappt das nicht, verlangt der
+      // Server noch eine Bestätigung (Supabase: „Confirm email“ ist noch an).
+      const { error: anmeldeFehler } = await supabase.auth.signInWithPassword({ email: email(d.email), password: d.passwort });
+      if (anmeldeFehler) return { bestaetigen: true };
+    }
     await AsyncStorage.removeItem(GAST).catch(() => {});
     setGastName(null);
     return {};

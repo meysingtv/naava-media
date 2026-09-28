@@ -45,8 +45,8 @@ Fähigkeit in der App stehen muss.
 
 - Anmelde-Links laufen über PKCE (Einmal-Code): Den Link aus „Passwort
   vergessen“ bitte auf dem Handy öffnen, auf dem er angefordert wurde.
-  Die Bestätigungs-Mail bestätigt die Adresse auch auf einem anderen Gerät –
-  danach einfach anmelden.
+- Eine E-Mail-Bestätigung gibt es nicht: Nach der Registrierung ist man sofort
+  angemeldet (Supabase: „Confirm email“ aus, `update-ohne-bestaetigung.sql`).
 
 - Jeder kann sich als „Fahrlehrer“ eintragen – eine Prüfung gibt es noch nicht.
   Clips kannst du als Inhaber weiterhin löschen.

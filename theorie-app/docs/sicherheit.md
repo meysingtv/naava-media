@@ -46,8 +46,11 @@ als Abschnitt 14 in `schema.sql`). Mehrfaches Ausführen ist unschädlich.
 
 ## In Supabase prüfen
 
-- Authentication → Sign In / Providers → Email: **Confirm email an**,
-  Mindestlänge Passwort 8.
+- Authentication → Sign In / Providers → Email: **Confirm email aus**
+  (Anmelden ohne Bestätigungs-Mail), Mindestlänge Passwort 8. Konten mit
+  E-Mail + Passwort tragen dann „email_ungeprueft“ (Abschnitt 15 in
+  `schema.sql`) und bekommen keine Inhaber-Rechte über die Adresse – außer mit
+  Google/Apple-Anmeldung.
 - Authentication → URL Configuration → Redirect URLs: nur `spur://**`
   (und `exp://**` zum Testen mit Expo Go).
 - Authentication → Rate Limits: Standardwerte lassen (begrenzen Anmeldeversuche
