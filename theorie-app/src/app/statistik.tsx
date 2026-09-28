@@ -1,18 +1,17 @@
 import { useMemo, useState } from "react";
 import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { KategorieMini } from "@/components/foto";
 import { Ring } from "@/components/grafik";
-import { KopfTaste, Segment, kopfOben, zurueck } from "@/components/ui";
+import { getoent, Kopf, KopfTaste, Segment } from "@/components/ui";
 import { THEMEN, themaVon, type ThemaId } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
 import { auswertung, fortschritt, lernzeitText, serieAktuell, tagKey, useStand, wochenStart, type Stand, type Zeitraum } from "@/lib/stand";
-import { farben, quoteFarbe, schrift, verlauf } from "@/lib/theme";
+import { farben, quoteFarbe, schrift } from "@/lib/theme";
 
 /** Diese Bereiche stehen immer da – in der Reihenfolge der Vorlage. */
 const HAUPTBEREICHE: ThemaId[] = ["zeichen", "vorfahrt", "gefahren", "umwelt", "technik", "manoever"];
@@ -70,7 +69,7 @@ function quote(s: Stand, vonTagen: number, bisTagen: number): number | null {
   return r + f > 0 ? r / (r + f) : null;
 }
 
-function StatKarte({ symbol, wert, label, wertFarbe = "#FFFFFF" }: { symbol: React.ReactNode; wert: string; label: string; wertFarbe?: string }) {
+function StatKarte({ symbol, wert, label, wertFarbe }: { symbol: React.ReactNode; wert: string; label: string; wertFarbe?: string }) {
   return (
     <View
       style={{
@@ -82,15 +81,15 @@ function StatKarte({ symbol, wert, label, wertFarbe = "#FFFFFF" }: { symbol: Rea
         borderRadius: 16,
         backgroundColor: farben.flaeche,
         borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.09)",
+        borderColor: farben.linie,
       }}
     >
       <View style={{ width: 30, alignItems: "center" }}>{symbol}</View>
       <View style={{ flex: 1 }}>
-        <Text style={{ ...schrift.titelFett, fontSize: 18, lineHeight: 22, color: wertFarbe }} numberOfLines={1}>
+        <Text style={{ ...schrift.titelFett, fontSize: 18, lineHeight: 22, color: wertFarbe ?? farben.text }} numberOfLines={1}>
           {wert}
         </Text>
-        <Text style={{ ...schrift.text, fontSize: 13, color: "#D3D7DC" }} numberOfLines={1}>
+        <Text style={{ ...schrift.text, fontSize: 13, color: farben.text3 }} numberOfLines={1}>
           {label}
         </Text>
       </View>
@@ -109,7 +108,7 @@ function Diagramm({ saeulen }: { saeulen: Saeule[] }) {
     <View style={{ flexDirection: "row", gap: 8, marginTop: 28 }}>
       <View style={{ height: HOEHE, justifyContent: "space-between", paddingBottom: 0 }}>
         {[skala, skala / 2, 0].map((w) => (
-          <Text key={w} style={{ ...schrift.text, fontSize: 12, color: "#8F959D", lineHeight: 14, marginTop: -7 }}>
+          <Text key={w} style={{ ...schrift.text, fontSize: 12, color: farben.text3, lineHeight: 14, marginTop: -7 }}>
             {w}
           </Text>
         ))}
@@ -117,7 +116,7 @@ function Diagramm({ saeulen }: { saeulen: Saeule[] }) {
       <View style={{ flex: 1 }}>
         <View style={{ height: HOEHE, flexDirection: "row", alignItems: "flex-end", justifyContent: "space-around" }}>
           {[0, 0.5, 1].map((p) => (
-            <View key={p} style={{ position: "absolute", left: 0, right: 0, bottom: p * HOEHE, height: 1, backgroundColor: "rgba(255,255,255,0.06)" }} />
+            <View key={p} style={{ position: "absolute", left: 0, right: 0, bottom: p * HOEHE, height: 1, backgroundColor: farben.linie }} />
           ))}
           {saeulen.map((s, i) => {
             const h = Math.max(s.wert > 0 ? 8 : 3, (s.wert / skala) * HOEHE);
@@ -134,8 +133,8 @@ function Diagramm({ saeulen }: { saeulen: Saeule[] }) {
               >
                 {aktiv && s.wert > 0 ? (
                   <View style={{ position: "absolute", bottom: h + 10, alignItems: "center", width: 90 }}>
-                    <View style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 9, backgroundColor: "#262D35", borderWidth: 1, borderColor: "rgba(255,255,255,0.1)" }}>
-                      <Text style={{ ...schrift.textMittel, fontSize: 13, color: "#FFFFFF" }}>
+                    <View style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 9, backgroundColor: farben.flaeche2, borderWidth: 1, borderColor: farben.linie }}>
+                      <Text style={{ ...schrift.textMittel, fontSize: 13, color: farben.text }}>
                         {s.wert} {s.wert === 1 ? "Frage" : "Fragen"}
                       </Text>
                     </View>
@@ -144,23 +143,19 @@ function Diagramm({ saeulen }: { saeulen: Saeule[] }) {
                 ) : null}
                 <View
                   style={{
-                    width: 24,
+                    width: 22,
                     height: h,
                     borderRadius: 6,
-                    overflow: "hidden",
-                    opacity: s.wert > 0 ? 1 : 0.35,
-                    ...(aktiv ? { shadowColor: farben.orange, shadowOpacity: 0.8, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } } : null),
+                    backgroundColor: s.wert > 0 ? (aktiv ? farben.orange : getoent(farben.orange, 0.55)) : farben.flaeche3,
                   }}
-                >
-                  <LinearGradient colors={verlauf.saeule} locations={[0, 0.4, 0.75, 1]} style={{ flex: 1 }} />
-                </View>
+                />
               </Pressable>
             );
           })}
         </View>
         <View style={{ flexDirection: "row", justifyContent: "space-around", marginTop: 8 }}>
           {saeulen.map((s) => (
-            <Text key={s.label} style={{ ...schrift.text, fontSize: 13, color: "#AEB3BA", width: 44, textAlign: "center" }} numberOfLines={1}>
+            <Text key={s.label} style={{ ...schrift.text, fontSize: 13, color: farben.text3, width: 44, textAlign: "center" }} numberOfLines={1}>
               {s.label}
             </Text>
           ))}
@@ -194,25 +189,10 @@ export default function MeinFortschritt() {
 
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <View style={{ paddingTop: kopfOben(insets.top), paddingHorizontal: 8, paddingBottom: 4 }}>
-        <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
-            <Text style={{ ...schrift.titelFett, fontSize: 20, color: "#FFFFFF" }}>Mein Fortschritt</Text>
-          </View>
-          <KopfTaste icon="arrow-back" label="Zurück" onPress={zurueck} />
-          <Pressable
-            onPress={() => {
-              tippen();
-              router.push("/kalender");
-            }}
-            accessibilityLabel="Lernkalender"
-            hitSlop={10}
-            style={({ pressed }) => ({ width: 40, height: 40, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.7 : 1 })}
-          >
-            <Icon name="calendar-outline" sf="calendar" size={26} color="#FFFFFF" />
-          </Pressable>
-        </View>
-      </View>
+      <Kopf
+        titel="Mein Fortschritt"
+        rechts={<KopfTaste icon="calendar-outline" label="Lernkalender" onPress={() => router.push("/kalender")} />}
+      />
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: insets.bottom + 28 }} showsVerticalScrollIndicator={false}>
         <Segment<Zeitraum>
@@ -228,11 +208,11 @@ export default function MeinFortschritt() {
         {/* Ring und Kennzahlen */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 20 }}>
           <View>
-            <Ring anteil={gesamt.anteil} groesse={172} dicke={16} spur="#23282E" verlauf={verlauf.ring} leuchten>
-              <Text style={{ ...schrift.titel, fontSize: 40, lineHeight: 46, color: "#FFFFFF", letterSpacing: -0.8, fontVariant: ["tabular-nums"] }}>
+            <Ring anteil={gesamt.anteil} groesse={168} dicke={14} spur={farben.flaeche3}>
+              <Text style={{ ...schrift.titel, fontSize: 38, lineHeight: 44, color: farben.text, letterSpacing: -0.8, fontVariant: ["tabular-nums"] }}>
                 {Math.round(gesamt.anteil * 100)}%
               </Text>
-              <Text style={{ ...schrift.text, fontSize: 14, lineHeight: 19, color: "#D3D7DC", textAlign: "center" }}>
+              <Text style={{ ...schrift.text, fontSize: 13.5, lineHeight: 18, color: farben.text3, textAlign: "center" }}>
                 {gesamt.richtig} von {gesamt.gesamt}
                 {"\n"}Fragen
               </Text>
@@ -245,13 +225,9 @@ export default function MeinFortschritt() {
               wertFarbe={trendPositiv ? farben.gruen : farben.rot}
               label={trendLabel}
             />
-            <StatKarte symbol={<Icon name="flame" size={28} color={farben.flamme} />} wert={String(serieAktuell(stand))} label="Tage in Folge" />
+            <StatKarte symbol={<Icon name="flame" size={26} color={farben.flamme} />} wert={String(serieAktuell(stand))} label="Tage in Folge" />
             <StatKarte
-              symbol={
-                <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: "#5AA9F0", alignItems: "center", justifyContent: "center" }}>
-                  <Icon name="time-outline" sf="clock" size={20} color="#FFFFFF" weight="semibold" />
-                </View>
-              }
+              symbol={<Icon name="time-outline" sf="clock.fill" size={24} color={farben.blau} />}
               wert={lernzeitText(daten.sekunden)}
               label="Lernzeit"
             />
@@ -259,14 +235,14 @@ export default function MeinFortschritt() {
         </View>
 
         {/* Lernaktivität */}
-        <View style={{ marginTop: 18, padding: 16, paddingBottom: 12, borderRadius: 18, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" }}>
-          <Text style={{ ...schrift.titelFett, fontSize: 20, color: "#FFFFFF" }}>Lernaktivität</Text>
+        <View style={{ marginTop: 18, padding: 16, paddingBottom: 12, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
+          <Text style={{ ...schrift.titelFett, fontSize: 18, color: farben.text }}>Lernaktivität</Text>
           <Diagramm saeulen={saeulen} />
         </View>
 
         {/* Stärken & Schwächen */}
         <View style={{ marginTop: 20, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <Text style={{ ...schrift.titelFett, fontSize: 20, color: "#FFFFFF" }}>Stärken & Schwächen</Text>
+          <Text style={{ ...schrift.titelFett, fontSize: 20, color: farben.text }}>Stärken & Schwächen</Text>
           <Pressable
             onPress={() => {
               tippen();
@@ -275,11 +251,11 @@ export default function MeinFortschritt() {
             hitSlop={8}
             style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
           >
-            <Text style={{ ...schrift.text, fontSize: 14, color: "#C9CDD2" }}>{alle ? "Weniger" : "Mehr anzeigen"}</Text>
-            <Icon name={alle ? "chevron-up" : "chevron-forward"} sf={alle ? "chevron.up" : "chevron.right"} size={14} color="#C9CDD2" />
+            <Text style={{ ...schrift.textMittel, fontSize: 14, color: farben.orangeText }}>{alle ? "Weniger" : "Mehr anzeigen"}</Text>
+            <Icon name={alle ? "chevron-up" : "chevron-forward"} sf={alle ? "chevron.up" : "chevron.right"} size={13} color={farben.orangeText} />
           </Pressable>
         </View>
-        <View style={{ marginTop: 12, gap: 9 }}>
+        <View style={{ marginTop: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
           {zeilen.map((t) => (
             <Pressable
               key={t.thema}
@@ -287,18 +263,18 @@ export default function MeinFortschritt() {
                 tippen();
                 router.push({ pathname: "/thema/[id]", params: { id: t.thema } });
               }}
-              style={{ flexDirection: "row", alignItems: "center", gap: 14 }}
+              style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 9, paddingHorizontal: 14, backgroundColor: pressed ? farben.flaeche2 : "transparent" })}
             >
               <View style={{ width: 28, alignItems: "center" }}>
                 <KategorieMini id={t.thema} />
               </View>
-              <Text style={{ ...schrift.text, fontSize: 14.5, color: "#E6E8EB", width: "38%" }} numberOfLines={1}>
+              <Text style={{ ...schrift.textMittel, fontSize: 14.5, color: farben.text, width: "36%" }} numberOfLines={1}>
                 {themaVon(t.thema).titel}
               </Text>
-              <View style={{ flex: 1, height: 12, borderRadius: 6, backgroundColor: "#1E242B", overflow: "hidden" }}>
-                <View style={{ width: `${t.quote * 100}%`, height: "100%", borderRadius: 6, backgroundColor: quoteFarbe(t.quote) }} />
+              <View style={{ flex: 1, height: 8, borderRadius: 4, backgroundColor: farben.flaeche3, overflow: "hidden" }}>
+                <View style={{ width: `${t.quote * 100}%`, height: "100%", borderRadius: 4, backgroundColor: quoteFarbe(t.quote) }} />
               </View>
-              <Text style={{ ...schrift.textMittel, fontSize: 15, color: "#FFFFFF", width: 42, textAlign: "right", fontVariant: ["tabular-nums"] }}>
+              <Text style={{ ...schrift.textHalb, fontSize: 14.5, color: farben.text, width: 42, textAlign: "right", fontVariant: ["tabular-nums"] }}>
                 {Math.round(t.quote * 100)}%
               </Text>
             </Pressable>

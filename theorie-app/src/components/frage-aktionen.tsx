@@ -24,19 +24,19 @@ function AktionsKnopf({ icon, titel, marke, aktiv, onPress, label }: { icon: Ico
         justifyContent: "center",
         gap: 7,
         paddingHorizontal: 10,
-        backgroundColor: aktiv ? farben.orangeSoft : "#161D24",
+        backgroundColor: aktiv ? farben.orangeSoft : farben.flaeche,
         borderWidth: 1,
-        borderColor: aktiv ? farben.orangeLinie : "rgba(255,255,255,0.1)",
+        borderColor: aktiv ? farben.orangeLinie : farben.linie,
         opacity: pressed ? 0.82 : 1,
         transform: [{ scale: pressed ? 0.98 : 1 }],
       })}
     >
       <Icon name={icon} size={17} color={farben.orange} weight="semibold" />
-      <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 15, color: aktiv ? farben.orange : "#E6E8EB", flexShrink: 1 }}>
+      <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 15, color: aktiv ? farben.orangeText : farben.text, flexShrink: 1 }}>
         {titel}
       </Text>
       {marke ? (
-        <View style={{ paddingHorizontal: 6, height: 18, borderRadius: 9, backgroundColor: "rgba(255,255,255,0.1)", justifyContent: "center" }}>
+        <View style={{ paddingHorizontal: 6, height: 18, borderRadius: 9, backgroundColor: farben.flaeche3, justifyContent: "center" }}>
           <Text style={{ ...schrift.textFett, fontSize: 10, letterSpacing: 0.5, color: farben.text2 }}>{marke}</Text>
         </View>
       ) : null}

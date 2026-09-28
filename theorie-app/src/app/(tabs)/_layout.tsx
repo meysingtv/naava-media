@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Icon, Label, NativeTabs, VectorIcon } from "expo-router/unstable-native-tabs";
 
@@ -11,7 +12,13 @@ import { farben } from "@/lib/theme";
  */
 export default function TabsLayout() {
   return (
-    <NativeTabs tintColor={farben.orange} minimizeBehavior="onScrollDown">
+    <NativeTabs
+      tintColor={farben.orange}
+      minimizeBehavior="onScrollDown"
+      backgroundColor={Platform.OS === "android" ? farben.grundHoch : undefined}
+      iconColor={Platform.OS === "android" ? { default: farben.text3, selected: farben.orange } : undefined}
+      labelStyle={Platform.OS === "android" ? { default: { color: farben.text3 }, selected: { color: farben.orange } } : undefined}
+    >
       <NativeTabs.Trigger name="heute">
         <Label>Home</Label>
         <Icon sf={{ default: "house", selected: "house.fill" }} androidSrc={<VectorIcon family={Ionicons} name="home" />} />

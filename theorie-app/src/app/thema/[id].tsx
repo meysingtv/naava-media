@@ -34,19 +34,19 @@ export default function ThemaSeite() {
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
       <Kopf titel={thema.titel} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(1), paddingBottom: abstand(8), gap: abstand(5) }}>
-        <FotoFlaeche quelle={themaFoto(thema.id)} verlauf="links" style={{ height: 200, borderRadius: 22 }}>
+        <FotoFlaeche quelle={themaFoto(thema.id)} verlauf="links" style={{ height: 190, borderRadius: 20 }}>
           <View style={{ flex: 1, padding: abstand(5), flexDirection: "row", alignItems: "flex-end", gap: abstand(3) }}>
             <View style={{ flex: 1, gap: abstand(1) }}>
-              <T v="titel" style={{ fontSize: 26, textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 8 }}>
+              <T v="titel" farbe={farben.fotoText} style={{ fontSize: 26, textShadowColor: "rgba(0,0,0,0.5)", textShadowRadius: 8 }}>
                 {thema.titel}
               </T>
-              <T v="text" farbe="#E4E6EA" style={{ textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 6 }}>
+              <T v="text" farbe="rgba(255,255,255,0.88)" style={{ textShadowColor: "rgba(0,0,0,0.5)", textShadowRadius: 6 }}>
                 {thema.kurz}
               </T>
             </View>
-            <View style={{ width: 86, height: 86, borderRadius: 43, backgroundColor: "rgba(10,11,14,0.62)" }}>
-              <Ring anteil={fort.anteil} groesse={86} dicke={7} spur="rgba(255,255,255,0.14)">
-                <T v="h3" style={{ fontSize: 18 }}>
+            <View style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: "rgba(0,0,0,0.5)" }}>
+              <Ring anteil={fort.anteil} groesse={84} dicke={7} spur="rgba(255,255,255,0.18)">
+                <T v="h3" farbe={farben.fotoText} style={{ fontSize: 18 }}>
                   {Math.round(fort.anteil * 100)}%
                 </T>
               </Ring>
@@ -105,8 +105,7 @@ export default function ThemaSeite() {
                       )
                     ) : undefined
                   }
-                  icon="ellipse"
-                  iconFarbe={s.farbe}
+                  punkt={s.farbe}
                   onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: thema.id, start: f.id } })}
                 />
               );

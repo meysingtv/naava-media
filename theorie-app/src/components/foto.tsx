@@ -4,31 +4,16 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { Icon } from "@/components/icon";
-import { Balken, PfeilKreis, T } from "@/components/ui";
+import { Balken } from "@/components/ui";
 import { TempoZeichen, Verkehrszeichen } from "@/components/zeichen";
 import type { ThemaId } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
-import { abstand, farben, schrift, verlauf } from "@/lib/theme";
+import { farben, schrift } from "@/lib/theme";
 
-const DUNKEL = "rgba(3,5,7,";
+/** Abdunkeln auf Fotos – damit weiße Schrift darauf lesbar bleibt (in beiden Schemata). */
+const SCHATTEN = "rgba(0,0,0,";
 
-/**
- * Weicher Übergang von der Kartenfläche ins Foto: am linken Fotorand voll
- * deckend, dann in einer sanften Kurve durchsichtig – so ist keine Kante zu sehen.
- */
-const VERBLENDEN = [
-  "rgba(13,19,23,1)",
-  "rgba(13,19,23,0.97)",
-  "rgba(13,19,23,0.88)",
-  "rgba(13,19,23,0.68)",
-  "rgba(13,19,23,0.44)",
-  "rgba(13,19,23,0.22)",
-  "rgba(13,19,23,0.08)",
-  "rgba(13,19,23,0)",
-] as const;
-const VERBLENDEN_STOPS = [0, 0.1, 0.22, 0.36, 0.5, 0.64, 0.8, 1] as const;
-
-/** Foto als Hintergrund mit Verlauf – Grundlage aller Bildkarten. */
+/** Foto als Hintergrund mit Verlauf – für Kopfbilder mit weißer Schrift. */
 export function FotoFlaeche({
   quelle,
   children,
@@ -47,7 +32,7 @@ export function FotoFlaeche({
       <Image source={quelle} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }} resizeMode="cover" />
       {verlauf === "links" ? (
         <LinearGradient
-          colors={[DUNKEL + "0.72)", DUNKEL + "0.3)", DUNKEL + "0)"]}
+          colors={[SCHATTEN + "0.66)", SCHATTEN + "0.28)", SCHATTEN + "0)"]}
           locations={[0, 0.55, 1]}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
@@ -57,10 +42,10 @@ export function FotoFlaeche({
       <LinearGradient
         colors={
           verlauf === "stark"
-            ? [DUNKEL + "0.25)", DUNKEL + "0.55)", DUNKEL + "0.92)"]
+            ? [SCHATTEN + "0.2)", SCHATTEN + "0.5)", SCHATTEN + "0.86)"]
             : verlauf === "links"
-              ? [DUNKEL + "0)", DUNKEL + "0.05)", DUNKEL + "0.6)"]
-              : [DUNKEL + "0)", DUNKEL + "0.15)", DUNKEL + "0.85)"]
+              ? [SCHATTEN + "0)", SCHATTEN + "0.05)", SCHATTEN + "0.55)"]
+              : [SCHATTEN + "0)", SCHATTEN + "0.12)", SCHATTEN + "0.78)"]
         }
         locations={[0, 0.45, 1]}
         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
@@ -68,7 +53,7 @@ export function FotoFlaeche({
       {children}
     </>
   );
-  const rahmen: ViewStyle = { borderRadius: 20, overflow: "hidden", backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie };
+  const rahmen: ViewStyle = { borderRadius: 20, overflow: "hidden", backgroundColor: farben.flaeche };
   if (!onPress) return <View style={[rahmen, style]}>{inhalt}</View>;
   return (
     <Pressable
@@ -76,99 +61,10 @@ export function FotoFlaeche({
         tippen();
         onPress();
       }}
-      style={({ pressed }) => [rahmen, { transform: [{ scale: pressed ? 0.98 : 1 }], opacity: pressed ? 0.92 : 1 }, style]}
+      style={({ pressed }) => [rahmen, { opacity: pressed ? 0.9 : 1 }, style]}
     >
       {inhalt}
     </Pressable>
-  );
-}
-
-/** Schnellstart-Kachel: Foto, Symbol oben links, Titel unten, oranger Pfeil. */
-export function FotoKachel({
-  quelle,
-  titel,
-  unter,
-  oben,
-  onPress,
-  hintergrund,
-}: {
-  quelle?: ImageSourcePropType;
-  titel: string;
-  unter: string;
-  oben?: ReactNode;
-  onPress: () => void;
-  hintergrund?: ReactNode;
-}) {
-  const text = (
-    <View style={{ flex: 1, padding: 13, justifyContent: "space-between" }}>
-      <View style={{ flexDirection: "row" }}>{oben}</View>
-      <View>
-        <T v="h3" passend style={{ fontSize: 18, lineHeight: 22, letterSpacing: -0.3, textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 6 }}>
-          {titel}
-        </T>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(1.5) }}>
-          <T v="klein" farbe="#E9EBEE" passend style={{ flex: 1, fontSize: 13.5, lineHeight: 18, textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 4 }}>
-            {unter}
-          </T>
-          <PfeilKreis groesse={28} />
-        </View>
-      </View>
-    </View>
-  );
-  if (quelle) {
-    return (
-      <FotoFlaeche quelle={quelle} onPress={onPress} style={{ flex: 1, height: 131, borderRadius: 16 }}>
-        {hintergrund}
-        {text}
-      </FotoFlaeche>
-    );
-  }
-  return (
-    <Pressable
-      onPress={() => {
-        tippen();
-        onPress();
-      }}
-      style={({ pressed }) => ({
-        flex: 1,
-        height: 131,
-        borderRadius: 16,
-        overflow: "hidden",
-        backgroundColor: farben.flaeche,
-        borderWidth: 1,
-        borderColor: farben.linie,
-        transform: [{ scale: pressed ? 0.98 : 1 }],
-      })}
-    >
-      {hintergrund}
-      {text}
-    </Pressable>
-  );
-}
-
-/** Leuchtende orange Säulen – Motiv der Statistik-Kachel. */
-export function LeuchtSaeulen({ hoehe = 84 }: { hoehe?: number }) {
-  const werte = [0.34, 0.5, 0.7, 1];
-  return (
-    <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 7, height: hoehe }}>
-      {werte.map((w, i) => (
-        <View
-          key={i}
-          style={{
-            width: 15,
-            height: hoehe * w,
-            borderRadius: 4,
-            overflow: "hidden",
-            shadowColor: farben.orange,
-            shadowOpacity: 0.8,
-            shadowRadius: 10,
-            shadowOffset: { width: 0, height: 0 },
-          }}
-        >
-          <LinearGradient colors={["#FFB45C", farben.orange, "#B94A00"]} locations={[0, 0.5, 1]} style={{ flex: 1 }} />
-        </View>
-      ))}
-    </View>
   );
 }
 
@@ -178,74 +74,53 @@ export function LeuchtSaeulen({ hoehe = 84 }: { hoehe?: number }) {
 
 export type KategorieId = ThemaId | "grundstoff";
 
-function Kreis({ children }: { children: ReactNode }) {
-  return <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: farben.iconKreis, alignItems: "center", justifyContent: "center" }}>{children}</View>;
-}
-
-/** Symbol einer Kategorie wie in der Vorlage – Verkehrszeichen, wo es eins gibt. */
-export function KategorieIcon({ id }: { id: KategorieId }) {
+/** Symbol einer Kategorie – Verkehrszeichen, wo es eins gibt – auf ruhiger Kachel. */
+export function KategorieIcon({ id, groesse = 50 }: { id: KategorieId; groesse?: number }) {
+  const g = groesse * 0.52;
+  let inhalt: ReactNode;
   switch (id) {
     case "grundstoff":
-      return (
-        <Kreis>
-          <Icon name="car-outline" sf="car.fill" size={32} color="#FFFFFF" fallback={<MaterialCommunityIcons name="car" size={34} color="#FFFFFF" />} />
-        </Kreis>
-      );
+      inhalt = <Icon name="car-outline" sf="car.fill" size={g} color={farben.text} fallback={<MaterialCommunityIcons name="car" size={g} color={farben.text} />} />;
+      break;
     case "gefahren":
-      return (
-        <Kreis>
-          <Icon name="warning-outline" size={36} color="#FF3B2F" weight="semibold" />
-        </Kreis>
-      );
+      inhalt = <Icon name="warning" size={g} color={farben.rot} weight="semibold" />;
+      break;
     case "vorfahrt":
-      return <Verkehrszeichen zeichen="z306" groesse={52} />;
+      inhalt = <Verkehrszeichen zeichen="z306" groesse={groesse * 0.78} />;
+      break;
     case "zeichen":
-      return <TempoZeichen zahl={50} groesse={52} />;
+      inhalt = <TempoZeichen zahl={50} groesse={groesse * 0.74} />;
+      break;
     case "umwelt":
-      return (
-        <Kreis>
-          <Icon name="leaf" size={34} color={farben.gruen} />
-        </Kreis>
-      );
+      inhalt = <Icon name="leaf" size={g} color={farben.gruen} />;
+      break;
     case "technik":
-      return (
-        <Kreis>
-          <Icon name="settings" size={34} color="#E6E8EB" />
-        </Kreis>
-      );
+      inhalt = <Icon name="settings" size={g} color={farben.text2} />;
+      break;
     case "manoever":
-      return (
-        <Kreis>
-          <Icon name="walk" size={34} color="#FFFFFF" fallback={<MaterialCommunityIcons name="walk" size={36} color="#FFFFFF" />} />
-        </Kreis>
-      );
+      inhalt = <Icon name="walk" size={g} color={farben.text} fallback={<MaterialCommunityIcons name="walk" size={g} color={farben.text} />} />;
+      break;
     case "tempo":
-      return (
-        <Kreis>
-          <Icon name="speedometer" size={32} color={farben.orange} />
-        </Kreis>
-      );
+      inhalt = <Icon name="speedometer" size={g} color={farben.orange} />;
+      break;
     case "parken":
-      return <Verkehrszeichen zeichen="z314" groesse={48} />;
+      inhalt = <Verkehrszeichen zeichen="z314" groesse={groesse * 0.7} />;
+      break;
     case "autobahn":
-      return (
-        <Kreis>
-          <Icon name="car-outline" sf="road.lanes" size={30} color={farben.blau} fallback={<MaterialCommunityIcons name="highway" size={30} color={farben.blau} />} />
-        </Kreis>
-      );
+      inhalt = <Icon name="car-outline" sf="road.lanes" size={g} color={farben.blau} fallback={<MaterialCommunityIcons name="highway" size={g} color={farben.blau} />} />;
+      break;
     case "mensch":
-      return (
-        <Kreis>
-          <Icon name="person" size={30} color="#E6E8EB" />
-        </Kreis>
-      );
+      inhalt = <Icon name="person" size={g * 0.92} color={farben.text2} />;
+      break;
     case "zahlen":
-      return (
-        <Kreis>
-          <Icon name="calculator" size={30} color={farben.gelb} />
-        </Kreis>
-      );
+      inhalt = <Icon name="calculator" size={g * 0.92} color={farben.gelb} />;
+      break;
   }
+  return (
+    <View style={{ width: groesse, height: groesse, borderRadius: groesse * 0.28, backgroundColor: farben.flaeche2, alignItems: "center", justifyContent: "center" }}>
+      {inhalt}
+    </View>
+  );
 }
 
 /** Kleines Symbol für Listen (Stärken & Schwächen). */
@@ -256,106 +131,80 @@ export function KategorieMini({ id }: { id: KategorieId }) {
     case "vorfahrt":
       return <Verkehrszeichen zeichen="z306" groesse={26} />;
     case "gefahren":
-      return <Icon name="warning" size={24} color="#FF3B2F" />;
+      return <Icon name="warning" size={23} color={farben.rot} />;
     case "umwelt":
-      return <Icon name="leaf" size={24} color={farben.gruen} />;
+      return <Icon name="leaf" size={23} color={farben.gruen} />;
     case "technik":
-      return <Icon name="settings" size={24} color="#FFFFFF" />;
+      return <Icon name="settings" size={23} color={farben.text2} />;
     case "manoever":
-      return <Icon name="walk" size={24} color="#FFFFFF" />;
+      return <Icon name="walk" size={23} color={farben.text} />;
     case "tempo":
-      return <Icon name="speedometer" size={23} color={farben.orange} />;
+      return <Icon name="speedometer" size={22} color={farben.orange} />;
     case "parken":
       return <Verkehrszeichen zeichen="z314" groesse={24} />;
     case "autobahn":
-      return <Icon name="car-outline" sf="road.lanes" size={22} color={farben.blau} />;
+      return <Icon name="car-outline" sf="road.lanes" size={21} color={farben.blau} />;
     case "mensch":
-      return <Icon name="person" size={22} color="#FFFFFF" />;
+      return <Icon name="person" size={21} color={farben.text2} />;
     case "zahlen":
-      return <Icon name="calculator" size={22} color={farben.gelb} />;
+      return <Icon name="calculator" size={21} color={farben.gelb} />;
     default:
-      return <Icon name="car-outline" sf="car.fill" size={22} color="#FFFFFF" />;
+      return <Icon name="car-outline" sf="car.fill" size={21} color={farben.text} />;
   }
 }
 
-/** Zeile der Kategorienliste: Symbol, Titel, Anzahl, Balken mit Prozent und Foto rechts. */
+/** Zeile der Kategorienliste: Symbol, Titel, Fortschritt und Anzahl. */
 export function KategorieZeile({
   id,
   titel,
   anzahl,
   anteil,
-  quelle,
   onPress,
 }: {
   id: KategorieId;
   titel: string;
   anzahl: number;
   anteil: number;
-  quelle: ImageSourcePropType;
+  quelle?: ImageSourcePropType;
   onPress: () => void;
 }) {
+  const prozent = Math.round(Math.max(0, Math.min(1, anteil)) * 100);
   return (
     <Pressable
       onPress={() => {
         tippen();
         onPress();
       }}
+      accessibilityRole="button"
+      accessibilityLabel={`${titel}, ${anzahl} Fragen, ${prozent} Prozent`}
       style={({ pressed }) => ({
-        height: 84,
-        borderRadius: 16,
-        overflow: "hidden",
-        backgroundColor: farben.flaeche,
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.09)",
         flexDirection: "row",
         alignItems: "center",
-        transform: [{ scale: pressed ? 0.985 : 1 }],
+        gap: 14,
+        paddingVertical: 12,
+        paddingLeft: 12,
+        paddingRight: 14,
+        borderRadius: 16,
+        backgroundColor: pressed ? farben.flaeche2 : farben.flaeche,
+        borderWidth: 1,
+        borderColor: farben.linie,
       })}
     >
-      <Image source={quelle} style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "60%", height: "100%" }} resizeMode="cover" />
-      <LinearGradient
-        colors={VERBLENDEN}
-        locations={VERBLENDEN_STOPS}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-        style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "60%" }}
-      />
-      <View style={{ width: 86, alignItems: "center", justifyContent: "center" }}>
-        <KategorieIcon id={id} />
-      </View>
-      <View style={{ flex: 1, paddingRight: 56 }}>
-        <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 17.5, lineHeight: 22, color: "#FFFFFF", textShadowColor: "rgba(0,0,0,0.7)", textShadowRadius: 6 }}>
+      <KategorieIcon id={id} />
+      <View style={{ flex: 1, gap: 7 }}>
+        <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 16.5, lineHeight: 21, color: farben.text }}>
           {titel}
         </Text>
-        <Text style={{ ...schrift.text, fontSize: 15, lineHeight: 19, color: "#D3D7DC", marginTop: 2 }}>{anzahl === 1 ? "1 Frage" : `${anzahl} Fragen`}</Text>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 8 }}>
-          <View style={{ width: 112, height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.16)", overflow: "hidden" }}>
-            <LinearGradient
-              colors={verlauf.kategorie}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={{ width: `${Math.max(0, Math.min(1, anteil)) * 100}%`, height: "100%", borderRadius: 4 }}
-            />
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <View style={{ flex: 1, maxWidth: 150 }}>
+            <Balken wert={anteil} hoehe={5} farbe={prozent >= 75 ? farben.gruen : farben.orange} />
           </View>
-          <Text style={{ ...schrift.textHalb, fontSize: 15, color: "#FFFFFF", textShadowColor: "rgba(0,0,0,0.7)", textShadowRadius: 4, fontVariant: ["tabular-nums"] }}>
-            {Math.round(anteil * 100)}%
+          <Text style={{ ...schrift.textMittel, fontSize: 13, color: farben.text3, fontVariant: ["tabular-nums"] }}>
+            {prozent} % · {anzahl === 1 ? "1 Frage" : `${anzahl} Fragen`}
           </Text>
         </View>
       </View>
-      <View
-        style={{
-          position: "absolute",
-          right: 12,
-          width: 38,
-          height: 38,
-          borderRadius: 19,
-          backgroundColor: "rgba(10,14,18,0.62)",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Icon name="chevron-forward" size={19} color="#FFFFFF" weight="semibold" />
-      </View>
+      <Icon name="chevron-forward" size={16} color={farben.text4} />
     </Pressable>
   );
 }

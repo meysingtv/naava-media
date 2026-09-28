@@ -9,6 +9,7 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-g
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Glas } from "@/components/glas";
+import { ImmerDunkel, useHelleStatusleiste } from "@/lib/erscheinung";
 import { Icon, type IconName } from "@/components/icon";
 import { Knopf, T } from "@/components/ui";
 import { Verkehrszeichen, ZEICHEN_INFO } from "@/components/zeichen";
@@ -16,7 +17,7 @@ import type { ZeichenKey } from "@/lib/fragen";
 import { erfolg, fehler, stoss, tippen } from "@/lib/haptik";
 import { ALBUM, mittelQuadrat, rahmenImFoto, schildErkennen, schildInfo, XP_JE_SCHILD, XP_QUIZ, type Erkennung } from "@/lib/schilder-jagd";
 import { gemischt, useStand } from "@/lib/stand";
-import { farben, schrift } from "@/lib/theme";
+import { DUNKEL as farben, schrift } from "@/lib/theme";
 
 type Quiz = { optionen: string[]; richtig: number };
 
@@ -107,7 +108,7 @@ function Hinweis({ icon, titel, text, children }: { icon: IconName; titel: strin
   );
 }
 
-export default function SchildScanner() {
+function SchildScannerInhalt() {
   const insets = useSafeAreaInsets();
   const fokus = useIsFocused();
   const { stand, schildGefunden, bonus } = useStand();
@@ -554,5 +555,15 @@ function ErgebnisKarte({
         </>
       )}
     </Animated.View>
+  );
+}
+
+/** Immer dunkel – auch im hellen Modus. */
+export default function SchildScanner() {
+  useHelleStatusleiste();
+  return (
+    <ImmerDunkel>
+      <SchildScannerInhalt />
+    </ImmerDunkel>
   );
 }

@@ -46,7 +46,7 @@ function Feld({
         placeholder={platzhalter}
         placeholderTextColor={farben.text4}
         selectionColor={farben.orange}
-        keyboardAppearance="dark"
+        keyboardAppearance={farben.tastatur}
         multiline
         autoFocus={autoFocus}
         textAlignVertical="top"
@@ -57,7 +57,7 @@ function Feld({
           borderRadius: 16,
           backgroundColor: farben.flaeche,
           borderWidth: 1,
-          borderColor: wert ? "rgba(252,91,14,0.45)" : farben.linieStark,
+          borderColor: wert ? farben.orangeLinie : farben.linieStark,
           ...schrift.textMittel,
           fontSize: 16.5,
           lineHeight: 22,
@@ -174,7 +174,7 @@ export default function KarteBearbeiten() {
                       justifyContent: "center",
                       backgroundColor: aktiv ? farben.orangeSoft : farben.flaeche,
                       borderWidth: aktiv ? 2 : 1,
-                      borderColor: aktiv ? farben.orange : "rgba(255,255,255,0.08)",
+                      borderColor: aktiv ? farben.orange : farben.linie,
                     }}
                   >
                     <Verkehrszeichen zeichen={z.key} groesse={38} />

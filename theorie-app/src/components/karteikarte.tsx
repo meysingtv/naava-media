@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FrageBild } from "@/components/frage-bild";
 import { Icon, type IconName } from "@/components/icon";
-import { T } from "@/components/ui";
+import { getoent, T } from "@/components/ui";
 import { Verkehrszeichen } from "@/components/zeichen";
 import { istZeichen, themaVon, zahlText, type ZeichenKey } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
@@ -37,7 +37,7 @@ export function FachPunkte({ fach, klein }: { fach: number | null; klein?: boole
   return (
     <View style={{ flexDirection: "row", gap: klein ? 3 : 4 }} accessibilityLabel={`Fach ${fach} von ${KARTEN_ABSTAENDE.length - 1}`}>
       {Array.from({ length: KARTEN_ABSTAENDE.length - 1 }, (_, i) => (
-        <View key={i} style={{ width: d, height: d, borderRadius: d / 2, backgroundColor: i < fach ? farben.orange : "rgba(255,255,255,0.16)" }} />
+        <View key={i} style={{ width: d, height: d, borderRadius: d / 2, backgroundColor: i < fach ? farben.orange : farben.flaeche3 }} />
       ))}
     </View>
   );
@@ -95,13 +95,13 @@ function Vorderseite({ inhalt, eng }: { inhalt: KartenInhalt; eng: boolean }) {
 
 function Merke({ text }: { text: string }) {
   return (
-    <View style={{ flexDirection: "row", gap: 10, padding: 13, borderRadius: 14, backgroundColor: "rgba(255,255,255,0.045)", borderWidth: 1, borderColor: "rgba(255,255,255,0.06)" }}>
+    <View style={{ flexDirection: "row", gap: 10, padding: 13, borderRadius: 14, backgroundColor: farben.flaeche2 }}>
       <Icon name="bulb" size={18} color={farben.gelb} style={{ marginTop: 1 }} />
       <View style={{ flex: 1, gap: 2 }}>
         <T v="mini" farbe={farben.gelb} style={{ fontSize: 10.5 }}>
           Merke
         </T>
-        <T v="text" farbe="#E6E8EB" style={{ fontSize: 15, lineHeight: 21 }}>
+        <T v="text" farbe={farben.text2} style={{ fontSize: 15, lineHeight: 21 }}>
           {text}
         </T>
       </View>
@@ -159,7 +159,7 @@ function Rueckseite({ inhalt }: { inhalt: KartenInhalt }) {
           richtige.map((a, i) => (
             <View key={i} style={{ flexDirection: "row", gap: 11 }}>
               <View style={{ width: 22, height: 22, borderRadius: 11, marginTop: 1, backgroundColor: farben.gruen, alignItems: "center", justifyContent: "center" }}>
-                <Icon name="checkmark" size={14} color="#FFFFFF" />
+                <Icon name="checkmark" size={14} color={farben.aufOrange} />
               </View>
               <T v="textStark" style={{ flex: 1, fontSize: 17, lineHeight: 23 }}>
                 {a.text}
@@ -237,9 +237,9 @@ export function FlipKarte({
           flex: 1,
           borderRadius: 24,
           overflow: "hidden",
-          backgroundColor: "#10171D",
+          backgroundColor: farben.flaeche,
           borderWidth: 1,
-          borderColor: hinten ? "rgba(78,208,83,0.28)" : "rgba(255,255,255,0.11)",
+          borderColor: hinten ? getoent(farben.gruen, 0.35) : farben.linieStark,
           transform: [
             { perspective: 1100 },
             { rotateY: dreh.interpolate({ inputRange: [-1, 0, 1], outputRange: ["-90deg", "0deg", "90deg"] }) },
@@ -248,7 +248,7 @@ export function FlipKarte({
         }}
       >
         <LinearGradient
-          colors={hinten ? ["rgba(78,208,83,0.10)", "rgba(78,208,83,0)"] : ["rgba(255,255,255,0.06)", "rgba(255,255,255,0)"]}
+          colors={hinten ? [getoent(farben.gruen, 0.08), getoent(farben.gruen, 0)] : ["transparent", "transparent"]}
           locations={[0, 0.55]}
           style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
           pointerEvents="none"
@@ -304,9 +304,9 @@ export function KartenVorschau({ id, onSchliessen, children }: { id: string | nu
             onPress={onSchliessen}
             accessibilityLabel="Schließen"
             hitSlop={8}
-            style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" }}
+            style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: farben.flaeche2, alignItems: "center", justifyContent: "center" }}
           >
-            <Icon name="close" size={20} color="#FFFFFF" />
+            <Icon name="close" size={20} color={farben.text} />
           </Pressable>
         </View>
         <View style={{ flex: 1, justifyContent: "center", paddingVertical: 12 }}>

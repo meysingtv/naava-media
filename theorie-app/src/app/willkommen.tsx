@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Eingabe, Knopf, T } from "@/components/ui";
+import { Eingabe, Knopf, T, getoent } from "@/components/ui";
 import { Logo } from "@/components/grafik";
 import { FOTOS } from "@/lib/fotos";
 import { useKonto } from "@/lib/konto";
@@ -25,7 +25,7 @@ export default function Willkommen() {
         <View style={{ height: bildHoehe + insets.top, overflow: "hidden" }}>
           <Image source={FOTOS.tagesziel} style={{ position: "absolute", top: 0, left: 0, width, height: bildHoehe + insets.top }} resizeMode="cover" />
           <LinearGradient
-            colors={["rgba(11,12,15,0.55)", "rgba(11,12,15,0)", "rgba(11,12,15,0.35)", farben.grund]}
+            colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0)", getoent(farben.grund, 0.35), farben.grund]}
             locations={[0, 0.3, 0.65, 1]}
             style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
             pointerEvents="none"

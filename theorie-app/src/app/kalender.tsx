@@ -2,7 +2,7 @@ import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Kopf } from "@/components/ui";
+import { getoent, Kopf } from "@/components/ui";
 import { serieAktuell, tagKey, useStand, wochenStart } from "@/lib/stand";
 import { farben, schrift } from "@/lib/theme";
 
@@ -10,9 +10,9 @@ const WOCHEN = 12;
 const TAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
 function farbeFuer(n: number): string {
-  if (n <= 0) return "#161C22";
-  if (n < 10) return "rgba(252,91,14,0.35)";
-  if (n < 30) return "rgba(252,91,14,0.65)";
+  if (n <= 0) return farben.flaeche2;
+  if (n < 10) return getoent(farben.orange, 0.35);
+  if (n < 30) return getoent(farben.orange, 0.65);
   return farben.orange;
 }
 
@@ -38,11 +38,11 @@ export default function Kalender() {
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
       <Kopf titel="Lernkalender" schliessen />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 16 }}>
-        <View style={{ padding: 16, borderRadius: 18, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" }}>
+        <View style={{ padding: 16, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
           <View style={{ flexDirection: "row", gap: 6 }}>
             <View style={{ justifyContent: "space-between", paddingVertical: 1 }}>
               {TAGE.map((t) => (
-                <Text key={t} style={{ ...schrift.text, fontSize: 10.5, lineHeight: 18, color: "#8F959D" }}>
+                <Text key={t} style={{ ...schrift.text, fontSize: 10.5, lineHeight: 18, color: farben.text3 }}>
                   {t}
                 </Text>
               ))}
@@ -59,7 +59,7 @@ export default function Kalender() {
                         borderRadius: 5,
                         backgroundColor: tag.zukunft ? "transparent" : farbeFuer(tag.n),
                         borderWidth: tag.key === heute ? 1.5 : 0,
-                        borderColor: "#FFFFFF",
+                        borderColor: farben.text,
                       }}
                     />
                   ))}
@@ -68,11 +68,11 @@ export default function Kalender() {
             </View>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 5, marginTop: 12 }}>
-            <Text style={{ ...schrift.text, fontSize: 11, color: "#8F959D" }}>weniger</Text>
+            <Text style={{ ...schrift.text, fontSize: 11, color: farben.text3 }}>weniger</Text>
             {[0, 5, 20, 40].map((n) => (
               <View key={n} style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: farbeFuer(n) }} />
             ))}
-            <Text style={{ ...schrift.text, fontSize: 11, color: "#8F959D" }}>mehr</Text>
+            <Text style={{ ...schrift.text, fontSize: 11, color: farben.text3 }}>mehr</Text>
           </View>
         </View>
 
@@ -82,10 +82,10 @@ export default function Kalender() {
             { icon: "calendar-outline" as const, farbe: farben.blau, wert: String(gelernteTage), label: "Lerntage" },
             { icon: "checkmark-circle" as const, farbe: farben.gruen, wert: String(summe), label: "Antworten" },
           ].map((k) => (
-            <View key={k.label} style={{ flex: 1, alignItems: "center", gap: 6, paddingVertical: 14, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" }}>
+            <View key={k.label} style={{ flex: 1, alignItems: "center", gap: 6, paddingVertical: 14, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
               <Icon name={k.icon} size={24} color={k.farbe} />
-              <Text style={{ ...schrift.titelFett, fontSize: 20, color: "#FFFFFF" }}>{k.wert}</Text>
-              <Text style={{ ...schrift.text, fontSize: 12.5, color: "#AEB3BA" }}>{k.label}</Text>
+              <Text style={{ ...schrift.titelFett, fontSize: 20, color: farben.text }}>{k.wert}</Text>
+              <Text style={{ ...schrift.text, fontSize: 12.5, color: farben.text3 }}>{k.label}</Text>
             </View>
           ))}
         </View>

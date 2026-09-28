@@ -2,7 +2,7 @@ import { useCallback, useRef } from "react";
 import { Pressable, TextInput, View } from "react-native";
 
 import { Icon, type IconName } from "@/components/icon";
-import { T } from "@/components/ui";
+import { getoent, T } from "@/components/ui";
 import { FrageBild } from "@/components/frage-bild";
 import { antwortReihenfolge, antwortRichtig, themaVon, zahlLesen, zahlText, type Frage } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
@@ -35,7 +35,7 @@ function mitPunkt(text: string): string {
 function Kaestchen({ zustand }: { zustand: Zustand }) {
   const gefuellt = zustand === "gewaehlt" || zustand === "richtig" || zustand === "falsch";
   const farbe =
-    zustand === "gewaehlt" ? farben.orange : zustand === "richtig" || zustand === "verpasst" ? farben.gruen : zustand === "falsch" ? farben.rot : "#5C636B";
+    zustand === "gewaehlt" ? farben.orange : zustand === "richtig" || zustand === "verpasst" ? farben.gruen : zustand === "falsch" ? farben.rot : farben.text4;
   return (
     <View
       style={{
@@ -50,9 +50,9 @@ function Kaestchen({ zustand }: { zustand: Zustand }) {
       }}
     >
       {zustand === "falsch" ? (
-        <Icon name="close" size={16} color="#FFFFFF" />
+        <Icon name="close" size={16} color={farben.aufOrange} />
       ) : gefuellt || zustand === "verpasst" ? (
-        <Icon name="checkmark" size={zustand === "verpasst" ? 14 : 16} color={gefuellt ? "#FFFFFF" : farben.gruen} />
+        <Icon name="checkmark" size={zustand === "verpasst" ? 14 : 16} color={gefuellt ? farben.aufOrange : farben.gruen} />
       ) : null}
     </View>
   );
@@ -70,9 +70,7 @@ function Etikett({ text, farbe, icon }: { text: string; farbe?: string; icon?: I
         height: 26,
         paddingHorizontal: 10,
         borderRadius: 13,
-        backgroundColor: farbe ? farbe + "1F" : "rgba(255,255,255,0.06)",
-        borderWidth: 1,
-        borderColor: farbe ? farbe + "55" : "rgba(255,255,255,0.08)",
+        backgroundColor: farbe ? getoent(farbe, 0.12) : farben.flaeche2,
       }}
     >
       {icon ? <Icon name={icon} size={12} color={f} /> : null}
@@ -102,13 +100,13 @@ function Status({ richtig, text }: { richtig: boolean; text: string }) {
         paddingVertical: 11,
         paddingHorizontal: 12,
         borderRadius: 14,
-        backgroundColor: richtig ? farben.gruenDunkel : "#2A1615",
+        backgroundColor: richtig ? farben.gruenDunkel : farben.rotDunkel,
         borderWidth: 1,
-        borderColor: farbe + "55",
+        borderColor: getoent(farbe, 0.3),
       }}
     >
       <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: farbe, alignItems: "center", justifyContent: "center" }}>
-        <Icon name={richtig ? "checkmark" : "close"} size={14} color="#FFFFFF" />
+        <Icon name={richtig ? "checkmark" : "close"} size={14} color={farben.aufOrange} />
       </View>
       <T v="textStark" farbe={farbe} style={{ flex: 1, fontSize: 14.5, lineHeight: 19 }}>
         {text}
@@ -125,14 +123,10 @@ function Erklaerung({ frage, richtig }: { frage: Frage; richtig: boolean }) {
       style={{
         padding: 14,
         gap: 12,
-        borderRadius: 20,
+        borderRadius: 18,
         backgroundColor: farben.flaeche,
         borderWidth: 1,
-        borderColor: "rgba(252,91,14,0.4)",
-        shadowColor: farben.orange,
-        shadowOpacity: 0.18,
-        shadowRadius: 16,
-        shadowOffset: { width: 0, height: 0 },
+        borderColor: farben.linie,
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -160,7 +154,7 @@ function Erklaerung({ frage, richtig }: { frage: Frage; richtig: boolean }) {
         </View>
       </View>
 
-      <View style={{ padding: 12, gap: 6, borderRadius: 14, backgroundColor: "rgba(78,208,83,0.08)", borderWidth: 1, borderColor: "rgba(78,208,83,0.25)" }}>
+      <View style={{ padding: 12, gap: 6, borderRadius: 14, backgroundColor: farben.gruenSoft }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
           <Icon name="checkmark-circle" size={16} color={farben.gruen} />
           <T v="textStark" farbe={farben.gruen} style={{ fontSize: 14.5 }}>
@@ -187,14 +181,14 @@ function Erklaerung({ frage, richtig }: { frage: Frage; richtig: boolean }) {
         )}
       </View>
 
-      <View style={{ padding: 12, gap: 6, borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: "rgba(255,255,255,0.07)" }}>
+      <View style={{ padding: 12, gap: 6, borderRadius: 14, backgroundColor: farben.flaeche2 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
           <Icon name="bulb-outline" size={16} color={farben.gelb} />
           <T v="textStark" farbe={farben.gelb} style={{ fontSize: 14.5 }}>
             Merke dir:
           </T>
         </View>
-        <T v="text" farbe="#E6E8EB" style={{ fontSize: 15, lineHeight: 21 }}>
+        <T v="text" farbe={farben.text2} style={{ fontSize: 15, lineHeight: 21 }}>
           {frage.erklaerung}
         </T>
       </View>
@@ -246,7 +240,7 @@ export function FrageAnsicht({
 
   return (
     <View style={{ gap: 12 }}>
-      <View style={{ padding: 14, gap: 12, borderRadius: 20, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" }}>
+      <View style={{ padding: 14, gap: 12, borderRadius: 18, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
         {frage.bild ? <FrageBild bild={frage.bild} thema={frage.thema} punkte={frage.punkte} kompakt={kompakt} /> : null}
         {!ohneMeta ? (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
@@ -280,9 +274,9 @@ export function FrageAnsicht({
                   ? farben.gruen
                   : zustand === "falsch"
                     ? farben.rot
-                    : "rgba(255,255,255,0.09)";
+                    : farben.linie;
             const flaeche =
-              zustand === "gewaehlt" ? farben.orangeSoft : zustand === "richtig" ? farben.gruenOption : zustand === "falsch" ? farben.rotSoft : farben.flaeche;
+              zustand === "gewaehlt" ? farben.orangeSoft : zustand === "richtig" ? farben.gruenOption : zustand === "falsch" ? farben.rotSoft : farben.option;
 
             return (
               <Pressable
@@ -306,7 +300,6 @@ export function FrageAnsicht({
                   borderColor: rand,
                   backgroundColor: flaeche,
                   opacity: zustand === "aus" ? 0.55 : pressed ? 0.85 : 1,
-                  ...(zustand === "richtig" ? { shadowColor: farben.gruen, shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 0 } } : null),
                 })}
               >
                 <Kaestchen zustand={zustand} />
@@ -341,7 +334,7 @@ function ZahlEingabe({
 }) {
   const wert = zahlLesen(eingabe);
   const richtig = wert != null && Math.abs(wert - frage.loesung) < 0.001;
-  const rand = !aufgedeckt ? (eingabe ? farben.orange : "rgba(255,255,255,0.12)") : richtig ? farben.gruen : farben.rot;
+  const rand = !aufgedeckt ? (eingabe ? farben.orange : farben.linieStark) : richtig ? farben.gruen : farben.rot;
 
   return (
     <View style={{ gap: abstand(2) }}>
@@ -362,7 +355,7 @@ function ZahlEingabe({
           onChangeText={(t) => onEingabe(t.replace(/[^0-9.,]/g, "").slice(0, 7))}
           editable={!aufgedeckt}
           keyboardType="decimal-pad"
-          keyboardAppearance="dark"
+          keyboardAppearance={farben.tastatur}
           placeholder="0"
           placeholderTextColor={farben.text4}
           selectionColor={farben.orange}

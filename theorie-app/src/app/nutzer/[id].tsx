@@ -5,13 +5,14 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
+import { ImmerDunkel, useHelleStatusleiste } from "@/lib/erscheinung";
 import { NutzerBild, ProfilBild } from "@/components/profilbild";
 import { Knopf, KopfTaste, kopfOben, zurueck } from "@/components/ui";
 import { anmeldenFragen } from "@/lib/clip-aktionen";
 import { clipsVonLaden, dateiUrl, erstellerProfilLaden, folgenSetzen, kurzeZahl, type ClipEintrag, type ErstellerProfil } from "@/lib/clips-server";
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
-import { farben, schrift } from "@/lib/theme";
+import { DUNKEL as farben, schrift } from "@/lib/theme";
 
 const SPALTEN = 3;
 const LUECKE = 2;
@@ -26,7 +27,7 @@ function Zahl({ wert, label }: { wert: number; label: string }) {
 }
 
 /** Profil eines Erstellers: Kopf mit Zahlen, Folgen-Knopf und alle Clips als Raster. */
-export default function NutzerProfil() {
+function NutzerProfilInhalt() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -186,5 +187,15 @@ export default function NutzerProfil() {
         )}
       />
     </View>
+  );
+}
+
+/** Immer dunkel – auch im hellen Modus. */
+export default function NutzerProfil() {
+  useHelleStatusleiste();
+  return (
+    <ImmerDunkel>
+      <NutzerProfilInhalt />
+    </ImmerDunkel>
   );
 }

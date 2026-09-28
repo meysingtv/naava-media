@@ -88,7 +88,7 @@ export default function Zeichen() {
       </View>
 
       <Modal visible={offen != null} transparent animationType="fade" onRequestClose={() => setOffen(null)}>
-        <Pressable onPress={() => setOffen(null)} style={{ flex: 1, backgroundColor: "rgba(5,8,18,0.72)", justifyContent: "flex-end" }}>
+        <Pressable onPress={() => setOffen(null)} style={{ flex: 1, backgroundColor: farben.abdunkeln, justifyContent: "flex-end" }}>
           {offen ? (
             <Pressable
               onPress={() => {}}

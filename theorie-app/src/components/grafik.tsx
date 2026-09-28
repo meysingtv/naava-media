@@ -57,8 +57,9 @@ export function Ring({
 }) {
   const r = (groesse - dicke) / 2;
   const umfang = 2 * Math.PI * r;
-  // Rand um die Zeichenfläche, damit das Leuchten nicht abgeschnitten wird.
-  const rand = leuchten ? Math.round(dicke * 1.2 + 6) : 0;
+  // Das neue Design verzichtet aufs Leuchten; `leuchten` bleibt nur für ältere Aufrufe.
+  void leuchten;
+  const rand = 0;
   const flaeche = groesse + rand * 2;
   const m = flaeche / 2;
   // Kreis als Pfad, der oben beginnt und im Uhrzeigersinn läuft (ohne Drehung,
@@ -86,22 +87,6 @@ export function Ring({
           </Defs>
         ) : null}
         <Circle cx={m} cy={m} r={r} stroke={spur} strokeWidth={dicke} fill="none" />
-        {/* Leuchten: breitere, sehr transparente Kopien genau hinter dem Bogen */}
-        {sichtbar && leuchten
-          ? [0.1, 0.07, 0.045, 0.025, 0.012].map((deckkraft, i) => (
-              <AnimPath
-                key={i}
-                d={bogen}
-                stroke={strich}
-                strokeOpacity={deckkraft}
-                strokeWidth={dicke + ((i + 1) * rand * 2) / 5}
-                fill="none"
-                strokeLinecap="round"
-                strokeDasharray={`${umfang} ${umfang}`}
-                strokeDashoffset={versatz}
-              />
-            ))
-          : null}
         {sichtbar ? (
           <AnimPath
             d={bogen}

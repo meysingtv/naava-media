@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Ring } from "@/components/grafik";
 import { Icon } from "@/components/icon";
-import { Chip, Knopf, Kopf, T } from "@/components/ui";
+import { Chip, Knopf, Kopf, T, getoent } from "@/components/ui";
 import { Verkehrszeichen, ZEICHEN_INFO, type ZeichenInfo } from "@/components/zeichen";
 import { datumKurz, datumLang } from "@/lib/format";
 import type { ZeichenKey } from "@/lib/fragen";
@@ -59,14 +59,14 @@ export default function SchilderJagd() {
             alignItems: "center",
             gap: 18,
             padding: 16,
-            borderRadius: 20,
+            borderRadius: 16,
             backgroundColor: farben.flaeche,
             borderWidth: 1,
             borderColor: farben.linie,
           }}
         >
-          <Ring anteil={anteil} groesse={86} dicke={8} spur={farben.ringSpur} leuchten>
-            <Text style={{ ...schrift.titel, fontSize: 22, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{gefunden.length}</Text>
+          <Ring anteil={anteil} groesse={86} dicke={8} spur={farben.flaeche3}>
+            <Text style={{ ...schrift.titel, fontSize: 22, color: farben.text, fontVariant: ["tabular-nums"] }}>{gefunden.length}</Text>
             <Text style={{ ...schrift.textMittel, fontSize: 11.5, color: farben.text3, marginTop: -2 }}>von {ALBUM.length}</Text>
           </Ring>
           <View style={{ flex: 1, gap: 4 }}>
@@ -91,16 +91,15 @@ export default function SchilderJagd() {
               alignItems: "center",
               gap: 14,
               padding: 14,
-              borderRadius: 18,
-              backgroundColor: farben.flaeche,
+              borderRadius: 16,
+              backgroundColor: pressed ? farben.flaeche2 : farben.flaeche,
               borderWidth: 1,
-              borderColor: "rgba(252,91,14,0.35)",
-              transform: [{ scale: pressed ? 0.985 : 1 }],
+              borderColor: farben.orangeLinie,
             })}
           >
             <Verkehrszeichen zeichen={ziel.key} groesse={54} />
             <View style={{ flex: 1, gap: 2 }}>
-              <T v="mini" farbe={farben.orange}>
+              <T v="mini" farbe={farben.orangeText}>
                 Heutiges Ziel
               </T>
               <T v="h3">{ziel.kurz ?? ziel.name}</T>
@@ -152,7 +151,7 @@ export default function SchilderJagd() {
                         borderRadius: 16,
                         backgroundColor: fund ? farben.flaeche2 : farben.flaeche,
                         borderWidth: 1,
-                        borderColor: fund ? "rgba(252,91,14,0.35)" : farben.linie,
+                        borderColor: fund ? farben.orangeLinie : farben.linie,
                         transform: [{ scale: pressed ? 0.97 : 1 }],
                       })}
                     >
@@ -160,7 +159,7 @@ export default function SchilderJagd() {
                         <Verkehrszeichen zeichen={z.key} groesse={58} />
                       </View>
                       {!fund ? (
-                        <View style={{ position: "absolute", top: 30, width: 30, height: 30, borderRadius: 15, backgroundColor: "rgba(19,26,33,0.92)", borderWidth: 1, borderColor: farben.linieStark, alignItems: "center", justifyContent: "center" }}>
+                        <View style={{ position: "absolute", top: 30, width: 30, height: 30, borderRadius: 15, backgroundColor: farben.flaeche2, borderWidth: 1, borderColor: farben.linieStark, alignItems: "center", justifyContent: "center" }}>
                           <Text style={{ ...schrift.titelFett, fontSize: 16, color: farben.text3 }}>?</Text>
                         </View>
                       ) : null}
@@ -187,7 +186,7 @@ export default function SchilderJagd() {
       {/* Scannen */}
       <LinearGradient
         pointerEvents="none"
-        colors={["rgba(3,5,7,0)", "rgba(3,5,7,0.86)", farben.grund]}
+        colors={[getoent(farben.grund, 0), getoent(farben.grund, 0.86), farben.grund]}
         locations={[0, 0.45, 1]}
         style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: insets.bottom + 120 }}
       />
@@ -196,7 +195,7 @@ export default function SchilderJagd() {
       </View>
 
       <Modal visible={offen != null} transparent animationType="fade" onRequestClose={() => setOffen(null)}>
-        <Pressable onPress={() => setOffen(null)} style={{ flex: 1, backgroundColor: "rgba(3,5,7,0.74)", justifyContent: "flex-end" }}>
+        <Pressable onPress={() => setOffen(null)} style={{ flex: 1, backgroundColor: farben.abdunkeln, justifyContent: "flex-end" }}>
           {offen ? (
             <Pressable
               onPress={() => {}}

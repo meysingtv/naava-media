@@ -300,19 +300,8 @@ export default function Pruefung() {
             </T>
           </Pressable>
         </View>
-        <View style={{ marginHorizontal: 8, height: 9, borderRadius: 5, backgroundColor: farben.flaeche3 }}>
-          <View
-            style={{
-              width: `${Math.max(4, (erledigt / Math.max(1, ids.length)) * 100)}%`,
-              height: "100%",
-              borderRadius: 5,
-              backgroundColor: farben.orange,
-              shadowColor: farben.orange,
-              shadowOpacity: 0.7,
-              shadowRadius: 8,
-              shadowOffset: { width: 0, height: 0 },
-            }}
-          />
+        <View style={{ marginHorizontal: 8, height: 5, borderRadius: 3, backgroundColor: farben.flaeche2 }}>
+          <View style={{ width: `${Math.max(4, (erledigt / Math.max(1, ids.length)) * 100)}%`, height: "100%", borderRadius: 3, backgroundColor: farben.orange }} />
         </View>
       </View>
 

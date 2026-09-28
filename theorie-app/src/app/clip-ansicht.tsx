@@ -6,6 +6,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ClipSeite } from "@/components/clip-seite";
+import { ImmerDunkel, useHelleStatusleiste } from "@/lib/erscheinung";
 import { Glas } from "@/components/glas";
 import { Icon } from "@/components/icon";
 import { KommentarBlatt } from "@/components/kommentar-blatt";
@@ -19,7 +20,7 @@ import { schrift } from "@/lib/theme";
 const SICHTBAR = { itemVisiblePercentThreshold: 70 };
 
 /** Clips einer Person im Vollbild – geöffnet aus ihrem Profil, startet beim angetippten Clip. */
-export default function ClipAnsicht() {
+function ClipAnsichtInhalt() {
   const { nutzer, start } = useLocalSearchParams<{ nutzer: string; start?: string }>();
   const insets = useSafeAreaInsets();
   const fokus = useIsFocused();
@@ -170,5 +171,15 @@ export default function ClipAnsicht() {
         }}
       />
     </View>
+  );
+}
+
+/** Immer dunkel – auch im hellen Modus. */
+export default function ClipAnsicht() {
+  useHelleStatusleiste();
+  return (
+    <ImmerDunkel>
+      <ClipAnsichtInhalt />
+    </ImmerDunkel>
   );
 }

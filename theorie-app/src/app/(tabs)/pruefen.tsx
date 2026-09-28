@@ -1,9 +1,9 @@
-import { ScrollView, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Abschnitt, Gruppe, Knopf, KopfTaste, T, Zeile, type IconName, kopfOben } from "@/components/ui";
+import { Abschnitt, Gruppe, Knopf, T, Zeile, type IconName, kopfOben } from "@/components/ui";
 import { FotoFlaeche } from "@/components/foto";
 import { Ring } from "@/components/grafik";
 import { useInhaltUnten } from "@/components/tab-leiste";
@@ -11,7 +11,7 @@ import { FOTOS } from "@/lib/fotos";
 import { FRAGEN } from "@/lib/fragen";
 import { datumKurz } from "@/lib/format";
 import { fortschritt, useStand } from "@/lib/stand";
-import { abstand, farben, RAND } from "@/lib/theme";
+import { abstand, farben, RAND, schrift } from "@/lib/theme";
 
 const REGELN: { icon: IconName; text: string }[] = [
   { icon: "layers-outline", text: "30 Fragen aus allen Themen, gemischt" },
@@ -22,11 +22,11 @@ const REGELN: { icon: IconName; text: string }[] = [
 
 function Wert({ wert, label, farbe }: { wert: string; label: string; farbe?: string }) {
   return (
-    <View style={{ flex: 1, alignItems: "center", paddingVertical: abstand(3.5), borderRadius: 18, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linieStark }}>
+    <View style={{ flex: 1, alignItems: "center", paddingVertical: abstand(3.5), borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
       <T v="zahl" farbe={farbe} style={{ fontSize: 24, lineHeight: 29 }}>
         {wert}
       </T>
-      <T v="klein" farbe={farben.text2} style={{ fontSize: 12.5 }}>
+      <T v="klein" style={{ fontSize: 12.5 }}>
         {label}
       </T>
     </View>
@@ -44,15 +44,8 @@ export default function Pruefen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <View style={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND - 8, paddingBottom: abstand(1) }}>
-        <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center" }}>
-          <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
-            <T v="h3" style={{ fontSize: 19 }}>
-              Prüfung
-            </T>
-          </View>
-          <KopfTaste icon="arrow-back" label="Zur Startseite" onPress={() => router.navigate("/heute")} />
-        </View>
+      <View style={{ paddingTop: kopfOben(insets.top) + 6, paddingHorizontal: RAND, paddingBottom: 10 }}>
+        <Text style={{ ...schrift.titel, fontSize: 32, lineHeight: 38, letterSpacing: -0.5, color: farben.text }}>Prüfung</Text>
       </View>
 
       <ScrollView
@@ -60,16 +53,16 @@ export default function Pruefen() {
         contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: inhaltUnten, gap: abstand(5) }}
         showsVerticalScrollIndicator={false}
       >
-        <FotoFlaeche quelle={FOTOS.pruefung} verlauf="stark" style={{ height: 290, borderRadius: 24 }}>
+        <FotoFlaeche quelle={FOTOS.pruefung} verlauf="stark" style={{ height: 280, borderRadius: 20 }}>
           <View style={{ flex: 1, padding: abstand(5), justifyContent: "flex-end", gap: abstand(3) }}>
             <View style={{ gap: 2 }}>
-              <T v="mini" farbe={farben.orange}>
+              <T v="mini" farbe={farben.orangeHell}>
                 Prüfungssimulation
               </T>
-              <T v="titel" style={{ fontSize: 28, lineHeight: 33, textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 8 }}>
+              <T v="titel" farbe={farben.fotoText} style={{ fontSize: 28, lineHeight: 33, textShadowColor: "rgba(0,0,0,0.5)", textShadowRadius: 8 }}>
                 Wie in der echten Prüfung.
               </T>
-              <T v="text" farbe="#E4E6EA">
+              <T v="text" farbe="rgba(255,255,255,0.86)">
                 {Math.min(30, FRAGEN.length)} Fragen · Fehlerpunkte wie beim TÜV oder der DEKRA
               </T>
             </View>
@@ -77,8 +70,8 @@ export default function Pruefen() {
           </View>
         </FotoFlaeche>
 
-        <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(4), padding: abstand(4), borderRadius: 20, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
-          <Ring anteil={reife} groesse={74} dicke={7} farbe={reife >= 0.9 ? farben.gruen : farben.orange}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(4), padding: abstand(4), borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
+          <Ring anteil={reife} groesse={72} dicke={7} farbe={reife >= 0.9 ? farben.gruen : farben.orange}>
             <T v="h3" style={{ fontSize: 17 }}>
               {Math.round(reife * 100)}%
             </T>
@@ -121,7 +114,7 @@ export default function Pruefen() {
             </Gruppe>
           </View>
         ) : (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(3), padding: abstand(4), borderRadius: 18, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(3), padding: abstand(4), borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
             <Icon name="time-outline" size={22} color={farben.text3} />
             <T v="klein" style={{ flex: 1 }}>
               Deine Simulationen erscheinen hier – mit Fehlerpunkten und Ergebnis.

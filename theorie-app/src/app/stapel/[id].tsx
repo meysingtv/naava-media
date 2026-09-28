@@ -54,8 +54,8 @@ function Faecher({ ids, faecher }: { ids: string[]; faecher: Record<string, { fa
     <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 6, height: 92 }}>
       {spalten.map((s) => (
         <View key={s.titel} style={{ flex: 1, alignItems: "center", gap: 4 }}>
-          <Text style={{ ...schrift.textHalb, fontSize: 12, color: s.n > 0 ? "#FFFFFF" : farben.text4, fontVariant: ["tabular-nums"] }}>{s.n}</Text>
-          <View style={{ width: "100%", height: 4 + (s.n / max) * 44, borderRadius: 5, backgroundColor: s.n > 0 ? s.farbe : "rgba(255,255,255,0.08)" }} />
+          <Text style={{ ...schrift.textHalb, fontSize: 12, color: s.n > 0 ? farben.text : farben.text4, fontVariant: ["tabular-nums"] }}>{s.n}</Text>
+          <View style={{ width: "100%", height: 4 + (s.n / max) * 44, borderRadius: 5, backgroundColor: s.n > 0 ? s.farbe : farben.flaeche3 }} />
           <Text numberOfLines={1} style={{ ...schrift.textMittel, fontSize: 10, color: farben.text3 }}>
             {s.titel.replace("Fach ", "")}
           </Text>
@@ -115,7 +115,7 @@ export default function StapelAnsicht() {
 
       {zeilen.length > 0 ? (
         <>
-          <View style={{ padding: 14, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", gap: 10 }}>
+          <View style={{ padding: 14, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie, gap: 10 }}>
             <T v="mini">Lernfächer</T>
             <Faecher ids={info.ids} faecher={stand.karteikarten.faecher} />
           </View>
@@ -135,7 +135,7 @@ export default function StapelAnsicht() {
         </>
       ) : null}
 
-      <Text style={{ ...schrift.titelFett, fontSize: 18, color: "#FFFFFF", marginTop: 4 }}>Karten</Text>
+      <Text style={{ ...schrift.titelFett, fontSize: 20, color: farben.text, marginTop: 4 }}>Karten</Text>
     </View>
   );
 
@@ -181,7 +181,7 @@ export default function StapelAnsicht() {
                 paddingVertical: 12,
                 paddingHorizontal: 14,
                 backgroundColor: pressed ? farben.flaeche2 : farben.flaeche,
-                borderColor: "rgba(255,255,255,0.08)",
+                borderColor: farben.linie,
                 borderLeftWidth: 1,
                 borderRightWidth: 1,
                 borderTopWidth: erste ? 1 : 0,
@@ -192,10 +192,10 @@ export default function StapelAnsicht() {
                 borderBottomRightRadius: letzte ? 16 : 0,
               })}
             >
-              {!erste ? <View style={{ position: "absolute", top: 0, left: 66, right: 0, height: 1, backgroundColor: "rgba(255,255,255,0.06)" }} /> : null}
+              {!erste ? <View style={{ position: "absolute", top: 0, left: 66, right: 0, height: 1, backgroundColor: farben.linie }} /> : null}
               <Vorschaubild inhalt={item} />
               <View style={{ flex: 1, gap: 2 }}>
-                <Text numberOfLines={2} style={{ ...schrift.textHalb, fontSize: 15, lineHeight: 20, color: "#FFFFFF" }}>
+                <Text numberOfLines={2} style={{ ...schrift.textHalb, fontSize: 15, lineHeight: 20, color: farben.text }}>
                   {vorneText(item)}
                 </Text>
                 <Text style={{ ...schrift.text, fontSize: 12.5, color: farben.text3 }}>{unterzeile(item)}</Text>

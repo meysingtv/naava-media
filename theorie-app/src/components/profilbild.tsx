@@ -1,9 +1,8 @@
 import { Image, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 
 import { useKonto } from "@/lib/konto";
 import { profilbildUrl, useProfilbild } from "@/lib/profilbild";
-import { farben, schrift } from "@/lib/theme";
+import { schrift, useFarben } from "@/lib/theme";
 
 function kuerzelVon(name: string): string {
   return (
@@ -17,8 +16,9 @@ function kuerzelVon(name: string): string {
   );
 }
 
-/** Eigenes rundes Profilbild mit heller Kante – ohne Foto mit Initialen. */
+/** Eigenes rundes Profilbild – ohne Foto mit Initialen auf Orange. */
 export function ProfilBild({ name, groesse = 52, rand = 2 }: { name: string; groesse?: number; rand?: number }) {
+  const farben = useFarben();
   const lokal = useProfilbild();
   const { profil } = useKonto();
   const uri = lokal ?? (profil?.bild_pfad ? profilbildUrl(profil.bild_pfad) : null);
@@ -29,7 +29,7 @@ export function ProfilBild({ name, groesse = 52, rand = 2 }: { name: string; gro
         height: groesse,
         borderRadius: groesse / 2,
         borderWidth: rand,
-        borderColor: "rgba(255,236,220,0.85)",
+        borderColor: "rgba(255,255,255,0.9)",
         overflow: "hidden",
         backgroundColor: farben.flaeche2,
       }}
@@ -37,9 +37,9 @@ export function ProfilBild({ name, groesse = 52, rand = 2 }: { name: string; gro
       {uri ? (
         <Image source={{ uri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
       ) : (
-        <LinearGradient colors={["#FF9A4A", "#E8541C"]} style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ ...schrift.titel, fontSize: groesse * 0.36, color: "#FFFFFF" }}>{kuerzelVon(name)}</Text>
-        </LinearGradient>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: farben.orange }}>
+          <Text style={{ ...schrift.titel, fontSize: groesse * 0.36, color: farben.aufOrange }}>{kuerzelVon(name)}</Text>
+        </View>
       )}
     </View>
   );
@@ -47,6 +47,7 @@ export function ProfilBild({ name, groesse = 52, rand = 2 }: { name: string; gro
 
 /** Profilbild eines anderen Nutzers (Clips, Kommentare) – sonst Initialen in seiner Farbe. */
 export function NutzerBild({ pfad, name, farbe, groesse = 36, rand = 1.5 }: { pfad: string | null | undefined; name: string; farbe?: string; groesse?: number; rand?: number }) {
+  const farben = useFarben();
   return (
     <View
       style={{

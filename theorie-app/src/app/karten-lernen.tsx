@@ -170,7 +170,7 @@ export default function KartenLernen() {
       <View style={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND - 8, paddingBottom: abstand(3), gap: abstand(2.5) }}>
         <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
-            <Text style={{ ...schrift.textMittel, fontSize: 18, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>
+            <Text style={{ ...schrift.textHalb, fontSize: 17, color: farben.text, fontVariant: ["tabular-nums"] }}>
               Karte {pos + 1} von {schlange.length}
             </Text>
             <Text numberOfLines={1} style={{ ...schrift.text, fontSize: 12.5, color: farben.text3 }}>
@@ -180,19 +180,8 @@ export default function KartenLernen() {
           <KopfTaste icon="close" label="Lernen beenden" onPress={() => router.back()} />
           <View style={{ width: 40 }} />
         </View>
-        <View style={{ marginHorizontal: 12, height: 6, borderRadius: 3, backgroundColor: "#1C232B" }}>
-          <View
-            style={{
-              width: `${Math.max(3, (pos / schlange.length) * 100)}%`,
-              height: "100%",
-              borderRadius: 3,
-              backgroundColor: farben.orangeHell,
-              shadowColor: farben.orangeHell,
-              shadowOpacity: 0.7,
-              shadowRadius: 6,
-              shadowOffset: { width: 0, height: 0 },
-            }}
-          />
+        <View style={{ marginHorizontal: 8, height: 5, borderRadius: 3, backgroundColor: farben.flaeche2 }}>
+          <View style={{ width: `${Math.max(3, (pos / schlange.length) * 100)}%`, height: "100%", borderRadius: 3, backgroundColor: farben.orange }} />
         </View>
       </View>
 
