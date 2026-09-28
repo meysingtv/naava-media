@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Easing, Image, Platform, Pressable, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
+import { Animated, Easing, Image, Platform, Pressable, StyleSheet, Text, View, type GestureResponderEvent } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEvent, useEventListener } from "expo";
 import { useVideoPlayer, VideoView, type VideoPlayer } from "expo-video";
@@ -7,6 +7,7 @@ import type { SFSymbol } from "expo-symbols";
 
 import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
+import { Lader } from "@/components/lader";
 import { NutzerBild, ProfilBild } from "@/components/profilbild";
 import { dateiUrl, kurzeZahl, type ClipEintrag } from "@/lib/clips-server";
 import { stoss, tippen } from "@/lib/haptik";
@@ -278,7 +279,7 @@ function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eig
 
       {!bereit && aktiv && !fehler ? (
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center" }]}>
-          <ActivityIndicator color="#FFFFFF" />
+          <Lader color="#FFFFFF" />
         </View>
       ) : null}
 

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { Alert, Linking, ScrollView, Switch, View } from "react-native";
+import { Linking, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Abschnitt, Chip, Eingabe, Gruppe, Knopf, Kopf, PasswortEingabe, T, Zeile } from "@/components/ui";
 import { Logo } from "@/components/grafik";
+import { dialog } from "@/components/dialog";
+import { Schalter } from "@/components/schalter";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
 import { useClipRechte } from "@/lib/clips-server";
 import { erinnerungPlanen } from "@/lib/erinnerung";
@@ -64,10 +66,10 @@ export default function Einstellungen() {
     setSpeichertBenutzer(true);
     const f = await benutzernameAendern(benutzer);
     setSpeichertBenutzer(false);
-    if (f) Alert.alert("Nicht gespeichert", f);
+    if (f) dialog("Nicht gespeichert", f);
     else {
       setBenutzerAngefasst(false);
-      Alert.alert("Gespeichert", `Du heißt jetzt @${benutzer}.`);
+      dialog("Gespeichert", `Du heißt jetzt @${benutzer}.`);
     }
   }
   const [neuesPasswort, setNeuesPasswort] = useState("");
@@ -77,17 +79,17 @@ export default function Einstellungen() {
     setAendertPasswort(true);
     const f = await passwortAendern(neuesPasswort);
     setAendertPasswort(false);
-    if (f) Alert.alert("Nicht geändert", f);
+    if (f) dialog("Nicht geändert", f);
     else {
       setNeuesPasswort("");
-      Alert.alert("Passwort geändert", "Ab jetzt meldest du dich mit dem neuen Passwort an.");
+      dialog("Passwort geändert", "Ab jetzt meldest du dich mit dem neuen Passwort an.");
     }
   }
 
   async function erinnerungAendern(an: boolean, stunde = stand.erinnerung.stunde, minute = stand.erinnerung.minute) {
     const ok = await erinnerungPlanen(an, stunde, minute);
     if (!ok) {
-      Alert.alert("Mitteilungen sind aus", "Erlaube Mitteilungen für Fahrschule Pro in den iPhone-Einstellungen, dann klappt die Erinnerung.");
+      dialog("Mitteilungen sind aus", "Erlaube Mitteilungen für Fahrschule Pro in den iPhone-Einstellungen, dann klappt die Erinnerung.");
       setzen({ erinnerung: { an: false, stunde, minute } });
       return;
     }
@@ -103,12 +105,12 @@ export default function Einstellungen() {
     setSpeichert(true);
     const f = await profilSpeichern({ name: name.trim() });
     setSpeichert(false);
-    if (f) Alert.alert("Nicht gespeichert", f);
+    if (f) dialog("Nicht gespeichert", f);
     else setNameAngefasst(false);
   }
 
   function zuruecksetzenFragen() {
-    Alert.alert("Fortschritt zurücksetzen?", "Alle Antworten, Serien, Abzeichen und Simulationen auf diesem Gerät werden gelöscht. Das lässt sich nicht rückgängig machen.", [
+    dialog("Fortschritt zurücksetzen?", "Alle Antworten, Serien, Abzeichen und Simulationen auf diesem Gerät werden gelöscht. Das lässt sich nicht rückgängig machen.", [
       { text: "Abbrechen", style: "cancel" },
       { text: "Zurücksetzen", style: "destructive", onPress: zuruecksetzen },
     ]);
@@ -150,7 +152,7 @@ export default function Einstellungen() {
                   aktiv={profil?.bundesland === b}
                   onPress={async () => {
                     const f = await profilSpeichern({ bundesland: profil?.bundesland === b ? null : b });
-                    if (f) Alert.alert("Nicht gespeichert", f);
+                    if (f) dialog("Nicht gespeichert", f);
                   }}
                 />
               ))}
@@ -169,13 +171,7 @@ export default function Einstellungen() {
               titel="Tägliche Erinnerung"
               unter={stand.erinnerung.an ? `Jeden Tag um ${uhrzeit(stand.erinnerung.stunde, stand.erinnerung.minute)} Uhr` : "Aus"}
               rechts={
-                <Switch
-                  value={stand.erinnerung.an}
-                  onValueChange={(an) => erinnerungAendern(an)}
-                  trackColor={{ true: farben.orange, false: farben.flaeche3 }}
-                  thumbColor="#FFFFFF"
-                  ios_backgroundColor={farben.flaeche3}
-                />
+                <Schalter wert={stand.erinnerung.an} onWechsel={(an) => erinnerungAendern(an)} />
               }
             />
           </Gruppe>
@@ -213,7 +209,7 @@ export default function Einstellungen() {
                       onPress={async () => {
                         if (profil.rolle === id) return;
                         const f = await rolleSetzen(id);
-                        if (f) Alert.alert("Nicht gespeichert", f);
+                        if (f) dialog("Nicht gespeichert", f);
                       }}
                     />
                   ))}

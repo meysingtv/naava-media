@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, KeyboardAvoidingView, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -7,6 +7,7 @@ import { Icon } from "@/components/icon";
 import { FlipKarte } from "@/components/karteikarte";
 import { Knopf, Kopf, KopfTaste, T } from "@/components/ui";
 import { Verkehrszeichen, ZEICHEN_INFO } from "@/components/zeichen";
+import { dialog } from "@/components/dialog";
 import type { ZeichenKey } from "@/lib/fragen";
 import { erfolg, tippen } from "@/lib/haptik";
 import { useStand } from "@/lib/stand";
@@ -47,6 +48,8 @@ function Feld({
         placeholder={platzhalter}
         placeholderTextColor={farben.text4}
         selectionColor={farben.orange}
+        cursorColor={farben.orange}
+        selectionHandleColor={farben.orange}
         keyboardAppearance="dark"
         multiline
         autoFocus={autoFocus}
@@ -98,7 +101,7 @@ export default function KarteBearbeiten() {
       router.back();
       return;
     }
-    Alert.alert("Änderungen verwerfen?", "Die Karte ist noch nicht gespeichert.", [
+    dialog("Änderungen verwerfen?", "Die Karte ist noch nicht gespeichert.", [
       { text: "Weiter schreiben", style: "cancel" },
       { text: "Verwerfen", style: "destructive", onPress: () => router.back() },
     ]);
@@ -108,7 +111,7 @@ export default function KarteBearbeiten() {
 
   function loeschen() {
     if (!altEigen) return;
-    Alert.alert("Karte löschen?", "Die Karte ist danach weg.", [
+    dialog("Karte löschen?", "Die Karte ist danach weg.", [
       { text: "Abbrechen", style: "cancel" },
       {
         text: "Löschen",

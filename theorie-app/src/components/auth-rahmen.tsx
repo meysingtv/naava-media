@@ -172,6 +172,8 @@ export function Feld({ label, icon, links, fehler, ...props }: TextInputProps & 
         ref={eingabe}
         placeholderTextColor={farben.text4}
         selectionColor={farben.orange}
+        cursorColor={farben.orange}
+        selectionHandleColor={farben.orange}
         keyboardAppearance="dark"
         {...props}
         onFocus={(e) => {
@@ -214,6 +216,8 @@ export function PasswortFeld({ label, fehler, ...props }: TextInputProps & { lab
         ref={eingabe}
         placeholderTextColor={farben.text4}
         selectionColor={farben.orange}
+        cursorColor={farben.orange}
+        selectionHandleColor={farben.orange}
         keyboardAppearance="dark"
         autoCapitalize="none"
         autoCorrect={false}

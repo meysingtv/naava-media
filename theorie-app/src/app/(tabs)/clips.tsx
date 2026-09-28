@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ActivityIndicator, AppState, FlatList, Pressable, RefreshControl, Text, View, type ViewToken } from "react-native";
+import { AppState, FlatList, Pressable, RefreshControl, Text, View, type ViewToken } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -11,6 +11,7 @@ import { ClipSeite } from "@/components/clip-seite";
 import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
 import { KommentarBlatt } from "@/components/kommentar-blatt";
+import { Lader } from "@/components/lader";
 import { useLeistenHoehe } from "@/components/tab-leiste";
 import { Knopf } from "@/components/ui";
 import { useClipAktionen } from "@/lib/clip-aktionen";
@@ -285,7 +286,7 @@ export default function Clips() {
   } else if (!feed.geladen || (feed.laedt && feed.eintraege.length === 0)) {
     inhalt = (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator color="#FFFFFF" />
+        <Lader color="#FFFFFF" />
       </View>
     );
   } else if (feed.eintraege.length === 0) {
@@ -326,7 +327,7 @@ export default function Clips() {
         viewabilityConfig={SICHTBAR}
         onEndReached={() => laden(art, false)}
         onEndReachedThreshold={2}
-        refreshControl={<RefreshControl refreshing={aktualisiert} onRefresh={neuLaden} tintColor="#FFFFFF" progressViewOffset={insets.top + 44} />}
+        refreshControl={<RefreshControl refreshing={aktualisiert} onRefresh={neuLaden} tintColor="#FFFFFF" colors={[farben.orange]} progressBackgroundColor={farben.flaeche2} progressViewOffset={insets.top + 44} />}
       />
     );
   } else {

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
-  ActivityIndicator,
   Animated,
   Pressable,
   Text,
@@ -17,6 +16,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
+import { Lader } from "@/components/lader";
 import { tippen } from "@/lib/haptik";
 import { abstand, farben, leuchten, radius, RAND, schrift, verlauf } from "@/lib/theme";
 
@@ -204,7 +204,7 @@ export function Knopf({
         />
       ) : null}
       {laedt ? (
-        <ActivityIndicator color={vorder} />
+        <Lader color={vorder} />
       ) : (
         <>
           <Text style={{ ...schrift.textHalb, fontSize: klein ? 16 : 18, color: vorder }}>{titel}</Text>
@@ -515,6 +515,8 @@ export function Eingabe({ icon, fehler, ...props }: TextInputProps & { icon?: Ic
       <TextInput
         placeholderTextColor={farben.text4}
         selectionColor={farben.orange}
+        cursorColor={farben.orange}
+        selectionHandleColor={farben.orange}
         keyboardAppearance="dark"
         {...props}
         style={[{ flex: 1, ...schrift.textMittel, fontSize: 16, color: farben.text, height: "100%" }, props.style]}
@@ -548,6 +550,8 @@ export function PasswortEingabe({ fehler, ...props }: TextInputProps & { fehler?
       <TextInput
         placeholderTextColor={farben.text4}
         selectionColor={farben.orange}
+        cursorColor={farben.orange}
+        selectionHandleColor={farben.orange}
         keyboardAppearance="dark"
         autoCapitalize="none"
         autoCorrect={false}

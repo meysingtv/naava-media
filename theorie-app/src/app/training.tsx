@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Alert, Keyboard, KeyboardAvoidingView, Pressable, ScrollView, Text, View } from "react-native";
+import { Keyboard, KeyboardAvoidingView, Pressable, ScrollView, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -9,6 +9,7 @@ import { FrageAktionen } from "@/components/frage-aktionen";
 import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { Ring } from "@/components/grafik";
+import { dialog } from "@/components/dialog";
 import { antwortRichtig, frageVon, FRAGEN, fragenZuThema, istBildfrage, istZeichen, themaVon, zahlLesen, type ThemaId } from "@/lib/fragen";
 import { erfolg, fehler, tippen } from "@/lib/haptik";
 import { frageMelden } from "@/lib/melden";
@@ -84,7 +85,7 @@ export default function Training() {
       router.back();
       return;
     }
-    Alert.alert("Training beenden?", "Deine bisherigen Antworten sind gespeichert.", [
+    dialog("Training beenden?", "Deine bisherigen Antworten sind gespeichert.", [
       { text: "Weiterlernen", style: "cancel" },
       { text: "Beenden", style: "destructive", onPress: () => router.back() },
     ]);

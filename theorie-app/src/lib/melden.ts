@@ -1,5 +1,7 @@
-import { Alert, Linking } from "react-native";
+import { Linking } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import { dialog } from "@/components/dialog";
 
 import { frageVon } from "./fragen";
 
@@ -29,12 +31,12 @@ async function senden(id: string, grund: Grund) {
     );
     if (ok) return;
   }
-  Alert.alert("Danke für den Hinweis", "Wir haben die Frage vorgemerkt und schauen sie uns an.");
+  dialog("Danke für den Hinweis", "Wir haben die Frage vorgemerkt und schauen sie uns an.");
 }
 
 /** Frage melden – mit kurzer Auswahl, was nicht stimmt. */
 export function frageMelden(id: string) {
-  Alert.alert("Frage melden", "Was stimmt an dieser Frage nicht?", [
+  dialog("Frage melden", "Was stimmt an dieser Frage nicht?", [
     { text: "Fehler in der Frage", onPress: () => senden(id, "Fehler in der Frage") },
     { text: "Antwort stimmt nicht", onPress: () => senden(id, "Antwort stimmt nicht") },
     { text: "Bild unklar", onPress: () => senden(id, "Bild unklar") },

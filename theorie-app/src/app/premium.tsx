@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { Chip, Knopf, Kopf, T } from "@/components/ui";
+import { dialog } from "@/components/dialog";
 import { tippen } from "@/lib/haptik";
 import { abstand, farben, radius, RAND, schrift } from "@/lib/theme";
 
@@ -97,7 +98,7 @@ export default function Premium() {
         <Knopf
           titel="Beim Start Bescheid geben"
           icon="notifications-outline"
-          onPress={() => Alert.alert("Vorgemerkt", "Sobald Premium startet, siehst du es hier in der App.")}
+          onPress={() => dialog("Vorgemerkt", "Sobald Premium startet, siehst du es hier in der App.")}
         />
       </View>
     </View>

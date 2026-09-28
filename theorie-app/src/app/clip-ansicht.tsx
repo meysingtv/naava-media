@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, AppState, FlatList, Pressable, Text, View, type ViewToken } from "react-native";
+import { AppState, FlatList, Pressable, Text, View, type ViewToken } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
@@ -9,6 +9,7 @@ import { ClipSeite } from "@/components/clip-seite";
 import { Glas } from "@/components/glas";
 import { Icon } from "@/components/icon";
 import { KommentarBlatt } from "@/components/kommentar-blatt";
+import { Lader } from "@/components/lader";
 import { zurueck } from "@/components/ui";
 import { useClipAktionen } from "@/lib/clip-aktionen";
 import { clipsVonLaden, type ClipEintrag } from "@/lib/clips-server";
@@ -101,7 +102,7 @@ export default function ClipAnsicht() {
       <View style={{ flex: 1 }} onLayout={(e) => setMasse({ breite: e.nativeEvent.layout.width, hoehe: e.nativeEvent.layout.height })}>
         {eintraege == null ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
-            {fehler ? <Text style={{ ...schrift.text, fontSize: 15, color: "#AEB3BA", textAlign: "center" }}>{fehler}</Text> : <ActivityIndicator color="#FFFFFF" />}
+            {fehler ? <Text style={{ ...schrift.text, fontSize: 15, color: "#AEB3BA", textAlign: "center" }}>{fehler}</Text> : <Lader color="#FFFFFF" />}
           </View>
         ) : liste.length === 0 ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>

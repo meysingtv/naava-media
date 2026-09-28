@@ -11,6 +11,10 @@ module.exports = function androidSicherheit(config) {
     const manifest = cfg.modResults.manifest;
     manifest.$ = { ...manifest.$, "xmlns:tools": "http://schemas.android.com/tools" };
     const app = manifest.application[0];
+    // Kein Backup der App-Daten – auch wenn eine Bibliothek es erlauben will.
+    const ersetzen = new Set(String(app.$["tools:replace"] ?? "").split(",").filter(Boolean));
+    ersetzen.add("android:allowBackup");
+    app.$["tools:replace"] = [...ersetzen].join(",");
     app.activity = app.activity ?? [];
     for (const name of SCHLIESSEN) {
       if (!app.activity.some((a) => a.$["android:name"] === name)) {

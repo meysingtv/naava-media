@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Easing, Linking, Pressable, Text, View, type LayoutChangeEvent } from "react-native";
+import { Animated, Easing, Linking, Pressable, Text, View, type LayoutChangeEvent } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { deleteAsync } from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
+import { Lader } from "@/components/lader";
 import { Knopf, T } from "@/components/ui";
 import { Verkehrszeichen, ZEICHEN_INFO } from "@/components/zeichen";
 import type { ZeichenKey } from "@/lib/fragen";
@@ -245,7 +246,7 @@ export default function SchildScanner() {
   if (!erlaubnis) {
     return (
       <View style={{ flex: 1, backgroundColor: "#000000", alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator color="#FFFFFF" />
+        <Lader color="#FFFFFF" />
       </View>
     );
   }
@@ -380,7 +381,7 @@ export default function SchildScanner() {
                 })}
               >
                 <View style={{ width: 62, height: 62, borderRadius: 31, backgroundColor: farben.orange, alignItems: "center", justifyContent: "center" }}>
-                  {laeuft ? <ActivityIndicator color="#FFFFFF" /> : <Icon name="scan" size={26} color="#FFFFFF" weight="semibold" />}
+                  {laeuft ? <Lader color="#FFFFFF" /> : <Icon name="scan" size={26} color="#FFFFFF" weight="semibold" />}
                 </View>
               </Pressable>
               <View style={{ alignItems: "center", gap: 6, width: 70 }}>
@@ -436,7 +437,7 @@ function ErgebnisKarte({
     >
       {laeuft ? (
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 6 }}>
-          <ActivityIndicator color={farben.orange} />
+          <Lader color={farben.orange} />
           <T v="textStark">Schild wird erkannt …</T>
         </View>
       ) : ergebnis?.art === "schild" && info ? (

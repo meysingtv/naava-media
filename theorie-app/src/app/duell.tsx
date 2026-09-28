@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Animated, Easing, Pressable, ScrollView, View } from "react-native";
+import { Animated, Easing, Pressable, ScrollView, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { Avatar, Chip, Knopf, T } from "@/components/ui";
 import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
+import { dialog } from "@/components/dialog";
 import { DUELL_RUNDEN, DUELL_SEKUNDEN, gegnerVon } from "@/lib/duell";
 import { antwortRichtig, frageVon, FRAGEN } from "@/lib/fragen";
 import { erfolg, fehler, stoss } from "@/lib/haptik";
@@ -136,7 +137,7 @@ export default function Duell() {
       router.back();
       return;
     }
-    Alert.alert("Duell aufgeben?", "Ein abgebrochenes Duell wird nicht gewertet.", [
+    dialog("Duell aufgeben?", "Ein abgebrochenes Duell wird nicht gewertet.", [
       { text: "Weiterspielen", style: "cancel" },
       { text: "Aufgeben", style: "destructive", onPress: () => router.back() },
     ]);

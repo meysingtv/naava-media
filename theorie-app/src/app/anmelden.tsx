@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Alert, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { router } from "expo-router";
 
 import { AuthRahmen, Feld, PasswortFeld, Wechsel } from "@/components/auth-rahmen";
 import { Icon } from "@/components/icon";
 import { Oder, SozialAnmeldung } from "@/components/sozial-anmeldung";
 import { Knopf, T } from "@/components/ui";
+import { dialog } from "@/components/dialog";
 import { useKonto } from "@/lib/konto";
 import { serverVerbunden } from "@/lib/supabase";
 import { abstand, farben, schrift } from "@/lib/theme";
@@ -46,7 +47,7 @@ export default function Anmelden() {
     }
     const f = await passwortVergessen(kennung);
     if (f) setFehler(f);
-    else Alert.alert("E-Mail ist unterwegs", "Wir haben dir einen Link zum Zurücksetzen deines Passworts geschickt.");
+    else dialog("E-Mail ist unterwegs", "Wir haben dir einen Link zum Zurücksetzen deines Passworts geschickt.");
   }
 
   return (

@@ -1,4 +1,4 @@
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -6,6 +6,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { useInhaltUnten } from "@/components/tab-leiste";
 import { Knopf, kopfOben } from "@/components/ui";
+import { dialog } from "@/components/dialog";
 import { CLIPS } from "@/lib/clips";
 import { ERFOLGE } from "@/lib/erfolge";
 import { tausender } from "@/lib/format";
@@ -84,7 +85,7 @@ export default function Profil() {
       await profilbildHochladen(profil?.bild_pfad ?? null);
       await profilNeuLaden();
     } catch {
-      Alert.alert("Profilbild", "Das Bild ist auf deinem Handy gespeichert, konnte aber gerade nicht hochgeladen werden. Versuch es gleich noch einmal.");
+      dialog("Profilbild", "Das Bild ist auf deinem Handy gespeichert, konnte aber gerade nicht hochgeladen werden. Versuch es gleich noch einmal.");
     }
   }
 
@@ -99,11 +100,11 @@ export default function Profil() {
     const optionen: { text: string; onPress?: () => void; style?: "cancel" | "destructive" }[] = [{ text: "Foto auswählen", onPress: () => fotoWaehlen() }];
     if (hatBild) optionen.push({ text: "Foto entfernen", style: "destructive", onPress: () => fotoEntfernen() });
     optionen.push({ text: "Abbrechen", style: "cancel" });
-    Alert.alert("Profilbild", undefined, optionen);
+    dialog("Profilbild", undefined, optionen);
   }
 
   function abmeldenFragen() {
-    Alert.alert(
+    dialog(
       gast ? "Gastmodus beenden?" : "Abmelden?",
       gast ? "Dein Fortschritt bleibt auf diesem Gerät gespeichert." : "Dein Fortschritt ist in deinem Konto gesichert.",
       [
@@ -202,7 +203,7 @@ export default function Profil() {
                   key={e.id}
                   onPress={() => {
                     tippen();
-                    Alert.alert(e.titel, hat ? `${e.text}\nFreigeschaltet am ${stand.erfolge[e.id].split("-").reverse().join(".")}.` : e.text);
+                    dialog(e.titel, hat ? `${e.text}\nFreigeschaltet am ${stand.erfolge[e.id].split("-").reverse().join(".")}.` : e.text);
                   }}
                   style={{ width: "25%", alignItems: "center", gap: 7 }}
                 >

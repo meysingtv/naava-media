@@ -1,8 +1,9 @@
 import { useCallback, useRef } from "react";
-import { ActionSheetIOS, Alert, Platform, Share } from "react-native";
+import { ActionSheetIOS, Platform, Share } from "react-native";
 import { router } from "expo-router";
 
 import { auswahlBlatt } from "@/components/auswahl-blatt";
+import { dialog } from "@/components/dialog";
 
 import { clipLoeschen, clipMelden, dateiUrl, folgenSetzen, geteiltMelden, likeSetzen, useClipRechte, type ClipEintrag } from "./clips-server";
 import { useKonto } from "./konto";
@@ -30,7 +31,7 @@ export function auswahl(titel: string, optionen: { text: string; gefahr?: boolea
 }
 
 export function anmeldenFragen(was: string) {
-  Alert.alert("Konto nötig", `${was} geht mit einem kostenlosen Konto. Dein Lernstand bleibt dabei erhalten.`, [
+  dialog("Konto nötig", `${was} geht mit einem kostenlosen Konto. Dein Lernstand bleibt dabei erhalten.`, [
     { text: "Abbrechen", style: "cancel" },
     { text: "Anmelden", onPress: () => router.push("/anmelden") },
     { text: "Konto erstellen", onPress: () => router.push("/registrieren") },
@@ -122,12 +123,12 @@ export function useClipAktionen(liste: Liste) {
       if (g == null) return;
       try {
         await clipMelden(clip.id, gruende[g]);
-        Alert.alert("Danke!", "Wir schauen uns den Clip an.");
+        dialog("Danke!", "Wir schauen uns den Clip an.");
       } catch (e) {
-        Alert.alert("Nicht gemeldet", (e as Error).message);
+        dialog("Nicht gemeldet", (e as Error).message);
       }
     } else if (wahl === 1 && darfLoeschen) {
-      Alert.alert("Clip löschen?", "Der Clip verschwindet für alle. Das lässt sich nicht rückgängig machen.", [
+      dialog("Clip löschen?", "Der Clip verschwindet für alle. Das lässt sich nicht rückgängig machen.", [
         { text: "Abbrechen", style: "cancel" },
         {
           text: "Löschen",
@@ -137,7 +138,7 @@ export function useClipAktionen(liste: Liste) {
               await clipLoeschen(clip);
               l.current.entfernt(clip.id);
             } catch (e) {
-              Alert.alert("Nicht gelöscht", (e as Error).message);
+              dialog("Nicht gelöscht", (e as Error).message);
             }
           },
         },

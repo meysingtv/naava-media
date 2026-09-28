@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Animated, Easing, Pressable, ScrollView, Share, View } from "react-native";
+import { Animated, Easing, Pressable, ScrollView, Share, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { Avatar, Chip, Knopf, Kopf, T } from "@/components/ui";
 import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
+import { dialog } from "@/components/dialog";
+import { Lader } from "@/components/lader";
 import { antwortRichtig, frageVon } from "@/lib/fragen";
 import { erfolg, fehler, stoss } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
@@ -116,7 +118,7 @@ export default function OnlineDuellSeite() {
       router.back();
       return;
     }
-    Alert.alert("Duell verlassen?", "Dein Ergebnis wird nicht gewertet und das Duell bleibt offen.", [
+    dialog("Duell verlassen?", "Dein Ergebnis wird nicht gewertet und das Duell bleibt offen.", [
       { text: "Weiterspielen", style: "cancel" },
       { text: "Verlassen", style: "destructive", onPress: () => router.back() },
     ]);
@@ -128,7 +130,7 @@ export default function OnlineDuellSeite() {
   if (phase === "laden" || phase === "senden") {
     return (
       <View style={{ flex: 1, backgroundColor: farben.grund, alignItems: "center", justifyContent: "center", gap: abstand(4) }}>
-        <ActivityIndicator color={farben.orange} />
+        <Lader color={farben.orange} />
         <T v="klein">{phase === "senden" ? "Ergebnis wird gespeichert …" : "Duell wird geladen …"}</T>
       </View>
     );

@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Alert, KeyboardAvoidingView, ScrollView } from "react-native";
+import { KeyboardAvoidingView, ScrollView } from "react-native";
 import { router } from "expo-router";
 
 import { Knopf, Kopf, PasswortEingabe, T } from "@/components/ui";
+import { dialog } from "@/components/dialog";
 import { useKonto } from "@/lib/konto";
 import { abstand, farben, RAND, schrift } from "@/lib/theme";
 
@@ -23,7 +24,7 @@ export default function PasswortNeu() {
       return;
     }
     passwortNeuErledigt();
-    Alert.alert("Passwort geändert", "Ab jetzt meldest du dich mit dem neuen Passwort an.");
+    dialog("Passwort geändert", "Ab jetzt meldest du dich mit dem neuen Passwort an.");
     router.replace("/heute");
   }
 

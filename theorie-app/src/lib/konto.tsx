@@ -1,11 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Alert, Platform } from "react-native";
+import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as Crypto from "expo-crypto";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import type { Session } from "@supabase/supabase-js";
+
+import { dialog } from "@/components/dialog";
 
 import { clipRechteNeuLaden } from "./clips-server";
 import { serverVerbunden, supabase } from "./supabase";
@@ -373,7 +375,7 @@ export function KontoProvider({ children }: { children: ReactNode }) {
       const e = await codeEinloesen(url);
       if (!e) return;
       if (e.fehler) {
-        Alert.alert("Link nicht gültig", `${e.fehler}\n\nFordere sonst einfach einen neuen Link an.`);
+        dialog("Link nicht gültig", `${e.fehler}\n\nFordere sonst einfach einen neuen Link an.`);
         return;
       }
       await AsyncStorage.removeItem(GAST).catch(() => {});

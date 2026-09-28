@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Keyboard, KeyboardAvoidingView, Pressable, ScrollView, View } from "react-native";
+import { Keyboard, KeyboardAvoidingView, Pressable, ScrollView, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,6 +10,7 @@ import { FrageAktionen } from "@/components/frage-aktionen";
 import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
 import { Ring } from "@/components/grafik";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
+import { dialog } from "@/components/dialog";
 import { antwortRichtig, frageVon, FRAGEN, THEMEN, themaVon, type Frage } from "@/lib/fragen";
 import { datumKurz, dauer } from "@/lib/format";
 import { erfolg, fehler, tippen } from "@/lib/haptik";
@@ -105,7 +106,7 @@ export default function Pruefung() {
       const f = frageVon(id);
       return f && !beantwortet(f, antworten[id]);
     }).length;
-    Alert.alert(
+    dialog(
       "Prüfung abgeben?",
       offen > 0 ? `${offen} ${offen === 1 ? "Frage ist" : "Fragen sind"} noch unbeantwortet und zählen als falsch.` : "Alle Fragen sind beantwortet.",
       [
@@ -120,7 +121,7 @@ export default function Pruefung() {
       router.back();
       return;
     }
-    Alert.alert("Simulation abbrechen?", "Diese Simulation wird nicht gewertet.", [
+    dialog("Simulation abbrechen?", "Diese Simulation wird nicht gewertet.", [
       { text: "Weiter prüfen", style: "cancel" },
       { text: "Abbrechen", style: "destructive", onPress: () => router.back() },
     ]);

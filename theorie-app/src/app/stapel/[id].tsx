@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, FlatList, Pressable, Text, View } from "react-native";
+import { FlatList, Pressable, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -8,6 +8,7 @@ import { FachPunkte, KartenVorschau } from "@/components/karteikarte";
 import { StapelSymbol } from "@/components/karteikarten-karte";
 import { Knopf, Kopf, KopfTaste, T } from "@/components/ui";
 import { Verkehrszeichen } from "@/components/zeichen";
+import { dialog } from "@/components/dialog";
 import { istZeichen, themaVon, type ZeichenKey } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
 import { GRUPPE_TITEL, istEingebaut, karteInhalt, naechsteText, stapelInfo, vorneText, type KartenInhalt, type StapelId } from "@/lib/karteikarten";
@@ -87,7 +88,7 @@ export default function StapelAnsicht() {
 
   function loeschen(k: KartenInhalt) {
     const frage = k.art === "frage";
-    Alert.alert(frage ? "Karte entfernen?" : "Karte löschen?", frage ? "Die Frage bleibt natürlich in der App – nur die Karteikarte verschwindet." : "Die Karte ist danach weg.", [
+    dialog(frage ? "Karte entfernen?" : "Karte löschen?", frage ? "Die Frage bleibt natürlich in der App – nur die Karteikarte verschwindet." : "Die Karte ist danach weg.", [
       { text: "Abbrechen", style: "cancel" },
       {
         text: frage ? "Entfernen" : "Löschen",

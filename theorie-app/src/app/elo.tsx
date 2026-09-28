@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Lader } from "@/components/lader";
 import { Avatar, Karte, Kopf, T } from "@/components/ui";
 import { useKonto } from "@/lib/konto";
 import { eloRanglisteLaden, type EloEintrag } from "@/lib/online-duell";
@@ -44,7 +45,7 @@ export default function EloRangliste() {
         </Karte>
 
         {liste === undefined ? (
-          <ActivityIndicator color={farben.orange} style={{ marginTop: abstand(6) }} />
+          <Lader color={farben.orange} style={{ marginTop: abstand(6) }} />
         ) : !liste || liste.length === 0 ? (
           <T v="text" zentriert style={{ marginTop: abstand(4) }}>
             {session ? "Noch keine gewerteten Duelle – spiel ein Rangliste-Duell und eröffne die Liste." : "Die Elo-Bestenliste siehst du mit Konto."}

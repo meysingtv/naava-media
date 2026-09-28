@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { View } from "react-native";
 import { Redirect } from "expo-router";
 
+import { Lader } from "@/components/lader";
 import { useKonto } from "@/lib/konto";
 import { farben } from "@/lib/theme";
 
@@ -22,7 +23,7 @@ export default function AuthRueckkehr() {
   if (session || genugGewartet) return <Redirect href="/" />;
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund, alignItems: "center", justifyContent: "center" }}>
-      <ActivityIndicator color={farben.orange} />
+      <Lader color={farben.orange} />
     </View>
   );
 }

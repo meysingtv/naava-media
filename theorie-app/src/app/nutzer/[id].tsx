@@ -1,10 +1,11 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, Text, useWindowDimensions, View } from "react-native";
+import { FlatList, Image, Pressable, RefreshControl, Text, useWindowDimensions, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
+import { Lader } from "@/components/lader";
 import { NutzerBild, ProfilBild } from "@/components/profilbild";
 import { Knopf, KopfTaste, kopfOben, zurueck } from "@/components/ui";
 import { anmeldenFragen } from "@/lib/clip-aktionen";
@@ -126,7 +127,7 @@ export default function NutzerProfil() {
           </View>
         </View>
       ) : fehler ? null : (
-        <ActivityIndicator color="#FFFFFF" style={{ marginTop: 40 }} />
+        <Lader color="#FFFFFF" style={{ marginTop: 40 }} />
       )}
 
       {profil ? (
@@ -147,7 +148,7 @@ export default function NutzerProfil() {
         columnWrapperStyle={{ gap: LUECKE }}
         contentContainerStyle={{ gap: LUECKE, paddingBottom: insets.bottom + 24 }}
         ListHeaderComponent={kopf}
-        refreshControl={<RefreshControl refreshing={aktualisiert} onRefresh={neuLaden} tintColor="#FFFFFF" />}
+        refreshControl={<RefreshControl refreshing={aktualisiert} onRefresh={neuLaden} tintColor="#FFFFFF" colors={[farben.orange]} progressBackgroundColor={farben.flaeche2} />}
         ListEmptyComponent={
           fehler ? (
             <View style={{ alignItems: "center", gap: 12, paddingTop: 30, paddingHorizontal: 32 }}>

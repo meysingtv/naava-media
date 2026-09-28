@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
+import { FlatList, KeyboardAvoidingView, Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { NutzerBild } from "@/components/profilbild";
+import { dialog } from "@/components/dialog";
+import { Lader } from "@/components/lader";
 import {
   kommentareLaden,
   kommentarLiken,
@@ -202,7 +204,7 @@ export function KommentarBlatt({
   }
 
   function kontoNoetig(was: string) {
-    Alert.alert("Konto nötig", `${was} geht mit einem kostenlosen Konto.`, [
+    dialog("Konto nötig", `${was} geht mit einem kostenlosen Konto.`, [
       { text: "Abbrechen", style: "cancel" },
       { text: "Anmelden", onPress: onAnmelden },
     ]);
@@ -222,7 +224,7 @@ export function KommentarBlatt({
       onAnzahl(clipId, 1);
       setListe(await kommentareLaden(clipId));
     } catch (e) {
-      Alert.alert("Nicht gesendet", (e as Error).message);
+      dialog("Nicht gesendet", (e as Error).message);
     } finally {
       setSendet(false);
     }
@@ -283,7 +285,7 @@ export function KommentarBlatt({
     if (!k.loeschbar || !clipId) return;
     tippen();
     const zahl = k.antwort_auf ? 0 : (antworten.get(k.id)?.length ?? 0);
-    Alert.alert("Kommentar löschen?", zahl > 0 ? `${k.inhalt}\n\nDie ${zahl === 1 ? "Antwort wird" : `${zahl} Antworten werden`} mit gelöscht.` : k.inhalt, [
+    dialog("Kommentar löschen?", zahl > 0 ? `${k.inhalt}\n\nDie ${zahl === 1 ? "Antwort wird" : `${zahl} Antworten werden`} mit gelöscht.` : k.inhalt, [
       { text: "Abbrechen", style: "cancel" },
       {
         text: "Löschen",
@@ -294,7 +296,7 @@ export function KommentarBlatt({
             setListe((l) => (l ? l.filter((x) => x.id !== k.id && x.antwort_auf !== k.id) : l));
             onAnzahl(clipId, -n);
           } catch (e) {
-            Alert.alert("Nicht gelöscht", (e as Error).message);
+            dialog("Nicht gelöscht", (e as Error).message);
           }
         },
       },
@@ -333,7 +335,7 @@ export function KommentarBlatt({
             {/* Liste */}
             {liste == null ? (
               <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                {fehler ? <Text style={{ ...schrift.text, fontSize: 14, color: farben.text3, paddingHorizontal: 24, textAlign: "center" }}>{fehler}</Text> : <ActivityIndicator color="#FFFFFF" />}
+                {fehler ? <Text style={{ ...schrift.text, fontSize: 14, color: farben.text3, paddingHorizontal: 24, textAlign: "center" }}>{fehler}</Text> : <Lader color="#FFFFFF" />}
               </View>
             ) : oben.length === 0 ? (
               <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 32 }}>
@@ -406,6 +408,8 @@ export function KommentarBlatt({
                       placeholder={antwortAn ? `${nameVon(antwortAn)} antworten …` : "Kommentar hinzufügen …"}
                       placeholderTextColor={farben.text4}
                       selectionColor={farben.orange}
+                      cursorColor={farben.orange}
+                      selectionHandleColor={farben.orange}
                       keyboardAppearance="dark"
                       maxLength={500}
                       multiline
@@ -418,7 +422,7 @@ export function KommentarBlatt({
                     accessibilityLabel="Senden"
                     style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: text.trim() ? farben.orange : "rgba(255,255,255,0.1)" }}
                   >
-                    {sendet ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Icon name="arrow-up" sf="arrow.up" size={20} color="#FFFFFF" weight="bold" />}
+                    {sendet ? <Lader color="#FFFFFF" size="small" /> : <Icon name="arrow-up" sf="arrow.up" size={20} color="#FFFFFF" weight="bold" />}
                   </Pressable>
                 </>
               ) : (

@@ -11,6 +11,12 @@ gibt es nur da, wo Android etwas nicht hat oder anders macht:
 | Schrift | San Francisco | Inter |
 | Leuchten/Schatten | iOS-Schatten | boxShadow (gleiche Werte) |
 | Menü „Mehr“ bei Clips | natives Apple-Menü | eigenes Menü von unten im gleichen Stil |
+| Rückfragen/Hinweise | iOS-Dialog | nachgebaut im iOS-26-Look: Glaskarte, Text linksbündig, Kapsel-Knöpfe (statt Android-Dialog) |
+| Schalter | iOS-Schalter | nachgebaut: Kapsel mit weißem Knopf, der beim Drücken breiter wird |
+| Ladekreis | iOS-Speichenrad | nachgebaut: acht Speichen, die hellste läuft im Kreis |
+| Glas-Knöpfe über Video/Kamera | Liquid Glass | Glas mit Glanz und Lichtkante (ohne Unschärfe – die erfasst auf Android kein Video) |
+| Vibration | Taptic Engine | feine Android-System-Haptik statt Vibrationsmotor |
+| Clip-Upload | Picker rechnet auf 720p um | App rechnet selbst auf 720p um (Fortschrittsanzeige), danach 50-MB-Prüfung; in Expo Go ohne Umrechnung |
 | Mit Apple anmelden | Apple-Fenster auf dem iPhone | über die Apple-Seite im Browser (Einrichtung siehe unten) |
 | Zurück | Wischen vom Rand | Zurück-Taste/-Geste – bei Training, Prüfung und Duell mit Rückfrage wie der Schließen-Knopf |
 

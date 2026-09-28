@@ -1,10 +1,12 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { Abschnitt, Avatar, Chip, Eingabe, Gruppe, Karte, Knopf, kopfOben, KopfTaste, Segment, T, Zeile, zurueck } from "@/components/ui";
+import { dialog } from "@/components/dialog";
+import { Lader } from "@/components/lader";
 import { GEGNER } from "@/lib/duell";
 import { tausender } from "@/lib/format";
 import { tippen } from "@/lib/haptik";
@@ -109,7 +111,7 @@ export default function Liga() {
 
   function regionalWaehlen(an: boolean) {
     if (an && session && !bundesland) {
-      Alert.alert("Bundesland fehlt", "Wähle dein Bundesland in den Einstellungen, dann siehst du die regionale Rangliste.", [
+      dialog("Bundesland fehlt", "Wähle dein Bundesland in den Einstellungen, dann siehst du die regionale Rangliste.", [
         { text: "Später", style: "cancel" },
         { text: "Einstellungen", onPress: () => router.push("/einstellungen") },
       ]);
@@ -123,7 +125,7 @@ export default function Liga() {
     const r = art === "suche" ? await rangDuellSuchen() : art === "code" ? await freundDuellErstellen() : await freundDuellBeitreten(code);
     setArbeitet(null);
     if (r.fehler || !r.daten) {
-      Alert.alert("Das hat nicht geklappt", r.fehler ?? "Bitte versuch es noch einmal.");
+      dialog("Das hat nicht geklappt", r.fehler ?? "Bitte versuch es noch einmal.");
       return;
     }
     setCode("");
@@ -234,7 +236,7 @@ export default function Liga() {
           ) : null}
 
           {laedt || !liste ? (
-            <ActivityIndicator color={farben.orange} style={{ marginTop: abstand(6) }} />
+            <Lader color={farben.orange} style={{ marginTop: abstand(6) }} />
           ) : (
             <View>
               {liste.slice(0, 30).map((e, i) => (

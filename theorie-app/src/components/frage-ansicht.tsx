@@ -363,6 +363,8 @@ function ZahlEingabe({
           placeholder="0"
           placeholderTextColor={farben.text4}
           selectionColor={farben.orange}
+          cursorColor={farben.orange}
+          selectionHandleColor={farben.orange}
           style={{ flex: 1, minWidth: 0, ...schrift.titel, fontSize: 36, color: farben.text, fontVariant: ["tabular-nums"] }}
         />
         <T v="h3" farbe={farben.text3}>

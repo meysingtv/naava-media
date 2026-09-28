@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Pressable, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { NutzerBild } from "@/components/profilbild";
 import { Eingabe, Gruppe, Knopf, Kopf, T } from "@/components/ui";
+import { dialog } from "@/components/dialog";
+import { Lader } from "@/components/lader";
 import { erstellerEntfernen, erstellerHinzufuegen, erstellerListe, useClipRechte, type Ersteller } from "@/lib/clips-server";
 import { erfolg, tippen } from "@/lib/haptik";
 import { abstand, farben, RAND } from "@/lib/theme";
@@ -40,7 +42,7 @@ export default function ClipErsteller() {
       setKennung("");
       await laden();
     } catch (e) {
-      Alert.alert("Nicht freigeschaltet", (e as Error).message);
+      dialog("Nicht freigeschaltet", (e as Error).message);
     } finally {
       setSpeichert(false);
     }
@@ -48,7 +50,7 @@ export default function ClipErsteller() {
 
   function entfernen(p: Ersteller) {
     tippen();
-    Alert.alert(`${p.name || "@" + p.benutzername} entfernen?`, "Die Person kann danach keine neuen Clips mehr hochladen. Ihre bisherigen Clips bleiben online.", [
+    dialog(`${p.name || "@" + p.benutzername} entfernen?`, "Die Person kann danach keine neuen Clips mehr hochladen. Ihre bisherigen Clips bleiben online.", [
       { text: "Abbrechen", style: "cancel" },
       {
         text: "Entfernen",
@@ -58,7 +60,7 @@ export default function ClipErsteller() {
             await erstellerEntfernen(p.id);
             setListe((l) => (l ? l.filter((x) => x.id !== p.id) : l));
           } catch (e) {
-            Alert.alert("Nicht entfernt", (e as Error).message);
+            dialog("Nicht entfernt", (e as Error).message);
           }
         },
       },
@@ -116,7 +118,7 @@ export default function ClipErsteller() {
                 <Knopf titel="Nochmal laden" klein art="sekundaer" onPress={laden} />
               </View>
             ) : (
-              <ActivityIndicator color={farben.text} style={{ alignSelf: "flex-start" }} />
+              <Lader color={farben.text} style={{ alignSelf: "flex-start" }} />
             )
           ) : liste.length === 0 ? (
             <T v="klein">Noch niemand – bisher kannst nur du Clips hochladen.</T>

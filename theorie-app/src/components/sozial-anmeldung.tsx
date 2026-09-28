@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Path } from "react-native-svg";
 
+import { Lader } from "@/components/lader";
 import { T } from "@/components/ui";
 import { tippen } from "@/lib/haptik";
 import { useKonto, type Rolle } from "@/lib/konto";
@@ -92,7 +93,7 @@ export function SozialAnmeldung({ rolle, onAngemeldet, onFehler }: { rolle?: Rol
         })}
       >
         {laeuft === "google" ? (
-          <ActivityIndicator color="#E3E3E3" />
+          <Lader color="#E3E3E3" />
         ) : (
           <>
             <GoogleLogo />
@@ -132,7 +133,7 @@ export function SozialAnmeldung({ rolle, onAngemeldet, onFehler }: { rolle?: Rol
           })}
         >
           {laeuft === "apple" ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <Lader color="#FFFFFF" />
           ) : (
             <>
               <Ionicons name="logo-apple" size={21} color="#FFFFFF" style={{ marginTop: -2 }} />
