@@ -77,9 +77,7 @@ export function AuthRahmen({ titel, unter, onZurueck, children }: { titel: strin
             <View style={{ width: 40 }} />
           </View>
 
-          {/* Ist Platz übrig, rutscht das Formular etwas nach unten. */}
-          <View style={{ flexGrow: 3, minHeight: abstand(7) }} />
-          <View style={{ gap: abstand(4) }}>
+          <View style={{ gap: abstand(4), marginTop: abstand(7) }}>
             <View style={{ gap: abstand(2), marginBottom: abstand(1) }}>
               <View style={{ width: 30, height: 4, borderRadius: 2, backgroundColor: farben.orange }} />
               <T v="display">{titel}</T>
@@ -87,7 +85,6 @@ export function AuthRahmen({ titel, unter, onZurueck, children }: { titel: strin
             </View>
             {children}
           </View>
-          <View style={{ flexGrow: 1 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

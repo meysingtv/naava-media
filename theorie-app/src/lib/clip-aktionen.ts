@@ -96,7 +96,7 @@ export function useClipAktionen(liste: Liste) {
 
   const onTeilen = useCallback(async (clip: ClipEintrag) => {
     try {
-      const r = await Share.share({ message: `„${clip.titel}“ – ${clip.autor_name || clip.autor_benutzername} in der Spur-App`, url: dateiUrl(clip.video_pfad) });
+      const r = await Share.share({ message: `„${clip.titel}“ – ${clip.autor_name || clip.autor_benutzername} in Fahrschule Pro`, url: dateiUrl(clip.video_pfad) });
       if (r.action === Share.sharedAction && ich.current) {
         const n = await geteiltMelden(clip.id);
         if (n != null) l.current.aendern(clip.id, () => ({ geteilt: n }));

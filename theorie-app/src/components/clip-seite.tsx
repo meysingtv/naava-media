@@ -12,7 +12,7 @@ import { dateiUrl, kurzeZahl, type ClipEintrag } from "@/lib/clips-server";
 import { stoss, tippen } from "@/lib/haptik";
 import { farben, schrift } from "@/lib/theme";
 
-// Eigener Spur-Look: Video im Vollbild, unten Ersteller, Titel und eine
+// Eigener Look: Video im Vollbild, unten Ersteller, Titel und eine
 // schlichte Aktionszeile direkt auf dem Video – orange Akzente, keine
 // Symbolspalte am Rand.
 

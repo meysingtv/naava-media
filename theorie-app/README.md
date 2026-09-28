@@ -1,4 +1,4 @@
-# Spur – Theorie-App
+# Fahrschule Pro – Theorie-App
 
 Eigenständige iOS-App zum Lernen der Führerschein-Theorie in Schwarz und
 Orange mit Fotokarten: Home mit Tagesziel und Schnellstart, Kategorien mit

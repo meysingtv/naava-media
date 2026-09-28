@@ -87,7 +87,7 @@ export default function ClipErsteller() {
       <Kopf titel="Clip-Ersteller" />
       <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(10), gap: abstand(6) }} keyboardShouldPersistTaps="handled">
         <T v="text">
-          Wer hier steht, kann in Spur Clips hochladen. Du als Inhaber kannst es immer. Die Person braucht ein Konto – gib ihren Benutzernamen oder ihre E-Mail ein.
+          Wer hier steht, kann in Fahrschule Pro Clips hochladen. Du als Inhaber kannst es immer. Die Person braucht ein Konto – gib ihren Benutzernamen oder ihre E-Mail ein.
         </T>
 
         <View style={{ gap: abstand(3) }}>

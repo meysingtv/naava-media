@@ -256,7 +256,7 @@ export default function SchildScanner() {
         <Hinweis
           icon="camera-outline"
           titel="Kamera für die Schilder-Jagd"
-          text="Damit du echte Verkehrsschilder scannen kannst, braucht Spur die Kamera. Die Fotos werden nur auf deinem Handy ausgewertet und nicht gespeichert."
+          text="Damit du echte Verkehrsschilder scannen kannst, braucht Fahrschule Pro die Kamera. Die Fotos werden nur auf deinem Handy ausgewertet und nicht gespeichert."
         >
           {erlaubnis.canAskAgain ? (
             <Knopf titel="Kamera erlauben" icon="camera" onPress={() => erlaubnisAnfragen()} />

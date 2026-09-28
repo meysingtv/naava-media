@@ -15,7 +15,7 @@ export async function erinnerungPlanen(an: boolean, stunde: number, minute: numb
   await Notifications.scheduleNotificationAsync({
     identifier: KENNUNG,
     content: {
-      title: "Zeit für deine Spur",
+      title: "Zeit für deine Theorie",
       body: "Zehn Fragen, fünf Minuten – deine Serie wartet.",
     },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: stunde, minute },

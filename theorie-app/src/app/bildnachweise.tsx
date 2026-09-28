@@ -13,7 +13,7 @@ export default function Bildnachweise() {
       <Kopf titel="Bildnachweise" />
       <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(8), gap: abstand(3) }}>
         <T v="text" style={{ marginBottom: abstand(2) }}>
-          Die Fotos in Spur stehen unter freien Lizenzen. Wir haben sie für die App verkleinert und zugeschnitten. Verkehrszeichen, Lagepläne und Symbole sind eigene
+          Die Fotos in Fahrschule Pro stehen unter freien Lizenzen. Wir haben sie für die App verkleinert und zugeschnitten. Verkehrszeichen, Lagepläne und Symbole sind eigene
           Zeichnungen.
         </T>
         {NACHWEISE.map((n) => (

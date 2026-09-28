@@ -231,7 +231,7 @@ export default function OnlineDuellSeite() {
                 {offenerCode}
               </T>
               <Pressable
-                onPress={() => Share.share({ message: `Duell in der Spur-App: Gib den Code ${offenerCode} unter Liga → Duell ein.` }).catch(() => {})}
+                onPress={() => Share.share({ message: `Duell in Fahrschule Pro: Gib den Code ${offenerCode} unter Liga → Duell ein.` }).catch(() => {})}
                 style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
                 hitSlop={8}
               >

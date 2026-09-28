@@ -1,6 +1,6 @@
 import { Platform, type TextStyle } from "react-native";
 
-// Design-Tokens von „Spur“: tiefes Schwarz als Grund, kräftiges Orange als
+// Design-Tokens von „Fahrschule Pro“: tiefes Schwarz als Grund, kräftiges Orange als
 // Signalfarbe, Grün für richtig. Karten sind leicht angehoben und tragen eine
 // feine helle Kante; Fotos bringen die Farbe in die Oberfläche.
 

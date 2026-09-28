@@ -87,7 +87,7 @@ export default function Einstellungen() {
   async function erinnerungAendern(an: boolean, stunde = stand.erinnerung.stunde, minute = stand.erinnerung.minute) {
     const ok = await erinnerungPlanen(an, stunde, minute);
     if (!ok) {
-      Alert.alert("Mitteilungen sind aus", "Erlaube Mitteilungen für Spur in den iPhone-Einstellungen, dann klappt die Erinnerung.");
+      Alert.alert("Mitteilungen sind aus", "Erlaube Mitteilungen für Fahrschule Pro in den iPhone-Einstellungen, dann klappt die Erinnerung.");
       setzen({ erinnerung: { an: false, stunde, minute } });
       return;
     }

@@ -229,7 +229,7 @@ export default function Profil() {
 
         <Gruppe>
           <Eintrag icon="settings-outline" farbe="#C4C8CE" titel="Einstellungen & Konto" onPress={() => router.push("/einstellungen")} />
-          <Eintrag icon="diamond-outline" farbe={farben.orange} titel="Spur Plus" unter="Bald verfügbar" onPress={() => router.push("/premium")} />
+          <Eintrag icon="diamond-outline" farbe={farben.orange} titel="Premium" unter="Bald verfügbar" onPress={() => router.push("/premium")} />
           <Eintrag icon="images-outline" farbe="#C4C8CE" titel="Bildnachweise" onPress={() => router.push("/bildnachweise")} />
           <Eintrag icon="log-out-outline" farbe={farben.rot} titel={gast ? "Gastmodus beenden" : "Abmelden"} gefahr onPress={abmeldenFragen} />
         </Gruppe>

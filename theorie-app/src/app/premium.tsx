@@ -31,7 +31,7 @@ export default function Premium() {
       <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: abstand(8), gap: abstand(7) }}>
         <View style={{ gap: abstand(2) }}>
           <T v="mini" farbe={farben.orange}>
-            Spur Plus
+            Premium
           </T>
           <T v="display">Mehr Tempo bis zur Prüfung.</T>
           <T v="text">Alles aus der kostenlosen Version – plus alles, was dich sicher durch die Prüfung bringt.</T>
@@ -90,14 +90,14 @@ export default function Premium() {
         </View>
 
         <T v="klein" zentriert>
-          Spur Plus startet bald. Der Kauf läuft dann über deinen App-Store-Account und ist jederzeit kündbar.
+          Premium startet bald. Der Kauf läuft dann über deinen App-Store-Account und ist jederzeit kündbar.
         </T>
       </ScrollView>
       <View style={{ paddingHorizontal: RAND, paddingTop: abstand(3), paddingBottom: insets.bottom + abstand(3), borderTopWidth: 1, borderColor: farben.linie }}>
         <Knopf
           titel="Beim Start Bescheid geben"
           icon="notifications-outline"
-          onPress={() => Alert.alert("Vorgemerkt", "Sobald Spur Plus startet, siehst du es hier in der App.")}
+          onPress={() => Alert.alert("Vorgemerkt", "Sobald Premium startet, siehst du es hier in der App.")}
         />
       </View>
     </View>

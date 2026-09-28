@@ -22,7 +22,9 @@ export function Logo({ groesse = 28, mitText = true }: { groesse?: number; mitTe
         <Polygon points="49.1,41 50.9,41 50.7,33 49.3,33" fill={farben.orange} />
       </Svg>
       {mitText ? (
-        <Text style={{ fontFamily: svgSchrift.schild, fontSize: groesse * 0.82, color: farben.text, letterSpacing: -0.6 }}>spur</Text>
+        <Text style={{ fontFamily: svgSchrift.schild, fontSize: groesse * 0.82, color: farben.text, letterSpacing: -0.6 }}>
+          Fahrschule<Text style={{ color: farben.orange }}> Pro</Text>
+        </Text>
       ) : null}
     </View>
   );

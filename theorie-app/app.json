@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Spur",
+    "name": "Fahrschule Pro",
     "slug": "spur-theorie",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -46,15 +46,15 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Spur greift nur auf deine Fotos und Videos zu, wenn du ein Profilbild, einen Clip zum Hochladen oder ein Schildfoto für die Schilder-Jagd auswählst.",
-          "cameraPermission": "Spur nutzt die Kamera für die Schilder-Jagd: Du scannst echte Verkehrsschilder für dein Album. Die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert.",
+          "photosPermission": "Fahrschule Pro greift nur auf deine Fotos und Videos zu, wenn du ein Profilbild, einen Clip zum Hochladen oder ein Schildfoto für die Schilder-Jagd auswählst.",
+          "cameraPermission": "Fahrschule Pro nutzt die Kamera für die Schilder-Jagd: Du scannst echte Verkehrsschilder für dein Album. Die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert.",
           "microphonePermission": false
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Spur nutzt die Kamera für die Schilder-Jagd: Du scannst echte Verkehrsschilder für dein Album. Die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert.",
+          "cameraPermission": "Fahrschule Pro nutzt die Kamera für die Schilder-Jagd: Du scannst echte Verkehrsschilder für dein Album. Die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert.",
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
