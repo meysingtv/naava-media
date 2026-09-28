@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -9,10 +9,8 @@ import {
   TextInput,
   View,
   useWindowDimensions,
-  type ImageSourcePropType,
   type TextInputProps,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Logo } from "@/components/grafik";
@@ -21,43 +19,39 @@ import { T, zurueck } from "@/components/ui";
 import { tippen } from "@/lib/haptik";
 import { abstand, farben, RAND, schrift } from "@/lib/theme";
 
+/** Dunkler Grund mit leuchtenden Straßen oben links und unten rechts. */
+const HINTERGRUND = require("../../assets/images/auth-hintergrund.jpg");
+/** Grundton des Bildes – steht da, bis es geladen ist. */
+const BILD_GRUND = "#060709";
+
+/** Felder wie dunkles Glas über dem Bild. */
+const GLAS = {
+  flaeche: "rgba(13,16,20,0.74)",
+  flaecheFokus: "rgba(13,16,20,0.9)",
+  rand: "rgba(255,255,255,0.12)",
+  liste: "rgba(13,16,20,0.95)",
+};
+
 /**
- * Rahmen für Anmelden und Registrieren: oben ein Foto mit Logo, darüber
- * schiebt sich eine schwarze Karte mit abgerundeten Ecken – darin das
- * Formular. Ein kurzer oranger Strich (wie eine Fahrbahnmarkierung) führt
- * zum Titel.
+ * Rahmen für Anmelden und Registrieren: das Bild steht fest als ganzer
+ * Hintergrund, das Formular läuft darüber. Oben Zurück und Logo, ein kurzer
+ * oranger Strich (wie eine Fahrbahnmarkierung) führt zum Titel.
  */
-export function AuthRahmen({
-  foto,
-  titel,
-  unter,
-  kopfAnteil = 0.33,
-  onZurueck,
-  children,
-}: {
-  foto: ImageSourcePropType;
-  titel: string;
-  unter: string;
-  /** Anteil der Bildschirmhöhe für das Foto. */
-  kopfAnteil?: number;
-  onZurueck?: () => void;
-  children: ReactNode;
-}) {
+export function AuthRahmen({ titel, unter, onZurueck, children }: { titel: string; unter: string; onZurueck?: () => void; children: ReactNode }) {
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
-  const kopf = Math.max(200, Math.round(height * kopfAnteil));
+  // Feste Größe statt „füllen“: So springt das Bild nicht, wenn die Tastatur den Bildschirm verkleinert.
+  const { width, height } = useWindowDimensions();
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: farben.grund }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <View style={{ height: kopf }}>
-          <Image source={foto} style={{ position: "absolute", top: 0, left: 0, right: 0, height: kopf + 40, width: "100%" }} resizeMode="cover" />
-          <LinearGradient
-            colors={["rgba(3,5,7,0.62)", "rgba(3,5,7,0.12)", "rgba(3,5,7,0.2)", "rgba(3,5,7,0.55)"]}
-            locations={[0, 0.35, 0.7, 1]}
-            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: -40 }}
-          />
-          <View style={{ position: "absolute", top: insets.top + 4, left: RAND - 4, right: RAND - 4, height: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+    <View style={{ flex: 1, backgroundColor: BILD_GRUND }}>
+      <Image source={HINTERGRUND} style={{ position: "absolute", top: 0, left: 0, width, height }} resizeMode="cover" />
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + 4, paddingBottom: insets.bottom + abstand(8), paddingHorizontal: RAND + 4 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={{ height: 44, marginHorizontal: -8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             <Pressable
               onPress={() => {
                 tippen();
@@ -71,9 +65,9 @@ export function AuthRahmen({
                 borderRadius: 20,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: "rgba(3,5,7,0.45)",
+                backgroundColor: GLAS.flaeche,
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.14)",
+                borderColor: GLAS.rand,
                 opacity: pressed ? 0.75 : 1,
               })}
             >
@@ -82,80 +76,104 @@ export function AuthRahmen({
             <Logo groesse={24} />
             <View style={{ width: 40 }} />
           </View>
-        </View>
 
-        <View
-          style={{
-            flex: 1,
-            marginTop: -30,
-            borderTopLeftRadius: 30,
-            borderTopRightRadius: 30,
-            backgroundColor: farben.grund,
-            paddingHorizontal: RAND + 4,
-            paddingTop: abstand(7),
-            paddingBottom: insets.bottom + abstand(8),
-            gap: abstand(4),
-          }}
-        >
-          <View style={{ gap: abstand(2), marginBottom: abstand(1) }}>
-            <View style={{ width: 30, height: 4, borderRadius: 2, backgroundColor: farben.orange }} />
-            <T v="display" style={{ fontSize: 32, lineHeight: 38 }}>
-              {titel}
-            </T>
-            <T v="text">{unter}</T>
+          {/* Ist Platz übrig, rutscht das Formular etwas nach unten. */}
+          <View style={{ flexGrow: 3, minHeight: abstand(7) }} />
+          <View style={{ gap: abstand(4) }}>
+            <View style={{ gap: abstand(2), marginBottom: abstand(1) }}>
+              <View style={{ width: 30, height: 4, borderRadius: 2, backgroundColor: farben.orange }} />
+              <T v="display">{titel}</T>
+              <T v="text">{unter}</T>
+            </View>
+            {children}
           </View>
-          {children}
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <View style={{ flexGrow: 1 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
-/** Rahmen eines Feldes mit Beschriftung in der Linie (wie ausgestanzt). */
-function FeldHuelle({ label, fokus, fehler, children, onPress }: { label: string; fokus: boolean; fehler?: boolean; children: ReactNode; onPress?: () => void }) {
-  const rand = fehler ? farben.rot : fokus ? farben.orange : farben.linieStark;
-  const inhalt = (
-    <View style={{ height: 58, borderRadius: 16, borderWidth: 1.5, borderColor: rand, flexDirection: "row", alignItems: "center", paddingLeft: abstand(4), paddingRight: abstand(2) }}>
-      <Text
-        style={{
-          position: "absolute",
-          top: -10,
-          left: 12,
-          paddingHorizontal: 5,
-          backgroundColor: farben.grund,
-          ...schrift.textHalb,
-          fontSize: 12.5,
-          color: fehler ? farben.rot : fokus ? farben.orange : farben.text3,
-        }}
-      >
-        {label}
-      </Text>
-      {children}
-    </View>
-  );
-  if (!onPress) return inhalt;
+/**
+ * Hülle eines Feldes: dunkles Glas, oben klein die Beschriftung, darunter der
+ * Inhalt. Ein Tipp irgendwo aufs Feld löst `onPress` aus.
+ */
+function FeldHuelle({
+  label,
+  fokus,
+  fehler,
+  rechts,
+  knopf,
+  onPress,
+  children,
+}: {
+  label: string;
+  fokus: boolean;
+  fehler?: boolean;
+  rechts?: ReactNode;
+  /** Wie ein Knopf (Auswahlfeld) – sonst nur zum Eingabefeld springen. */
+  knopf?: boolean;
+  onPress: () => void;
+  children: ReactNode;
+}) {
+  const rand = fehler ? farben.rot : fokus ? farben.orange : GLAS.rand;
   return (
     <Pressable
       onPress={() => {
-        tippen();
+        if (knopf) tippen();
         onPress();
       }}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+      accessible={knopf}
+      accessibilityRole={knopf ? "button" : undefined}
+      accessibilityLabel={knopf ? label : undefined}
+      style={({ pressed }) => ({
+        minHeight: 62,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: rand,
+        backgroundColor: fokus ? GLAS.flaecheFokus : GLAS.flaeche,
+        flexDirection: "row",
+        alignItems: "center",
+        paddingLeft: abstand(4),
+        paddingRight: abstand(2),
+        paddingVertical: 9,
+        opacity: knopf && pressed ? 0.85 : 1,
+      })}
     >
-      {inhalt}
+      <View style={{ flex: 1, gap: 3 }}>
+        <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 12, lineHeight: 15, color: fehler ? farben.rot : fokus ? farben.orange : farben.text3 }}>
+          {label}
+        </Text>
+        <View style={{ minHeight: 24, flexDirection: "row", alignItems: "center" }}>{children}</View>
+      </View>
+      {rechts}
     </Pressable>
   );
 }
 
-/** Eingabefeld mit Beschriftung im Rahmen und optionalem Symbol rechts. */
+const EINGABE = { flex: 1, height: 24, paddingVertical: 0, paddingHorizontal: 0, ...schrift.textMittel, fontSize: 16, color: farben.text } as const;
+
+/** Eingabefeld mit Beschriftung im Feld und optionalem Symbol rechts. */
 export function Feld({ label, icon, links, fehler, ...props }: TextInputProps & { label: string; icon?: IconName; links?: ReactNode; fehler?: boolean }) {
   const [fokus, setFokus] = useState(false);
+  const eingabe = useRef<TextInput>(null);
   return (
-    <FeldHuelle label={label} fokus={fokus} fehler={fehler}>
+    <FeldHuelle
+      label={label}
+      fokus={fokus}
+      fehler={fehler}
+      onPress={() => eingabe.current?.focus()}
+      rechts={
+        icon ? (
+          <View style={{ width: 40, alignItems: "center" }}>
+            <Icon name={icon} size={20} color={fokus ? farben.orange : farben.text3} />
+          </View>
+        ) : null
+      }
+    >
       {links}
       <TextInput
+        ref={eingabe}
         placeholderTextColor={farben.text4}
         selectionColor={farben.orange}
         keyboardAppearance="dark"
@@ -168,13 +186,8 @@ export function Feld({ label, icon, links, fehler, ...props }: TextInputProps & 
           setFokus(false);
           props.onBlur?.(e);
         }}
-        style={[{ flex: 1, height: "100%", ...schrift.textMittel, fontSize: 16, color: farben.text }, props.style]}
+        style={[EINGABE, props.style]}
       />
-      {icon ? (
-        <View style={{ width: 40, alignItems: "center" }}>
-          <Icon name={icon} size={20} color={fokus ? farben.orange : farben.text3} />
-        </View>
-      ) : null}
     </FeldHuelle>
   );
 }
@@ -183,9 +196,26 @@ export function Feld({ label, icon, links, fehler, ...props }: TextInputProps & 
 export function PasswortFeld({ label, fehler, ...props }: TextInputProps & { label: string; fehler?: boolean }) {
   const [sichtbar, setSichtbar] = useState(false);
   const [fokus, setFokus] = useState(false);
+  const eingabe = useRef<TextInput>(null);
   return (
-    <FeldHuelle label={label} fokus={fokus} fehler={fehler}>
+    <FeldHuelle
+      label={label}
+      fokus={fokus}
+      fehler={fehler}
+      onPress={() => eingabe.current?.focus()}
+      rechts={
+        <Pressable
+          onPress={() => setSichtbar((v) => !v)}
+          hitSlop={8}
+          accessibilityLabel={sichtbar ? "Passwort verbergen" : "Passwort anzeigen"}
+          style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+        >
+          <Icon name={sichtbar ? "eye-outline" : "eye-off-outline"} size={20} color={fokus ? farben.orange : farben.text3} />
+        </Pressable>
+      }
+    >
       <TextInput
+        ref={eingabe}
         placeholderTextColor={farben.text4}
         selectionColor={farben.orange}
         keyboardAppearance="dark"
@@ -204,16 +234,8 @@ export function PasswortFeld({ label, fehler, ...props }: TextInputProps & { lab
           setFokus(false);
           props.onBlur?.(e);
         }}
-        style={[{ flex: 1, height: "100%", ...schrift.textMittel, fontSize: 16, color: farben.text }, props.style]}
+        style={[EINGABE, props.style]}
       />
-      <Pressable
-        onPress={() => setSichtbar((v) => !v)}
-        hitSlop={8}
-        accessibilityLabel={sichtbar ? "Passwort verbergen" : "Passwort anzeigen"}
-        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
-      >
-        <Icon name={sichtbar ? "eye-outline" : "eye-off-outline"} size={20} color={fokus ? farben.orange : farben.text3} />
-      </Pressable>
     </FeldHuelle>
   );
 }
@@ -221,30 +243,32 @@ export function PasswortFeld({ label, fehler, ...props }: TextInputProps & { lab
 export type Auswahl<W extends string> = { id: W; titel: string; unter?: string; icon?: IconName };
 
 /**
- * Auswahlfeld wie ein Klappmenü: zeigt die Wahl mit Symbol; ein Tipp klappt
- * die Möglichkeiten direkt darunter auf.
+ * Auswahlfeld wie ein Klappmenü: zeigt die Wahl; ein Tipp klappt die
+ * Möglichkeiten direkt darunter auf.
  */
 export function AuswahlFeld<W extends string>({ label, wert, optionen, onWechsel }: { label: string; wert: W; optionen: Auswahl<W>[]; onWechsel: (w: W) => void }) {
   const [offen, setOffen] = useState(false);
   const aktiv = optionen.find((o) => o.id === wert) ?? optionen[0];
   return (
     <View>
-      <FeldHuelle label={label} fokus={offen} onPress={() => setOffen((o) => !o)}>
-        {aktiv.icon ? (
-          <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center", marginRight: abstand(3) }}>
-            <Icon name={aktiv.icon} size={18} color={farben.orange} />
+      <FeldHuelle
+        label={label}
+        fokus={offen}
+        knopf
+        onPress={() => setOffen((o) => !o)}
+        rechts={
+          <View style={{ width: 40, alignItems: "center" }}>
+            <Icon name={offen ? "chevron-up" : "chevron-down"} size={18} color={offen ? farben.orange : farben.text3} />
           </View>
-        ) : null}
-        <View style={{ flex: 1 }}>
-          <Text style={{ ...schrift.textHalb, fontSize: 16, color: farben.text }}>{aktiv.titel}</Text>
-          {aktiv.unter ? <Text style={{ ...schrift.text, fontSize: 12.5, color: farben.text3 }}>{aktiv.unter}</Text> : null}
-        </View>
-        <View style={{ width: 40, alignItems: "center" }}>
-          <Icon name={offen ? "chevron-up" : "chevron-down"} size={18} color={offen ? farben.orange : farben.text3} />
-        </View>
+        }
+      >
+        {aktiv.icon ? <Icon name={aktiv.icon} size={17} color={farben.orange} style={{ marginRight: 8 }} /> : null}
+        <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 16, color: farben.text, flexShrink: 1 }}>
+          {aktiv.titel}
+        </Text>
       </FeldHuelle>
       {offen ? (
-        <View style={{ marginTop: abstand(2), borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie, overflow: "hidden" }}>
+        <View style={{ marginTop: abstand(2), borderRadius: 16, backgroundColor: GLAS.liste, borderWidth: 1, borderColor: GLAS.rand, overflow: "hidden" }}>
           {optionen.map((o, i) => {
             const gewaehlt = o.id === wert;
             return (

@@ -7,7 +7,6 @@ import { AuswahlFeld, AuthRahmen, Feld, FeldHinweis, PasswortFeld, Wechsel, type
 import { Icon } from "@/components/icon";
 import { Oder, SozialAnmeldung } from "@/components/sozial-anmeldung";
 import { Knopf, T } from "@/components/ui";
-import { FOTOS } from "@/lib/fotos";
 import { useKonto, type Rolle } from "@/lib/konto";
 import { tippen } from "@/lib/haptik";
 import { useStand } from "@/lib/stand";
@@ -20,7 +19,7 @@ const ROLLEN: Auswahl<Rolle>[] = [
 ];
 
 const KLASSEN: Auswahl<string>[] = [
-  { id: "B", titel: "Klasse B", unter: "Pkw", icon: "car-outline" },
+  { id: "B", titel: "Klasse B", unter: "Pkw" },
   { id: "A", titel: "Klasse A", unter: "Motorrad" },
   { id: "A2", titel: "Klasse A2", unter: "Motorrad bis 35 kW" },
   { id: "A1", titel: "Klasse A1", unter: "Leichtkraftrad" },
@@ -196,14 +195,14 @@ export default function Registrieren() {
 
   if (bestaetigen) {
     return (
-      <AuthRahmen foto={FOTOS.lernen} kopfAnteil={0.3} titel="Fast geschafft." unter={`Wir haben dir eine E-Mail an ${email.trim()} geschickt. Bestätige deine Adresse und melde dich danach an – mit deiner E-Mail oder @${benutzer}.`}>
+      <AuthRahmen titel="Fast geschafft." unter={`Wir haben dir eine E-Mail an ${email.trim()} geschickt. Bestätige deine Adresse und melde dich danach an – mit deiner E-Mail oder @${benutzer}.`}>
         <Knopf titel="Zur Anmeldung" icon="arrow-forward" onPress={() => router.replace("/anmelden")} style={{ marginTop: abstand(2) }} />
       </AuthRahmen>
     );
   }
 
   return (
-    <AuthRahmen foto={FOTOS.lernen} kopfAnteil={0.24} titel="Konto erstellen" unter="Beginne deine Reise zum Führerschein.">
+    <AuthRahmen titel="Konto erstellen" unter="Beginne deine Reise zum Führerschein.">
       {!serverVerbunden ? (
         <View style={{ flexDirection: "row", gap: abstand(2), padding: abstand(3.5), borderRadius: radius.m, backgroundColor: farben.gelbSoft }}>
           <Icon name="cloud-offline-outline" size={18} color={farben.gelb} />
@@ -260,9 +259,9 @@ export default function Registrieren() {
                 setVorwahlOffen(true);
               }}
               accessibilityLabel={`Vorwahl ${land.vorwahl}, ändern`}
-              style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingRight: abstand(3), marginRight: abstand(3), borderRightWidth: 1, borderColor: farben.linieStark, height: 30 }}
+              style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingRight: abstand(3), marginRight: abstand(3), borderRightWidth: 1, borderColor: farben.linieStark, height: 24 }}
             >
-              <Text style={{ fontSize: 18 }}>{land.flagge}</Text>
+              <Text style={{ fontSize: 17 }}>{land.flagge}</Text>
               <Text style={{ ...schrift.textHalb, fontSize: 16, color: farben.text }}>{land.vorwahl}</Text>
               <Icon name="chevron-down" size={13} color={farben.text3} />
             </Pressable>

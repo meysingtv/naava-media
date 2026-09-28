@@ -6,7 +6,6 @@ import { AuthRahmen, Feld, PasswortFeld, Wechsel } from "@/components/auth-rahme
 import { Icon } from "@/components/icon";
 import { Oder, SozialAnmeldung } from "@/components/sozial-anmeldung";
 import { Knopf, T } from "@/components/ui";
-import { FOTOS } from "@/lib/fotos";
 import { useKonto } from "@/lib/konto";
 import { serverVerbunden } from "@/lib/supabase";
 import { abstand, farben, schrift } from "@/lib/theme";
@@ -51,7 +50,7 @@ export default function Anmelden() {
   }
 
   return (
-    <AuthRahmen foto={FOTOS.autobahn} titel="Anmelden" unter="Willkommen zurück! Mach da weiter, wo du aufgehört hast.">
+    <AuthRahmen titel="Anmelden" unter="Willkommen zurück! Mach da weiter, wo du aufgehört hast.">
       {!serverVerbunden ? (
         <View style={{ flexDirection: "row", gap: abstand(2), padding: abstand(3.5), borderRadius: 14, backgroundColor: farben.gelbSoft }}>
           <Icon name="cloud-offline-outline" size={18} color={farben.gelb} />
