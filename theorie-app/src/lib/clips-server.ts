@@ -205,6 +205,12 @@ async function rechteHolen(nutzer: string) {
   rechteHoerer.forEach((h) => h());
 }
 
+/** Rechte neu vom Server holen, z. B. nachdem jemand Fahrlehrer geworden ist. */
+export function clipRechteNeuLaden() {
+  rechte = { fuer: null, wert: KEINE };
+  rechteHoerer.forEach((h) => h());
+}
+
 /** Darf der angemeldete Nutzer Clips hochladen bzw. Ersteller verwalten? */
 export function useClipRechte(): ClipRechte {
   const { session } = useKonto();

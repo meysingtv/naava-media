@@ -31,7 +31,7 @@ const AGB = process.env.EXPO_PUBLIC_AGB_URL;
 export default function Einstellungen() {
   const insets = useSafeAreaInsets();
   const { stand, setzen, zuruecksetzen } = useStand();
-  const { session, profil, gast, anzeigeName, profilSpeichern, passwortAendern, benutzernameFrei, benutzernameAendern } = useKonto();
+  const { session, profil, gast, anzeigeName, profilSpeichern, passwortAendern, benutzernameFrei, benutzernameAendern, rolleSetzen } = useKonto();
   const rechte = useClipRechte();
   const [name, setName] = useState(anzeigeName);
   const [nameAngefasst, setNameAngefasst] = useState(false);
@@ -196,6 +196,33 @@ export default function Einstellungen() {
         <View>
           <Abschnitt titel="Profil" klein />
           <View style={{ gap: abstand(2) }}>
+            {profil ? (
+              <>
+                <T v="klein">Ich bin</T>
+                <View style={{ flexDirection: "row", gap: abstand(2) }}>
+                  {(
+                    [
+                      ["schueler", "Fahrschüler"],
+                      ["fahrlehrer", "Fahrlehrer"],
+                    ] as const
+                  ).map(([id, titel]) => (
+                    <Chip
+                      key={id}
+                      text={titel}
+                      aktiv={profil.rolle === id}
+                      onPress={async () => {
+                        if (profil.rolle === id) return;
+                        const f = await rolleSetzen(id);
+                        if (f) Alert.alert("Nicht gespeichert", f);
+                      }}
+                    />
+                  ))}
+                </View>
+                <T v="klein" style={{ marginBottom: abstand(2) }}>
+                  {profil.rolle === "fahrlehrer" ? "Als Fahrlehrer kannst du im Clips-Tab Videos hochladen." : "Fahrlehrer können im Clips-Tab eigene Videos hochladen."}
+                </T>
+              </>
+            ) : null}
             <T v="klein">Name – so begrüßt dich die App</T>
             <Eingabe
               icon="person-outline"

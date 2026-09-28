@@ -1,9 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as AppleAuthentication from "expo-apple-authentication";
 import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 import type { Session } from "@supabase/supabase-js";
 
+import { clipRechteNeuLaden } from "./clips-server";
 import { serverVerbunden, supabase } from "./supabase";
 
 /**
@@ -23,9 +26,28 @@ export type Profil = {
   bundesland: string | null;
   elo: number;
   bild_pfad: string | null;
+  /** Fahrschüler oder Fahrlehrer – Fahrlehrer dürfen Clips hochladen. */
+  rolle: Rolle;
 };
 
-type Registrierung = { name: string; benutzername: string; email: string; passwort: string; klasse: string; bundesland: string | null };
+export type Rolle = "schueler" | "fahrlehrer";
+
+type Registrierung = {
+  rolle: Rolle;
+  vorname: string;
+  nachname: string;
+  benutzername: string;
+  telefon: string | null;
+  /** ISO-Datum (JJJJ-MM-TT) oder null. */
+  geburtsdatum: string | null;
+  email: string;
+  passwort: string;
+  klasse: string;
+  bundesland: string | null;
+};
+
+/** Ergebnis von „Mit Google/Apple anmelden“. */
+export type SozialErgebnis = { fehler?: string; abgebrochen?: boolean };
 
 type KontoKontext = {
   laedt: boolean;
@@ -35,7 +57,11 @@ type KontoKontext = {
   drin: boolean;
   anzeigeName: string;
   registrieren: (d: Registrierung) => Promise<{ fehler?: string; bestaetigen?: boolean }>;
-  anmelden: (email: string, passwort: string) => Promise<string | null>;
+  /** Anmelden mit E-Mail oder Benutzername. */
+  anmelden: (kennung: string, passwort: string) => Promise<string | null>;
+  mitGoogle: (rolle?: Rolle) => Promise<SozialErgebnis>;
+  mitApple: (rolle?: Rolle) => Promise<SozialErgebnis>;
+  rolleSetzen: (rolle: Rolle) => Promise<string | null>;
   passwortVergessen: (email: string) => Promise<string | null>;
   passwortAendern: (neu: string) => Promise<string | null>;
   abmelden: () => Promise<void>;
@@ -69,7 +95,20 @@ function fehlerText(meldung: string): string {
   if (/valid email|invalid email/i.test(meldung)) return "Bitte gib eine gültige E-Mail-Adresse ein.";
   if (/network|fetch/i.test(meldung)) return "Keine Verbindung. Bitte prüfe dein Internet.";
   if (/rate limit/i.test(meldung)) return "Zu viele Versuche. Bitte warte kurz.";
+  if (/provider is not enabled|unsupported provider/i.test(meldung)) return "Diese Anmeldung ist auf dem Server noch nicht eingeschaltet.";
   return meldung;
+}
+
+/** Tokens aus einem Rückkehr-Link (…#access_token=…&refresh_token=…) lesen. */
+function tokensAus(url: string): { access_token: string; refresh_token: string; type: string | null; fehler: string | null } | null {
+  const teil = url.includes("#") ? url.slice(url.indexOf("#") + 1) : url.includes("?") ? url.slice(url.indexOf("?") + 1) : "";
+  if (!teil) return null;
+  const p = new URLSearchParams(teil);
+  const fehler = p.get("error_description");
+  const access_token = p.get("access_token");
+  const refresh_token = p.get("refresh_token");
+  if (!fehler && (!access_token || !refresh_token)) return null;
+  return { access_token: access_token ?? "", refresh_token: refresh_token ?? "", type: p.get("type"), fehler: fehler ? fehler.replace(/\+/g, " ") : null };
 }
 
 export function KontoProvider({ children }: { children: ReactNode }) {
@@ -85,14 +124,19 @@ export function KontoProvider({ children }: { children: ReactNode }) {
       return;
     }
     const spalten = "id, name, benutzername, klasse, avatar_farbe, xp, xp_woche, bundesland, elo";
-    const mitBild = await supabase.from("lern_profil").select(`${spalten}, bild_pfad`).eq("id", s.user.id).maybeSingle<Profil>();
-    if (!mitBild.error) {
-      setProfil(mitBild.data ?? null);
+    const voll = await supabase.from("lern_profil").select(`${spalten}, bild_pfad, rolle`).eq("id", s.user.id).maybeSingle<Profil>();
+    if (!voll.error) {
+      setProfil(voll.data ? { ...voll.data, rolle: voll.data.rolle === "fahrlehrer" ? "fahrlehrer" : "schueler" } : null);
       return;
     }
-    // Älteres Schema ohne Profilbild-Spalte: trotzdem das Profil laden.
-    const { data } = await supabase.from("lern_profil").select(spalten).eq("id", s.user.id).maybeSingle<Omit<Profil, "bild_pfad">>();
-    setProfil(data ? { ...data, bild_pfad: null } : null);
+    // Älteres Schema ohne Rolle oder Profilbild: trotzdem das Profil laden.
+    const mitBild = await supabase.from("lern_profil").select(`${spalten}, bild_pfad`).eq("id", s.user.id).maybeSingle<Omit<Profil, "rolle">>();
+    if (!mitBild.error) {
+      setProfil(mitBild.data ? { ...mitBild.data, rolle: "schueler" } : null);
+      return;
+    }
+    const { data } = await supabase.from("lern_profil").select(spalten).eq("id", s.user.id).maybeSingle<Omit<Profil, "bild_pfad" | "rolle">>();
+    setProfil(data ? { ...data, bild_pfad: null, rolle: "schueler" } : null);
   }, []);
 
   useEffect(() => {
@@ -132,7 +176,17 @@ export function KontoProvider({ children }: { children: ReactNode }) {
       password: d.passwort,
       options: {
         emailRedirectTo: APP_LINK,
-        data: { name: d.name.trim(), benutzername: d.benutzername.trim().toLowerCase(), klasse: d.klasse, bundesland: d.bundesland },
+        // Telefon, Nachname und Geburtsdatum bleiben privat im Konto (nicht im öffentlichen Profil).
+        data: {
+          name: d.vorname.trim(),
+          nachname: d.nachname.trim(),
+          benutzername: d.benutzername.trim().toLowerCase(),
+          rolle: d.rolle,
+          telefon: d.telefon,
+          geburtsdatum: d.geburtsdatum,
+          klasse: d.klasse,
+          bundesland: d.bundesland,
+        },
       },
     });
     if (error) return { fehler: fehlerText(error.message) };
@@ -146,14 +200,84 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     return {};
   }, []);
 
-  const anmelden = useCallback(async (adresse: string, passwort: string) => {
+  const anmelden = useCallback(async (kennung: string, passwort: string) => {
     if (!serverVerbunden) return "Die App ist noch mit keinem Server verbunden.";
+    let adresse = kennung.trim();
+    if (!adresse.includes("@") || adresse.startsWith("@")) {
+      // Benutzername: Der Server gibt die E-Mail nur heraus, wenn das Passwort stimmt.
+      const { data, error } = await supabase.rpc("lern_anmelde_email", { p_benutzername: adresse, p_passwort: passwort });
+      if (error) {
+        if (/lern_anmelde_email|schema cache|function/i.test(error.message)) return "Anmelden mit Benutzername ist noch nicht eingerichtet – bitte mit deiner E-Mail anmelden.";
+        return fehlerText(error.message);
+      }
+      if (!data) return "Benutzername oder Passwort stimmt nicht.";
+      adresse = String(data);
+    }
     const { error } = await supabase.auth.signInWithPassword({ email: email(adresse), password: passwort });
     if (error) return fehlerText(error.message);
     await AsyncStorage.removeItem(GAST).catch(() => {});
     setGastName(null);
     return null;
   }, []);
+
+  /** Nach Google/Apple: Gastmodus beenden und – wenn gewählt – als Fahrlehrer eintragen. */
+  const nachSozialAnmeldung = useCallback(async (rolle?: Rolle) => {
+    await AsyncStorage.removeItem(GAST).catch(() => {});
+    setGastName(null);
+    if (rolle === "fahrlehrer") {
+      await supabase.rpc("lern_rolle_setzen", { p_rolle: "fahrlehrer" });
+      clipRechteNeuLaden();
+    }
+  }, []);
+
+  const mitGoogle = useCallback(
+    async (rolle?: Rolle): Promise<SozialErgebnis> => {
+      if (!serverVerbunden) return { fehler: "Die App ist noch mit keinem Server verbunden." };
+      const ziel = Linking.createURL("auth-callback");
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: ziel, skipBrowserRedirect: true, queryParams: { prompt: "select_account" } },
+      });
+      if (error || !data?.url) return { fehler: fehlerText(error?.message ?? "Google-Anmeldung konnte nicht starten.") };
+      const antwort = await WebBrowser.openAuthSessionAsync(data.url, ziel);
+      if (antwort.type !== "success") return { abgebrochen: true };
+      const t = tokensAus(antwort.url);
+      if (!t) return { fehler: "Google hat keine Anmeldung zurückgegeben. Bitte versuch es noch einmal." };
+      if (t.fehler) return { fehler: t.fehler };
+      const { error: fehler } = await supabase.auth.setSession({ access_token: t.access_token, refresh_token: t.refresh_token });
+      if (fehler) return { fehler: fehlerText(fehler.message) };
+      await nachSozialAnmeldung(rolle);
+      return {};
+    },
+    [nachSozialAnmeldung],
+  );
+
+  const mitApple = useCallback(
+    async (rolle?: Rolle): Promise<SozialErgebnis> => {
+      if (!serverVerbunden) return { fehler: "Die App ist noch mit keinem Server verbunden." };
+      if (Platform.OS !== "ios") return { fehler: "Mit Apple anmelden geht auf dem iPhone." };
+      try {
+        const cred = await AppleAuthentication.signInAsync({
+          requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
+        });
+        if (!cred.identityToken) return { fehler: "Apple hat keine Anmeldung zurückgegeben." };
+        const { data, error } = await supabase.auth.signInWithIdToken({ provider: "apple", token: cred.identityToken });
+        if (error) return { fehler: fehlerText(error.message) };
+        // Den Namen gibt Apple nur beim allerersten Mal heraus – dann gleich übernehmen.
+        const vorname = cred.fullName?.givenName?.trim();
+        if (vorname && data.user) {
+          await supabase.auth.updateUser({ data: { name: vorname, nachname: cred.fullName?.familyName?.trim() ?? null } });
+          await supabase.from("lern_profil").update({ name: vorname }).eq("id", data.user.id);
+        }
+        await nachSozialAnmeldung(rolle);
+        return {};
+      } catch (e) {
+        if ((e as { code?: string }).code === "ERR_REQUEST_CANCELED") return { abgebrochen: true };
+        return { fehler: "Die Anmeldung mit Apple hat nicht geklappt. Bitte versuch es noch einmal." };
+      }
+    },
+    [nachSozialAnmeldung],
+  );
 
   const passwortVergessen = useCallback(async (adresse: string) => {
     if (!serverVerbunden) return "Die App ist noch mit keinem Server verbunden.";
@@ -206,15 +330,13 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     if (!serverVerbunden) return;
     async function verarbeiten(url: string | null) {
       if (!url || !url.includes("#")) return;
-      const p = new URLSearchParams(url.slice(url.indexOf("#") + 1));
-      const fehler = p.get("error_description");
-      if (fehler) {
-        Alert.alert("Link abgelaufen", `${fehler.replace(/\+/g, " ")}\n\nFordere einfach einen neuen an.`);
+      const t = tokensAus(url);
+      if (!t) return;
+      if (t.fehler) {
+        Alert.alert("Link abgelaufen", `${t.fehler}\n\nFordere einfach einen neuen an.`);
         return;
       }
-      const access_token = p.get("access_token");
-      const refresh_token = p.get("refresh_token");
-      if (!access_token || !refresh_token) return;
+      const { access_token, refresh_token } = t;
       const { error } = await supabase.auth.setSession({ access_token, refresh_token });
       if (error) {
         Alert.alert("Anmeldung fehlgeschlagen", fehlerText(error.message));
@@ -222,12 +344,24 @@ export function KontoProvider({ children }: { children: ReactNode }) {
       }
       await AsyncStorage.removeItem(GAST).catch(() => {});
       setGastName(null);
-      if (p.get("type") === "recovery") setPasswortNeuFaellig(true);
+      if (t.type === "recovery") setPasswortNeuFaellig(true);
     }
     Linking.getInitialURL().then(verarbeiten);
     const abo = Linking.addEventListener("url", ({ url }) => verarbeiten(url));
     return () => abo.remove();
   }, []);
+
+  const rolleSetzen = useCallback(
+    async (rolle: Rolle) => {
+      if (!session) return "Bitte melde dich an.";
+      const { error } = await supabase.rpc("lern_rolle_setzen", { p_rolle: rolle });
+      if (error) return /lern_rolle_setzen|schema cache|function/i.test(error.message) ? "Das geht erst, wenn der Server aktualisiert ist." : fehlerText(error.message);
+      await profilLaden(session);
+      clipRechteNeuLaden();
+      return null;
+    },
+    [session, profilLaden],
+  );
 
   const benutzernameAendern = useCallback(
     async (neu: string) => {
@@ -251,6 +385,9 @@ export function KontoProvider({ children }: { children: ReactNode }) {
       anzeigeName: profil?.name || gastName || session?.user.email?.split("@")[0] || "Du",
       registrieren,
       anmelden,
+      mitGoogle,
+      mitApple,
+      rolleSetzen,
       passwortVergessen,
       passwortAendern,
       abmelden,
@@ -262,7 +399,26 @@ export function KontoProvider({ children }: { children: ReactNode }) {
       passwortNeuFaellig,
       passwortNeuErledigt: () => setPasswortNeuFaellig(false),
     };
-  }, [laedt, session, profil, gastName, registrieren, anmelden, passwortVergessen, passwortAendern, abmelden, alsGast, profilSpeichern, benutzernameFrei, benutzernameAendern, profilLaden, passwortNeuFaellig]);
+  }, [
+    laedt,
+    session,
+    profil,
+    gastName,
+    registrieren,
+    anmelden,
+    mitGoogle,
+    mitApple,
+    rolleSetzen,
+    passwortVergessen,
+    passwortAendern,
+    abmelden,
+    alsGast,
+    profilSpeichern,
+    benutzernameFrei,
+    benutzernameAendern,
+    profilLaden,
+    passwortNeuFaellig,
+  ]);
 
   return <Kontext.Provider value={wert}>{children}</Kontext.Provider>;
 }

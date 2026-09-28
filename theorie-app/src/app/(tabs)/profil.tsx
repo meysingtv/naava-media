@@ -135,7 +135,7 @@ export default function Profil() {
               {anzeigeName}
             </Text>
             <Text style={{ ...schrift.text, fontSize: 14, color: "#AEB3BA", marginTop: 2 }} numberOfLines={1}>
-              {profil ? `@${profil.benutzername}` : gast ? "Gastmodus" : session?.user.email ?? ""} · Klasse {stand.klasse}
+              {profil ? `@${profil.benutzername}` : gast ? "Gastmodus" : session?.user.email ?? ""} · {profil?.rolle === "fahrlehrer" ? "Fahrlehrer" : `Klasse ${stand.klasse}`}
             </Text>
           </View>
         </View>

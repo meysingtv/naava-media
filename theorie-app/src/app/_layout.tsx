@@ -102,6 +102,7 @@ function Navigation() {
         {/* Registrieren und Anmelden gehen auch aus dem Gastmodus heraus */}
         <Stack.Screen name="registrieren" />
         <Stack.Screen name="anmelden" />
+        <Stack.Screen name="auth-callback" options={{ animation: "none" }} />
         <Stack.Screen name="passwort-neu" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
         <Stack.Protected guard={!drin}>
           <Stack.Screen name="willkommen" options={{ animation: "fade" }} />
