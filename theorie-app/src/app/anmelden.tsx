@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
 import { router } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AuthRahmen, Feld, PasswortFeld, Wechsel } from "@/components/auth-rahmen";
 import { Icon } from "@/components/icon";
 import { Oder, SozialAnmeldung } from "@/components/sozial-anmeldung";
-import { Eingabe, Knopf, Kopf, PasswortEingabe, T } from "@/components/ui";
-import { tippen } from "@/lib/haptik";
+import { Knopf, T } from "@/components/ui";
+import { FOTOS } from "@/lib/fotos";
 import { useKonto } from "@/lib/konto";
 import { serverVerbunden } from "@/lib/supabase";
-import { abstand, farben, RAND, schrift } from "@/lib/theme";
+import { abstand, farben, schrift } from "@/lib/theme";
 
 export default function Anmelden() {
-  const insets = useSafeAreaInsets();
   const { anmelden, passwortVergessen, gast, session } = useKonto();
   // Kam man aus dem Gastmodus (z. B. von den Clips), geht es danach dorthin zurück.
   const [ausGastmodus] = useState(gast);
@@ -52,65 +51,49 @@ export default function Anmelden() {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: farben.grund }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <Kopf />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(4), paddingBottom: insets.bottom + abstand(8), gap: abstand(4) }} keyboardShouldPersistTaps="handled">
-        {!serverVerbunden ? (
-          <View style={{ flexDirection: "row", gap: abstand(2), padding: abstand(3.5), borderRadius: 14, backgroundColor: farben.gelbSoft }}>
-            <Icon name="cloud-offline-outline" size={18} color={farben.gelb} />
-            <T v="klein" farbe={farben.gelb} style={{ flex: 1 }}>
-              Die App ist noch mit keinem Server verbunden. Anmelden klappt erst danach.
-            </T>
-          </View>
-        ) : null}
-        <T v="titel">Willkommen zurück.</T>
-        <T v="text">Melde dich an und mach da weiter, wo du aufgehört hast.</T>
-        <View style={{ gap: abstand(3), marginTop: abstand(2) }}>
-          <Eingabe
-            icon="mail-outline"
-            value={kennung}
-            onChangeText={setKennung}
-            placeholder="E-Mail oder Benutzername"
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            textContentType="username"
-            autoComplete="username"
-          />
-          <PasswortEingabe value={passwort} onChangeText={setPasswort} placeholder="Passwort" returnKeyType="go" onSubmitEditing={los} />
+    <AuthRahmen foto={FOTOS.autobahn} titel="Anmelden" unter="Willkommen zurück! Mach da weiter, wo du aufgehört hast.">
+      {!serverVerbunden ? (
+        <View style={{ flexDirection: "row", gap: abstand(2), padding: abstand(3.5), borderRadius: 14, backgroundColor: farben.gelbSoft }}>
+          <Icon name="cloud-offline-outline" size={18} color={farben.gelb} />
+          <T v="klein" farbe={farben.gelb} style={{ flex: 1 }}>
+            Die App ist noch mit keinem Server verbunden. Anmelden klappt erst danach.
+          </T>
         </View>
-        {fehler ? (
-          <T v="klein" farbe={farben.rot} style={{ ...schrift.textHalb }}>
-            {fehler}
-          </T>
-        ) : null}
-        <Knopf titel="Anmelden" laedt={laedt} deaktiviert={!kennung.trim() || !passwort} onPress={los} />
-        <Pressable onPress={vergessen} hitSlop={8} style={{ alignSelf: "center", paddingVertical: abstand(2) }}>
-          <T v="klein" farbe={farben.text2} style={{ ...schrift.textHalb }}>
-            Passwort vergessen?
-          </T>
-        </Pressable>
+      ) : null}
 
-        <Oder />
-        <SozialAnmeldung onAngemeldet={() => setFertig(true)} onFehler={setFehler} />
+      <View style={{ gap: abstand(5), marginTop: abstand(2) }}>
+        <Feld
+          label="E-Mail oder Benutzername"
+          icon="person-outline"
+          value={kennung}
+          onChangeText={setKennung}
+          placeholder="name@beispiel.de oder @name"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          textContentType="username"
+          autoComplete="username"
+          returnKeyType="next"
+        />
+        <PasswortFeld label="Passwort" value={passwort} onChangeText={setPasswort} placeholder="Dein Passwort" returnKeyType="go" onSubmitEditing={los} />
+      </View>
+      <Pressable onPress={vergessen} hitSlop={8} style={{ alignSelf: "flex-end", marginTop: -abstand(1) }}>
+        <T v="klein" farbe={farben.orange} style={{ ...schrift.textHalb, fontSize: 14 }}>
+          Passwort vergessen?
+        </T>
+      </Pressable>
 
-        <View style={{ flexDirection: "row", justifyContent: "center", gap: 6, paddingVertical: abstand(2) }}>
-          <T v="klein" style={{ fontSize: 14 }}>
-            Noch kein Konto?
-          </T>
-          <Pressable
-            onPress={() => {
-              tippen();
-              router.replace("/registrieren");
-            }}
-            hitSlop={8}
-          >
-            <T v="klein" farbe={farben.orange} style={{ ...schrift.textHalb, fontSize: 14 }}>
-              Registrieren
-            </T>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      {fehler ? (
+        <T v="klein" farbe={farben.rot} style={{ ...schrift.textHalb }}>
+          {fehler}
+        </T>
+      ) : null}
+
+      <Knopf titel="Anmelden" icon="arrow-forward" laedt={laedt} deaktiviert={!kennung.trim() || !passwort} onPress={los} style={{ marginTop: abstand(1) }} />
+      <Wechsel frage="Kein Konto?" aktion="Registrieren" onPress={() => router.replace("/registrieren")} />
+
+      <Oder />
+      <SozialAnmeldung onAngemeldet={() => setFertig(true)} onFehler={setFehler} />
+    </AuthRahmen>
   );
 }

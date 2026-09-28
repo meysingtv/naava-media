@@ -218,9 +218,7 @@ export default function Einstellungen() {
                     />
                   ))}
                 </View>
-                <T v="klein" style={{ marginBottom: abstand(2) }}>
-                  {profil.rolle === "fahrlehrer" ? "Als Fahrlehrer kannst du im Clips-Tab Videos hochladen." : "Fahrlehrer können im Clips-Tab eigene Videos hochladen."}
-                </T>
+                <View style={{ height: abstand(2) }} />
               </>
             ) : null}
             <T v="klein">Name – so begrüßt dich die App</T>

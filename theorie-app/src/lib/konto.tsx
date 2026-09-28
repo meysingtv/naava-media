@@ -230,19 +230,21 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const mitGoogle = useCallback(
-    async (rolle?: Rolle): Promise<SozialErgebnis> => {
+  /** Anmeldung über die Seite des Anbieters im Browser (Google, Apple außerhalb des iPhones). */
+  const imBrowser = useCallback(
+    async (anbieter: "google" | "apple", rolle?: Rolle): Promise<SozialErgebnis> => {
       if (!serverVerbunden) return { fehler: "Die App ist noch mit keinem Server verbunden." };
+      const name = anbieter === "google" ? "Google" : "Apple";
       const ziel = Linking.createURL("auth-callback");
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: ziel, skipBrowserRedirect: true, queryParams: { prompt: "select_account" } },
+        provider: anbieter,
+        options: { redirectTo: ziel, skipBrowserRedirect: true, queryParams: anbieter === "google" ? { prompt: "select_account" } : undefined },
       });
-      if (error || !data?.url) return { fehler: fehlerText(error?.message ?? "Google-Anmeldung konnte nicht starten.") };
+      if (error || !data?.url) return { fehler: fehlerText(error?.message ?? `${name}-Anmeldung konnte nicht starten.`) };
       const antwort = await WebBrowser.openAuthSessionAsync(data.url, ziel);
       if (antwort.type !== "success") return { abgebrochen: true };
       const t = tokensAus(antwort.url);
-      if (!t) return { fehler: "Google hat keine Anmeldung zurückgegeben. Bitte versuch es noch einmal." };
+      if (!t) return { fehler: `${name} hat keine Anmeldung zurückgegeben. Bitte versuch es noch einmal.` };
       if (t.fehler) return { fehler: t.fehler };
       const { error: fehler } = await supabase.auth.setSession({ access_token: t.access_token, refresh_token: t.refresh_token });
       if (fehler) return { fehler: fehlerText(fehler.message) };
@@ -252,10 +254,14 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     [nachSozialAnmeldung],
   );
 
+  const mitGoogle = useCallback((rolle?: Rolle) => imBrowser("google", rolle), [imBrowser]);
+
   const mitApple = useCallback(
     async (rolle?: Rolle): Promise<SozialErgebnis> => {
       if (!serverVerbunden) return { fehler: "Die App ist noch mit keinem Server verbunden." };
-      if (Platform.OS !== "ios") return { fehler: "Mit Apple anmelden geht auf dem iPhone." };
+      // Auf dem iPhone mit Apples eigener Anmeldung, sonst über die Apple-Seite im Browser.
+      const nativ = Platform.OS === "ios" && (await AppleAuthentication.isAvailableAsync().catch(() => false));
+      if (!nativ) return imBrowser("apple", rolle);
       try {
         const cred = await AppleAuthentication.signInAsync({
           requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
@@ -276,7 +282,7 @@ export function KontoProvider({ children }: { children: ReactNode }) {
         return { fehler: "Die Anmeldung mit Apple hat nicht geklappt. Bitte versuch es noch einmal." };
       }
     },
-    [nachSozialAnmeldung],
+    [nachSozialAnmeldung, imBrowser],
   );
 
   const passwortVergessen = useCallback(async (adresse: string) => {

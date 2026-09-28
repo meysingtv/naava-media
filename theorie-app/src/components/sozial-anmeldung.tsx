@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, Text, View } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
+import { Ionicons } from "@expo/vector-icons";
 import Svg, { Path } from "react-native-svg";
 
 import { T } from "@/components/ui";
@@ -38,19 +39,20 @@ export function Oder() {
 }
 
 /**
- * „Mit Google anmelden“ und „Mit Apple anmelden“ (Apple nur auf dem iPhone,
- * mit Apples eigenem Knopf). Neue Konten bekommen die gewählte Rolle.
+ * „Mit Google anmelden“ und „Mit Apple anmelden“ – Apple auf dem iPhone mit
+ * Apples eigenem Knopf, sonst über die Apple-Seite im Browser. Neue Konten
+ * bekommen die gewählte Rolle.
  */
 export function SozialAnmeldung({ rolle, onAngemeldet, onFehler }: { rolle?: Rolle; onAngemeldet: () => void; onFehler: (f: string | null) => void }) {
   const { mitGoogle, mitApple } = useKonto();
-  const [apple, setApple] = useState(false);
+  const [appleNativ, setAppleNativ] = useState(false);
   const [laeuft, setLaeuft] = useState<"google" | "apple" | null>(null);
 
   useEffect(() => {
     if (Platform.OS !== "ios") return;
     AppleAuthentication.isAvailableAsync()
-      .then(setApple)
-      .catch(() => setApple(false));
+      .then(setAppleNativ)
+      .catch(() => setAppleNativ(false));
   }, []);
 
   async function los(art: "google" | "apple") {
@@ -77,8 +79,8 @@ export function SozialAnmeldung({ rolle, onAngemeldet, onFehler }: { rolle?: Rol
         accessibilityRole="button"
         accessibilityLabel="Mit Google anmelden"
         style={({ pressed }) => ({
-          height: 52,
-          borderRadius: 14,
+          height: 54,
+          borderRadius: 16,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "center",
@@ -98,17 +100,47 @@ export function SozialAnmeldung({ rolle, onAngemeldet, onFehler }: { rolle?: Rol
           </>
         )}
       </Pressable>
-      {apple ? (
-        <View style={{ height: 52, borderRadius: 14, borderWidth: 1, borderColor: RAHMEN, overflow: "hidden", opacity: laeuft === "apple" ? 0.6 : 1 }}>
+      {appleNativ ? (
+        <View style={{ height: 54, borderRadius: 16, borderWidth: 1, borderColor: RAHMEN, overflow: "hidden", opacity: laeuft === "apple" ? 0.6 : 1 }}>
           <AppleAuthentication.AppleAuthenticationButton
             buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
             buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-            cornerRadius={13}
+            cornerRadius={15}
             style={{ flex: 1, width: "100%" }}
             onPress={() => los("apple")}
           />
         </View>
-      ) : null}
+      ) : (
+        <Pressable
+          onPress={() => {
+            tippen();
+            los("apple");
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Mit Apple anmelden"
+          style={({ pressed }) => ({
+            height: 54,
+            borderRadius: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            backgroundColor: "#000000",
+            borderWidth: 1,
+            borderColor: RAHMEN,
+            opacity: pressed ? 0.8 : 1,
+          })}
+        >
+          {laeuft === "apple" ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <>
+              <Ionicons name="logo-apple" size={21} color="#FFFFFF" style={{ marginTop: -2 }} />
+              <Text style={{ ...schrift.textHalb, fontSize: 16.5, color: "#FFFFFF" }}>Mit Apple anmelden</Text>
+            </>
+          )}
+        </Pressable>
+      )}
     </View>
   );
 }
