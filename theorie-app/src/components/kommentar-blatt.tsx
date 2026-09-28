@@ -17,7 +17,7 @@ import {
   type Kommentar,
 } from "@/lib/clips-server";
 import { stoss, tippen } from "@/lib/haptik";
-import { DUNKEL as farben, schrift } from "@/lib/theme";
+import { farben, schrift } from "@/lib/theme";
 
 const BLATT = "#121518";
 /** Ab so vielen Antworten erst auf Tippen aufklappen. */

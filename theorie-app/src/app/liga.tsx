@@ -4,7 +4,7 @@ import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Abschnitt, Avatar, Chip, Eingabe, getoent, Gruppe, Karte, Knopf, kopfOben, KopfTaste, Segment, T, Zeile, zurueck } from "@/components/ui";
+import { Abschnitt, Avatar, Chip, Eingabe, Gruppe, Karte, Knopf, kopfOben, KopfTaste, Segment, T, Zeile, zurueck } from "@/components/ui";
 import { GEGNER } from "@/lib/duell";
 import { tausender } from "@/lib/format";
 import { tippen } from "@/lib/haptik";
@@ -17,10 +17,7 @@ import { abstand, farben, radius, RAND, schrift } from "@/lib/theme";
 
 type Ansicht = "rangliste" | "duell";
 
-/** Farben für Platz 1–3 (Gold ist unser Orange). */
-function podest(platz: number): string {
-  return [farben.orange, farben.hell ? "#8A93A3" : "#C7CDDA", farben.hell ? "#A0703F" : "#B98A5E"][platz - 1];
-}
+const PODEST = [farben.orange, "#C7CDDA", "#B98A5E"];
 
 function Rangzeile({ e }: { e: RangEintrag }) {
   return (
@@ -37,10 +34,10 @@ function Rangzeile({ e }: { e: RangEintrag }) {
         borderColor: e.ich ? farben.orangeLinie : "transparent",
       }}
     >
-      <T v="h3" farbe={e.platz <= 3 ? podest(e.platz) : farben.text3} style={{ width: 26, fontVariant: ["tabular-nums"] }}>
+      <T v="h3" farbe={e.platz <= 3 ? PODEST[e.platz - 1] : farben.text3} style={{ width: 26, fontVariant: ["tabular-nums"] }}>
         {e.platz}
       </T>
-      <Avatar name={e.name} groesse={36} farbe={e.platz <= 3 ? podest(e.platz) : farben.linieStark} />
+      <Avatar name={e.name} groesse={36} farbe={e.platz <= 3 ? PODEST[e.platz - 1] : farben.linieStark} />
       <View style={{ flex: 1 }}>
         <T v="textStark" numberOfLines={1}>
           {e.ich ? `${e.name} (du)` : e.name}
@@ -150,7 +147,7 @@ export default function Liga() {
             Rangliste
           </T>
         </View>
-        <KopfTaste icon="chevron-back" label="Zurück" onPress={zurueck} />
+        <KopfTaste icon="arrow-back" label="Zurück" onPress={zurueck} />
         <Pressable
           onPress={() => {
             tippen();
@@ -177,7 +174,7 @@ export default function Liga() {
         <>
           <Karte style={{ gap: abstand(4) }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(3.5) }}>
-              <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: getoent(liga.farbe, 0.16), alignItems: "center", justifyContent: "center" }}>
+              <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: liga.farbe + "22", alignItems: "center", justifyContent: "center" }}>
                 <Icon name="trail-sign" size={22} color={liga.farbe} />
               </View>
               <View style={{ flex: 1, gap: 2 }}>

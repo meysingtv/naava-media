@@ -197,7 +197,7 @@ export default function Training() {
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <KopfKnopf icon="close" label="Training beenden" onPress={schliessen} />
           <View style={{ flex: 1, alignItems: "center", gap: 5 }}>
-            <Text style={{ ...schrift.titelFett, fontSize: 17, color: farben.text, fontVariant: ["tabular-nums"] }}>
+            <Text style={{ ...schrift.titelFett, fontSize: 17, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>
               Frage {index + 1}/{ids.length}
             </Text>
             <View
@@ -210,10 +210,12 @@ export default function Training() {
                 paddingHorizontal: 10,
                 borderRadius: 12,
                 backgroundColor: farben.orangeSoft,
+                borderWidth: 1,
+                borderColor: "rgba(252,91,14,0.35)",
               }}
             >
-              <Icon name={themaVon(frage.thema).icon as IconName} size={12} color={farben.orangeText} />
-              <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 12, color: farben.orangeText, flexShrink: 1 }}>
+              <Icon name={themaVon(frage.thema).icon as IconName} size={12} color={farben.orange} />
+              <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 12, color: farben.orange, flexShrink: 1 }}>
                 {themaVon(frage.thema).titel}
               </Text>
             </View>
@@ -226,13 +228,17 @@ export default function Training() {
             onPress={() => merken(frage.id)}
           />
         </View>
-        <View style={{ height: 5, borderRadius: 3, backgroundColor: farben.flaeche2 }}>
+        <View style={{ height: 5, borderRadius: 3, backgroundColor: "#1C232B" }}>
           <View
             style={{
               width: `${Math.max(3, ((index + (aufgedeckt ? 1 : 0)) / ids.length) * 100)}%`,
               height: "100%",
               borderRadius: 3,
-              backgroundColor: farben.orange,
+              backgroundColor: farben.orangeHell,
+              shadowColor: farben.orangeHell,
+              shadowOpacity: 0.7,
+              shadowRadius: 6,
+              shadowOffset: { width: 0, height: 0 },
             }}
           />
         </View>
@@ -263,14 +269,16 @@ export default function Training() {
             style={({ pressed }) => ({
               width: 54,
               height: 54,
-              borderRadius: 14,
+              borderRadius: 17,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: farben.flaeche2,
+              backgroundColor: "#1F262E",
+              borderWidth: 1,
+              borderColor: "rgba(255,255,255,0.1)",
               opacity: pressed ? 0.8 : 1,
             })}
           >
-            <Icon name="flag-outline" sf="flag" size={21} color={farben.text2} />
+            <Icon name="flag-outline" sf="flag" size={22} color="#E6E8EB" />
           </Pressable>
           {aufgedeckt ? (
             <Knopf titel={letzte ? "Auswertung" : "Nächste Frage"} icon="arrow-forward" onPress={weiter} style={{ flex: 1, height: 54 }} />

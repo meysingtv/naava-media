@@ -5,7 +5,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Chip, Knopf, KopfTaste, Plakette, T, zurueck, getoent } from "@/components/ui";
+import { Chip, Knopf, KopfTaste, Plakette, T, zurueck } from "@/components/ui";
 import { ClipBild } from "@/components/clip-bild";
 import { CLIPS, type Clip } from "@/lib/clips";
 import { stoss, tippen } from "@/lib/haptik";
@@ -62,9 +62,9 @@ function Aktion({ icon, aktiv, farbe, text, onPress, label }: { icon: keyof type
         alignItems: "center",
         justifyContent: "center",
         gap: 5,
-        backgroundColor: aktiv ? getoent(farbe ?? farben.orange, 0.14) : farben.flaeche2,
+        backgroundColor: aktiv ? (farbe ?? farben.orange) + "22" : farben.flaeche2,
         borderWidth: 1,
-        borderColor: aktiv ? getoent(farbe ?? farben.orange, 0.4) : "transparent",
+        borderColor: aktiv ? (farbe ?? farben.orange) + "66" : farben.linie,
         opacity: pressed ? 0.8 : 1,
       })}
     >
@@ -185,7 +185,7 @@ export default function KurzErklaert() {
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund, paddingTop: insets.top + abstand(1.5), paddingBottom: insets.bottom }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(2), paddingHorizontal: RAND - 8, paddingBottom: abstand(3) }}>
-        <KopfTaste icon="chevron-back" label="Zurück" onPress={zurueck} />
+        <KopfTaste icon="arrow-back" label="Zurück" onPress={zurueck} />
         <View style={{ flex: 1 }}>
           <T v="h3" style={{ fontSize: 19 }}>
             Kurz erklärt

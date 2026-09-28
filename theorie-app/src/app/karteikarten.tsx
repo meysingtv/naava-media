@@ -1,4 +1,5 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -13,8 +14,8 @@ import { farben, schrift } from "@/lib/theme";
 function Wert({ wert, label }: { wert: string; label: string }) {
   return (
     <View style={{ flex: 1, alignItems: "center", paddingVertical: 12 }}>
-      <Text style={{ ...schrift.titelFett, fontSize: 20, color: farben.text, fontVariant: ["tabular-nums"] }}>{wert}</Text>
-      <Text style={{ ...schrift.text, fontSize: 13, color: farben.text3, marginTop: 2 }}>{label}</Text>
+      <Text style={{ ...schrift.titelFett, fontSize: 20, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{wert}</Text>
+      <Text style={{ ...schrift.text, fontSize: 13, color: "#AEB3BA", marginTop: 2 }}>{label}</Text>
     </View>
   );
 }
@@ -32,24 +33,24 @@ function StapelZeile({ stapel }: { stapel: Stapel }) {
     >
       <StapelSymbol id={stapel.id} />
       <View style={{ flex: 1, gap: 3 }}>
-        <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 16, color: farben.text }}>
+        <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 16, color: "#FFFFFF" }}>
           {stapel.titel}
         </Text>
         <Text numberOfLines={1} style={{ ...schrift.text, fontSize: 13, color: farben.text3 }}>
           {leer ? "Noch leer – schreib deine erste Karte" : stapel.unter}
         </Text>
         {!leer ? (
-          <View style={{ height: 4, borderRadius: 2, backgroundColor: farben.flaeche3, overflow: "hidden", marginTop: 4, marginRight: 8 }}>
+          <View style={{ height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.1)", overflow: "hidden", marginTop: 4, marginRight: 8 }}>
             <View style={{ width: `${(stapel.sicher / stapel.ids.length) * 100}%`, height: "100%", borderRadius: 2, backgroundColor: farben.gruen }} />
           </View>
         ) : null}
       </View>
       {dran > 0 ? (
         <View style={{ minWidth: 26, height: 26, paddingHorizontal: 7, borderRadius: 13, backgroundColor: farben.orange, alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ ...schrift.textFett, fontSize: 13, color: farben.aufOrange, fontVariant: ["tabular-nums"] }}>{dran}</Text>
+          <Text style={{ ...schrift.textFett, fontSize: 13, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{dran}</Text>
         </View>
       ) : null}
-      <Icon name="chevron-forward" size={16} color={farben.text4} />
+      <Icon name="chevron-forward" size={16} color="#5C626A" />
     </Pressable>
   );
 }
@@ -69,16 +70,22 @@ export default function Karteikarten() {
       <Kopf titel="Karteikarten" rechts={<KopfTaste icon="add" label="Neue Karte schreiben" onPress={() => router.push("/karte-bearbeiten")} />} />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: insets.bottom + 28, gap: 16 }} showsVerticalScrollIndicator={false}>
         {/* Heute dran */}
-        <View style={{ borderRadius: 18, overflow: "hidden", backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie, padding: 16, gap: 16 }}>
+        <View style={{ borderRadius: 20, overflow: "hidden", backgroundColor: farben.flaeche, borderWidth: 1, borderColor: "rgba(252,91,14,0.32)", padding: 16, gap: 16 }}>
+          <LinearGradient
+            colors={["rgba(252,91,14,0.22)", "rgba(252,91,14,0.05)", "rgba(252,91,14,0)"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          />
           <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-            <View style={{ width: 72, height: 72, borderRadius: 20, backgroundColor: farben.flaeche2, alignItems: "center", justifyContent: "center" }}>
+            <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: "rgba(0,0,0,0.3)", alignItems: "center", justifyContent: "center" }}>
               <KartenStapelBild groesse={44} />
             </View>
             <View style={{ flex: 1 }}>
-              <T v="mini" farbe={farben.orangeText}>
+              <T v="mini" farbe={farben.orange}>
                 Heute dran
               </T>
-              <Text style={{ ...schrift.titel, fontSize: 30, lineHeight: 36, color: farben.text, fontVariant: ["tabular-nums"] }}>
+              <Text style={{ ...schrift.titel, fontSize: 30, lineHeight: 36, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>
                 {dran.gesamt} {dran.gesamt === 1 ? "Karte" : "Karten"}
               </Text>
               <Text style={{ ...schrift.text, fontSize: 14, color: farben.text2 }}>
@@ -99,20 +106,20 @@ export default function Karteikarten() {
           ) : null}
         </View>
 
-        <View style={{ flexDirection: "row", borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
+        <View style={{ flexDirection: "row", borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" }}>
           <Wert wert={String(zahlen.eigene)} label="Deine Karten" />
-          <View style={{ width: 1, marginVertical: 12, backgroundColor: farben.linie }} />
+          <View style={{ width: 1, marginVertical: 12, backgroundColor: "rgba(255,255,255,0.08)" }} />
           <Wert wert={String(zahlen.sicher)} label="Sitzen" />
-          <View style={{ width: 1, marginVertical: 12, backgroundColor: farben.linie }} />
+          <View style={{ width: 1, marginVertical: 12, backgroundColor: "rgba(255,255,255,0.08)" }} />
           <Wert wert={`${zeichenBegonnen}/100`} label="Zeichen" />
         </View>
 
         <View>
-          <Text style={{ ...schrift.titelFett, fontSize: 20, color: farben.text, marginBottom: 10 }}>Stapel</Text>
-          <View style={{ borderRadius: 16, overflow: "hidden", backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
+          <Text style={{ ...schrift.titelFett, fontSize: 18, color: "#FFFFFF", marginBottom: 10 }}>Stapel</Text>
+          <View style={{ borderRadius: 16, overflow: "hidden", backgroundColor: farben.flaeche, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" }}>
             {stapel.map((s, i) => (
               <View key={s.id}>
-                {i > 0 ? <View style={{ height: 1, backgroundColor: farben.linie, marginLeft: 72 }} /> : null}
+                {i > 0 ? <View style={{ height: 1, backgroundColor: "rgba(255,255,255,0.06)", marginLeft: 72 }} /> : null}
                 <StapelZeile stapel={s} />
               </View>
             ))}
@@ -120,7 +127,7 @@ export default function Karteikarten() {
         </View>
 
         {zahlen.eigene === 0 ? (
-          <View style={{ flexDirection: "row", gap: 14, padding: 16, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
+          <View style={{ flexDirection: "row", gap: 14, padding: 16, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" }}>
             <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center" }}>
               <Icon name="albums-outline" size={20} color={farben.orange} />
             </View>

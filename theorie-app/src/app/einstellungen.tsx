@@ -1,20 +1,17 @@
 import { useEffect, useState } from "react";
-import { Alert, Linking, Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { Alert, Linking, ScrollView, Switch, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Abschnitt, Chip, Eingabe, Gruppe, Knopf, Kopf, PasswortEingabe, T, Zeile } from "@/components/ui";
 import { Logo } from "@/components/grafik";
-import { Icon } from "@/components/icon";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
 import { useClipRechte } from "@/lib/clips-server";
 import { erinnerungPlanen } from "@/lib/erinnerung";
 import { uhrzeit } from "@/lib/format";
 import { useKonto } from "@/lib/konto";
-import { useErscheinung, type Erscheinung } from "@/lib/erscheinung";
-import { tippen } from "@/lib/haptik";
 import { useStand } from "@/lib/stand";
-import { abstand, DUNKEL, farben, HELL, RAND, schrift, type Palette } from "@/lib/theme";
+import { abstand, farben, RAND } from "@/lib/theme";
 
 const ZIELE = [15, 30, 50, 80];
 const ZEITEN: [number, number][] = [
@@ -25,86 +22,6 @@ const ZEITEN: [number, number][] = [
   [21, 0],
 ];
 const KLASSEN = ["B", "A", "A2", "A1", "AM", "BE"];
-
-/** Kleines Handy-Bild in den Farben eines Schemas. */
-function Vorschau({ p }: { p: Palette }) {
-  return (
-    <View style={{ width: 72, height: 104, padding: 8, gap: 6, backgroundColor: p.grund }}>
-      <View style={{ width: 30, height: 6, borderRadius: 3, backgroundColor: p.text }} />
-      <View style={{ height: 24, borderRadius: 6, backgroundColor: p.flaeche, borderWidth: 1, borderColor: p.linie, padding: 5, gap: 3 }}>
-        <View style={{ width: "70%", height: 4, borderRadius: 2, backgroundColor: p.text3 }} />
-        <View style={{ width: "45%", height: 4, borderRadius: 2, backgroundColor: p.orange }} />
-      </View>
-      <View style={{ height: 18, borderRadius: 6, backgroundColor: p.flaeche, borderWidth: 1, borderColor: p.linie }} />
-      <View style={{ height: 12, borderRadius: 4, backgroundColor: p.orange, marginTop: "auto" }} />
-    </View>
-  );
-}
-
-const ERSCHEINUNGEN: { id: Erscheinung; titel: string }[] = [
-  { id: "dunkel", titel: "Dunkel" },
-  { id: "hell", titel: "Hell" },
-  { id: "system", titel: "Wie iPhone" },
-];
-
-/** Auswahl Dunkel / Hell / wie das iPhone – mit kleinen Vorschau-Bildern. */
-function Darstellung() {
-  const { wahl, waehlen } = useErscheinung();
-  return (
-    <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: abstand(4), paddingHorizontal: abstand(3), borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
-      {ERSCHEINUNGEN.map((e) => {
-        const aktiv = wahl === e.id;
-        return (
-          <Pressable
-            key={e.id}
-            onPress={() => {
-              if (aktiv) return;
-              tippen();
-              waehlen(e.id, ["/profil", "/einstellungen"]);
-            }}
-            accessibilityRole="radio"
-            accessibilityState={{ checked: aktiv }}
-            accessibilityLabel={e.titel}
-            style={{ flex: 1, alignItems: "center", gap: 10 }}
-          >
-            <View
-              style={{
-                borderRadius: 14,
-                overflow: "hidden",
-                borderWidth: 2,
-                borderColor: aktiv ? farben.orange : farben.linieStark,
-              }}
-            >
-              <Vorschau p={e.id === "hell" ? HELL : DUNKEL} />
-              {e.id === "system" ? (
-                <View style={{ position: "absolute", top: 0, bottom: 0, left: 36, width: 36, overflow: "hidden" }}>
-                  <View style={{ marginLeft: -36 }}>
-                    <Vorschau p={HELL} />
-                  </View>
-                </View>
-              ) : null}
-            </View>
-            <Text style={{ ...schrift.textMittel, fontSize: 14, color: farben.text }}>{e.titel}</Text>
-            <View
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: 11,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: aktiv ? farben.orange : "transparent",
-                borderWidth: aktiv ? 0 : 1.5,
-                borderColor: farben.text4,
-              }}
-            >
-              {aktiv ? <Icon name="checkmark" size={14} color={farben.aufOrange} /> : null}
-            </View>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
 
 const SUPPORT = process.env.EXPO_PUBLIC_SUPPORT_EMAIL;
 const DATENSCHUTZ = process.env.EXPO_PUBLIC_DATENSCHUTZ_URL;
@@ -200,15 +117,10 @@ export default function Einstellungen() {
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
       <Kopf titel="Einstellungen" />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: insets.bottom + abstand(10), gap: abstand(7) }} keyboardShouldPersistTaps="handled">
-        <View>
-          <Abschnitt titel="Darstellung" klein />
-          <Darstellung />
-        </View>
-
+      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(10), gap: abstand(7) }} keyboardShouldPersistTaps="handled">
         <View>
           <Abschnitt titel="Tagesziel" klein />
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: abstand(2) }}>
+          <View style={{ flexDirection: "row", gap: abstand(2) }}>
             {ZIELE.map((z) => (
               <Chip key={z} text={`${z} Fragen`} aktiv={stand.tagesziel === z} onPress={() => setzen({ tagesziel: z })} />
             ))}

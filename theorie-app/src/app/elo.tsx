@@ -7,10 +7,7 @@ import { useKonto } from "@/lib/konto";
 import { eloRanglisteLaden, type EloEintrag } from "@/lib/online-duell";
 import { abstand, farben, radius, RAND } from "@/lib/theme";
 
-/** Farben für Platz 1–3 (Gold ist unser Orange). */
-function podest(platz: number): string {
-  return [farben.orange, farben.hell ? "#8A93A3" : "#C7CDDA", farben.hell ? "#A0703F" : "#B98A5E"][platz - 1];
-}
+const PODEST = [farben.orange, "#C7CDDA", "#B98A5E"];
 
 /** Top 100 der Rangliste-Duelle nach Elo. */
 export default function EloRangliste() {
@@ -71,10 +68,10 @@ export default function EloRangliste() {
                     borderColor: ichSelbst ? farben.orangeLinie : "transparent",
                   }}
                 >
-                  <T v="h3" farbe={e.platz <= 3 ? podest(e.platz) : farben.text3} style={{ width: 34, fontVariant: ["tabular-nums"] }}>
+                  <T v="h3" farbe={e.platz <= 3 ? PODEST[e.platz - 1] : farben.text3} style={{ width: 34, fontVariant: ["tabular-nums"] }}>
                     {e.platz}
                   </T>
-                  <Avatar name={e.name} groesse={36} farbe={e.platz <= 3 ? podest(e.platz) : farben.linieStark} />
+                  <Avatar name={e.name} groesse={36} farbe={e.platz <= 3 ? PODEST[e.platz - 1] : farben.linieStark} />
                   <View style={{ flex: 1 }}>
                     <T v="textStark" numberOfLines={1}>
                       {ichSelbst ? `${e.name} (du)` : e.name}

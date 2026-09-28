@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, View } from "react-native";
-import { router, Stack, usePathname } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as Notifications from "expo-notifications";
 import { StatusBar } from "expo-status-bar";
@@ -12,7 +12,6 @@ import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, In
 import { Icon } from "@/components/icon";
 import { T } from "@/components/ui";
 import { erfolgVon } from "@/lib/erfolge";
-import { ErscheinungProvider, useErscheinung } from "@/lib/erscheinung";
 import { erfolg } from "@/lib/haptik";
 import { KontoProvider, useKonto } from "@/lib/konto";
 import { StandProvider, useStand } from "@/lib/stand";
@@ -64,11 +63,7 @@ function ErfolgHinweis() {
         borderRadius: 18,
         backgroundColor: farben.flaeche2,
         borderWidth: 1,
-        borderColor: farben.linieStark,
-        shadowColor: "#000",
-        shadowOpacity: farben.hell ? 0.12 : 0.4,
-        shadowRadius: 18,
-        shadowOffset: { width: 0, height: 6 },
+        borderColor: farben.orangeLinie,
       }}
     >
       <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: farben.orange, alignItems: "center", justifyContent: "center" }}>
@@ -87,26 +82,10 @@ function ErfolgHinweis() {
 function Navigation() {
   const { drin, laedt, session, passwortNeuFaellig } = useKonto();
   const { bereit } = useStand();
-  const { rueckwegHolen, uebergangFertig } = useErscheinung();
   const fertig = !laedt && bereit;
 
   useEffect(() => {
     if (fertig) SplashScreen.hideAsync().catch(() => {});
-  }, [fertig]);
-
-  // Nach einem Wechsel von Hell/Dunkel wurde alles neu aufgebaut – zurück zur Seite, auf der umgeschaltet wurde.
-  // (Im Web stellt der Browser die Adresse selbst wieder her; dann ist nichts zu tun.)
-  const pfad = usePathname();
-  useEffect(() => {
-    if (!fertig) return;
-    const weg = rueckwegHolen();
-    if (!weg) return;
-    const t = setTimeout(() => {
-      if (pfad !== weg[weg.length - 1]) weg.forEach((ziel, i) => (i === 0 ? router.navigate(ziel as never) : router.push(ziel as never)));
-      uebergangFertig();
-    }, 60);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fertig]);
 
   // Über den Link „Passwort zurücksetzen“ gekommen → neues Passwort festlegen.
@@ -176,25 +155,13 @@ export default function RootLayout() {
   if (!schriftenGeladen) return null;
 
   return (
-    <ErscheinungProvider>
-      <StandProvider>
-        <KontoProvider>
-          <SyncBruecke />
-          <ProfilbildAbgleich />
-          <NeuAufbau />
-        </KontoProvider>
-      </StandProvider>
-    </ErscheinungProvider>
-  );
-}
-
-/** Beim Wechsel von Hell/Dunkel wird die ganze Navigation neu gezeichnet. */
-function NeuAufbau() {
-  const { schema } = useErscheinung();
-  return (
-    <>
-      <StatusBar style={schema === "hell" ? "dark" : "light"} />
-      <Navigation key={schema} />
-    </>
+    <StandProvider>
+      <KontoProvider>
+        <StatusBar style="light" />
+        <SyncBruecke />
+        <ProfilbildAbgleich />
+        <Navigation />
+      </KontoProvider>
+    </StandProvider>
   );
 }

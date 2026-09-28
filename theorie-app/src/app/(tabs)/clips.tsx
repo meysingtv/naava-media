@@ -8,7 +8,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { SFSymbol } from "expo-symbols";
 
 import { ClipSeite } from "@/components/clip-seite";
-import { ImmerDunkel, useHelleStatusleiste } from "@/lib/erscheinung";
 import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
 import { KommentarBlatt } from "@/components/kommentar-blatt";
@@ -19,7 +18,7 @@ import { beiNeuenClips, feedLaden, useClipRechte, type ClipEintrag, type FeedArt
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { serverVerbunden } from "@/lib/supabase";
-import { DUNKEL as farben, schrift } from "@/lib/theme";
+import { farben, schrift } from "@/lib/theme";
 
 type Feed = { eintraege: ClipEintrag[]; laedt: boolean; mehr: boolean; fehler: string | null; geladen: boolean };
 
@@ -86,7 +85,7 @@ function Hinweis({ icon, sf, titel, text, children }: { icon: IconName; sf: SFSy
   );
 }
 
-function ClipsInhalt() {
+export default function Clips() {
   const insets = useSafeAreaInsets();
   const leiste = useLeistenHoehe();
   const fokus = useIsFocused();
@@ -367,15 +366,5 @@ function ClipsInhalt() {
         }}
       />
     </View>
-  );
-}
-
-/** Immer dunkel – auch im hellen Modus. */
-export default function Clips() {
-  useHelleStatusleiste();
-  return (
-    <ImmerDunkel>
-      <ClipsInhalt />
-    </ImmerDunkel>
   );
 }

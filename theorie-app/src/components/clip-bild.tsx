@@ -4,7 +4,7 @@ import Svg, { Circle, G, Line, Rect, Text as SvgText } from "react-native-svg";
 
 import type { ClipBildKey } from "@/lib/clips";
 import type { LeuchteKey } from "@/lib/fragen";
-import { DUNKEL as farben, schrift, svgSchrift } from "@/lib/theme";
+import { farben, schrift, svgSchrift } from "@/lib/theme";
 import { ANDERE, ASPHALT, Auto, DU, GEHWEG, GRUND, Kreuzung, MARKIERUNG, NEUTRAL, RAND, Radfahrer } from "./lagen";
 import { Kontrollleuchte, LEUCHTE_NAME } from "./leuchten";
 

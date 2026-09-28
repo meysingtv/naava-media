@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Avatar, Chip, Knopf, Kopf, T, getoent } from "@/components/ui";
+import { Avatar, Chip, Knopf, Kopf, T } from "@/components/ui";
 import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
 import { antwortRichtig, frageVon } from "@/lib/fragen";
 import { erfolg, fehler, stoss } from "@/lib/haptik";
@@ -196,7 +196,7 @@ export default function OnlineDuellSeite() {
         <Kopf schliessen />
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: RAND, gap: abstand(6) }}>
           <View style={{ alignItems: "center", gap: abstand(3) }}>
-            <View style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: getoent(farbe, 0.14), alignItems: "center", justifyContent: "center" }}>
+            <View style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: farbe + "22", alignItems: "center", justifyContent: "center" }}>
               <Icon name={!d ? "alert" : fertig ? (s?.gewonnen ? "trophy" : s?.verloren ? "flag" : "git-compare") : "hourglass"} size={38} color={farbe} />
             </View>
             <T v="display" farbe={farbe}>

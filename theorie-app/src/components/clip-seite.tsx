@@ -10,7 +10,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { NutzerBild, ProfilBild } from "@/components/profilbild";
 import { dateiUrl, kurzeZahl, type ClipEintrag } from "@/lib/clips-server";
 import { stoss, tippen } from "@/lib/haptik";
-import { DUNKEL as farben, schrift } from "@/lib/theme";
+import { farben, schrift } from "@/lib/theme";
 
 // Eigener Spur-Look: Video im Vollbild, unten Ersteller, Titel und eine
 // schlichte Aktionszeile direkt auf dem Video – orange Akzente, keine
