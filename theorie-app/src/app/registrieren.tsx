@@ -303,14 +303,17 @@ export default function Registrieren() {
           textContentType="emailAddress"
           autoComplete="email"
         />
-        <PasswortFeld label="Passwort" value={passwort} onChangeText={setPasswort} placeholder="Mindestens 8 Zeichen" textContentType="newPassword" autoComplete="password-new" />
+        {/* Kein iOS-„Starkes Passwort“: iOS trägt sonst unbemerkt ein Zufallspasswort in
+            beide Felder ein, das ohne verknüpfte Domain nirgends gespeichert wird – danach
+            passt das eigene Passwort beim Anmelden nicht. „oneTimeCode“ schaltet das ab. */}
+        <PasswortFeld label="Passwort" value={passwort} onChangeText={setPasswort} placeholder="Mindestens 8 Zeichen" textContentType="oneTimeCode" autoComplete="off" />
         <PasswortFeld
           label="Passwort bestätigen"
           value={passwort2}
           onChangeText={setPasswort2}
           placeholder="Noch einmal eingeben"
-          textContentType="newPassword"
-          autoComplete="password-new"
+          textContentType="oneTimeCode"
+          autoComplete="off"
           fehler={passwort2.length > 0 && !passwortGleich}
         />
         {passwort2.length > 0 ? (
