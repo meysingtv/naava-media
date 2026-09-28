@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { Avatar, Chip, Knopf, Kopf, T } from "@/components/ui";
-import { FrageAnsicht } from "@/components/frage-ansicht";
+import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
 import { antwortRichtig, frageVon } from "@/lib/fragen";
 import { erfolg, fehler, stoss } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
@@ -34,6 +34,7 @@ export default function OnlineDuellSeite() {
   const start = useRef(0);
   const auswahlRef = useRef(auswahl);
   auswahlRef.current = auswahl;
+  const reihenfolge = useAntwortReihenfolge();
   const gesperrtRef = useRef(gesperrt);
   gesperrtRef.current = gesperrt;
 
@@ -284,6 +285,7 @@ export default function OnlineDuellSeite() {
           aufgedeckt={gesperrt}
           ohneErklaerung
           kompakt
+          reihenfolge={reihenfolge(frage)}
         />
       </ScrollView>
 

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { Avatar, Chip, Knopf, T } from "@/components/ui";
-import { FrageAnsicht } from "@/components/frage-ansicht";
+import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
 import { DUELL_RUNDEN, DUELL_SEKUNDEN, gegnerVon } from "@/lib/duell";
 import { antwortRichtig, frageVon, FRAGEN } from "@/lib/fragen";
 import { erfolg, fehler, stoss } from "@/lib/haptik";
@@ -61,6 +61,7 @@ export default function Duell() {
   const intro = useRef(new Animated.Value(0)).current;
   const auswahlRef = useRef(auswahl);
   auswahlRef.current = auswahl;
+  const reihenfolge = useAntwortReihenfolge();
   const meinsRef = useRef(meins);
   meinsRef.current = meins;
 
@@ -262,6 +263,7 @@ export default function Duell() {
           aufgedeckt={aufgedeckt}
           ohneErklaerung
           kompakt
+          reihenfolge={reihenfolge(frage)}
         />
       </ScrollView>
 

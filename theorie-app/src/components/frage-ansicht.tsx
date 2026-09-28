@@ -1,13 +1,30 @@
+import { useCallback, useRef } from "react";
 import { Pressable, TextInput, View } from "react-native";
 
 import { Icon, type IconName } from "@/components/icon";
 import { T } from "@/components/ui";
 import { FrageBild } from "@/components/frage-bild";
-import { antwortRichtig, themaVon, zahlLesen, zahlText, type Frage } from "@/lib/fragen";
+import { antwortReihenfolge, antwortRichtig, themaVon, zahlLesen, zahlText, type Frage } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
 import { abstand, farben, schrift } from "@/lib/theme";
 
 type Zustand = "offen" | "gewaehlt" | "richtig" | "verpasst" | "falsch" | "aus";
+
+/**
+ * Merkt sich je Frage, in welcher Reihenfolge die Antworten gezeigt werden –
+ * solange der Bildschirm offen ist. Beim nächsten Mal wird neu gewürfelt.
+ */
+export function useAntwortReihenfolge(): (frage: Frage) => number[] {
+  const gemerkt = useRef(new Map<string, number[]>());
+  return useCallback((frage: Frage) => {
+    let r = gemerkt.current.get(frage.id);
+    if (!r) {
+      r = antwortReihenfolge(frage);
+      gemerkt.current.set(frage.id, r);
+    }
+    return r;
+  }, []);
+}
 
 /** Antworten enden wie in der Prüfung mit Punkt. */
 function mitPunkt(text: string): string {
@@ -201,6 +218,7 @@ export function FrageAnsicht({
   ohneMeta,
   kompakt,
   etikett,
+  reihenfolge,
 }: {
   frage: Frage;
   auswahl: number[];
@@ -214,9 +232,17 @@ export function FrageAnsicht({
   kompakt?: boolean;
   /** Erste Kapsel über der Frage, z. B. „Übung“ oder „Prüfung“. */
   etikett?: string;
+  /** Anzeige-Reihenfolge der Antworten (ursprüngliche Positionen); sonst wie im Katalog. */
+  reihenfolge?: number[];
 }) {
   const richtig = antwortRichtig(frage, auswahl, eingabe);
   const mitAufloesung = aufgedeckt && !ohneErklaerung;
+  const ordnung =
+    frage.art === "auswahl"
+      ? reihenfolge && reihenfolge.length === frage.antworten.length
+        ? reihenfolge
+        : frage.antworten.map((_, i) => i)
+      : [];
 
   return (
     <View style={{ gap: 12 }}>
@@ -237,7 +263,8 @@ export function FrageAnsicht({
 
       {frage.art === "auswahl" ? (
         <View style={{ gap: 8 }}>
-          {frage.antworten.map((antwort, i) => {
+          {ordnung.map((i) => {
+            const antwort = frage.antworten[i];
             const gewaehlt = auswahl.includes(i);
             let zustand: Zustand = gewaehlt ? "gewaehlt" : "offen";
             if (aufgedeckt) {

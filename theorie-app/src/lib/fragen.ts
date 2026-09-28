@@ -953,6 +953,25 @@ export function zahlText(n: number): string {
   return String(n).replace(".", ",");
 }
 
+/**
+ * Reihenfolge der Antworten für eine Anzeige: mal wie im Fragenkatalog, mal
+ * gemischt – damit sich niemand merkt, an welcher Stelle die richtige steht.
+ * Die Einträge sind die ursprünglichen Positionen; die Auswahl bleibt daran gebunden.
+ */
+export function antwortReihenfolge(frage: Frage): number[] {
+  const original = frage.art === "auswahl" ? frage.antworten.map((_, i) => i) : [];
+  if (original.length < 2 || Math.random() < 0.5) return original;
+  let neu = original;
+  while (neu.every((x, i) => x === i)) {
+    neu = [...original];
+    for (let i = neu.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [neu[i], neu[j]] = [neu[j], neu[i]];
+    }
+  }
+  return neu;
+}
+
 /** Ist die gegebene Antwort richtig? */
 export function antwortRichtig(frage: Frage, auswahl: number[], eingabe: string): boolean {
   if (frage.art === "zahl") {

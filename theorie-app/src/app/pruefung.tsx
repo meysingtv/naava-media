@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "@/components/icon";
 import { Abschnitt, Chip, Gruppe, Karte, Knopf, Kopf, kopfOben, KopfTaste, T, Zeile } from "@/components/ui";
 import { FrageAktionen } from "@/components/frage-aktionen";
-import { FrageAnsicht } from "@/components/frage-ansicht";
+import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
 import { Ring } from "@/components/grafik";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { antwortRichtig, frageVon, FRAGEN, THEMEN, themaVon, type Frage } from "@/lib/fragen";
@@ -49,6 +49,7 @@ export default function Pruefung() {
   const [ergebnis, setErgebnis] = useState<{ fehlerpunkte: number; bestanden: boolean; richtig: number; falsche: string[]; xp: number; fuenfer: number } | null>(null);
   const scroll = useRef<ScrollView>(null);
   const hinweis = useHinweis();
+  const reihenfolge = useAntwortReihenfolge();
 
   useEffect(() => {
     if (phase !== "laeuft") return;
@@ -173,7 +174,7 @@ export default function Pruefung() {
               const a = antworten[id] ?? { auswahl: [], eingabe: "" };
               return f ? (
                 <View key={id} style={{ gap: 14 }}>
-                  <FrageAnsicht frage={f} auswahl={a.auswahl} onAuswahl={() => {}} eingabe={a.eingabe} onEingabe={() => {}} aufgedeckt etikett="Prüfung" />
+                  <FrageAnsicht frage={f} auswahl={a.auswahl} onAuswahl={() => {}} eingabe={a.eingabe} onEingabe={() => {}} aufgedeckt etikett="Prüfung" reihenfolge={reihenfolge(f)} />
                   <FrageAktionen frageId={id} onHinweis={hinweis.zeigen} />
                 </View>
               ) : null;
@@ -357,6 +358,7 @@ export default function Pruefung() {
             onEingabe={(eingabe) => setzeAntwort({ eingabe })}
             aufgedeckt={false}
             etikett="Prüfung"
+            reihenfolge={reihenfolge(frage)}
           />
         </ScrollView>
         <View style={{ flexDirection: "row", gap: abstand(3), paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: insets.bottom + abstand(3) }}>

@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, type IconName } from "@/components/icon";
 import { Abschnitt, Chip, Gruppe, Knopf, KopfKnopf, kopfOben, Plakette, T, Zeile } from "@/components/ui";
 import { FrageAktionen } from "@/components/frage-aktionen";
-import { FrageAnsicht } from "@/components/frage-ansicht";
+import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { Ring } from "@/components/grafik";
 import { antwortRichtig, frageVon, FRAGEN, fragenZuThema, istBildfrage, istZeichen, themaVon, zahlLesen, type ThemaId } from "@/lib/fragen";
@@ -71,6 +71,7 @@ export default function Training() {
   const [xpSumme, setXpSumme] = useState(0);
   const [fertig, setFertig] = useState(false);
   const hinweis = useHinweis();
+  const reihenfolge = useAntwortReihenfolge();
   const scroll = useRef<ScrollView>(null);
   const frageSeit = useRef(Date.now());
 
@@ -245,7 +246,15 @@ export default function Training() {
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView ref={scroll} contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(1), paddingBottom: abstand(6) }} keyboardShouldPersistTaps="handled">
-          <FrageAnsicht frage={frage} auswahl={auswahl} onAuswahl={setAuswahl} eingabe={eingabe} onEingabe={setEingabe} aufgedeckt={aufgedeckt} />
+          <FrageAnsicht
+            frage={frage}
+            auswahl={auswahl}
+            onAuswahl={setAuswahl}
+            eingabe={eingabe}
+            onEingabe={setEingabe}
+            aufgedeckt={aufgedeckt}
+            reihenfolge={reihenfolge(frage)}
+          />
           <View style={{ marginTop: 12 }}>
             <FrageAktionen frageId={frage.id} onHinweis={hinweis.zeigen} />
           </View>
