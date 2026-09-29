@@ -10,6 +10,7 @@ import { useInhaltUnten } from "@/components/tab-leiste";
 import { FOTOS } from "@/lib/fotos";
 import { FRAGEN } from "@/lib/fragen";
 import { datumKurz } from "@/lib/format";
+import { countdownMoeglich, tageText, terminDatum, terminText } from "@/lib/pruefungstag";
 import { fortschritt, useStand } from "@/lib/stand";
 import { abstand, farben, RAND } from "@/lib/theme";
 import { useLeistenScroll } from "@/lib/leisten-scroll";
@@ -43,6 +44,8 @@ export default function Pruefen() {
   const bestanden = stand.pruefungen.filter((p) => p.bestanden).length;
   const beste = stand.pruefungen.length ? Math.min(...stand.pruefungen.map((p) => p.fehlerpunkte)) : null;
   const starten = () => router.push({ pathname: "/pruefung", params: { direkt: "1" } });
+  const termin = terminDatum(stand.pruefungstermin);
+  const terminWann = termin ? tageText(termin) : null;
 
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
@@ -91,6 +94,27 @@ export default function Pruefen() {
             <T v="klein">{reife >= 0.9 ? "Du bist bereit – mach zur Sicherheit noch eine Simulation." : "Ab 90 % richtig beantworteter Fragen bist du gut aufgestellt."}</T>
           </View>
         </View>
+
+        <Gruppe>
+          {termin ? (
+            <Zeile
+              icon="calendar"
+              iconFarbe={farben.orange}
+              titel="Deine Theorieprüfung"
+              unter={terminText(termin)}
+              wert={terminWann ?? undefined}
+              onPress={() => router.push("/pruefungstermin")}
+            />
+          ) : (
+            <Zeile
+              icon="calendar-outline"
+              iconFarbe={farben.orange}
+              titel="Prüfungstermin eintragen"
+              unter={countdownMoeglich() ? "Countdown auf dem Sperrbildschirm am Prüfungstag" : "Erinnerung am Morgen des Prüfungstags"}
+              onPress={() => router.push("/pruefungstermin")}
+            />
+          )}
+        </Gruppe>
 
         <View style={{ flexDirection: "row", gap: abstand(2.5) }}>
           <Wert wert={String(stand.pruefungen.length)} label="Simulationen" />

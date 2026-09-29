@@ -65,6 +65,41 @@ Ansehen geht für alle, Liken, Kommentieren und Folgen mit Konto.
 - Videos werden beim Auswählen auf 720p (H.264) verkleinert. Im kostenlosen
   Supabase-Tarif sind höchstens 50 MB je Datei erlaubt.
 
+## Live-Aktivität (Sperrbildschirm und Dynamic Island)
+
+Nur iPhone ab iOS 16.2; die Dynamic Island gibt es ab iPhone 14 Pro.
+
+- **Prüfungssimulation:** Frage X von 30, offene Fragen und die laufende Zeit.
+  Nach dem Abgeben erscheinen Ergebnis und Fehlerpunkte, die dann noch
+  15 Minuten auf dem Sperrbildschirm stehen. Die echte Prüfung hat kein
+  Zeitlimit, deshalb zählt die Zeit hoch statt herunter.
+- **Prüfungstag:** Im Prüfen-Tab den Prüfungstermin eintragen. Am Morgen des
+  Prüfungstags kommt eine Mitteilung. Öffnet man danach die App, startet ein
+  Countdown bis zur Prüfung (höchstens 8 Stunden vorher, das ist Apples
+  Grenze); ab dem Termin zeigt er „Viel Erfolg“. Auf Android gibt es nur die
+  Mitteilung.
+
+Aufbau:
+
+- `targets/pruefung-live/`: SwiftUI-Ansichten (Widget-Erweiterung, wird von
+  `@bacons/apple-targets` bei `expo prebuild` angelegt, Bundle-ID
+  `de.spur.theorie.pruefunglive`).
+- `modules/live-aktivitaet/`: kleines natives Modul (ActivityKit) zum
+  Starten, Aktualisieren und Beenden.
+- `src/lib/live-aktivitaet.ts` (JS-Anbindung) und `src/lib/pruefungstag.tsx`
+  (Termin, Countdown, Mitteilung).
+- `Attribute.swift` gibt es zweimal (Erweiterung und Modul). Die beiden
+  Dateien müssen gleich bleiben, weil iOS die Aktivität über den Typnamen
+  zuordnet.
+
+Bauen: Die Erweiterung braucht einen nativen Build, Expo Go reicht nicht. Mit
+`eas build -p ios` legt EAS für beide Bundle-IDs Zertifikate und Profile an.
+Für Builds in Xcode die Team-ID unter `ios.appleTeamId` in `app.json`
+eintragen (developer.apple.com → Membership). Zum Testen im Simulator ein
+iPhone 15 oder neuer wählen. Live-Aktivitäten lassen sich unter
+Einstellungen → Fahrschule Pro → Live-Aktivitäten ausschalten; dann macht
+die App einfach ohne weiter.
+
 ## Fragen
 
 `src/lib/fragen.ts` enthält selbst formulierte Beispielfragen. Der amtliche

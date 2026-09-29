@@ -59,6 +59,8 @@ export type Stand = {
   schilder: Record<string, string>;
   /** Eigene Karteikarten und die Lernfächer aller Karten (auch der eingebauten Zeichen-Karten). */
   karteikarten: { karten: Karte[]; faecher: Record<string, KartenFach> };
+  /** Termin der Theorieprüfung (ISO-Zeitpunkt) – für Countdown und Erinnerung am Prüfungstag. */
+  pruefungstermin: string | null;
 };
 
 export const LEER: Stand = {
@@ -83,6 +85,7 @@ export const LEER: Stand = {
   themaTage: {},
   schilder: {},
   karteikarten: { karten: [], faecher: {} },
+  pruefungstermin: null,
 };
 
 const SPEICHER = "spur-stand-v1";
@@ -418,7 +421,7 @@ type StandKontext = {
   trainingFertig: (richtig: number, gesamt: number) => void;
   pruefungFertig: (p: Omit<Pruefung, "datum">) => number;
   duellFertig: (ergebnis: "sieg" | "remis" | "niederlage", gegnerRating: number) => { xp: number; rating: number };
-  setzen: (teil: Partial<Pick<Stand, "tagesziel" | "erinnerung" | "klasse">>) => void;
+  setzen: (teil: Partial<Pick<Stand, "tagesziel" | "erinnerung" | "klasse" | "pruefungstermin">>) => void;
   clipUmschalten: (id: string, liste: "gemocht" | "gemerkt") => void;
   /** Schild für das Album verbuchen; gibt zurück, ob es neu war und wie viele XP es gab. */
   schildGefunden: (key: string, xp: number) => { neu: boolean; xp: number };
@@ -558,7 +561,7 @@ export function StandProvider({ children }: { children: ReactNode }) {
   );
 
   const setzen = useCallback(
-    (teil: Partial<Pick<Stand, "tagesziel" | "erinnerung" | "klasse">>) => anwenden({ ...aktuell.current, ...teil }),
+    (teil: Partial<Pick<Stand, "tagesziel" | "erinnerung" | "klasse" | "pruefungstermin">>) => anwenden({ ...aktuell.current, ...teil }),
     [anwenden],
   );
 
@@ -680,8 +683,8 @@ export function StandProvider({ children }: { children: ReactNode }) {
     // Punkte in der Rangliste bleiben erhalten; neue XP werden ab 0 weiter gemeldet.
     // Das Schilder-Album bleibt – die Schilder wurden ja wirklich gefunden.
     // Selbst erstellte Karteikarten bleiben auch, nur ihre Lernfächer beginnen neu.
-    const { klasse, tagesziel, erinnerung, schilder, karteikarten } = aktuell.current;
-    const neu = { ...LEER, klasse, tagesziel, erinnerung, schilder, karteikarten: { karten: karteikarten.karten, faecher: {} } };
+    const { klasse, tagesziel, erinnerung, schilder, karteikarten, pruefungstermin } = aktuell.current;
+    const neu = { ...LEER, klasse, tagesziel, erinnerung, schilder, karteikarten: { karten: karteikarten.karten, faecher: {} }, pruefungstermin };
     aktuell.current = neu;
     setStand(neu);
   }, []);

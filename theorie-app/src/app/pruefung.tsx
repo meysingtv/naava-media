@@ -14,6 +14,7 @@ import { dialog } from "@/components/dialog";
 import { antwortRichtig, frageVon, FRAGEN, THEMEN, themaVon, type Frage } from "@/lib/fragen";
 import { datumKurz, dauer } from "@/lib/format";
 import { erfolg, fehler, tippen } from "@/lib/haptik";
+import { liveSimulation } from "@/lib/live-aktivitaet";
 import { gemischt, useStand } from "@/lib/stand";
 import { abstand, farben, leuchten, RAND, schrift } from "@/lib/theme";
 import { useZurueckTaste } from "@/lib/zurueck-taste";
@@ -52,18 +53,43 @@ export default function Pruefung() {
   const scroll = useRef<ScrollView>(null);
   const hinweis = useHinweis();
   const reihenfolge = useAntwortReihenfolge();
+  // Jeder Start zählt hoch; die Zeit läuft nach der Uhr, damit App und Sperrbildschirm gleich zählen.
+  const [lauf, setLauf] = useState(direkt ? 1 : 0);
+  const startMs = useRef(Date.now());
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  const erledigt = ids.filter((id) => {
+    const f = frageVon(id);
+    return f && beantwortet(f, antworten[id]);
+  }).length;
 
   useEffect(() => {
     if (phase !== "laeuft") return;
-    const t = setInterval(() => setSekunden((s) => s + 1), 1000);
+    const t = setInterval(() => setSekunden(Math.floor((Date.now() - startMs.current) / 1000)), 1000);
     return () => clearInterval(t);
   }, [phase]);
+
+  // Live-Aktivität (iPhone): beim Start anlegen, bei jeder Frage auffrischen, beim Verlassen entfernen.
+  useEffect(() => {
+    if (lauf > 0) liveSimulation.starten(ids.length, startMs.current);
+  }, [lauf, ids.length]);
+  useEffect(() => {
+    if (phase === "laeuft" && lauf > 0) liveSimulation.aktualisieren(index + 1, erledigt);
+  }, [phase, lauf, index, erledigt]);
+  useEffect(
+    () => () => {
+      if (phaseRef.current === "laeuft") liveSimulation.beenden();
+    },
+    [],
+  );
 
   function starten() {
     setIds(pruefungsbogen());
     setIndex(0);
     setAntworten({});
     setSekunden(0);
+    startMs.current = Date.now();
+    setLauf((l) => l + 1);
     setPhase("laeuft");
   }
 
@@ -94,7 +120,11 @@ export default function Pruefung() {
     // Durchgefallen bei mehr als 10 Fehlerpunkten – oder bei zwei falschen 5-Punkte-Fragen.
     const bestanden = fehlerpunkte <= MAX_FEHLERPUNKTE && fuenfer < 2;
     const xp = pruefungFertig({ fehlerpunkte, bestanden, richtig, gesamt: ids.length });
-    zeitBuchen(Math.min(sekunden, 60 * 60));
+    const endeMs = Date.now();
+    const dauerSek = Math.floor((endeMs - startMs.current) / 1000);
+    setSekunden(dauerSek);
+    zeitBuchen(Math.min(dauerSek, 60 * 60));
+    liveSimulation.abgeben({ fehlerpunkte, bestanden, richtig, beantwortet: erledigt, endeMs });
     if (bestanden) erfolg();
     else fehler();
     setErgebnis({ fehlerpunkte, bestanden, richtig, falsche, xp, fuenfer });
@@ -278,10 +308,6 @@ export default function Pruefung() {
   const a = antworten[frage.id] ?? { auswahl: [], eingabe: "" };
   const setzeAntwort = (teil: Partial<{ auswahl: number[]; eingabe: string }>) =>
     setAntworten((alt) => ({ ...alt, [frage.id]: { ...(alt[frage.id] ?? { auswahl: [], eingabe: "" }), ...teil } }));
-  const erledigt = ids.filter((id) => {
-    const f = frageVon(id);
-    return f && beantwortet(f, antworten[id]);
-  }).length;
 
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>

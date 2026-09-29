@@ -19,6 +19,7 @@ import { erfolg } from "@/lib/haptik";
 import { KontoProvider, useKonto } from "@/lib/konto";
 import { StandProvider, useStand } from "@/lib/stand";
 import { ProfilbildAbgleich } from "@/lib/profilbild";
+import { PruefungstagBruecke } from "@/lib/pruefungstag";
 import { SyncBruecke } from "@/lib/sync";
 import { abstand, farben, RAND } from "@/lib/theme";
 
@@ -125,6 +126,7 @@ function Navigation() {
           <Stack.Screen name="liga" />
           <Stack.Screen name="favoriten" />
           <Stack.Screen name="kalender" options={{ animation: "slide_from_bottom" }} />
+          <Stack.Screen name="pruefungstermin" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="elo" />
           <Stack.Screen name="thema/[id]" />
           <Stack.Screen name="formeln" />
@@ -165,6 +167,7 @@ export default function RootLayout() {
         <KontoProvider>
           <StatusBar style="light" />
           <SyncBruecke />
+          <PruefungstagBruecke />
           <ProfilbildAbgleich />
           <Navigation />
           <DialogHost />

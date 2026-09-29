@@ -35,7 +35,8 @@ export function SyncBruecke() {
       const { data } = await supabase.from("lern_sync").select("daten").eq("user_id", nutzer).maybeSingle<{ daten: Stand }>();
       const server = data?.daten;
       if (server && (server.xp ?? 0) > standRef.current.xp) {
-        ersetzen({ ...LEER, ...server });
+        // Einen nur hier eingetragenen Prüfungstermin nicht mit einem älteren Server-Stand überschreiben.
+        ersetzen({ ...LEER, ...server, pruefungstermin: server.pruefungstermin ?? standRef.current.pruefungstermin });
       }
     })();
   }, [nutzer, bereit, ersetzen]);

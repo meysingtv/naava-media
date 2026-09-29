@@ -17,7 +17,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "de.spur.theorie",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSSupportsLiveActivities": true
       },
       "usesAppleSignIn": true
     },
@@ -77,7 +78,9 @@
       "expo-apple-authentication",
       "./plugins/android-sicherheit",
       "expo-secure-store",
-      "react-native-compressor"
+      "react-native-compressor",
+      "@bacons/apple-targets",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
