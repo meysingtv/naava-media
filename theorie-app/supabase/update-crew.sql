@@ -2,7 +2,90 @@
 -- 2 bis 6 Leute lernen zusammen: gemeinsame Crew-Flamme (wächst nur, wenn
 -- alle ihr Tagesziel schaffen), Anstupsen, Einladungen und jede Woche ein
 -- Boss aus dem schwächsten Thema der Crew, den alle zusammen besiegen.
--- Wiederholbar; derselbe Inhalt steht in schema.sql (Abschnitt 16).
+--
+-- So geht's: Supabase → SQL Editor → „New query“ → diese ganze Datei einfügen
+-- → „Run“. Mehrfaches Ausführen ist unschädlich. Der Crew-Teil steht auch in
+-- schema.sql (Abschnitt 16).
+
+-- 0) Voraussetzungen aus älteren Updates -----------------------------------
+-- (stehen auch in schema.sql Abschnitt 10 und 14; falls ein älteres Update
+-- fehlt, wird es hier nachgeholt – sonst ändert sich nichts)
+alter table public.lern_profil add column if not exists bild_pfad text;
+
+create table if not exists public.lern_limit (
+  user_id uuid not null,
+  art     text not null,
+  zeit    timestamptz not null default now()
+);
+create index if not exists lern_limit_idx on public.lern_limit (user_id, art, zeit);
+alter table public.lern_limit enable row level security;
+-- Keine Policies: nur die Funktionen unten lesen und schreiben.
+
+create or replace function public.lern_limit_pruefen(p_art text, p_max integer, p_fenster interval)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_ich uuid := auth.uid();
+begin
+  if v_ich is null then raise exception 'Nicht angemeldet'; end if;
+  if (select count(*) from public.lern_limit l where l.user_id = v_ich and l.art = p_art and l.zeit > now() - p_fenster) >= p_max then
+    raise exception 'Zu viele Anfragen – bitte warte kurz.';
+  end if;
+  insert into public.lern_limit (user_id, art) values (v_ich, p_art);
+  delete from public.lern_limit l where l.user_id = v_ich and l.zeit < now() - interval '1 day';
+end;
+$$;
+
+revoke execute on function public.lern_limit_pruefen(text, integer, interval) from public, anon, authenticated;
+
+alter table public.lern_profil
+  add column if not exists xp_tag date,
+  add column if not exists xp_heute integer not null default 0,
+  add column if not exists fragen_heute integer not null default 0;
+
+create or replace function public.lern_xp_buchen(p_xp integer, p_gesamt integer, p_richtig integer, p_serie integer)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_ich   uuid := auth.uid();
+  v_heute date := (now() at time zone 'Europe/Berlin')::date;
+  v_woche date := (date_trunc('week', now() at time zone 'Europe/Berlin'))::date;
+  v_p     public.lern_profil;
+  v_xp    integer;
+  v_ges   integer;
+  v_serie integer;
+begin
+  if v_ich is null then raise exception 'Nicht angemeldet'; end if;
+  select * into v_p from public.lern_profil where id = v_ich for update;
+  if not found then return; end if;
+  if v_p.xp_tag is distinct from v_heute then
+    v_p.xp_heute := 0;
+    v_p.fragen_heute := 0;
+  end if;
+  v_xp    := greatest(0, least(coalesce(p_xp, 0), 600, 5000 - v_p.xp_heute));
+  v_ges   := greatest(0, least(coalesce(p_gesamt, 0), 120, 2000 - v_p.fragen_heute));
+  v_serie := greatest(0, least(coalesce(p_serie, 0), (v_heute - (v_p.created_at at time zone 'Europe/Berlin')::date) + 1));
+  update public.lern_profil p set
+    xp             = p.xp + v_xp,
+    xp_woche       = (case when p.woche_start = v_woche then p.xp_woche else 0 end) + v_xp,
+    woche_start    = v_woche,
+    xp_tag         = v_heute,
+    xp_heute       = v_p.xp_heute + v_xp,
+    fragen_heute   = v_p.fragen_heute + v_ges,
+    fragen_gesamt  = p.fragen_gesamt + v_ges,
+    fragen_richtig = p.fragen_richtig + greatest(0, least(coalesce(p_richtig, 0), v_ges)),
+    serie          = v_serie,
+    beste_serie    = greatest(p.beste_serie, v_serie)
+  where p.id = v_ich;
+end;
+$$;
+
+revoke execute on function public.lern_xp_buchen(integer, integer, integer, integer) from public, anon;
+grant execute on function public.lern_xp_buchen(integer, integer, integer, integer) to authenticated;
 
 -- a) Tabellen – Lesen und Schreiben nur über die Funktionen unten -----------
 create table if not exists public.lern_crew (
