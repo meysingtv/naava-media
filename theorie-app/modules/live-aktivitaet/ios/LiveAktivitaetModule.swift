@@ -69,6 +69,19 @@ public class LiveAktivitaetModule: Module {
         PruefungstagSteuerung.beenden()
       }
     }
+
+    Function("letzterFehler") { () -> String in
+      Diagnose.letzterFehler
+    }
+  }
+}
+
+/// Warum zuletzt keine Live-Aktivität gestartet ist – für die Meldung beim Entwickeln.
+enum Diagnose {
+  static var letzterFehler = ""
+
+  static func merken(_ error: Error) {
+    letzterFehler = "Activity.request: \(error) – \(error.localizedDescription)"
   }
 }
 
@@ -85,7 +98,10 @@ enum SimulationSteuerung {
         await aktivitaet.end(nil, dismissalPolicy: .immediate)
       }
     }
-    guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
+    guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+      Diagnose.letzterFehler = "Live-Aktivitäten sind für die App ausgeschaltet."
+      return false
+    }
     let zustand = SimulationAttribute.ContentState(
       frage: 1, beantwortet: 0, fertig: false, fehlerpunkte: 0, bestanden: false, richtig: 0, ende: nil
     )
@@ -95,8 +111,10 @@ enum SimulationSteuerung {
         content: ActivityContent(state: zustand, staleDate: frist),
         pushType: nil
       )
+      Diagnose.letzterFehler = ""
       return true
     } catch {
+      Diagnose.merken(error)
       return false
     }
   }
@@ -165,15 +183,20 @@ enum PruefungstagSteuerung {
         await aktivitaet.end(nil, dismissalPolicy: .immediate)
       }
     }
-    guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
+    guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+      Diagnose.letzterFehler = "Live-Aktivitäten sind für die App ausgeschaltet."
+      return false
+    }
     do {
       _ = try Activity.request(
         attributes: PruefungstagAttribute(termin: termin),
         content: ActivityContent(state: zustand, staleDate: termin),
         pushType: nil
       )
+      Diagnose.letzterFehler = ""
       return true
     } catch {
+      Diagnose.merken(error)
       return false
     }
   }

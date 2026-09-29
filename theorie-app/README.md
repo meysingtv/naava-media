@@ -120,7 +120,12 @@ Aufbau:
   Dateien müssen gleich bleiben, weil iOS die Aktivität über den Typnamen
   zuordnet.
 
-Bauen: Die Erweiterung braucht einen nativen Build, Expo Go reicht nicht. Mit
+Bauen: Die Erweiterung braucht einen nativen Build, Expo Go reicht nicht.
+Gibt es schon einen `ios`-Ordner von einem älteren Build, einmal
+`npx expo prebuild --clean -p ios` ausführen: `npx expo run:ios` legt den
+Ordner nicht neu an, und ohne das fehlt die Erweiterung. Beim Entwickeln steht
+im Terminal nach dem Start einer Simulation, ob die Live-Aktivität läuft und
+wenn nicht, warum. Mit
 `eas build -p ios` legt EAS für beide Bundle-IDs Zertifikate und Profile an.
 Für Builds in Xcode die Team-ID unter `ios.appleTeamId` in `app.json`
 eintragen (developer.apple.com → Membership). Zum Testen im Simulator ein
