@@ -54,6 +54,8 @@ export const ERFOLGE: Erfolg[] = [
     icon: "layers",
     pruefen: (s) => Object.values(s.karteikarten?.faecher ?? {}).filter((f) => f.fach >= 3).length >= 25,
   },
+  { id: "crew", titel: "Crew-Mitglied", text: "Einer Crew beigetreten – ab jetzt lernt ihr zusammen.", icon: "people" },
+  { id: "crew-boss", titel: "Bossbezwinger", text: "Mit deiner Crew einen Wochen-Boss besiegt.", icon: "shield-checkmark" },
 ];
 
 export function erfolgVon(id: string): Erfolg | undefined {

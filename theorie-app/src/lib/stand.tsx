@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { antwortMelden } from "./antwort-hoerer";
 import { ERFOLGE } from "./erfolge";
 import { FRAGEN, type Frage, type ThemaId, type ZeichenKey } from "./fragen";
 
@@ -427,6 +428,8 @@ type StandKontext = {
   schildGefunden: (key: string, xp: number) => { neu: boolean; xp: number };
   /** Zusätzliche XP gutschreiben (z. B. Quiz nach einem Schild-Fund). */
   bonus: (xp: number) => void;
+  /** Abzeichen freischalten, das ein Ereignis auslöst (z. B. Crew beigetreten); optional mit XP. */
+  erfolgMelden: (id: string, xp?: number) => void;
   /** Karteikarte aus einer Frage anlegen oder wieder entfernen; gibt zurück, ob sie jetzt da ist. */
   frageKarteUmschalten: (frageId: string) => boolean;
   /** Eigene Karte anlegen oder ändern; gibt die Id zurück. */
@@ -503,6 +506,7 @@ export function StandProvider({ children }: { children: ReactNode }) {
       s = xpDazu(s, xp);
       const extra = new Date().getHours() >= 22 ? ["nacht"] : [];
       anwenden(s, extra);
+      antwortMelden(id, richtig);
       return xp;
     },
     [anwenden],
@@ -586,6 +590,13 @@ export function StandProvider({ children }: { children: ReactNode }) {
   );
 
   const bonus = useCallback((xp: number) => anwenden(xpDazu(aktuell.current, xp)), [anwenden]);
+  const erfolgMelden = useCallback(
+    (id: string, xp = 0) => {
+      if (!xp && aktuell.current.erfolge[id]) return;
+      anwenden(xp ? xpDazu(aktuell.current, xp) : aktuell.current, [id]);
+    },
+    [anwenden],
+  );
 
   const frageKarteUmschalten = useCallback(
     (frageId: string) => {
@@ -703,6 +714,7 @@ export function StandProvider({ children }: { children: ReactNode }) {
       clipUmschalten,
       schildGefunden,
       bonus,
+      erfolgMelden,
       frageKarteUmschalten,
       eigeneKarteSpeichern,
       karteLoeschen,
@@ -726,6 +738,7 @@ export function StandProvider({ children }: { children: ReactNode }) {
       clipUmschalten,
       schildGefunden,
       bonus,
+      erfolgMelden,
       frageKarteUmschalten,
       eigeneKarteSpeichern,
       karteLoeschen,

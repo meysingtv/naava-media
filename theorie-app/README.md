@@ -65,6 +65,33 @@ Ansehen geht für alle, Liken, Kommentieren und Folgen mit Konto.
 - Videos werden beim Auswählen auf 720p (H.264) verkleinert. Im kostenlosen
   Supabase-Tarif sind höchstens 50 MB je Datei erlaubt.
 
+## Crew (gemeinsam lernen)
+
+2 bis 6 Freunde lernen zusammen. Die Crew findet man auf Home unter „Serie und
+Woche“, außerdem unter Profil → Meine Crew.
+
+- **Crew-Flamme:** Sie wächst jeden Tag, an dem alle ihr Tagesziel schaffen,
+  und zeigt, wer heute schon fertig ist. Wer fehlt, kann angestupst werden.
+- **Wochen-Boss:** Jeden Montag kommt ein Boss aus dem schwächsten Thema der
+  Crew. Jede richtige Antwort in diesem Thema macht 5 Schaden, jede falsche
+  heilt ihn um 3. Die Treffer erscheinen live auf der Boss-Seite und beim
+  Lernen als „−5 HP“. Nach dem Sieg bekommen alle eine XP-Truhe (+150 XP) und
+  das Abzeichen „Bossbezwinger“.
+- **Einladen:** per Link, QR-Code oder Code (Meine Crew). Auf fremden
+  Profilen gibt es „In Crew einladen“; die Einladung erscheint dort auf Home.
+
+Einrichten:
+
+1. `supabase/update-crew.sql` im SQL-Editor ausführen (steht auch als
+   Abschnitt 16 in `schema.sql`, wiederholbar).
+2. Push-Mitteilungen (Anstupsen, Einladung, Boss besiegt) verschickt die
+   Datenbank selbst über die Erweiterung `pg_net` (Database → Extensions →
+   pg_net; das Skript schaltet sie ein, wenn es darf). Ohne `pg_net`
+   funktioniert alles, nur ohne Push.
+3. Die App braucht dafür eine EAS-Projekt-ID (`eas init`, landet in `app.json`
+   unter `extra.eas.projectId`). iPhone: Beim ersten `eas build` den Push-Key
+   anlegen lassen. Android: Firebase (FCM) in EAS eintragen.
+
 ## Live-Aktivität (Sperrbildschirm und Dynamic Island)
 
 Nur iPhone ab iOS 16.2; die Dynamic Island gibt es ab iPhone 14 Pro.

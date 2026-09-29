@@ -11,11 +11,13 @@ import { MarckScript_400Regular } from "@expo-google-fonts/marck-script";
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 
 import { AuswahlBlattHost } from "@/components/auswahl-blatt";
+import { BossTrefferAnzeige } from "@/components/crew";
 import { DialogHost } from "@/components/dialog";
 import { Icon } from "@/components/icon";
 import { T } from "@/components/ui";
 import { erfolgVon } from "@/lib/erfolge";
 import { erfolg } from "@/lib/haptik";
+import { CrewProvider } from "@/lib/crew";
 import { KontoProvider, useKonto } from "@/lib/konto";
 import { StandProvider, useStand } from "@/lib/stand";
 import { ProfilbildAbgleich } from "@/lib/profilbild";
@@ -127,6 +129,9 @@ function Navigation() {
           <Stack.Screen name="favoriten" />
           <Stack.Screen name="kalender" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="pruefungstermin" options={{ animation: "slide_from_bottom" }} />
+          <Stack.Screen name="crew" />
+          <Stack.Screen name="crew-beitreten" options={{ animation: "slide_from_bottom" }} />
+          <Stack.Screen name="crew-boss" />
           <Stack.Screen name="elo" />
           <Stack.Screen name="thema/[id]" />
           <Stack.Screen name="formeln" />
@@ -143,6 +148,7 @@ function Navigation() {
         </Stack.Protected>
       </Stack>
       <ErfolgHinweis />
+      <BossTrefferAnzeige />
       <AuswahlBlattHost />
     </View>
   );
@@ -169,7 +175,9 @@ export default function RootLayout() {
           <SyncBruecke />
           <PruefungstagBruecke />
           <ProfilbildAbgleich />
-          <Navigation />
+          <CrewProvider>
+            <Navigation />
+          </CrewProvider>
           <DialogHost />
         </KontoProvider>
       </StandProvider>

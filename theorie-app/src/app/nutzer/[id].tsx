@@ -4,13 +4,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { dialog } from "@/components/dialog";
 import { Icon } from "@/components/icon";
 import { Lader } from "@/components/lader";
 import { NutzerBild, ProfilBild } from "@/components/profilbild";
 import { Knopf, KopfTaste, kopfOben, zurueck } from "@/components/ui";
 import { anmeldenFragen } from "@/lib/clip-aktionen";
 import { clipsVonLaden, dateiUrl, erstellerProfilLaden, folgenSetzen, kurzeZahl, type ClipEintrag, type ErstellerProfil } from "@/lib/clips-server";
-import { tippen } from "@/lib/haptik";
+import { CREW_MAX, useCrew } from "@/lib/crew";
+import { erfolg, tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { farben, schrift } from "@/lib/theme";
 
@@ -36,6 +38,8 @@ export default function NutzerProfil() {
   const [clips, setClips] = useState<ClipEintrag[] | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
   const [aktualisiert, setAktualisiert] = useState(false);
+  const crew = useCrew();
+  const [eingeladen, setEingeladen] = useState(false);
 
   const laden = useCallback(async () => {
     if (!id) return;
@@ -116,7 +120,7 @@ export default function NutzerProfil() {
             <Zahl wert={profil.likes} label="Likes" />
           </View>
 
-          <View style={{ width: "62%" }}>
+          <View style={{ width: "62%", gap: 8 }}>
             {profil.ich ? (
               <Knopf titel="Profil bearbeiten" klein art="sekundaer" onPress={() => router.push("/einstellungen")} />
             ) : profil.folge_ich ? (
@@ -124,6 +128,23 @@ export default function NutzerProfil() {
             ) : (
               <Knopf titel="Folgen" klein onPress={folgen} />
             )}
+            {!profil.ich && crew.daten?.crew && !crew.daten.mitglieder?.some((m) => m.id === profil.id) && (crew.daten.mitglieder?.length ?? 0) < CREW_MAX ? (
+              <Knopf
+                titel={eingeladen ? "Eingeladen" : "In Crew einladen"}
+                icon={eingeladen ? "checkmark" : "people"}
+                klein
+                art="sekundaer"
+                deaktiviert={eingeladen}
+                onPress={async () => {
+                  const f = await crew.einladen(profil.id);
+                  if (f) dialog("In Crew einladen", f);
+                  else {
+                    erfolg();
+                    setEingeladen(true);
+                  }
+                }}
+              />
+            ) : null}
           </View>
         </View>
       ) : fehler ? null : (

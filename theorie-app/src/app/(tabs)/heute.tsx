@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 
+import { CrewBereich } from "@/components/crew";
 import { Icon } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { Ring } from "@/components/grafik";
@@ -253,6 +254,9 @@ export default function Home() {
             })}
           </View>
         </View>
+
+        {/* Crew: gemeinsame Flamme und Wochen-Boss */}
+        <CrewBereich style={{ marginHorizontal: RAND, marginTop: 10 }} />
 
         {/* Zitat */}
         <View style={{ marginHorizontal: RAND, marginTop: 10, height: 74, borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: farben.linie, backgroundColor: farben.flaeche }}>

@@ -8,6 +8,7 @@ import { useInhaltUnten } from "@/components/tab-leiste";
 import { Knopf, kopfOben } from "@/components/ui";
 import { dialog } from "@/components/dialog";
 import { CLIPS } from "@/lib/clips";
+import { useCrew } from "@/lib/crew";
 import { ERFOLGE } from "@/lib/erfolge";
 import { tausender } from "@/lib/format";
 import { tippen } from "@/lib/haptik";
@@ -68,6 +69,7 @@ export default function Profil() {
   const inhaltUnten = useInhaltUnten();
   const leistenScroll = useLeistenScroll();
   const { stand } = useStand();
+  const { daten: crewDaten } = useCrew();
   const { profil, gast, anzeigeName, abmelden, session, profilNeuLaden } = useKonto();
   const bild = useProfilbild();
   const hatBild = Boolean(bild || profil?.bild_pfad);
@@ -186,6 +188,13 @@ export default function Profil() {
             titel="Karteikarten"
             unter={kartenDran > 0 ? `${kartenDran} ${kartenDran === 1 ? "Karte" : "Karten"} heute dran` : eigeneKarten > 0 ? `${eigeneKarten} eigene ${eigeneKarten === 1 ? "Karte" : "Karten"}` : "Fragen als Karten lernen"}
             onPress={() => router.push("/karteikarten")}
+          />
+          <Eintrag
+            icon="people"
+            farbe={farben.flamme}
+            titel="Meine Crew"
+            unter={crewDaten?.crew ? `${crewDaten.crew.name} · Flamme Tag ${crewDaten.crew.flamme}` : "Gemeinsam lernen, Boss besiegen"}
+            onPress={() => router.push("/crew")}
           />
           <Eintrag icon="trophy" farbe={farben.gelb} titel="Rangliste & Duelle" unter="Wochen-Liga, Elo und Freundes-Duelle" onPress={() => router.push("/liga")} />
           <Eintrag icon="bulb" farbe={farben.pink} titel="Kurz erklärt" unter={gemerkteClips > 0 ? `${gemerkteClips} gemerkt` : "Regeln in 30 Sekunden"} onPress={() => router.push("/kurz-erklaert")} />

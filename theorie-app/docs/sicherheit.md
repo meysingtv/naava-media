@@ -27,6 +27,14 @@ als Abschnitt 14 in `schema.sql`). Mehrfaches Ausführen ist unschädlich.
 - Speicher: höchstens 10 Profilbilder und 400 Clip-Dateien je Konto, jeder nur
   im eigenen Ordner.
 
+- Crew (Abschnitt 16): Tabellen nur über Funktionen erreichbar. Beitreten
+  per Code höchstens 10 Versuche in 10 Minuten, Gründen 5/Tag, Einladungen
+  20/Tag, Anstupsen je Person höchstens alle 3 Stunden. Boss-Treffer höchstens
+  30 Antworten je Aufruf und 200 am Tag. Crew-Mitglieder sehen voneinander nur
+  Name, Profilbild, heutige Fragenzahl und Tagesziel. Die internen Hilfen
+  (Push senden, Mitglied aufnehmen) liegen im Schema `lern_intern`, das die App
+  nicht erreicht.
+
 **App**
 
 - Anmelde-Links (Google, Apple im Browser, Bestätigung, Passwort vergessen)
