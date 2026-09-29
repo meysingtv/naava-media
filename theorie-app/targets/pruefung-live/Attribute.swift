@@ -20,6 +20,8 @@ struct SimulationAttribute: ActivityAttributes {
 
   var gesamt: Int
   var start: Date
+  /// Ende der Bearbeitungszeit (Start + 45 Minuten).
+  var frist: Date
 }
 
 /// Prüfungstag: Countdown bis zum Termin der Theorieprüfung.

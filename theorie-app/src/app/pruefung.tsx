@@ -21,6 +21,10 @@ import { useZurueckTaste } from "@/lib/zurueck-taste";
 
 const FRAGEN_ANZAHL = 30;
 const MAX_FEHLERPUNKTE = 10;
+/** Bearbeitungszeit: 45 Minuten, danach wird automatisch abgegeben. */
+const ZEIT_LIMIT = 45 * 60;
+/** Ab hier wird die Restzeit rot. */
+const ZEIT_KNAPP = 5 * 60;
 
 type Antworten = Record<string, { auswahl: number[]; eingabe: string }>;
 
@@ -49,13 +53,22 @@ export default function Pruefung() {
   const [index, setIndex] = useState(0);
   const [antworten, setAntworten] = useState<Antworten>({});
   const [sekunden, setSekunden] = useState(0);
-  const [ergebnis, setErgebnis] = useState<{ fehlerpunkte: number; bestanden: boolean; richtig: number; falsche: string[]; xp: number; fuenfer: number } | null>(null);
+  const [ergebnis, setErgebnis] = useState<{
+    fehlerpunkte: number;
+    bestanden: boolean;
+    richtig: number;
+    falsche: string[];
+    xp: number;
+    fuenfer: number;
+    zeitAbgelaufen: boolean;
+  } | null>(null);
   const scroll = useRef<ScrollView>(null);
   const hinweis = useHinweis();
   const reihenfolge = useAntwortReihenfolge();
   // Jeder Start zählt hoch; die Zeit läuft nach der Uhr, damit App und Sperrbildschirm gleich zählen.
   const [lauf, setLauf] = useState(direkt ? 1 : 0);
   const startMs = useRef(Date.now());
+  const abgegeben = useRef(false);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
   const erledigt = ids.filter((id) => {
@@ -65,13 +78,18 @@ export default function Pruefung() {
 
   useEffect(() => {
     if (phase !== "laeuft") return;
-    const t = setInterval(() => setSekunden(Math.floor((Date.now() - startMs.current) / 1000)), 1000);
+    const t = setInterval(() => setSekunden(Math.min(ZEIT_LIMIT, Math.floor((Date.now() - startMs.current) / 1000))), 1000);
     return () => clearInterval(t);
   }, [phase]);
 
+  // Zeit um: automatisch abgeben (auch wenn die App zwischendurch im Hintergrund war).
+  useEffect(() => {
+    if (phase === "laeuft" && sekunden >= ZEIT_LIMIT) abgeben(true);
+  }, [phase, sekunden]);
+
   // Live-Aktivität (iPhone): beim Start anlegen, bei jeder Frage auffrischen, beim Verlassen entfernen.
   useEffect(() => {
-    if (lauf > 0) liveSimulation.starten(ids.length, startMs.current);
+    if (lauf > 0) liveSimulation.starten(ids.length, startMs.current, startMs.current + ZEIT_LIMIT * 1000);
   }, [lauf, ids.length]);
   useEffect(() => {
     if (phase === "laeuft" && lauf > 0) liveSimulation.aktualisieren(index + 1, erledigt);
@@ -89,6 +107,7 @@ export default function Pruefung() {
     setAntworten({});
     setSekunden(0);
     startMs.current = Date.now();
+    abgegeben.current = false;
     setLauf((l) => l + 1);
     setPhase("laeuft");
   }
@@ -99,7 +118,10 @@ export default function Pruefung() {
     scroll.current?.scrollTo({ y: 0, animated: false });
   }
 
-  function abgeben() {
+  function abgeben(zeitAbgelaufen = false) {
+    // Nur einmal werten – z. B. wenn die Zeit abläuft, während „Abgeben?“ noch offen ist.
+    if (abgegeben.current) return;
+    abgegeben.current = true;
     let fehlerpunkte = 0;
     let fuenfer = 0;
     let richtig = 0;
@@ -121,13 +143,13 @@ export default function Pruefung() {
     const bestanden = fehlerpunkte <= MAX_FEHLERPUNKTE && fuenfer < 2;
     const xp = pruefungFertig({ fehlerpunkte, bestanden, richtig, gesamt: ids.length });
     const endeMs = Date.now();
-    const dauerSek = Math.floor((endeMs - startMs.current) / 1000);
+    const dauerSek = Math.min(ZEIT_LIMIT, Math.floor((endeMs - startMs.current) / 1000));
     setSekunden(dauerSek);
     zeitBuchen(Math.min(dauerSek, 60 * 60));
     liveSimulation.abgeben({ fehlerpunkte, bestanden, richtig, beantwortet: erledigt, endeMs });
     if (bestanden) erfolg();
     else fehler();
-    setErgebnis({ fehlerpunkte, bestanden, richtig, falsche, xp, fuenfer });
+    setErgebnis({ fehlerpunkte, bestanden, richtig, falsche, xp, fuenfer, zeitAbgelaufen });
     setPhase("ergebnis");
   }
 
@@ -141,7 +163,7 @@ export default function Pruefung() {
       offen > 0 ? `${offen} ${offen === 1 ? "Frage ist" : "Fragen sind"} noch unbeantwortet und zählen als falsch.` : "Alle Fragen sind beantwortet.",
       [
         { text: "Weiter prüfen", style: "cancel" },
-        { text: "Abgeben", style: offen > 0 ? "destructive" : "default", onPress: abgeben },
+        { text: "Abgeben", style: offen > 0 ? "destructive" : "default", onPress: () => abgeben() },
       ],
     );
   }
@@ -162,6 +184,7 @@ export default function Pruefung() {
   if (phase === "start") {
     const regeln: { icon: keyof typeof Ionicons.glyphMap; text: string }[] = [
       { icon: "layers-outline", text: `${Math.min(FRAGEN_ANZAHL, FRAGEN.length)} Fragen aus allen Themen, gemischt` },
+      { icon: "time-outline", text: "45 Minuten Zeit – danach wird automatisch abgegeben" },
       { icon: "alert-circle-outline", text: "Jede Frage zählt 2 bis 5 Fehlerpunkte" },
       { icon: "shield-checkmark-outline", text: "Bestanden mit höchstens 10 Fehlerpunkten – außer bei zwei falschen 5-Punkte-Fragen" },
       { icon: "eye-off-outline", text: "Die Auflösung siehst du erst nach dem Abgeben" },
@@ -255,6 +278,11 @@ export default function Pruefung() {
                 {ok ? "BESTANDEN" : "NICHT BESTANDEN"}
               </T>
             </View>
+            {ergebnis.zeitAbgelaufen ? (
+              <T v="klein" farbe={farben.rot} zentriert>
+                Die 45 Minuten sind abgelaufen – offene Fragen zählen als falsch.
+              </T>
+            ) : null}
             <T v="text" zentriert>
               {ok
                 ? "Sauber. So darf es in der echten Prüfung laufen."
@@ -308,6 +336,8 @@ export default function Pruefung() {
   const a = antworten[frage.id] ?? { auswahl: [], eingabe: "" };
   const setzeAntwort = (teil: Partial<{ auswahl: number[]; eingabe: string }>) =>
     setAntworten((alt) => ({ ...alt, [frage.id]: { ...(alt[frage.id] ?? { auswahl: [], eingabe: "" }), ...teil } }));
+  const rest = Math.max(0, ZEIT_LIMIT - sekunden);
+  const knapp = rest <= ZEIT_KNAPP;
 
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
@@ -318,9 +348,9 @@ export default function Pruefung() {
               Frage {index + 1}/{ids.length}
             </T>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Icon name="time-outline" size={12} color={farben.text3} />
-              <T v="klein" style={{ fontSize: 11.5, fontVariant: ["tabular-nums"] }}>
-                {dauer(sekunden)} · {erledigt} beantwortet
+              <Icon name="time-outline" size={12} color={knapp ? farben.rot : farben.text3} />
+              <T v="klein" farbe={knapp ? farben.rot : undefined} style={{ fontSize: 11.5, fontVariant: ["tabular-nums"] }}>
+                noch {dauer(rest)} · {erledigt} beantwortet
               </T>
             </View>
           </View>

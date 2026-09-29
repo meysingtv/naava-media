@@ -8,7 +8,7 @@ import { requireOptionalNativeModule } from "expo";
  */
 type Nativ = {
   verfuegbar(): boolean;
-  simulationStarten(gesamt: number, startMs: number): boolean;
+  simulationStarten(gesamt: number, startMs: number, fristMs: number): boolean;
   simulationAktualisieren(frage: number, beantwortet: number): void;
   simulationAbgeben(fehlerpunkte: number, bestanden: boolean, richtig: number, beantwortet: number, endeMs: number): void;
   simulationBeenden(): void;
@@ -32,7 +32,7 @@ function sicher<T>(aufruf: (n: Nativ) => T, ersatz: T): T {
 export const liveAktivitaetMoeglich = () => sicher((n) => n.verfuegbar(), false);
 
 export const liveSimulation = {
-  starten: (gesamt: number, startMs: number) => sicher((n) => n.simulationStarten(gesamt, startMs), false),
+  starten: (gesamt: number, startMs: number, fristMs: number) => sicher((n) => n.simulationStarten(gesamt, startMs, fristMs), false),
   aktualisieren: (frage: number, beantwortet: number) => sicher((n) => n.simulationAktualisieren(frage, beantwortet), undefined),
   abgeben: (e: { fehlerpunkte: number; bestanden: boolean; richtig: number; beantwortet: number; endeMs: number }) =>
     sicher((n) => n.simulationAbgeben(e.fehlerpunkte, e.bestanden, e.richtig, e.beantwortet, e.endeMs), undefined),

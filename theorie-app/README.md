@@ -69,10 +69,11 @@ Ansehen geht für alle, Liken, Kommentieren und Folgen mit Konto.
 
 Nur iPhone ab iOS 16.2; die Dynamic Island gibt es ab iPhone 14 Pro.
 
-- **Prüfungssimulation:** Frage X von 30, offene Fragen und die laufende Zeit.
-  Nach dem Abgeben erscheinen Ergebnis und Fehlerpunkte, die dann noch
-  15 Minuten auf dem Sperrbildschirm stehen. Die echte Prüfung hat kein
-  Zeitlimit, deshalb zählt die Zeit hoch statt herunter.
+- **Prüfungssimulation:** Frage X von 30, offene Fragen und die Restzeit der
+  45 Minuten. Ist die Zeit um, gibt die App automatisch ab. War die App in dem
+  Moment nicht offen, zeigt die Aktivität „Zeit abgelaufen“, und die App
+  gibt ab, sobald man sie öffnet. Nach dem Abgeben erscheinen Ergebnis und
+  Fehlerpunkte, die dann noch 15 Minuten auf dem Sperrbildschirm stehen.
 - **Prüfungstag:** Im Prüfen-Tab den Prüfungstermin eintragen. Am Morgen des
   Prüfungstags kommt eine Mitteilung. Öffnet man danach die App, startet ein
   Countdown bis zur Prüfung (höchstens 8 Stunden vorher, das ist Apples

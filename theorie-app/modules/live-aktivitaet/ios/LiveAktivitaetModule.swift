@@ -15,9 +15,13 @@ public class LiveAktivitaetModule: Module {
       return false
     }
 
-    Function("simulationStarten") { (gesamt: Int, startMs: Double) -> Bool in
+    Function("simulationStarten") { (gesamt: Int, startMs: Double, fristMs: Double) -> Bool in
       if #available(iOS 16.2, *) {
-        return SimulationSteuerung.starten(gesamt: gesamt, start: Date(timeIntervalSince1970: startMs / 1000))
+        return SimulationSteuerung.starten(
+          gesamt: gesamt,
+          start: Date(timeIntervalSince1970: startMs / 1000),
+          frist: Date(timeIntervalSince1970: fristMs / 1000)
+        )
       }
       return false
     }
@@ -73,7 +77,8 @@ public class LiveAktivitaetModule: Module {
 @available(iOS 16.2, *)
 enum SimulationSteuerung {
   /// Neue Live-Aktivität für eine Simulation; alte Simulationen verschwinden vorher.
-  static func starten(gesamt: Int, start: Date) -> Bool {
+  /// Ab der Frist gilt sie als „stale“ – dann zeigt sie „Zeit abgelaufen“.
+  static func starten(gesamt: Int, start: Date, frist: Date) -> Bool {
     let alte = Activity<SimulationAttribute>.activities
     Task {
       for aktivitaet in alte {
@@ -86,8 +91,8 @@ enum SimulationSteuerung {
     )
     do {
       _ = try Activity.request(
-        attributes: SimulationAttribute(gesamt: gesamt, start: start),
-        content: ActivityContent(state: zustand, staleDate: nil),
+        attributes: SimulationAttribute(gesamt: gesamt, start: start, frist: frist),
+        content: ActivityContent(state: zustand, staleDate: frist),
         pushType: nil
       )
       return true
@@ -103,7 +108,7 @@ enum SimulationSteuerung {
     let aktivitaeten = Activity<SimulationAttribute>.activities
     Task {
       for aktivitaet in aktivitaeten {
-        await aktivitaet.update(ActivityContent(state: zustand, staleDate: nil))
+        await aktivitaet.update(ActivityContent(state: zustand, staleDate: aktivitaet.attributes.frist))
       }
     }
   }

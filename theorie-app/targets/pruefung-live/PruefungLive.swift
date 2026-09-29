@@ -50,10 +50,15 @@ struct Countdown: View {
 
 // MARK: - Prüfungssimulation
 
+/// Frist verstrichen, aber noch nicht abgegeben (die App war zu dem Zeitpunkt nicht offen).
+func istAbgelaufen(_ context: ActivityViewContext<SimulationAttribute>) -> Bool {
+  context.isStale && !context.state.fertig
+}
+
 struct SimulationLive: Widget {
   var body: some WidgetConfiguration {
     ActivityConfiguration(for: SimulationAttribute.self) { context in
-      SimulationSperrbildschirm(attribute: context.attributes, zustand: context.state)
+      SimulationSperrbildschirm(attribute: context.attributes, zustand: context.state, abgelaufen: istAbgelaufen(context))
         .activityBackgroundTint(Farbe.grund)
         .activitySystemActionForegroundColor(.white)
     } dynamicIsland: { context in
@@ -64,10 +69,10 @@ struct SimulationLive: Widget {
         }
         DynamicIslandExpandedRegion(.trailing) {
           VStack(alignment: .trailing, spacing: 2) {
-            Text("Zeit")
+            Text(context.state.fertig ? "Zeit" : "Restzeit")
               .font(.caption2)
               .foregroundStyle(Farbe.text2)
-            SimulationZeit(attribute: context.attributes, zustand: context.state)
+            SimulationZeit(attribute: context.attributes, zustand: context.state, abgelaufen: istAbgelaufen(context))
               .font(.title2.weight(.bold))
               .foregroundStyle(.white)
               .frame(width: 88, alignment: .trailing)
@@ -80,14 +85,14 @@ struct SimulationLive: Widget {
             .foregroundStyle(Farbe.orange)
         }
         DynamicIslandExpandedRegion(.bottom) {
-          SimulationFortschritt(attribute: context.attributes, zustand: context.state)
+          SimulationFortschritt(attribute: context.attributes, zustand: context.state, abgelaufen: istAbgelaufen(context))
             .padding(.horizontal, 6)
             .padding(.top, 4)
         }
       } compactLeading: {
         SimulationKompaktLinks(attribute: context.attributes, zustand: context.state)
       } compactTrailing: {
-        SimulationKompaktRechts(attribute: context.attributes, zustand: context.state)
+        SimulationKompaktRechts(attribute: context.attributes, zustand: context.state, abgelaufen: istAbgelaufen(context))
       } minimal: {
         SimulationSymbol(zustand: context.state)
       }
@@ -99,6 +104,7 @@ struct SimulationLive: Widget {
 struct SimulationSperrbildschirm: View {
   let attribute: SimulationAttribute
   let zustand: SimulationAttribute.ContentState
+  let abgelaufen: Bool
 
   private var ergebnisFarbe: Color { zustand.bestanden ? Farbe.gruen : Farbe.rot }
 
@@ -110,7 +116,7 @@ struct SimulationSperrbildschirm: View {
           .font(.caption2.weight(.bold))
           .tracking(0.8)
         Spacer(minLength: 8)
-        SimulationZeit(attribute: attribute, zustand: zustand)
+        SimulationZeit(attribute: attribute, zustand: zustand, abgelaufen: abgelaufen)
           .font(.caption.weight(.semibold))
           .foregroundStyle(Farbe.text2)
           .frame(width: 70, alignment: .trailing)
@@ -141,6 +147,15 @@ struct SimulationSperrbildschirm: View {
               .foregroundStyle(Farbe.text2)
           }
         }
+      } else if abgelaufen {
+        VStack(alignment: .leading, spacing: 2) {
+          Text("Zeit abgelaufen")
+            .font(.system(size: 22, weight: .bold))
+            .foregroundStyle(Farbe.rot)
+          Text("Öffne die App – dann wird abgegeben und du siehst dein Ergebnis.")
+            .font(.subheadline)
+            .foregroundStyle(Farbe.text2)
+        }
       } else {
         HStack(alignment: .firstTextBaseline, spacing: 5) {
           Text("Frage \(zustand.frage)")
@@ -164,19 +179,22 @@ struct SimulationSperrbildschirm: View {
   }
 }
 
-/// Laufende Zeit seit dem Start; nach dem Abgeben die feste Dauer.
+/// Restzeit bis zur Frist (läuft von selbst herunter); nach dem Abgeben die gebrauchte Zeit.
 struct SimulationZeit: View {
   let attribute: SimulationAttribute
   let zustand: SimulationAttribute.ContentState
+  let abgelaufen: Bool
 
   var body: some View {
     if zustand.fertig, let ende = zustand.ende {
       Text(dauerText(von: attribute.start, bis: ende))
         .monospacedDigit()
-    } else {
-      Text(attribute.start, style: .timer)
+    } else if abgelaufen {
+      Text("0:00")
         .monospacedDigit()
-        .multilineTextAlignment(.trailing)
+        .foregroundStyle(Farbe.rot)
+    } else {
+      Countdown(bis: attribute.frist)
     }
   }
 }
@@ -208,6 +226,7 @@ struct SimulationLinks: View {
 struct SimulationFortschritt: View {
   let attribute: SimulationAttribute
   let zustand: SimulationAttribute.ContentState
+  let abgelaufen: Bool
 
   var body: some View {
     if zustand.fertig {
@@ -225,6 +244,11 @@ struct SimulationFortschritt: View {
         }
         Spacer(minLength: 0)
       }
+    } else if abgelaufen {
+      Text("Zeit abgelaufen – öffne die App für dein Ergebnis.")
+        .font(.caption)
+        .foregroundStyle(Farbe.rot)
+        .frame(maxWidth: .infinity, alignment: .leading)
     } else {
       VStack(spacing: 6) {
         ProgressView(value: Double(zustand.beantwortet), total: Double(max(attribute.gesamt, 1)))
@@ -260,6 +284,7 @@ struct SimulationKompaktLinks: View {
 struct SimulationKompaktRechts: View {
   let attribute: SimulationAttribute
   let zustand: SimulationAttribute.ContentState
+  let abgelaufen: Bool
 
   var body: some View {
     if zustand.fertig {
@@ -267,11 +292,14 @@ struct SimulationKompaktRechts: View {
         .font(.caption.weight(.semibold))
         .monospacedDigit()
         .foregroundStyle(zustand.bestanden ? Farbe.gruen : Farbe.rot)
-    } else {
-      Text(attribute.start, style: .timer)
+    } else if abgelaufen {
+      Text("0:00")
         .font(.caption.weight(.semibold))
         .monospacedDigit()
-        .multilineTextAlignment(.trailing)
+        .foregroundStyle(Farbe.rot)
+    } else {
+      Countdown(bis: attribute.frist)
+        .font(.caption.weight(.semibold))
         .frame(width: 50)
         .foregroundStyle(.white)
     }

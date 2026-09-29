@@ -17,6 +17,7 @@ import { useLeistenScroll } from "@/lib/leisten-scroll";
 
 const REGELN: { icon: IconName; text: string }[] = [
   { icon: "layers-outline", text: "30 Fragen aus allen Themen, gemischt" },
+  { icon: "time-outline", text: "45 Minuten Zeit – danach wird automatisch abgegeben" },
   { icon: "alert-circle-outline", text: "Jede Frage zählt 2 bis 5 Fehlerpunkte" },
   { icon: "shield-checkmark-outline", text: "Bestanden mit höchstens 10 Fehlerpunkten – außer bei zwei falschen 5-Punkte-Fragen" },
   { icon: "eye-off-outline", text: "Die Auflösung siehst du erst nach dem Abgeben" },
@@ -76,7 +77,7 @@ export default function Pruefen() {
                 Wie in der echten Prüfung.
               </T>
               <T v="text" farbe="#E4E6EA">
-                {Math.min(30, FRAGEN.length)} Fragen · Fehlerpunkte wie beim TÜV oder der DEKRA
+                {Math.min(30, FRAGEN.length)} Fragen · 45 Minuten · Fehlerpunkte wie beim TÜV oder der DEKRA
               </T>
             </View>
             <Knopf titel="Simulation starten" icon="arrow-forward" onPress={starten} style={{ alignSelf: "flex-start", paddingHorizontal: abstand(7) }} />
