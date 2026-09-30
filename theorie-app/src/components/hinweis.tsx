@@ -1,11 +1,11 @@
 import { useCallback, useRef, useState } from "react";
-import { Animated } from "react-native";
+import { Animated, Text } from "react-native";
 
 import { Icon, type IconName } from "@/components/icon";
-import { T } from "@/components/ui";
-import { abstand, farben } from "@/lib/theme";
+import { useFarbwelt } from "@/lib/darstellung";
+import { leuchten, mitDeckkraft, schrift } from "@/lib/theme";
 
-/** Kurzer Hinweis oben im Bild („+10 XP“, „Karteikarte erstellt“ …). */
+/** Kurzer Hinweis oben im Bild („Karteikarte erstellt“ …). */
 export type Hinweis = { icon: IconName; text: string; farbe?: string; textFarbe?: string };
 
 export function useHinweis() {
@@ -27,33 +27,39 @@ export function useHinweis() {
   return { zeigen, wert, inhalt };
 }
 
+/** Kapsel mit Symbol, die kurz einblendet und nach oben verschwindet. */
 export function HinweisAnzeige({ wert, inhalt, oben }: { wert: Animated.Value; inhalt: Hinweis | null; oben: number }) {
+  const f = useFarbwelt();
   if (!inhalt) return null;
-  const farbe = inhalt.farbe ?? farben.orange;
+  const farbe = inhalt.farbe ?? f.orange;
   return (
     <Animated.View
       pointerEvents="none"
-      style={{
-        position: "absolute",
-        top: oben,
-        alignSelf: "center",
-        paddingHorizontal: abstand(3.5),
-        paddingVertical: abstand(1.5),
-        borderRadius: 999,
-        backgroundColor: farben.flaeche2,
-        borderWidth: 1,
-        borderColor: farben.orangeLinie,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-        opacity: wert.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 0] }),
-        transform: [{ translateY: wert.interpolate({ inputRange: [0, 1, 2], outputRange: [8, 0, -10] }) }],
-      }}
+      style={[
+        {
+          position: "absolute",
+          top: oben,
+          alignSelf: "center",
+          height: 40,
+          paddingHorizontal: 16,
+          borderRadius: 20,
+          backgroundColor: f.hell ? "#FFFFFF" : "#1A2128",
+          borderWidth: 1,
+          borderColor: mitDeckkraft(farbe, f.hell ? 0.3 : 0.4),
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 7,
+          opacity: wert.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 0] }),
+          transform: [
+            { translateY: wert.interpolate({ inputRange: [0, 1, 2], outputRange: [8, 0, -10] }) },
+            { scale: wert.interpolate({ inputRange: [0, 1, 2], outputRange: [0.94, 1, 0.98] }) },
+          ],
+        },
+        f.hell ? leuchten("#3C2C18", 0.14, 16, 6) : leuchten("#000000", 0.5, 16, 6),
+      ]}
     >
-      <Icon name={inhalt.icon} size={14} color={farbe} />
-      <T v="textStark" farbe={inhalt.textFarbe ?? farben.text} style={{ fontSize: 14 }}>
-        {inhalt.text}
-      </T>
+      <Icon name={inhalt.icon} size={15} color={farbe} />
+      <Text style={{ ...schrift.textHalb, fontSize: 14.5, color: inhalt.textFarbe ?? f.text }}>{inhalt.text}</Text>
     </Animated.View>
   );
 }

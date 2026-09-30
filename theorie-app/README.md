@@ -56,8 +56,9 @@ Startknopf, Schnellstart, das Thema mit dem meisten Nachholbedarf, alle Themen
 als Karussell, die Prüfungssimulation, die Crew und ein Spruch des Tages.
 
 Unter Einstellungen → Darstellung gibt es „Nachtfahrt (dunkel)“ und
-„Tagfahrt (hell)“. Die helle Darstellung gilt zuerst für Startseite und
-Profil – dort ist auch die Tab-Leiste unten helles Glas. Auf dem iPhone
+„Tagfahrt (hell)“. Die helle Darstellung gilt für Home, Lernen, Prüfung,
+Profil sowie Training und Simulation – dort ist auch die Tab-Leiste unten
+helles Glas. Auf dem iPhone
 schaltet die App dafür das Fenster auf hell (`DarstellungBruecke` in
 `src/lib/darstellung.tsx`), weil die native Liquid-Glass-Leiste sich nach der
 Darstellung des Fensters richtet; fürs System ist die App sonst fest dunkel.
@@ -76,6 +77,15 @@ ersten Öffnen einmal Vollausschlag wie beim Motorstart), den Startknopf für di
 Simulation, den Prüfungstermin als Ticket, die Fehlerpunkte der letzten zehn
 Simulationen mit der Grenze bei 10 Punkten, die schwächsten Themen zum Üben und
 den Ablauf der Prüfung (`src/components/pruefen.tsx`).
+
+**Fragen** (Training und Simulation) sind hell und dunkel: oben Glas-Knöpfe,
+im Training ein Fortschritt je Frage (grün richtig, rot falsch), in der
+Simulation Uhr und Nummern zum Springen. Die Frage steht auf einer Karte mit
+Bild oder Themenfoto, die Antworten sind Karten mit Buchstaben, die beim Wählen
+zum Haken werden. Nach dem Prüfen zeigt ein Banner das Ergebnis mit XP, darunter
+„Richtig ist“ und „Merke dir“. Die Auswertung hat ein Foto, einen leuchtenden
+Ring und bei der Simulation einen Stempel „Bestanden“ / „Nicht bestanden“
+(`src/components/frage-ansicht.tsx`, `frage-rahmen.tsx`, `auswertung.tsx`).
 
 ## Clips (kurze Videos)
 

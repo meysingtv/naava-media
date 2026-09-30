@@ -6,9 +6,11 @@ import Svg, { Circle, Path } from "react-native-svg";
 
 import type { BildKey, LageKey, LeuchteKey, ThemaId, ZeichenKey } from "@/lib/fragen";
 import { themaVon } from "@/lib/fragen";
+import { useFarbwelt } from "@/lib/darstellung";
 import { FOTOS, strassenFoto, themaFoto } from "@/lib/fotos";
 import { tippen } from "@/lib/haptik";
 import { farben, schrift } from "@/lib/theme";
+import { Glas } from "./glas";
 import { Icon } from "./icon";
 import { T } from "./ui";
 import { Lageplan } from "./lagen";
@@ -96,9 +98,11 @@ export function ThemaBanner({ thema, breite, punkte }: { thema: ThemaId; breite:
 /**
  * Bild zu einer Frage – immer im gleichen abgerundeten Rahmen:
  * Zeichen in der Fahrersicht, Lagepläne von oben, Kontrollleuchten im
- * Instrument, sonst das Foto des Themas.
+ * Instrument, sonst das Foto des Themas. `randlos`: ohne eigenen Rahmen, weil
+ * das Bild oben in einer Karte sitzt.
  */
-export function FrageBild({ bild, thema, punkte, kompakt }: { bild?: BildKey; thema: ThemaId; punkte?: number; kompakt?: boolean }) {
+export function FrageBild({ bild, thema, punkte, kompakt, randlos }: { bild?: BildKey; thema: ThemaId; punkte?: number; kompakt?: boolean; randlos?: boolean }) {
+  const f = useFarbwelt();
   const [breite, setBreite] = useState(0);
   const [gross, setGross] = useState(false);
   const fenster = useWindowDimensions();
@@ -124,11 +128,11 @@ export function FrageBild({ bild, thema, punkte, kompakt }: { bild?: BildKey; th
     <View
       onLayout={(e) => setBreite(Math.round(e.nativeEvent.layout.width))}
       style={{
-        borderRadius: RUND,
+        borderRadius: randlos ? 0 : RUND,
         overflow: "hidden",
-        backgroundColor: istLage ? farben.gelaende : farben.flaeche,
-        borderWidth: 1,
-        borderColor: farben.linie,
+        backgroundColor: istLage ? farben.gelaende : randlos ? "transparent" : f.hell ? f.flaeche2 : farben.flaeche,
+        borderWidth: randlos ? 0 : 1,
+        borderColor: f.linie,
         minHeight: breite > 0 ? undefined : 180,
       }}
     >
@@ -141,22 +145,11 @@ export function FrageBild({ bild, thema, punkte, kompakt }: { bild?: BildKey; th
           }}
           accessibilityLabel="Bild vergrößern"
           hitSlop={8}
-          style={({ pressed }) => ({
-            position: "absolute",
-            right: 10,
-            bottom: 10,
-            width: 38,
-            height: 38,
-            borderRadius: 19,
-            backgroundColor: "rgba(8,11,14,0.72)",
-            borderWidth: 1,
-            borderColor: "rgba(255,255,255,0.12)",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: pressed ? 0.8 : 1,
-          })}
+          style={({ pressed }) => ({ position: "absolute", right: 12, bottom: 12, transform: [{ scale: pressed ? 0.92 : 1 }] })}
         >
-          <Icon name="expand-outline" sf="arrow.up.left.and.arrow.down.right" size={17} color="#FFFFFF" weight="semibold" />
+          <Glas klar style={{ width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" }}>
+            <Icon name="expand-outline" sf="arrow.up.left.and.arrow.down.right" size={16} color="#FFFFFF" weight="semibold" />
+          </Glas>
         </Pressable>
       ) : null}
 

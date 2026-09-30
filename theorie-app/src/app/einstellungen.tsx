@@ -129,7 +129,7 @@ export default function Einstellungen() {
             <Chip text="Tagfahrt (hell)" aktiv={darstellung === "hell"} onPress={() => darstellungSetzen("hell")} />
           </View>
           <T v="klein" style={{ marginTop: abstand(2) }}>
-            Gilt für Home, Lernen, Prüfung und Profil – die anderen Seiten folgen.
+            Gilt für Home, Lernen, Prüfung, Profil und die Fragen – die anderen Seiten folgen.
           </T>
         </View>
 

@@ -90,6 +90,8 @@ const SF: Partial<Record<IconName, SFSymbol>> = {
   "swap-horizontal": "arrow.left.arrow.right",
   "hourglass-outline": "hourglass",
   flag: "flag.fill",
+  "flag-outline": "flag",
+  "calculator-outline": "plus.forwardslash.minus",
   "trail-sign": "signpost.right.fill",
   "car-outline": "car.fill",
   // Clips

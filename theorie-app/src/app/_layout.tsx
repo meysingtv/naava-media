@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, View } from "react-native";
-import { router, Stack } from "expo-router";
+import { Animated, Text, View } from "react-native";
+import { router, Stack, usePathname } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import * as SplashScreen from "expo-splash-screen";
 import * as Notifications from "expo-notifications";
 import { StatusBar } from "expo-status-bar";
@@ -14,17 +15,16 @@ import { AuswahlBlattHost } from "@/components/auswahl-blatt";
 import { BossTrefferAnzeige } from "@/components/crew";
 import { DialogHost } from "@/components/dialog";
 import { Icon } from "@/components/icon";
-import { T } from "@/components/ui";
 import { erfolgVon } from "@/lib/erfolge";
 import { erfolg } from "@/lib/haptik";
 import { CrewProvider } from "@/lib/crew";
-import { DarstellungBruecke, DarstellungProvider } from "@/lib/darstellung";
+import { DarstellungBruecke, DarstellungProvider, istHelleSeite, useDarstellung } from "@/lib/darstellung";
 import { KontoProvider, useKonto } from "@/lib/konto";
 import { StandProvider, useStand } from "@/lib/stand";
 import { ProfilbildAbgleich } from "@/lib/profilbild";
 import { PruefungstagBruecke } from "@/lib/pruefungstag";
 import { SyncBruecke } from "@/lib/sync";
-import { abstand, farben, RAND } from "@/lib/theme";
+import { farben, leuchten, schrift, verlauf } from "@/lib/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -32,9 +32,11 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: false }),
 });
 
-/** Kurzer Hinweis oben, wenn ein Abzeichen freigeschaltet wurde. */
+/** Kurzer Hinweis oben als kleine Kapsel, wenn ein Abzeichen freigeschaltet wurde. */
 function ErfolgHinweis() {
   const { neueErfolge, erfolgeGesehen } = useStand();
+  const { darstellung } = useDarstellung();
+  const hell = istHelleSeite(darstellung, usePathname());
   const insets = useSafeAreaInsets();
   const [aktuell, setAktuell] = useState<string | null>(null);
   const y = useRef(new Animated.Value(-140)).current;
@@ -57,30 +59,35 @@ function ErfolgHinweis() {
   return (
     <Animated.View
       pointerEvents="none"
-      style={{
-        position: "absolute",
-        top: insets.top + abstand(2),
-        left: RAND,
-        right: RAND,
-        transform: [{ translateY: y }],
-        flexDirection: "row",
-        alignItems: "center",
-        gap: abstand(3),
-        padding: abstand(3.5),
-        borderRadius: 18,
-        backgroundColor: farben.flaeche2,
-        borderWidth: 1,
-        borderColor: farben.orangeLinie,
-      }}
+      style={[
+        {
+          position: "absolute",
+          top: insets.top + 4,
+          alignSelf: "center",
+          maxWidth: "90%",
+          transform: [{ translateY: y }],
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 10,
+          height: 54,
+          paddingLeft: 7,
+          paddingRight: 18,
+          borderRadius: 27,
+          backgroundColor: hell ? "#FFFFFF" : "#1A2128",
+          borderWidth: 1,
+          borderColor: hell ? "rgba(242,84,10,0.22)" : "rgba(252,91,14,0.42)",
+        },
+        hell ? leuchten("#3C2C18", 0.16, 18, 6) : leuchten("#000000", 0.55, 18, 6),
+      ]}
     >
-      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: farben.orange, alignItems: "center", justifyContent: "center" }}>
-        <Icon name={e.icon} size={20} color={farben.aufOrange} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <T v="mini" farbe={farben.orange}>
-          Abzeichen freigeschaltet
-        </T>
-        <T v="textStark">{e.titel}</T>
+      <LinearGradient colors={verlauf.knopf} style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}>
+        <Icon name={e.icon} size={19} color="#FFFFFF" />
+      </LinearGradient>
+      <View style={{ flexShrink: 1 }}>
+        <Text style={{ ...schrift.textFett, fontSize: 10.5, letterSpacing: 1, color: hell ? "#F2540A" : farben.orange }}>ABZEICHEN FREIGESCHALTET</Text>
+        <Text style={{ ...schrift.textHalb, fontSize: 15, color: hell ? "#14171B" : "#FFFFFF" }} numberOfLines={1}>
+          {e.titel}
+        </Text>
       </View>
     </Animated.View>
   );

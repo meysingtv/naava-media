@@ -5,39 +5,44 @@ import type { Hinweis } from "@/components/hinweis";
 import { Icon, type IconName } from "@/components/icon";
 import { KartenVorschau } from "@/components/karteikarte";
 import { Knopf } from "@/components/ui";
+import { useFarbwelt } from "@/lib/darstellung";
 import { erfolg, tippen } from "@/lib/haptik";
 import { frageKarteId, useStand } from "@/lib/stand";
-import { farben, schrift } from "@/lib/theme";
+import { leuchten, mitDeckkraft, schrift } from "@/lib/theme";
 
 function AktionsKnopf({ icon, titel, marke, aktiv, onPress, label }: { icon: IconName; titel: string; marke?: string; aktiv?: boolean; onPress: () => void; label: string }) {
+  const f = useFarbwelt();
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => ({
-        flex: 1,
-        height: 46,
-        borderRadius: 14,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 7,
-        paddingHorizontal: 10,
-        backgroundColor: aktiv ? farben.orangeSoft : "#161D24",
-        borderWidth: 1,
-        borderColor: aktiv ? farben.orangeLinie : "rgba(255,255,255,0.1)",
-        opacity: pressed ? 0.82 : 1,
-        transform: [{ scale: pressed ? 0.98 : 1 }],
-      })}
+      style={({ pressed }) => [
+        {
+          flex: 1,
+          height: 50,
+          borderRadius: 25,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          paddingHorizontal: 12,
+          backgroundColor: aktiv ? (f.hell ? "#FFF1E8" : mitDeckkraft(f.orange, 0.14)) : f.hell ? "#FFFFFF" : "rgba(255,255,255,0.06)",
+          borderWidth: 1,
+          borderColor: aktiv ? mitDeckkraft(f.orange, 0.45) : f.hell ? "rgba(20,23,27,0.05)" : "rgba(255,255,255,0.09)",
+          opacity: pressed ? 0.85 : 1,
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+        },
+        f.hell && !aktiv ? leuchten("#3C2C18", 0.06, 10, 3) : null,
+      ]}
     >
-      <Icon name={icon} size={17} color={farben.orange} weight="semibold" />
-      <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 15, color: aktiv ? farben.orange : "#E6E8EB", flexShrink: 1 }}>
+      <Icon name={icon} size={17} color={f.orange} weight="semibold" />
+      <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 15, color: aktiv ? f.orange : f.text, flexShrink: 1 }}>
         {titel}
       </Text>
       {marke ? (
-        <View style={{ paddingHorizontal: 6, height: 18, borderRadius: 9, backgroundColor: "rgba(255,255,255,0.1)", justifyContent: "center" }}>
-          <Text style={{ ...schrift.textFett, fontSize: 10, letterSpacing: 0.5, color: farben.text2 }}>{marke}</Text>
+        <View style={{ paddingHorizontal: 7, height: 19, borderRadius: 10, backgroundColor: f.hell ? "#F1EDE6" : "rgba(255,255,255,0.1)", justifyContent: "center" }}>
+          <Text style={{ ...schrift.textFett, fontSize: 9.5, letterSpacing: 0.6, color: f.text3 }}>{marke}</Text>
         </View>
       ) : null}
     </Pressable>

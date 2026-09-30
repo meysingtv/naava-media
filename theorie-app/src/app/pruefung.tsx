@@ -1,22 +1,26 @@
 import { useEffect, useRef, useState } from "react";
-import { Keyboard, KeyboardAvoidingView, Pressable, ScrollView, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Keyboard, KeyboardAvoidingView, Pressable, ScrollView, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Icon } from "@/components/icon";
-import { Abschnitt, Chip, Gruppe, Karte, Knopf, Kopf, kopfOben, KopfTaste, T, Zeile } from "@/components/ui";
+import { kopfOben } from "@/components/ui";
+import { AllesRichtig, ErgebnisHeld, ErgebnisRing, ErgebnisWerte, FehlerKarte, Stempel } from "@/components/auswertung";
 import { FrageAktionen } from "@/components/frage-aktionen";
 import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
-import { Ring } from "@/components/grafik";
+import { AktionsLeiste, FrageKopf, FragenNavigator, GlasPille, GlasRund, HauptKnopf, Kapsel, NebenKnopf } from "@/components/frage-rahmen";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
+import { Kopfzeile } from "@/components/home";
+import { Eckdaten, ErgebnisListe, RegelListe, type Regel } from "@/components/pruefen";
 import { dialog } from "@/components/dialog";
-import { antwortRichtig, frageVon, FRAGEN, THEMEN, themaVon, type Frage } from "@/lib/fragen";
-import { datumKurz, dauer } from "@/lib/format";
+import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
+import { FOTOS } from "@/lib/fotos";
+import { antwortRichtig, frageVon, FRAGEN, THEMEN, type Frage } from "@/lib/fragen";
+import { dauer } from "@/lib/format";
 import { erfolg, fehler, tippen } from "@/lib/haptik";
 import { liveSimulation } from "@/lib/live-aktivitaet";
 import { gemischt, useStand } from "@/lib/stand";
-import { abstand, farben, leuchten, RAND, schrift } from "@/lib/theme";
+import { mitDeckkraft, RAND, schrift } from "@/lib/theme";
 import { useZurueckTaste } from "@/lib/zurueck-taste";
 
 const FRAGEN_ANZAHL = 30;
@@ -46,6 +50,7 @@ function beantwortet(f: Frage, a?: { auswahl: number[]; eingabe: string }) {
 
 export default function Pruefung() {
   const insets = useSafeAreaInsets();
+  const { farbwelt: f } = useDarstellung();
   const { direkt } = useLocalSearchParams<{ direkt?: string }>();
   const { stand, antwort, pruefungFertig, zeitBuchen } = useStand();
   const [phase, setPhase] = useState<"start" | "laeuft" | "ergebnis" | "aufloesung">(direkt ? "laeuft" : "start");
@@ -72,9 +77,11 @@ export default function Pruefung() {
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
   const erledigt = ids.filter((id) => {
-    const f = frageVon(id);
-    return f && beantwortet(f, antworten[id]);
+    const q = frageVon(id);
+    return q && beantwortet(q, antworten[id]);
   }).length;
+  const gruen = f.hell ? "#23A548" : "#4ED053";
+  const rot = f.hell ? "#E5392C" : "#FF5A4E";
 
   useEffect(() => {
     if (phase !== "laeuft") return;
@@ -127,15 +134,15 @@ export default function Pruefung() {
     let richtig = 0;
     const falsche: string[] = [];
     for (const id of ids) {
-      const f = frageVon(id);
-      if (!f) continue;
+      const q = frageVon(id);
+      if (!q) continue;
       const a = antworten[id] ?? { auswahl: [], eingabe: "" };
-      const ok = antwortRichtig(f, a.auswahl, a.eingabe);
+      const ok = antwortRichtig(q, a.auswahl, a.eingabe);
       antwort(id, ok);
       if (ok) richtig++;
       else {
-        fehlerpunkte += f.punkte;
-        if (f.punkte === 5) fuenfer++;
+        fehlerpunkte += q.punkte;
+        if (q.punkte === 5) fuenfer++;
         falsche.push(id);
       }
     }
@@ -155,8 +162,8 @@ export default function Pruefung() {
 
   function abgebenFragen() {
     const offen = ids.filter((id) => {
-      const f = frageVon(id);
-      return f && !beantwortet(f, antworten[id]);
+      const q = frageVon(id);
+      return q && !beantwortet(q, antworten[id]);
     }).length;
     dialog(
       "Prüfung abgeben?",
@@ -169,6 +176,10 @@ export default function Pruefung() {
   }
 
   function abbrechenFragen() {
+    if (phase === "aufloesung") {
+      setPhase("ergebnis");
+      return;
+    }
     if (phase !== "laeuft") {
       router.back();
       return;
@@ -182,7 +193,7 @@ export default function Pruefung() {
 
   // ------------------------------------------------------------------ Start
   if (phase === "start") {
-    const regeln: { icon: keyof typeof Ionicons.glyphMap; text: string }[] = [
+    const regeln: Regel[] = [
       { icon: "layers-outline", text: `${Math.min(FRAGEN_ANZAHL, FRAGEN.length)} Fragen aus allen Themen, gemischt` },
       { icon: "time-outline", text: "45 Minuten Zeit – danach wird automatisch abgegeben" },
       { icon: "alert-circle-outline", text: "Jede Frage zählt 2 bis 5 Fehlerpunkte" },
@@ -190,143 +201,155 @@ export default function Pruefung() {
       { icon: "eye-off-outline", text: "Die Auflösung siehst du erst nach dem Abgeben" },
     ];
     return (
-      <View style={{ flex: 1, backgroundColor: farben.grund }}>
-        <Kopf schliessen />
-        <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: abstand(8), gap: abstand(6) }}>
-          <View style={{ gap: abstand(2) }}>
-            <T v="mini" farbe={farben.orange}>
-              Prüfungssimulation
-            </T>
-            <T v="display">Wie in der echten Prüfung.</T>
-          </View>
-          <Gruppe>
-            {regeln.map((r) => (
-              <Zeile key={r.text} icon={r.icon} iconFarbe={farben.orange} titel={r.text} />
-            ))}
-          </Gruppe>
-          {stand.pruefungen.length > 0 ? (
-            <View>
-              <Abschnitt titel="Letzte Simulationen" />
-              <Gruppe>
-                {stand.pruefungen.slice(0, 5).map((p) => (
-                  <Zeile
-                    key={p.datum}
-                    icon={p.bestanden ? "checkmark-circle" : "close-circle"}
-                    iconFarbe={p.bestanden ? farben.gruen : farben.rot}
-                    titel={p.bestanden ? "Bestanden" : "Nicht bestanden"}
-                    unter={`${datumKurz(p.datum)} · ${p.richtig} von ${p.gesamt} richtig`}
-                    wert={`${p.fehlerpunkte} FP`}
-                  />
-                ))}
-              </Gruppe>
+      <FarbweltBereich farbwelt={f}>
+        <StatusBar style={f.hell ? "dark" : "light"} />
+        <View style={{ flex: 1, backgroundColor: f.grund }}>
+          <FrageKopf oben={kopfOben(insets.top)} links={<GlasRund icon="close" label="Schließen" onPress={() => router.back()} />} rechts={null} titel="Prüfungssimulation" />
+          <ScrollView contentContainerStyle={{ paddingTop: 8, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+            <View style={{ paddingHorizontal: RAND, gap: 4, marginBottom: 22 }}>
+              <Text style={{ ...schrift.titel, fontSize: 32, lineHeight: 38, color: f.text }}>Wie in der echten Prüfung.</Text>
+              <Text style={{ ...schrift.text, fontSize: 15.5, lineHeight: 22, color: f.text2 }}>Ohne Hilfe, mit Uhr – die Auflösung gibt es erst am Ende.</Text>
             </View>
-          ) : null}
-        </ScrollView>
-        <View style={{ paddingHorizontal: RAND, paddingTop: abstand(3), paddingBottom: insets.bottom + abstand(3), borderTopWidth: 1, borderColor: farben.linie }}>
-          <Knopf titel="Simulation starten" icon="arrow-forward" onPress={starten} />
+            <Eckdaten style={{ marginHorizontal: RAND }} />
+            <RegelListe regeln={regeln} style={{ marginHorizontal: RAND, marginTop: 10 }} />
+            {stand.pruefungen.length > 0 ? (
+              <>
+                <Kopfzeile titel="Letzte Simulationen" style={{ marginTop: 30 }} />
+                <ErgebnisListe pruefungen={stand.pruefungen.slice(0, 5)} style={{ marginHorizontal: RAND }} />
+              </>
+            ) : null}
+          </ScrollView>
+          <AktionsLeiste unten={insets.bottom}>
+            <HauptKnopf titel="Simulation starten" icon="arrow-forward" onPress={starten} style={{ flex: 1 }} />
+          </AktionsLeiste>
         </View>
-      </View>
+      </FarbweltBereich>
     );
   }
 
-  // ------------------------------------------------------------------ Ergebnis
-  if ((phase === "ergebnis" || phase === "aufloesung") && ergebnis) {
-    if (phase === "aufloesung") {
-      return (
-        <View style={{ flex: 1, backgroundColor: farben.grund }}>
-          <Kopf titel="Auflösung" rechts={<Chip text={`${ergebnis.falsche.length} falsch`} farbe={farben.rot} />} />
-          <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(8), gap: abstand(10) }}>
+  // ------------------------------------------------------------------ Auflösung
+  if (phase === "aufloesung" && ergebnis) {
+    return (
+      <FarbweltBereich farbwelt={f}>
+        <StatusBar style={f.hell ? "dark" : "light"} />
+        <View style={{ flex: 1, backgroundColor: f.grund }}>
+          <FrageKopf
+            oben={kopfOben(insets.top)}
+            links={<GlasRund icon="chevron-back" label="Zurück zum Ergebnis" onPress={() => setPhase("ergebnis")} />}
+            rechts={null}
+            titel="Auflösung"
+            unter={<Kapsel icon="close" text={`${ergebnis.falsche.length} falsch`} farbe={rot} />}
+          />
+          <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: 8, paddingBottom: insets.bottom + 32, gap: 40 }} showsVerticalScrollIndicator={false}>
             {ergebnis.falsche.map((id) => {
-              const f = frageVon(id);
+              const q = frageVon(id);
               const a = antworten[id] ?? { auswahl: [], eingabe: "" };
-              return f ? (
-                <View key={id} style={{ gap: 14 }}>
-                  <FrageAnsicht frage={f} auswahl={a.auswahl} onAuswahl={() => {}} eingabe={a.eingabe} onEingabe={() => {}} aufgedeckt etikett="Prüfung" reihenfolge={reihenfolge(f)} />
+              return q ? (
+                <View key={id} style={{ gap: 12 }}>
+                  <Text style={{ ...schrift.textFett, fontSize: 12, letterSpacing: 1.2, color: f.text3 }}>
+                    FRAGE {ids.indexOf(id) + 1} · {q.punkte} FEHLERPUNKTE
+                  </Text>
+                  <FrageAnsicht frage={q} auswahl={a.auswahl} onAuswahl={() => {}} eingabe={a.eingabe} onEingabe={() => {}} aufgedeckt etikett="Prüfung" reihenfolge={reihenfolge(q)} />
                   <FrageAktionen frageId={id} onHinweis={hinweis.zeigen} />
                 </View>
               ) : null;
             })}
           </ScrollView>
-          <HinweisAnzeige wert={hinweis.wert} inhalt={hinweis.inhalt} oben={insets.top + 56} />
+          <HinweisAnzeige wert={hinweis.wert} inhalt={hinweis.inhalt} oben={insets.top + 70} />
         </View>
-      );
-    }
+      </FarbweltBereich>
+    );
+  }
+
+  // ------------------------------------------------------------------ Ergebnis
+  if (phase === "ergebnis" && ergebnis) {
     const ok = ergebnis.bestanden;
+    const text = ok
+      ? "Sauber. So darf es in der echten Prüfung laufen."
+      : ergebnis.fuenfer >= 2 && ergebnis.fehlerpunkte <= MAX_FEHLERPUNKTE
+        ? "Zwei falsche 5-Punkte-Fragen – das reicht in der echten Prüfung zum Durchfallen."
+        : "Schau dir die Fehler an und übe die Themen gezielt.";
+    const hatFehler = ergebnis.falsche.length > 0;
     return (
-      <View style={{ flex: 1, backgroundColor: farben.grund }}>
-        <ScrollView contentContainerStyle={{ paddingTop: insets.top + abstand(10), paddingHorizontal: RAND, paddingBottom: abstand(8), gap: abstand(7) }}>
-          <View style={{ alignItems: "center", gap: abstand(4) }}>
-            <Ring anteil={Math.min(1, ergebnis.fehlerpunkte / MAX_FEHLERPUNKTE)} groesse={156} dicke={10} farbe={ok ? farben.gruen : farben.rot}>
-              <T v="display" style={{ fontSize: 42 }}>
-                {ergebnis.fehlerpunkte}
-              </T>
-              <T v="klein" style={{ marginTop: -4 }}>
-                Fehlerpunkte
-              </T>
-            </Ring>
-            <View
-              style={{
-                paddingHorizontal: abstand(4),
-                paddingVertical: abstand(1.5),
-                borderRadius: 8,
-                borderWidth: 2,
-                borderColor: ok ? farben.gruen : farben.rot,
-                transform: [{ rotate: "-4deg" }],
-              }}
-            >
-              <T v="h2" farbe={ok ? farben.gruen : farben.rot} style={{ letterSpacing: 1.5, ...schrift.titel }}>
-                {ok ? "BESTANDEN" : "NICHT BESTANDEN"}
-              </T>
+      <FarbweltBereich farbwelt={f}>
+        <StatusBar style="light" />
+        <View style={{ flex: 1, backgroundColor: f.grund }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+            <ErgebnisHeld bild={FOTOS.pruefung} oben={insets.top + 16} hoehe={insets.top + 420} label={`Simulation · ${ids.length} Fragen`} titel={ok ? "Geschafft!" : "Noch nicht ganz."}>
+              <View style={{ alignItems: "center" }}>
+                <ErgebnisRing
+                  anteil={Math.min(1, ergebnis.fehlerpunkte / MAX_FEHLERPUNKTE)}
+                  wert={`${ergebnis.fehlerpunkte}`}
+                  unter="Fehlerpunkte"
+                  ton={ok ? "gruen" : "rot"}
+                  spur={ok ? mitDeckkraft("#4ED053", 0.28) : undefined}
+                />
+                <Stempel bestanden={ok} style={{ marginTop: -22 }} />
+              </View>
+            </ErgebnisHeld>
+
+            <ErgebnisWerte
+              werte={[
+                { icon: "checkmark-circle", farbe: gruen, wert: `${ergebnis.richtig}/${ids.length}`, label: "richtig" },
+                { icon: "time-outline", farbe: f.orange, wert: dauer(sekunden), label: "Zeit" },
+                { icon: "flash", farbe: f.orange, wert: `+${ergebnis.xp}`, label: "XP" },
+              ]}
+              style={{ marginHorizontal: RAND, marginTop: -40 }}
+            />
+
+            <View style={{ paddingHorizontal: RAND + 8, marginTop: 18, gap: 6 }}>
+              {ergebnis.zeitAbgelaufen ? (
+                <Text style={{ ...schrift.textHalb, fontSize: 14, lineHeight: 20, color: rot, textAlign: "center" }}>Die 45 Minuten sind abgelaufen – offene Fragen zählen als falsch.</Text>
+              ) : null}
+              <Text style={{ ...schrift.text, fontSize: 15.5, lineHeight: 22, color: f.text2, textAlign: "center" }}>{text}</Text>
             </View>
-            {ergebnis.zeitAbgelaufen ? (
-              <T v="klein" farbe={farben.rot} zentriert>
-                Die 45 Minuten sind abgelaufen – offene Fragen zählen als falsch.
-              </T>
+
+            <Kopfzeile
+              titel={hatFehler ? "Falsch beantwortet" : "Fehlerfrei"}
+              link={hatFehler ? "Auflösung" : undefined}
+              onLink={hatFehler ? () => setPhase("aufloesung") : undefined}
+              style={{ marginTop: 30 }}
+            />
+            <View style={{ paddingHorizontal: RAND, gap: 10 }}>
+              {hatFehler ? (
+                ergebnis.falsche.map((id) => {
+                  const q = frageVon(id);
+                  return q ? <FehlerKarte key={id} frage={q} onPress={() => setPhase("aufloesung")} /> : null;
+                })
+              ) : (
+                <AllesRichtig text="Alle Fragen richtig – besser geht es nicht." />
+              )}
+            </View>
+
+            {hatFehler ? (
+              <Pressable
+                onPress={() => {
+                  tippen();
+                  starten();
+                }}
+                hitSlop={8}
+                style={({ pressed }) => ({ alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 6, marginTop: 22, opacity: pressed ? 0.6 : 1 })}
+              >
+                <Text style={{ ...schrift.textHalb, fontSize: 15, color: f.orange }}>Neue Simulation starten</Text>
+              </Pressable>
             ) : null}
-            <T v="text" zentriert>
-              {ok
-                ? "Sauber. So darf es in der echten Prüfung laufen."
-                : ergebnis.fuenfer >= 2 && ergebnis.fehlerpunkte <= MAX_FEHLERPUNKTE
-                  ? "Zwei falsche 5-Punkte-Fragen – das reicht in der echten Prüfung zum Durchfallen."
-                  : "Schau dir die Fehler an und übe die Themen gezielt."}
-            </T>
-          </View>
+          </ScrollView>
 
-          <View style={{ flexDirection: "row", gap: abstand(3) }}>
-            {[
-              { w: `${ergebnis.richtig}/${ids.length}`, l: "richtig" },
-              { w: dauer(sekunden), l: "Zeit" },
-              { w: `+${ergebnis.xp}`, l: "XP" },
-            ].map((x) => (
-              <Karte key={x.l} style={{ flex: 1, padding: abstand(3.5), alignItems: "center", gap: 2 }}>
-                <T v="h2" style={{ fontVariant: ["tabular-nums"] }}>
-                  {x.w}
-                </T>
-                <T v="klein">{x.l}</T>
-              </Karte>
-            ))}
-          </View>
-
-          {ergebnis.falsche.length > 0 ? (
-            <View>
-              <Abschnitt titel="Falsch beantwortet" aktion="Auflösung" onAktion={() => setPhase("aufloesung")} />
-              <Gruppe>
-                {ergebnis.falsche.map((id) => {
-                  const f = frageVon(id);
-                  return f ? <Zeile key={id} titel={f.text} titelZeilen={2} unter={themaVon(f.thema).titel} wert={`${f.punkte} FP`} /> : null;
-                })}
-              </Gruppe>
-            </View>
-          ) : null}
-        </ScrollView>
-        <View style={{ paddingHorizontal: RAND, paddingTop: abstand(3), paddingBottom: insets.bottom + abstand(3), gap: abstand(3), borderTopWidth: 1, borderColor: farben.linie }}>
-          {ergebnis.falsche.length > 0 ? <Knopf titel="Auflösung ansehen" onPress={() => setPhase("aufloesung")} /> : null}
-          <View style={{ flexDirection: "row", gap: abstand(3) }}>
-            <Knopf titel="Neue Simulation" art="sekundaer" onPress={starten} style={{ flex: 1 }} />
-            <Knopf titel="Fertig" art="sekundaer" onPress={() => router.back()} style={{ flex: 1 }} />
-          </View>
+          <AktionsLeiste unten={insets.bottom}>
+            {hatFehler ? (
+              <>
+                <NebenKnopf titel="Fertig" onPress={() => router.back()} style={{ flex: 1 }} />
+                <HauptKnopf titel="Auflösung" icon="eye-outline" onPress={() => setPhase("aufloesung")} style={{ flex: 1.5 }} />
+              </>
+            ) : (
+              <>
+                <NebenKnopf titel="Nochmal" icon="refresh" onPress={starten} style={{ flex: 1 }} />
+                <HauptKnopf titel="Fertig" icon="checkmark" onPress={() => router.back()} style={{ flex: 1.5 }} />
+              </>
+            )}
+          </AktionsLeiste>
         </View>
-      </View>
+      </FarbweltBereich>
     );
   }
 
@@ -340,98 +363,50 @@ export default function Pruefung() {
   const knapp = rest <= ZEIT_KNAPP;
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <View style={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND - 8, gap: abstand(2.5) }}>
-        <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <View pointerEvents="none" style={{ position: "absolute", left: 70, right: 70, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
-            <T v="h3" style={{ fontSize: 19, fontVariant: ["tabular-nums"] }}>
-              Frage {index + 1}/{ids.length}
-            </T>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Icon name="time-outline" size={12} color={knapp ? farben.rot : farben.text3} />
-              <T v="klein" farbe={knapp ? farben.rot : undefined} style={{ fontSize: 11.5, fontVariant: ["tabular-nums"] }}>
-                noch {dauer(rest)} · {erledigt} beantwortet
-              </T>
-            </View>
-          </View>
-          <KopfTaste
-            icon="close"
-            label="Simulation abbrechen"
-            onPress={abbrechenFragen}
-          />
-          <Pressable onPress={abgebenFragen} hitSlop={10} style={{ paddingHorizontal: abstand(2), height: 40, justifyContent: "center" }}>
-            <T v="textStark" farbe={farben.orange}>
-              Abgeben
-            </T>
-          </Pressable>
-        </View>
-        <View style={{ marginHorizontal: 8, height: 9, borderRadius: 5, backgroundColor: farben.flaeche3 }}>
-          <View
-            style={{
-              width: `${Math.max(4, (erledigt / Math.max(1, ids.length)) * 100)}%`,
-              height: "100%",
-              borderRadius: 5,
-              backgroundColor: farben.orange,
-              ...leuchten(farben.orange, 0.7, 8, 0),
+    <FarbweltBereich farbwelt={f}>
+      <StatusBar style={f.hell ? "dark" : "light"} />
+      <View style={{ flex: 1, backgroundColor: f.grund }}>
+        <FrageKopf
+          oben={kopfOben(insets.top)}
+          links={<GlasRund icon="close" label="Simulation abbrechen" onPress={abbrechenFragen} />}
+          rechts={<GlasPille titel="Abgeben" onPress={abgebenFragen} />}
+          titel={`Frage ${index + 1} von ${ids.length}`}
+          unter={<Kapsel icon="time-outline" text={`noch ${dauer(rest)}`} farbe={knapp ? rot : undefined} gefuellt={knapp} />}
+        >
+          <FragenNavigator
+            anzahl={ids.length}
+            aktiv={index}
+            erledigt={(i) => {
+              const q = frageVon(ids[i]);
+              return q ? beantwortet(q, antworten[ids[i]]) : false;
             }}
+            onWahl={gehe}
           />
-        </View>
+        </FrageKopf>
+
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+          <ScrollView ref={scroll} contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: 4, paddingBottom: 28 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <FrageAnsicht
+              frage={frage}
+              auswahl={a.auswahl}
+              onAuswahl={(auswahl) => setzeAntwort({ auswahl })}
+              eingabe={a.eingabe}
+              onEingabe={(eingabe) => setzeAntwort({ eingabe })}
+              aufgedeckt={false}
+              etikett="Prüfung"
+              reihenfolge={reihenfolge(frage)}
+            />
+          </ScrollView>
+          <AktionsLeiste unten={insets.bottom}>
+            <NebenKnopf icon="chevron-back" onPress={() => gehe(index - 1)} deaktiviert={index === 0} style={{ width: 56 }} />
+            {index + 1 < ids.length ? (
+              <HauptKnopf titel="Nächste Frage" icon="arrow-forward" onPress={() => gehe(index + 1)} style={{ flex: 1 }} />
+            ) : (
+              <HauptKnopf titel="Abgeben" icon="checkmark" onPress={abgebenFragen} style={{ flex: 1 }} />
+            )}
+          </AktionsLeiste>
+        </KeyboardAvoidingView>
       </View>
-
-      {/* Fragen-Navigator */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: RAND, paddingVertical: abstand(3), gap: abstand(2) }}>
-        {ids.map((id, i) => {
-          const f = frageVon(id);
-          const fertig = f ? beantwortet(f, antworten[id]) : false;
-          const aktiv = i === index;
-          return (
-            <Pressable
-              key={id}
-              onPress={() => {
-                tippen();
-                gehe(i);
-              }}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: fertig ? farben.flaeche3 : farben.flaeche,
-                borderWidth: 1.5,
-                borderColor: aktiv ? farben.orange : fertig ? farben.flaeche3 : farben.linie,
-              }}
-            >
-              <T v="klein" farbe={aktiv ? farben.orange : fertig ? farben.text : farben.text3} style={{ ...schrift.textHalb }}>
-                {i + 1}
-              </T>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-        <ScrollView ref={scroll} contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(1), paddingBottom: abstand(8) }} keyboardShouldPersistTaps="handled">
-          <FrageAnsicht
-            frage={frage}
-            auswahl={a.auswahl}
-            onAuswahl={(auswahl) => setzeAntwort({ auswahl })}
-            eingabe={a.eingabe}
-            onEingabe={(eingabe) => setzeAntwort({ eingabe })}
-            aufgedeckt={false}
-            etikett="Prüfung"
-            reihenfolge={reihenfolge(frage)}
-          />
-        </ScrollView>
-        <View style={{ flexDirection: "row", gap: abstand(3), paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: insets.bottom + abstand(3) }}>
-          <Knopf titel="Zurück" art="sekundaer" deaktiviert={index === 0} onPress={() => gehe(index - 1)} style={{ flex: 1 }} />
-          {index + 1 < ids.length ? (
-            <Knopf titel="Nächste Frage" icon="arrow-forward" onPress={() => gehe(index + 1)} style={{ flex: 2 }} />
-          ) : (
-            <Knopf titel="Abgeben" icon="checkmark" onPress={abgebenFragen} style={{ flex: 2 }} />
-          )}
-        </View>
-      </KeyboardAvoidingView>
-    </View>
+    </FarbweltBereich>
   );
 }
