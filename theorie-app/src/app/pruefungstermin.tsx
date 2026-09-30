@@ -5,12 +5,16 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Gruppe, Knopf, Kopf, T, Zeile } from "@/components/ui";
+import { AktionsLeiste, HauptKnopf, NebenKnopf } from "@/components/frage-rahmen";
+import { FotoKopf, Seite } from "@/components/seite";
+import { Gruppe, kartenFlaeche, T, Zeile } from "@/components/ui";
+import { useDarstellung } from "@/lib/darstellung";
+import { FOTOS } from "@/lib/fotos";
 import { datumLang, uhrzeit } from "@/lib/format";
 import { erfolg } from "@/lib/haptik";
 import { countdownMoeglich, pruefungstagErinnerungPlanen, tageText, terminDatum, terminText } from "@/lib/pruefungstag";
 import { useStand } from "@/lib/stand";
-import { abstand, farben, RAND } from "@/lib/theme";
+import { abstand, RAND } from "@/lib/theme";
 
 /** Vorschlag, wenn noch nichts eingetragen ist: in zwei Wochen um 10 Uhr. */
 function vorschlag(): Date {
@@ -23,6 +27,8 @@ function vorschlag(): Date {
 /** Termin der Theorieprüfung eintragen – für Countdown und Erinnerung am Prüfungstag. */
 export default function Pruefungstermin() {
   const insets = useSafeAreaInsets();
+  const { farbwelt: f } = useDarstellung();
+  const rot = f.hell ? "#E5392C" : "#FF5A4E";
   const { stand, setzen } = useStand();
   const gespeichert = terminDatum(stand.pruefungstermin);
   const [wert, setWert] = useState<Date>(() => gespeichert ?? vorschlag());
@@ -78,11 +84,12 @@ export default function Pruefungstermin() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <Kopf titel="Prüfungstermin" schliessen />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: abstand(8), gap: abstand(5) }}>
-        <View style={{ flexDirection: "row", gap: abstand(3), padding: abstand(4), borderRadius: 18, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
-          <Icon name={countdown ? "phone-portrait-outline" : "notifications-outline"} size={22} color={farben.orange} />
+    <Seite>
+      <ScrollView contentContainerStyle={{ paddingBottom: abstand(8) }} showsVerticalScrollIndicator={false}>
+        <FotoKopf bild={FOTOS.pruefung} hoehe={220} schliessen titel="Prüfungstermin" unter="Wann ist deine Theorieprüfung?" />
+        <View style={{ paddingHorizontal: RAND, marginTop: 8, gap: abstand(5) }}>
+        <View style={[{ flexDirection: "row", gap: abstand(3), padding: abstand(4), borderRadius: 22 }, kartenFlaeche(f)]}>
+          <Icon name={countdown ? "phone-portrait-outline" : "notifications-outline"} size={22} color={f.orange} />
           <T v="klein" style={{ flex: 1 }}>
             {countdown
               ? "Am Prüfungstag läuft ein Countdown auf deinem Sperrbildschirm und in der Dynamic Island. Morgens bekommst du dazu eine kurze Erinnerung."
@@ -91,7 +98,7 @@ export default function Pruefungstermin() {
         </View>
 
         {Platform.OS === "ios" ? (
-          <View style={{ borderRadius: 18, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie, padding: abstand(2) }}>
+          <View style={[{ borderRadius: 24, padding: abstand(2) }, kartenFlaeche(f)]}>
             <DateTimePicker
               value={wert}
               mode="date"
@@ -99,8 +106,8 @@ export default function Pruefungstermin() {
               minimumDate={heute}
               maximumDate={inEinemJahr}
               onChange={(_, d) => d && datumSetzen(d)}
-              themeVariant="dark"
-              accentColor={farben.orange}
+              themeVariant={f.hell ? "light" : "dark"}
+              accentColor={f.orange}
               locale="de-DE"
             />
           </View>
@@ -111,14 +118,14 @@ export default function Pruefungstermin() {
         ) : (
           <Gruppe>
             {Platform.OS === "android" ? (
-              <Zeile icon="calendar-outline" iconFarbe={farben.orange} titel="Datum" wert={datumLang(wert)} onPress={() => androidWaehlen("date")} />
+              <Zeile icon="calendar-outline" iconFarbe={f.orange} titel="Datum" wert={datumLang(wert)} onPress={() => androidWaehlen("date")} />
             ) : null}
             {Platform.OS === "android" ? (
-              <Zeile icon="time-outline" iconFarbe={farben.orange} titel="Uhrzeit" wert={`${uhrzeit(wert.getHours(), wert.getMinutes())} Uhr`} onPress={() => androidWaehlen("time")} />
+              <Zeile icon="time-outline" iconFarbe={f.orange} titel="Uhrzeit" wert={`${uhrzeit(wert.getHours(), wert.getMinutes())} Uhr`} onPress={() => androidWaehlen("time")} />
             ) : (
               <Zeile
                 icon="time-outline"
-                iconFarbe={farben.orange}
+                iconFarbe={f.orange}
                 titel="Uhrzeit"
                 rechts={
                   <DateTimePicker
@@ -127,8 +134,8 @@ export default function Pruefungstermin() {
                     display="compact"
                     minuteInterval={5}
                     onChange={(_, d) => d && zeitSetzen(d)}
-                    themeVariant="dark"
-                    accentColor={farben.orange}
+                    themeVariant={f.hell ? "light" : "dark"}
+                    accentColor={f.orange}
                     locale="de-DE"
                   />
                 }
@@ -138,17 +145,18 @@ export default function Pruefungstermin() {
         )}
 
         <View style={{ gap: 2 }}>
-          <T v="mini" farbe={vergangen ? farben.rot : farben.orange}>
+          <T v="mini" farbe={vergangen ? rot : f.orange}>
             {vergangen ? "Dieser Zeitpunkt ist schon vorbei" : tageText(wert)}
           </T>
-          <T v="h3">{terminText(wert)}</T>
+          <T v="h3" style={{ fontSize: 19 }}>{terminText(wert)}</T>
+        </View>
         </View>
       </ScrollView>
 
-      <View style={{ paddingHorizontal: RAND, paddingTop: abstand(3), paddingBottom: insets.bottom + abstand(3), gap: abstand(2), borderTopWidth: 1, borderColor: farben.linie }}>
-        <Knopf titel="Termin speichern" icon="checkmark" onPress={speichern} deaktiviert={vergangen || Platform.OS === "web"} />
-        {gespeichert ? <Knopf titel="Termin entfernen" art="geist" onPress={entfernen} /> : null}
-      </View>
-    </View>
+      <AktionsLeiste unten={insets.bottom}>
+        {gespeichert ? <NebenKnopf icon="trash-outline" onPress={entfernen} style={{ width: 56 }} /> : null}
+        <HauptKnopf titel="Termin speichern" icon="checkmark" onPress={speichern} deaktiviert={vergangen || Platform.OS === "web"} style={{ flex: 1 }} />
+      </AktionsLeiste>
+    </Seite>
   );
 }

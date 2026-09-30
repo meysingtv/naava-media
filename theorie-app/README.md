@@ -56,9 +56,9 @@ Startknopf, Schnellstart, das Thema mit dem meisten Nachholbedarf, alle Themen
 als Karussell, die Prüfungssimulation, die Crew und ein Spruch des Tages.
 
 Unter Einstellungen → Darstellung gibt es „Nachtfahrt (dunkel)“ und
-„Tagfahrt (hell)“. Die helle Darstellung gilt für Home, Lernen, Prüfung,
-Profil sowie Training und Simulation – dort ist auch die Tab-Leiste unten
-helles Glas. Auf dem iPhone
+„Tagfahrt (hell)“. Die helle Darstellung gilt für die ganze App – nur Clips,
+der Kamera-Scanner und Anmelden/Registrieren bleiben bewusst dunkel. Auf den
+Tabs ist dann auch die Tab-Leiste unten helles Glas. Auf dem iPhone
 schaltet die App dafür das Fenster auf hell (`DarstellungBruecke` in
 `src/lib/darstellung.tsx`), weil die native Liquid-Glass-Leiste sich nach der
 Darstellung des Fensters richtet; fürs System ist die App sonst fest dunkel.
@@ -68,6 +68,12 @@ Ebenfalls unter Darstellung: „XP, HP & Abzeichen einblenden“ – von Haus au
 den Crew-Boss und keinen Hinweis auf neue Abzeichen; in den Auswertungen steht
 statt XP die Zeit. XP und Abzeichen werden trotzdem gesammelt (Liga, Profil).
 Die Einstellung gilt fürs Gerät (`belohnungen` in `src/lib/darstellung.tsx`).
+
+Unterseiten nutzen dieselben Bausteine: `Seite` (Farbwelt, Statusleiste),
+`FotoKopf` (Titelfoto mit Glas-Knöpfen, läuft in den Grund aus), `GrossKopf`
+(großer Titel ohne Foto), `StandKarte` und `WerteReihe` in
+`src/components/seite.tsx`; Knöpfe, Chips, Listen, Karten und Eingaben aus
+`src/components/ui.tsx` richten sich nach der Farbwelt.
 
 ## Lernen und Prüfung
 

@@ -135,9 +135,9 @@ export function useDarstellung(): Kontext {
 }
 
 /**
- * Bausteine wie die Crew-Karten gibt es auf hellen und dunklen Seiten. Home,
- * Lernen, Prüfung, Profil sowie Training und Simulation legen die Farbwelt für
- * ihren Bereich fest, alle anderen Seiten bleiben dunkel.
+ * Bausteine wie die Crew-Karten gibt es auf hellen und dunklen Seiten. Jede
+ * Seite legt die Farbwelt für ihren Bereich fest (Tabs selbst, Unterseiten über
+ * <Seite>). Ohne Bereich – Clips, Kamera, Anmeldung – bleibt es dunkel.
  */
 const FarbweltKontext = createContext<Farbwelt>(NACHT);
 
@@ -176,6 +176,11 @@ const HELLE_SEITEN = new Set([
   "elo",
   "duell",
   "online-duell",
+  "einstellungen",
+  "pruefungstermin",
+  "kalender",
+  "premium",
+  "bildnachweise",
 ]);
 
 /** Ist die Seite (Name der Route oder Pfad wie „/heute“ oder „/thema/vorfahrt“) gerade hell? */

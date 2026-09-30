@@ -3,7 +3,8 @@ import { Linking, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Abschnitt, Chip, Eingabe, Gruppe, Knopf, Kopf, PasswortEingabe, T, Zeile } from "@/components/ui";
+import { GrossKopf, Seite } from "@/components/seite";
+import { Abschnitt, Chip, Eingabe, Gruppe, Knopf, PasswortEingabe, T, Zeile } from "@/components/ui";
 import { Logo } from "@/components/grafik";
 import { dialog } from "@/components/dialog";
 import { Schalter } from "@/components/schalter";
@@ -119,9 +120,9 @@ export default function Einstellungen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <Kopf titel="Einstellungen" />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(10), gap: abstand(7) }} keyboardShouldPersistTaps="handled">
+    <Seite>
+      <GrossKopf titel="Einstellungen" unter="Darstellung, Lernziel, Konto" />
+      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(4), paddingBottom: insets.bottom + abstand(10), gap: abstand(7) }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View>
           <Abschnitt titel="Darstellung" klein />
           <View style={{ flexDirection: "row", gap: abstand(2) }}>
@@ -129,7 +130,7 @@ export default function Einstellungen() {
             <Chip text="Tagfahrt (hell)" aktiv={darstellung === "hell"} onPress={() => darstellungSetzen("hell")} />
           </View>
           <T v="klein" style={{ marginTop: abstand(2) }}>
-            Gilt für Home, Lernen, Prüfung, Profil und die Fragen – die anderen Seiten folgen.
+            Gilt für die ganze App – nur Clips, Kamera und Anmeldung bleiben dunkel.
           </T>
           <Gruppe style={{ marginTop: abstand(4) }}>
             <Zeile
@@ -144,7 +145,7 @@ export default function Einstellungen() {
 
         <View>
           <Abschnitt titel="Tagesziel" klein />
-          <View style={{ flexDirection: "row", gap: abstand(2) }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: abstand(2) }}>
             {ZIELE.map((z) => (
               <Chip key={z} text={`${z} Fragen`} aktiv={stand.tagesziel === z} onPress={() => setzen({ tagesziel: z })} />
             ))}
@@ -350,6 +351,6 @@ export default function Einstellungen() {
           <T v="klein">Version 1.0 · Beispielfragen, nicht der amtliche Katalog</T>
         </View>
       </ScrollView>
-    </View>
+    </Seite>
   );
 }

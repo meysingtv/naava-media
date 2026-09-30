@@ -3,10 +3,14 @@ import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Chip, Knopf, Kopf, T } from "@/components/ui";
+import { AktionsLeiste, HauptKnopf, KopfPille } from "@/components/frage-rahmen";
+import { FotoKopf, Seite } from "@/components/seite";
+import { Chip, kartenFlaeche, T } from "@/components/ui";
+import { useDarstellung } from "@/lib/darstellung";
+import { FOTOS } from "@/lib/fotos";
 import { dialog } from "@/components/dialog";
 import { tippen } from "@/lib/haptik";
-import { abstand, farben, radius, RAND, schrift } from "@/lib/theme";
+import { abstand, leuchten, RAND, schrift } from "@/lib/theme";
 
 const VORTEILE = [
   { icon: "library-outline", text: "Der komplette amtliche Fragenkatalog" },
@@ -24,25 +28,30 @@ const PLAENE = [
 
 export default function Premium() {
   const insets = useSafeAreaInsets();
+  const { farbwelt: f } = useDarstellung();
   const [plan, setPlan] = useState("sechs");
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <Kopf schliessen />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: abstand(8), gap: abstand(7) }}>
-        <View style={{ gap: abstand(2) }}>
-          <T v="mini" farbe={farben.orange}>
-            Premium
-          </T>
-          <T v="display">Mehr Tempo bis zur Prüfung.</T>
-          <T v="text">Alles aus der kostenlosen Version – plus alles, was dich sicher durch die Prüfung bringt.</T>
-        </View>
-
-        <View style={{ gap: abstand(3.5) }}>
+    <Seite>
+      <ScrollView contentContainerStyle={{ paddingBottom: abstand(8) }} showsVerticalScrollIndicator={false}>
+        <FotoKopf
+          bild={FOTOS.grundstoff}
+          hoehe={270}
+          schliessen
+          ueber={
+            <View style={{ flexDirection: "row" }}>
+              <KopfPille icon="diamond-outline" text="Premium" />
+            </View>
+          }
+          titel="Mehr Tempo bis zur Prüfung."
+          unter="Alles aus der kostenlosen Version – plus alles, was dich sicher durch die Prüfung bringt."
+        />
+        <View style={{ paddingHorizontal: RAND, marginTop: 10, gap: abstand(7) }}>
+        <View style={[{ gap: abstand(3.5), padding: 16, borderRadius: 24 }, kartenFlaeche(f)]}>
           {VORTEILE.map((v) => (
             <View key={v.text} style={{ flexDirection: "row", alignItems: "center", gap: abstand(3.5) }}>
-              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center" }}>
-                <Icon name={v.icon} size={18} color={farben.orange} />
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: f.orangeSoft, alignItems: "center", justifyContent: "center" }}>
+                <Icon name={v.icon} size={18} color={f.orange} />
               </View>
               <T v="textStark" style={{ flex: 1, ...schrift.textMittel }}>
                 {v.text}
@@ -61,19 +70,14 @@ export default function Premium() {
                   tippen();
                   setPlan(p.id);
                 }}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: abstand(3.5),
-                  padding: abstand(4),
-                  borderRadius: radius.l,
-                  borderWidth: 1.5,
-                  borderColor: aktiv ? farben.orange : farben.linie,
-                  backgroundColor: aktiv ? farben.orangeSoft : farben.flaeche,
-                }}
+                style={[
+                  { flexDirection: "row", alignItems: "center", gap: abstand(3.5), padding: abstand(4), borderRadius: 22 },
+                  kartenFlaeche(f),
+                  aktiv ? [{ borderWidth: 2, borderColor: f.orange, backgroundColor: f.hell ? "#FFF6F0" : "#1D140F" }, leuchten(f.orange, f.hell ? 0.2 : 0.3, 12, 0)] : null,
+                ]}
               >
-                <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: aktiv ? farben.orange : farben.text4, alignItems: "center", justifyContent: "center" }}>
-                  {aktiv ? <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: farben.orange }} /> : null}
+                <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: aktiv ? f.orange : f.text3, alignItems: "center", justifyContent: "center" }}>
+                  {aktiv ? <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: f.orange }} /> : null}
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(2) }}>
@@ -82,7 +86,7 @@ export default function Premium() {
                   <T v="klein">{p.unter}</T>
                 </View>
                 <View style={{ alignItems: "flex-end", gap: 4 }}>
-                  {"beliebt" in p && p.beliebt ? <Chip text="Beliebt" farbe={farben.orange} /> : null}
+                  {"beliebt" in p && p.beliebt ? <Chip text="Beliebt" farbe={f.orange} /> : null}
                   <T v="h3">{p.preis}</T>
                 </View>
               </Pressable>
@@ -93,14 +97,16 @@ export default function Premium() {
         <T v="klein" zentriert>
           Premium startet bald. Der Kauf läuft dann über deinen App-Store-Account und ist jederzeit kündbar.
         </T>
+        </View>
       </ScrollView>
-      <View style={{ paddingHorizontal: RAND, paddingTop: abstand(3), paddingBottom: insets.bottom + abstand(3), borderTopWidth: 1, borderColor: farben.linie }}>
-        <Knopf
+      <AktionsLeiste unten={insets.bottom}>
+        <HauptKnopf
           titel="Beim Start Bescheid geben"
           icon="notifications-outline"
           onPress={() => dialog("Vorgemerkt", "Sobald Premium startet, siehst du es hier in der App.")}
+          style={{ flex: 1 }}
         />
-      </View>
-    </View>
+      </AktionsLeiste>
+    </Seite>
   );
 }
