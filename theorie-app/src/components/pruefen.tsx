@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Animated, Easing, Image, Pressable, Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Circle, Defs, Line, Path, Polygon, RadialGradient, Stop, Text as SvgText, LinearGradient as SvgVerlauf } from "react-native-svg";
@@ -89,6 +89,13 @@ export function Tacho({ anteil, sicher, gesamt, groesse = 300 }: { anteil: numbe
     Animated.parallel([lauf(bogenWert, false), lauf(nadelWert, true)]).start();
     erstesMal.current = false;
   }, [wert, bogenWert, nadelWert]);
+
+  // Die Zahl in der Mitte läuft mit der Nadel mit (0 → 100 → Stand), statt sofort den Endwert zu zeigen.
+  const [anzeige, setAnzeige] = useState(0);
+  useEffect(() => {
+    const id = bogenWert.addListener(({ value }) => setAnzeige(Math.round(value * 100)));
+    return () => bogenWert.removeListener(id);
+  }, [bogenWert]);
 
   const rad = (v: number) => ((START + BOGEN * v) * Math.PI) / 180;
   const punkt = (v: number, r: number) => ({ x: m + r * Math.cos(rad(v)), y: m + r * Math.sin(rad(v)) });
@@ -200,7 +207,7 @@ export function Tacho({ anteil, sicher, gesamt, groesse = 300 }: { anteil: numbe
       {/* Anzeige unter der Nabe */}
       <View pointerEvents="none" style={{ position: "absolute", left: 0, right: 0, top: m + 26, alignItems: "center" }}>
         <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
-          <Text style={{ ...schrift.titel, fontSize: 46, lineHeight: 50, color: f.text, fontVariant: ["tabular-nums"], letterSpacing: -1 }}>{Math.round(wert * 100)}</Text>
+          <Text style={{ ...schrift.titel, fontSize: 46, lineHeight: 50, color: f.text, fontVariant: ["tabular-nums"], letterSpacing: -1 }}>{anzeige}</Text>
           <Text style={{ ...schrift.titel, fontSize: 21, lineHeight: 36, color: f.text2, marginLeft: 2 }}>%</Text>
         </View>
         <Text style={{ ...schrift.textHalb, fontSize: 13.5, color: reif ? gruen : f.text2, marginTop: -1 }}>{reif ? "Prüfungsreif" : "Prüfungsreife"}</Text>
