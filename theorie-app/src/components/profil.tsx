@@ -9,7 +9,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { useFarbwelt } from "@/lib/darstellung";
 import { FOTOS } from "@/lib/fotos";
 import { tippen } from "@/lib/haptik";
-import { leuchten, RAND, schrift, verlauf } from "@/lib/theme";
+import { leuchten, RAND, schrift } from "@/lib/theme";
 
 // Bausteine des Profils im Kino-Look der Startseite.
 
@@ -341,7 +341,7 @@ export function MenueGruppe({ children, style }: { children: ReactNode; style?: 
   );
 }
 
-/** Profilbild mit leuchtendem orangem Ring und Kamera-Knopf. */
+/** Profilbild mit weißem Rand, leichtem Schatten und Kamera-Knopf. */
 export function ProfilRing({ children, onPress }: { children: ReactNode; onPress: () => void }) {
   const f = useFarbwelt();
   return (
@@ -353,13 +353,14 @@ export function ProfilRing({ children, onPress }: { children: ReactNode; onPress
       accessibilityLabel="Profilbild ändern"
       style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}
     >
-      <View style={[{ padding: 4, borderRadius: 70 }, leuchten("#FC5B0E", 0.7, 20, 0)]}>
-        <LinearGradient colors={verlauf.ring} style={{ padding: 3, borderRadius: 70 }}>
-          <View style={{ padding: 3, borderRadius: 70, backgroundColor: f.hell ? "#FFFFFF" : "rgba(10,8,14,0.9)" }}>{children}</View>
-        </LinearGradient>
-      </View>
-      <View style={{ position: "absolute", right: 4, bottom: 6, width: 32, height: 32, borderRadius: 16, backgroundColor: "#FC5B0E", borderWidth: 3, borderColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
-        <Icon name="camera" sf="camera.fill" size={14} color="#FFFFFF" />
+      <View style={[{ borderRadius: 70, borderWidth: 4, borderColor: "#FFFFFF", backgroundColor: "#FFFFFF" }, leuchten("#000000", f.hell ? 0.16 : 0.5, 16, 8)]}>{children}</View>
+      <View
+        style={[
+          { position: "absolute", right: 2, bottom: 4, width: 32, height: 32, borderRadius: 16, backgroundColor: f.hell ? "#14171B" : "#FFFFFF", alignItems: "center", justifyContent: "center" },
+          leuchten("#000000", 0.25, 6, 2),
+        ]}
+      >
+        <Icon name="camera" sf="camera.fill" size={15} color={f.hell ? "#FFFFFF" : "#14171B"} />
       </View>
     </Pressable>
   );

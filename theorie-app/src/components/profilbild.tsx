@@ -1,5 +1,4 @@
 import { Image, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 
 import { useKonto } from "@/lib/konto";
 import { profilbildUrl, useProfilbild } from "@/lib/profilbild";
@@ -17,7 +16,10 @@ function kuerzelVon(name: string): string {
   );
 }
 
-/** Eigenes rundes Profilbild mit heller Kante – ohne Foto mit Initialen. */
+/**
+ * Eigenes rundes Profilbild mit heller Kante – ohne Foto schlicht grau mit
+ * Initialen, wie bei den iOS-Kontakten.
+ */
 export function ProfilBild({ name, groesse = 52, rand = 2 }: { name: string; groesse?: number; rand?: number }) {
   const lokal = useProfilbild();
   const { profil } = useKonto();
@@ -29,7 +31,7 @@ export function ProfilBild({ name, groesse = 52, rand = 2 }: { name: string; gro
         height: groesse,
         borderRadius: groesse / 2,
         borderWidth: rand,
-        borderColor: "rgba(255,236,220,0.85)",
+        borderColor: "rgba(255,255,255,0.92)",
         overflow: "hidden",
         backgroundColor: farben.flaeche2,
       }}
@@ -37,9 +39,9 @@ export function ProfilBild({ name, groesse = 52, rand = 2 }: { name: string; gro
       {uri ? (
         <Image source={{ uri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
       ) : (
-        <LinearGradient colors={["#FF9A4A", "#E8541C"]} style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ ...schrift.titel, fontSize: groesse * 0.36, color: "#FFFFFF" }}>{kuerzelVon(name)}</Text>
-        </LinearGradient>
+        <View style={{ flex: 1, backgroundColor: "#8E939B", alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ ...schrift.textHalb, fontSize: groesse * 0.4, color: "#FFFFFF", letterSpacing: 0.3 }}>{kuerzelVon(name)}</Text>
+        </View>
       )}
     </View>
   );
