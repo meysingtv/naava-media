@@ -28,8 +28,12 @@ export const FOTOS = {
   strasse2: require("../../assets/images/fotos/strasse2.jpg"),
   strasse3: require("../../assets/images/fotos/strasse3.jpg"),
   baeume: require("../../assets/images/fotos/baeume.jpg"),
-  held: require("../../assets/images/fotos/held.jpg"),
   zitat: require("../../assets/images/fotos/zitat.jpg"),
+  // Titelbild der Startseite – wechselt mit der Tageszeit
+  heldMorgen: require("../../assets/images/home/held-morgen.jpg"),
+  heldTag: require("../../assets/images/home/held-tag.jpg"),
+  heldAbend: require("../../assets/images/home/held-abend.jpg"),
+  heldNacht: require("../../assets/images/home/held-nacht.jpg"),
 } satisfies Record<string, ImageSourcePropType>;
 
 export type FotoKey = keyof typeof FOTOS;
@@ -97,9 +101,12 @@ const roh: [FotoKey, string, string, string, string][] = [
   ["strasse1", "Country road", "prague.czech.photo", "by 2.0", "https://www.flickr.com/photos/99424477@N04/15214051925"],
   ["strasse2", "Euro Road Trip 2012 - 090", "Kyle Taylor, Dream It. Do It.", "by 2.0", "https://www.flickr.com/photos/95672737@N00/7345496698"],
   ["strasse3", "Landstrasse", "ThomasKohler", "by 2.0", "https://www.flickr.com/photos/28077296@N02/8586132860"],
-  ["held", "SUV driving curve mountain road (farblich angepasst)", "rawpixel", "cc0 1.0", "https://www.rawpixel.com/image/3286346/free-photo-image-driving-suv-cars-automobile"],
-  ["zitat", "Nature Landscape", "Hoach Le Dinh", "cc0 1.0", "https://stocksnap.io/photo/nature-landscape-O4DWC2WG2U"],
   ["baeume", "The drive from Arbury Hall - North Lodge", "ell brown", "by-sa 2.0", "https://www.flickr.com/photos/39415781@N06/33556283563"],
+  ["zitat", "Nature Landscape", "Hoach Le Dinh", "cc0 1.0", "https://stocksnap.io/photo/nature-landscape-O4DWC2WG2U"],
+  ["heldMorgen", "Car driving along a winding mountain highway in fog", "Sakin Shrestha", "cc0 1.0", "https://wordpress.org/photos/photo/2226a15dce/"],
+  ["heldTag", "A car driving on a road going through the mountain valleys", "Nithin John", "cc0 1.0", "https://wordpress.org/photos/photo/57365be3ed/"],
+  ["heldAbend", "Sunset view over a rural road", "Angel Zinsel", "cc0 1.0", "https://wordpress.org/photos/photo/34768b4c09/"],
+  ["heldNacht", "Driving at Night, Rest Stop Ahead", "Marcus Kazmierczak", "cc0 1.0", "https://wordpress.org/photos/photo/73161c9d1f/"],
 ];
 
 export const NACHWEISE: Nachweis[] = roh.map(([foto, titel, urheber, lizenz, seite]) => ({ foto, titel, urheber, lizenz: LIZENZ_NAME[lizenz] ?? lizenz, seite }));

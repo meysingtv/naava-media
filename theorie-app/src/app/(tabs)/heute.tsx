@@ -1,282 +1,183 @@
-import { Image, Platform, Pressable, ScrollView, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { useState } from "react";
+import { Pressable, ScrollView, Text, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Path } from "react-native-svg";
 
 import { CrewBereich } from "@/components/crew";
+import { FokusKarte, GRUSS, Handschrift, HeldWerte, heldHoehe, KinoHeld, Kopfzeile, PruefungKarte, Schnellstart, StartKnopf, tageszeit, ThemenKarussell, ZitatKarte } from "@/components/home";
 import { Icon } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
-import { Ring } from "@/components/grafik";
-import { Schnellzugriff } from "@/components/schnellzugriff";
 import { useInhaltUnten } from "@/components/tab-leiste";
-import { T } from "@/components/ui";
-import { FOTOS } from "@/lib/fotos";
+import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
+import { FRAGEN, THEMEN, type ThemaId } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
+import { heuteDran } from "@/lib/karteikarten";
 import { useKonto } from "@/lib/konto";
-import { fortschritt, heuteBeantwortet, serieAktuell, useStand, wocheTage } from "@/lib/stand";
-import { farben, handschrift, leuchten, schrift, verlauf } from "@/lib/theme";
 import { useLeistenScroll } from "@/lib/leisten-scroll";
-
-const RAND = 16;
+import { tageBis, terminDatum } from "@/lib/pruefungstag";
+import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, serieAktuell, useStand } from "@/lib/stand";
+import { RAND, schrift } from "@/lib/theme";
 
 const ZITATE: [string, string][] = [
   ["Kleine Schritte.", "Große Freiheit."],
-  ["Jede Frage zählt.", "Jeder Tag bringt dich weiter."],
   ["Heute üben.", "Morgen bestehen."],
-  ["Dranbleiben lohnt sich.", "Die Straße wartet."],
+  ["Jede Frage zählt.", "Du packst das."],
+  ["Dranbleiben.", "Die Straße wartet."],
 ];
-
-/** Oranger Pinselstrich unter dem Slogan. */
-function Pinselstrich() {
-  return (
-    <Svg width={104} height={22} viewBox="0 0 104 22">
-      <Path d="M3 18 C 28 12, 58 7, 101 3 C 70 8.5, 38 14, 5 20.5 Z" fill="#F66A16" />
-    </Svg>
-  );
-}
-
-function Punkt({ zustand }: { zustand: "voll" | "halb" | "leer" }) {
-  if (zustand === "halb") {
-    return (
-      <View style={{ width: 13, height: 13, borderRadius: 6.5, overflow: "hidden", flexDirection: "row", backgroundColor: "#3F4650" }}>
-        <View style={{ width: 6.5, height: 13, backgroundColor: farben.orangeHell }} />
-      </View>
-    );
-  }
-  return <View style={{ width: 13, height: 13, borderRadius: 6.5, backgroundColor: zustand === "voll" ? farben.orangeHell : "#3F4650" }} />;
-}
 
 export default function Home() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const inhaltUnten = useInhaltUnten();
   const leistenScroll = useLeistenScroll();
+  const fokus = useIsFocused();
+  const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();
   const { anzeigeName } = useKonto();
+  const [ueberFoto, setUeberFoto] = useState(true);
 
-  const vorname = anzeigeName.split(" ")[0];
+  const jetzt = new Date();
+  const zeit = tageszeit(jetzt.getHours());
+  const vorname = anzeigeName.split(" ")[0] || "Gast";
   const gesamt = fortschritt(stand);
   const serie = serieAktuell(stand);
   const heute = heuteBeantwortet(stand);
-  const woche = wocheTage(stand);
-  const zitat = ZITATE[new Date().getDate() % ZITATE.length];
-  const heroHoehe = insets.top + 356;
+  const rest = Math.max(0, stand.tagesziel - heute);
+  const termin = terminDatum(stand.pruefungstermin);
+  const tage = termin ? tageBis(termin) : null;
+  const kommend = tage !== null && tage >= 0 ? tage : null;
+
+  // Die Handschrift zählt bis zur Prüfung – ohne Termin der Slogan wie immer.
+  const zeilen =
+    kommend === null ? ["Mach", "deinen Führerschein", "möglich."] : kommend === 0 ? ["Heute ist", "dein Tag."] : kommend === 1 ? ["Morgen", "ist Prüfung."] : [`Noch ${kommend} Tage`, "bis zur Prüfung."];
+
+  // Stand je Thema; Fokus ist das schwächste bereits begonnene Thema.
+  const themen = THEMEN.map((t) => {
+    const liste = FRAGEN.filter((q) => q.thema === t.id);
+    const p = fortschritt(stand, liste);
+    const begonnen = liste.some((q) => stand.fragen[q.id]);
+    return { id: t.id as ThemaId, anteil: p.anteil, offen: p.gesamt - p.richtig, begonnen };
+  });
+  const offeneThemen = themen.filter((t) => t.offen > 0);
+  const fokusThema = [...offeneThemen.filter((t) => t.begonnen)].sort((a, b) => a.anteil - b.anteil)[0] ?? offeneThemen[0] ?? themen[0];
+
+  const letzte = stand.pruefungen[0] ?? null;
+  const zitat = ZITATE[jetzt.getDate() % ZITATE.length];
   const glockePunkt = !stand.erinnerung.an;
 
+  // Über dem Foto hell, darunter (im hellen Modus) dunkle Statusleiste.
+  const schwelle = heldHoehe(width) - insets.top - 60;
+  function beimScrollen(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    leistenScroll.onScroll?.(e);
+    const oben = e.nativeEvent.contentOffset.y < schwelle;
+    if (oben !== ueberFoto) setUeberFoto(oben);
+  }
+
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <ScrollView {...leistenScroll} contentContainerStyle={{ paddingBottom: inhaltUnten }} showsVerticalScrollIndicator={false}>
-        {/* Titelbild, weich ins Schwarz verblendet */}
-        <View style={{ height: heroHoehe, overflow: "hidden" }}>
-          <Image source={FOTOS.held} style={{ position: "absolute", top: 0, left: 0, right: 0, height: heroHoehe, width: "100%" }} resizeMode="cover" />
-          <LinearGradient
-            colors={["rgba(3,5,7,0.62)", "rgba(3,5,7,0.18)", "rgba(3,5,7,0)"]}
-            locations={[0, 0.22, 0.4]}
-            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-          />
-          <LinearGradient
-            colors={["rgba(3,5,7,0.5)", "rgba(3,5,7,0)"]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 0.7, y: 0.5 }}
-            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-          />
-          <LinearGradient
-            colors={["rgba(3,5,7,0)", "rgba(3,5,7,0.28)", "rgba(3,5,7,0.72)", "rgba(3,5,7,0.94)", farben.grund]}
-            locations={[0.52, 0.66, 0.8, 0.92, 1]}
-            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: -1 }}
-          />
-
-          {/* Begrüßung */}
-          <View style={{ paddingTop: insets.top + 2, paddingLeft: 30, paddingRight: RAND, flexDirection: "row", alignItems: "flex-start" }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ ...schrift.text, fontSize: 17, color: "#F2F3F5" }}>Hallo</Text>
-              <Text style={{ ...schrift.titel, fontSize: 35, lineHeight: 41, color: "#FFFFFF", letterSpacing: -0.4 }} numberOfLines={1}>
-                {vorname} 👋
-              </Text>
-            </View>
-            <Pressable
-              onPress={() => {
-                tippen();
-                router.push("/einstellungen");
-              }}
-              accessibilityLabel="Erinnerungen"
-              hitSlop={8}
-              style={{ marginTop: 22, marginRight: 18 }}
-            >
-              <Icon name="notifications" size={25} color="#D8DBDF" />
-              {glockePunkt ? (
-                <View style={{ position: "absolute", top: -3, right: -3, width: 9, height: 9, borderRadius: 4.5, backgroundColor: farben.orange, borderWidth: 1.5, borderColor: "rgba(3,5,7,0.6)" }} />
-              ) : null}
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                tippen();
-                router.navigate("/profil");
-              }}
-              accessibilityLabel="Profil"
-              style={{ marginTop: 8 }}
-            >
-              <ProfilBild name={anzeigeName} groesse={52} />
-            </Pressable>
-          </View>
-
-          {/* Slogan in Handschrift */}
-          <View pointerEvents="none" style={{ position: "absolute", left: 30, top: insets.top + 104, transform: [{ rotate: "-8deg" }] }}>
-            {[
-              { text: "Mach", einzug: 0 },
-              { text: "deinen Führerschein", einzug: 12 },
-              { text: "möglich.", einzug: 26 },
-            ].map((z) => (
-              <Text
-                key={z.text}
-                style={{ fontFamily: handschrift, fontSize: 28, lineHeight: 33, marginLeft: z.einzug, color: "#FFFFFF", textShadowColor: "rgba(0,0,0,0.45)", textShadowRadius: 6 }}
+    <FarbweltBereich farbwelt={f}>
+      {fokus ? <StatusBar style={f.hell && !ueberFoto ? "dark" : "light"} /> : null}
+      <View style={{ flex: 1, backgroundColor: f.grund }}>
+        <ScrollView onScroll={beimScrollen} scrollEventThrottle={16} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
+          <KinoHeld zeit={zeit}>
+            {/* Begrüßung */}
+            <View style={{ position: "absolute", top: insets.top + 2, left: 26, right: RAND, flexDirection: "row", alignItems: "flex-start" }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...schrift.text, fontSize: 17, color: "rgba(255,255,255,0.92)", textShadowColor: "rgba(0,0,0,0.35)", textShadowRadius: 6 }}>{GRUSS[zeit]}</Text>
+                <Text style={{ ...schrift.titel, fontSize: 38, lineHeight: 44, color: "#FFFFFF", letterSpacing: -0.5, textShadowColor: "rgba(0,0,0,0.35)", textShadowRadius: 8 }} numberOfLines={1}>
+                  {vorname}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => {
+                  tippen();
+                  router.push("/einstellungen");
+                }}
+                accessibilityLabel="Erinnerungen"
+                hitSlop={8}
+                style={{ marginTop: 20, marginRight: 18 }}
               >
-                {z.text}
-              </Text>
-            ))}
-            <View style={{ marginLeft: 30, marginTop: 2 }}>
-              <Pinselstrich />
+                <Icon name="notifications" size={24} color="#FFFFFF" />
+                {glockePunkt ? (
+                  <View style={{ position: "absolute", top: -3, right: -3, width: 9, height: 9, borderRadius: 4.5, backgroundColor: f.orange, borderWidth: 1.5, borderColor: "rgba(0,0,0,0.4)" }} />
+                ) : null}
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  tippen();
+                  router.navigate("/profil");
+                }}
+                accessibilityLabel="Profil"
+                style={{ marginTop: 6 }}
+              >
+                <ProfilBild name={anzeigeName} groesse={50} />
+              </Pressable>
             </View>
-          </View>
-        </View>
 
-        {/* Lernen starten */}
-        <Pressable
-          onPress={() => {
-            tippen();
-            router.push({ pathname: "/training", params: { modus: "smart" } });
-          }}
-          style={({ pressed }) => ({
-            marginTop: -64,
-            marginHorizontal: 29,
-            height: 60,
-            borderRadius: 30,
-            overflow: "hidden",
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-            ...leuchten(farben.orange, 0.45, 18, 6),
-          })}
-        >
-          <LinearGradient colors={verlauf.knopf} locations={[0, 0.5, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
-          <LinearGradient
-            colors={verlauf.knopfSchein}
-            locations={[0, 0.1, 0.25, 0.36]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+            <Handschrift zeilen={zeilen} style={{ position: "absolute", left: 30, top: insets.top + 112 }} />
+
+            <View style={{ position: "absolute", left: RAND, right: RAND, bottom: 104 }}>
+              <HeldWerte
+                reife={gesamt.anteil}
+                sicher={gesamt.richtig}
+                gesamt={gesamt.gesamt}
+                serie={serie}
+                heute={heute}
+                ziel={stand.tagesziel}
+                onReife={() => router.push("/statistik")}
+                onSerie={() => router.push("/statistik")}
+                onHeute={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
+              />
+            </View>
+          </KinoHeld>
+
+          <View style={{ marginTop: -80, paddingHorizontal: RAND }}>
+            <StartKnopf
+              titel={heute > 0 ? "Weiterlernen" : "Lernen starten"}
+              unter={rest > 0 ? `Noch ${rest} Fragen bis zum Tagesziel` : "Tagesziel geschafft – jede Frage zählt extra"}
+              onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
+            />
+          </View>
+
+          <Schnellstart
+            style={{ marginTop: 18 }}
+            ziele={[
+              { icon: "heart", titel: "Favoriten", zahl: gemerktIds(stand).length, onPress: () => router.push("/favoriten") },
+              { icon: "refresh", titel: "Fehler üben", zahl: fehlerIds(stand).length, onPress: () => router.push({ pathname: "/training", params: { modus: "fehler" } }) },
+              { icon: "albums-outline", titel: "Karteikarten", zahl: heuteDran(stand).gesamt, onPress: () => router.push("/karteikarten") },
+              { icon: "camera", titel: "Schilder-Jagd", onPress: () => router.push("/schilder-jagd") },
+              { icon: "flash", titel: "Duell", onPress: () => router.push("/duell") },
+              { icon: "stats-chart", titel: "Statistik", onPress: () => router.push("/statistik") },
+            ]}
           />
-          <View style={{ flex: 1, flexDirection: "row", alignItems: "center", paddingLeft: 32 }}>
-            <Text style={{ ...schrift.textHalb, fontSize: 20, color: "#FFFFFF", flex: 1 }}>Lernen starten</Text>
-            {/* Heller Kreis bildet das rechte Ende des Knopfs */}
-            <LinearGradient colors={["#FE9145", "#FD8538"]} style={{ width: 60, height: 60, borderRadius: 30, alignItems: "center", justifyContent: "center" }}>
-              <Icon name="arrow-forward" size={25} color="#FFFFFF" weight="semibold" />
-            </LinearGradient>
-          </View>
-        </Pressable>
 
-        {/* Schnellzugriff */}
-        <Schnellzugriff
-          style={{ marginTop: 20 }}
-          ziele={[
-            { id: "themen", titel: "Themen", onPress: () => router.navigate("/lernen") },
-            { id: "pruefung", titel: "Prüfung", onPress: () => router.navigate("/pruefen") },
-            { id: "statistik", titel: "Statistiken", onPress: () => router.push("/statistik") },
-            { id: "favoriten", titel: "Favoriten", onPress: () => router.push("/favoriten") },
-          ]}
-        />
-
-        {/* Dein Fortschritt */}
-        <View style={{ paddingHorizontal: RAND, marginTop: 22, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <T v="titel" style={{ fontSize: 21, lineHeight: 26 }}>
-            Dein Fortschritt
-          </T>
-          <Pressable
-            onPress={() => {
-              tippen();
-              router.push("/statistik");
-            }}
-            hitSlop={8}
-            style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-          >
-            <Text style={{ ...schrift.text, fontSize: 15, color: "#C9CDD2" }}>Alle ansehen</Text>
-            <Icon name="chevron-forward" size={15} color="#C9CDD2" />
-          </Pressable>
-        </View>
-
-        <View
-          style={{
-            marginHorizontal: RAND,
-            marginTop: 10,
-            padding: 9,
-            paddingLeft: 12,
-            paddingRight: 18,
-            borderRadius: 16,
-            backgroundColor: farben.flaeche,
-            borderWidth: 1,
-            borderColor: farben.linie,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 18,
-          }}
-        >
-          <View>
-            <Ring anteil={gesamt.anteil} groesse={72} dicke={8} spur={farben.ringSpur} leuchten>
-              <Text style={{ ...schrift.titel, fontSize: 19, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{Math.round(gesamt.anteil * 100)}%</Text>
-            </Ring>
+          <Kopfzeile titel="Dein Fokus heute" style={{ marginTop: 30 }} />
+          <View style={{ paddingHorizontal: RAND }}>
+            <FokusKarte
+              thema={fokusThema.id}
+              anteil={fokusThema.anteil}
+              offen={fokusThema.offen}
+              onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: fokusThema.id } })}
+            />
           </View>
-          <View style={{ flex: 1, gap: 12 }}>
-            <Text style={{ ...schrift.text, fontSize: 16, color: "#FFFFFF" }}>
-              {gesamt.richtig} von {gesamt.gesamt} Fragen
-            </Text>
-            <View style={{ height: 10, borderRadius: 5, backgroundColor: farben.flaeche3, overflow: "hidden" }}>
-              <LinearGradient colors={verlauf.balken} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ width: `${Math.max(2, gesamt.anteil * 100)}%`, height: "100%", borderRadius: 5 }} />
-            </View>
-          </View>
-        </View>
 
-        {/* Serie und Woche */}
-        <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: RAND, marginTop: 10 }}>
-          <View style={{ flex: 0.86, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, height: 64, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
-            <Icon name="flame" size={34} color={farben.flamme} />
-            <View>
-              <Text style={{ ...schrift.titel, fontSize: 23, lineHeight: 27, color: "#FFFFFF" }}>{serie}</Text>
-              <Text style={{ ...schrift.text, fontSize: 14, color: "#D3D7DC" }}>{serie === 1 ? "Tag in Folge" : "Tage in Folge"}</Text>
-            </View>
-          </View>
-          <View style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12, height: 64, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
-            {woche.map((tag) => {
-              const zustand = tag.heute ? (heute >= stand.tagesziel ? "voll" : heute > 0 ? "halb" : "leer") : tag.gelernt ? "voll" : "leer";
-              return (
-                <View key={tag.kurz} style={{ alignItems: "center", gap: 7 }}>
-                  <Punkt zustand={zustand} />
-                  <Text style={{ ...schrift.text, fontSize: 11, color: "#AEB3BA" }}>{tag.kurz}</Text>
-                </View>
-              );
-            })}
-          </View>
-        </View>
+          <Kopfzeile titel="Deine Themen" link="Alle ansehen" onLink={() => router.navigate("/lernen")} style={{ marginTop: 30 }} />
+          <ThemenKarussell themen={themen} onThema={(id) => router.push({ pathname: "/thema/[id]", params: { id } })} />
 
-        {/* Crew: gemeinsame Flamme und Wochen-Boss */}
-        <CrewBereich style={{ marginHorizontal: RAND, marginTop: 10 }} />
-
-        {/* Zitat */}
-        <View style={{ marginHorizontal: RAND, marginTop: 10, height: 74, borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: farben.linie, backgroundColor: farben.flaeche }}>
-          <Image source={FOTOS.zitat} style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "72%", height: "100%" }} resizeMode="cover" />
-          <LinearGradient
-            colors={["rgba(13,19,23,1)", "rgba(13,19,23,0.95)", "rgba(13,19,23,0.8)", "rgba(13,19,23,0.55)", "rgba(13,19,23,0.3)", "rgba(13,19,23,0.12)", "rgba(13,19,23,0)"]}
-            locations={[0, 0.12, 0.26, 0.42, 0.6, 0.8, 1]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "72%" }}
-          />
-          <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 18 }}>
-            <Text style={{ ...schrift.titel, fontSize: 40, lineHeight: 44, color: "#FFFFFF", marginTop: 14 }}>“</Text>
-            <View>
-              <Text style={{ ...schrift.textMittel, fontSize: 16, lineHeight: 21, color: "#FFFFFF" }}>{zitat[0]}</Text>
-              <Text style={{ ...schrift.textMittel, fontSize: 16, lineHeight: 21, color: "#FFFFFF" }}>{zitat[1]}</Text>
-            </View>
+          <Kopfzeile titel="Deine Prüfung" style={{ marginTop: 30 }} />
+          <View style={{ paddingHorizontal: RAND }}>
+            <PruefungKarte tage={kommend} letzte={letzte} onPress={() => router.navigate("/pruefen")} onTermin={() => router.push("/pruefungstermin")} />
           </View>
-        </View>
-      </ScrollView>
-    </View>
+
+          {/* Crew: gemeinsame Flamme und Wochen-Boss */}
+          <CrewBereich style={{ marginHorizontal: RAND }} kopf={<Kopfzeile titel="Deine Crew" link="Öffnen" onLink={() => router.push("/crew")} style={{ marginTop: 30, marginHorizontal: -RAND }} />} />
+
+          <View style={{ paddingHorizontal: RAND, marginTop: 30 }}>
+            <ZitatKarte zeilen={zitat} />
+          </View>
+        </ScrollView>
+      </View>
+    </FarbweltBereich>
   );
 }

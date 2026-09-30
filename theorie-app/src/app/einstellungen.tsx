@@ -8,6 +8,7 @@ import { Logo } from "@/components/grafik";
 import { dialog } from "@/components/dialog";
 import { Schalter } from "@/components/schalter";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
+import { useDarstellung } from "@/lib/darstellung";
 import { useClipRechte } from "@/lib/clips-server";
 import { erinnerungPlanen } from "@/lib/erinnerung";
 import { uhrzeit } from "@/lib/format";
@@ -35,6 +36,7 @@ export default function Einstellungen() {
   const { stand, setzen, zuruecksetzen } = useStand();
   const { session, profil, gast, anzeigeName, profilSpeichern, passwortAendern, benutzernameFrei, benutzernameAendern, rolleSetzen } = useKonto();
   const rechte = useClipRechte();
+  const { darstellung, setzen: darstellungSetzen } = useDarstellung();
   const [name, setName] = useState(anzeigeName);
   const [nameAngefasst, setNameAngefasst] = useState(false);
   const [speichert, setSpeichert] = useState(false);
@@ -120,6 +122,17 @@ export default function Einstellungen() {
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
       <Kopf titel="Einstellungen" />
       <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(10), gap: abstand(7) }} keyboardShouldPersistTaps="handled">
+        <View>
+          <Abschnitt titel="Darstellung" klein />
+          <View style={{ flexDirection: "row", gap: abstand(2) }}>
+            <Chip text="Nachtfahrt (dunkel)" aktiv={darstellung === "dunkel"} onPress={() => darstellungSetzen("dunkel")} />
+            <Chip text="Tagfahrt (hell)" aktiv={darstellung === "hell"} onPress={() => darstellungSetzen("hell")} />
+          </View>
+          <T v="klein" style={{ marginTop: abstand(2) }}>
+            Gilt zuerst für die Startseite, die anderen Seiten folgen.
+          </T>
+        </View>
+
         <View>
           <Abschnitt titel="Tagesziel" klein />
           <View style={{ flexDirection: "row", gap: abstand(2) }}>

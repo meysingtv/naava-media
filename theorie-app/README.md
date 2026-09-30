@@ -47,6 +47,17 @@ schwebend und beim Scrollen kleiner). iOS zeigt höchstens fünf Reiter:
 Home, Lernen, Clips, Prüfung, Profil. „Mein Fortschritt“ (Statistiken) ist
 über Home → „Alle ansehen“, die Statistik-Kachel und das Profil erreichbar.
 
+## Startseite und Darstellung
+
+Oben ein großes Foto, das mit der Tageszeit wechselt (Morgen, Tag, Abend,
+Nacht) und sich langsam bewegt. Darauf Begrüßung, der Countdown zur Prüfung in
+Handschrift und auf Glas Prüfungsreife, Serie und Tagesziel. Darunter der
+Startknopf, Schnellstart, das Thema mit dem meisten Nachholbedarf, alle Themen
+als Karussell, die Prüfungssimulation, die Crew und ein Spruch des Tages.
+
+Unter Einstellungen → Darstellung gibt es „Nachtfahrt (dunkel)“ und
+„Tagfahrt (hell)“. Die helle Darstellung gilt zuerst für die Startseite.
+
 ## Clips (kurze Videos)
 
 Der Reiter „Clips“ zeigt kurze Videos: oben „Entdecken“ und „Folge ich“,

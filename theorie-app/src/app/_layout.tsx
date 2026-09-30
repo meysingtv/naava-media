@@ -18,6 +18,7 @@ import { T } from "@/components/ui";
 import { erfolgVon } from "@/lib/erfolge";
 import { erfolg } from "@/lib/haptik";
 import { CrewProvider } from "@/lib/crew";
+import { DarstellungProvider } from "@/lib/darstellung";
 import { KontoProvider, useKonto } from "@/lib/konto";
 import { StandProvider, useStand } from "@/lib/stand";
 import { ProfilbildAbgleich } from "@/lib/profilbild";
@@ -170,16 +171,18 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: farben.grund }}>
       <StandProvider>
-        <KontoProvider>
-          <StatusBar style="light" />
-          <SyncBruecke />
-          <PruefungstagBruecke />
-          <ProfilbildAbgleich />
-          <CrewProvider>
-            <Navigation />
-          </CrewProvider>
-          <DialogHost />
-        </KontoProvider>
+        <DarstellungProvider>
+          <KontoProvider>
+            <StatusBar style="light" />
+            <SyncBruecke />
+            <PruefungstagBruecke />
+            <ProfilbildAbgleich />
+            <CrewProvider>
+              <Navigation />
+            </CrewProvider>
+            <DialogHost />
+          </KontoProvider>
+        </DarstellungProvider>
       </StandProvider>
     </GestureHandlerRootView>
   );
