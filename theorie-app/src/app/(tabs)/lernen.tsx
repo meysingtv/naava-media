@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
@@ -51,7 +51,6 @@ const VORSCHLAEGE = ["Kreisverkehr", "Rettungsgasse", "Promille", "Überholen", 
 
 export default function Lernen() {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const inhaltUnten = useInhaltUnten();
   const leistenScroll = useLeistenScroll();
   const fokus = useIsFocused();
@@ -148,15 +147,14 @@ export default function Lernen() {
     );
   }
 
-  const heldHoehe = Math.max(Math.round(width * 1.2), insets.top + 410);
-
   return (
     <FarbweltBereich farbwelt={f}>
       {statusLeiste}
       <View style={{ flex: 1, backgroundColor: f.grund }}>
         <ScrollView {...leistenScroll} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
-          <Themenwand hoehe={heldHoehe}>
-            <View style={{ position: "absolute", top: insets.top + 4, left: RAND, right: RAND }}>
+          {/* Kopf als ein Block: Titel, Suche, Stand und Startknopf dicht beieinander */}
+          <Themenwand>
+            <View style={{ paddingTop: insets.top + 4, paddingHorizontal: RAND, paddingBottom: 24 }}>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                 <Text style={{ ...schrift.titel, fontSize: 34, lineHeight: 40, color: kopfText, letterSpacing: -0.5 }}>Lernen</Text>
                 <Pressable onPress={() => router.push("/statistik")} accessibilityLabel="Mein Fortschritt" hitSlop={8}>
@@ -169,18 +167,19 @@ export default function Lernen() {
                 {THEMEN.length} Themen · {FRAGEN.length} Fragen · Klasse {stand.klasse}
               </Text>
               <SuchPille onPress={() => setSuche("")} style={{ marginTop: 16 }} />
-            </View>
-
-            <View style={{ position: "absolute", left: RAND, right: RAND, bottom: 104 }}>
-              <LernStand sicher={gesamt.richtig} fehler={fehler} neu={neu} onPress={() => router.push("/statistik")} />
+              <View style={{ marginTop: 10 }}>
+                <LernStand sicher={gesamt.richtig} fehler={fehler} neu={neu} onPress={() => router.push("/statistik")} />
+              </View>
+              <StartKnopf
+                titel="Smart lernen"
+                unter="Die Fragen, die dich jetzt weiterbringen"
+                onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
+                style={{ marginTop: 14 }}
+              />
             </View>
           </Themenwand>
 
-          <View style={{ marginTop: -80, paddingHorizontal: RAND }}>
-            <StartKnopf titel="Smart lernen" unter="Die Fragen, die dich jetzt weiterbringen" onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })} />
-          </View>
-
-          <Kopfzeile titel="Lernmodi" style={{ marginTop: 32 }} />
+          <Kopfzeile titel="Lernmodi" style={{ marginTop: 20 }} />
           <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: RAND }}>
             <ModusKarte
               titel="Karteikarten"

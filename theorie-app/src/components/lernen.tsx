@@ -39,8 +39,9 @@ function reihenFotos(i: number): ThemaId[] {
 /**
  * Kopf mit einer schräg gestellten Wand aus allen Themenfotos. Die Reihen
  * ziehen ganz langsam gegeneinander vorbei; unten läuft die Wand in den Grund aus.
+ * Die Höhe ergibt sich aus dem Inhalt – die Wand liegt nur dahinter.
  */
-export function Themenwand({ hoehe, children }: { hoehe: number; children?: ReactNode }) {
+export function Themenwand({ children }: { children?: ReactNode }) {
   const f = useFarbwelt();
   const { width } = useWindowDimensions();
   const fahrt = useRef(new Animated.Value(0)).current;
@@ -56,7 +57,7 @@ export function Themenwand({ hoehe, children }: { hoehe: number; children?: Reac
   const grund = (a: number) => mitDeckkraft(f.grund, a);
 
   return (
-    <View style={{ width, height: hoehe, overflow: "hidden", backgroundColor: f.hell ? "#E4DED4" : "#050709" }}>
+    <View style={{ width, overflow: "hidden", backgroundColor: f.hell ? "#E4DED4" : "#050709" }}>
       <View style={{ position: "absolute", left: (width - wandBreite) / 2, top: -96, width: wandBreite, transform: [{ rotate: "-8deg" }] }}>
         {Array.from({ length: REIHEN }, (_, i) => {
           const nachLinks = i % 2 === 0;
@@ -74,8 +75,8 @@ export function Themenwand({ hoehe, children }: { hoehe: number; children?: Reac
 
       {/* Tönung: die Fotos bleiben Stimmung, Schrift und Glas stehen davor */}
       <View style={[FUELLEN, { backgroundColor: f.hell ? "rgba(244,241,236,0.34)" : "rgba(3,5,7,0.5)" }]} />
-      <LinearGradient colors={[grund(f.hell ? 0.96 : 0.82), grund(f.hell ? 0.55 : 0.35), grund(0)]} locations={[0, 0.26, 0.5]} style={FUELLEN} />
-      <LinearGradient colors={[grund(0), grund(0.55), grund(0.9), f.grund]} locations={[0.5, 0.72, 0.9, 1]} style={[FUELLEN, { bottom: -1 }]} />
+      <LinearGradient colors={[grund(f.hell ? 0.96 : 0.82), grund(f.hell ? 0.55 : 0.35), grund(0)]} locations={[0, 0.22, 0.42]} style={FUELLEN} />
+      <LinearGradient colors={[grund(0), grund(0.6), grund(0.92), f.grund]} locations={[0.56, 0.76, 0.9, 1]} style={[FUELLEN, { bottom: -1 }]} />
       {children}
     </View>
   );
