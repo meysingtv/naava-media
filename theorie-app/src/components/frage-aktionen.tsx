@@ -1,16 +1,18 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import type { Hinweis } from "@/components/hinweis";
 import { Icon, type IconName } from "@/components/icon";
 import { KartenVorschau } from "@/components/karteikarte";
+import { KiBlase, type KiAnker } from "@/components/ki-hilfe";
 import { Knopf } from "@/components/ui";
 import { useFarbwelt } from "@/lib/darstellung";
+import { frageVon } from "@/lib/fragen";
 import { erfolg, tippen } from "@/lib/haptik";
 import { frageKarteId, useStand } from "@/lib/stand";
 import { leuchten, mitDeckkraft, schrift } from "@/lib/theme";
 
-function AktionsKnopf({ icon, titel, marke, aktiv, onPress, label }: { icon: IconName; titel: string; marke?: string; aktiv?: boolean; onPress: () => void; label: string }) {
+function AktionsKnopf({ icon, titel, aktiv, onPress, label }: { icon: IconName; titel: string; aktiv?: boolean; onPress: () => void; label: string }) {
   const f = useFarbwelt();
   return (
     <Pressable
@@ -40,38 +42,57 @@ function AktionsKnopf({ icon, titel, marke, aktiv, onPress, label }: { icon: Ico
       <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 15, color: aktiv ? f.orange : f.text, flexShrink: 1 }}>
         {titel}
       </Text>
-      {marke ? (
-        <View style={{ paddingHorizontal: 7, height: 19, borderRadius: 10, backgroundColor: f.hell ? "#F1EDE6" : "rgba(255,255,255,0.1)", justifyContent: "center" }}>
-          <Text style={{ ...schrift.textFett, fontSize: 9.5, letterSpacing: 0.6, color: f.text3 }}>{marke}</Text>
-        </View>
-      ) : null}
     </Pressable>
   );
 }
 
 /**
- * Unter einer Frage: KI-Hilfe (kommt später) und Karteikarte. Der erste Tipp
- * macht aus der Frage eine Karteikarte – Frage vorn, richtige Antwort und
- * Merksatz hinten. Danach öffnet derselbe Knopf die Karte.
+ * Unter einer Frage: KI-Hilfe und Karteikarte. Die KI-Hilfe öffnet eine
+ * Sprechblase, die die Frage erklärt oder eigene Fragen beantwortet (im
+ * Training sitzt sie stattdessen in der unteren Leiste: `ohneKi`). Der erste
+ * Tipp auf „Karteikarte“ macht aus der Frage eine Karte – Frage vorn, richtige
+ * Antwort und Merksatz hinten. Danach öffnet derselbe Knopf die Karte.
  */
-export function FrageAktionen({ frageId, onHinweis }: { frageId: string; onHinweis: (h: Hinweis) => void }) {
+export function FrageAktionen({
+  frageId,
+  onHinweis,
+  auswahl,
+  eingabe,
+  ohneKi,
+}: {
+  frageId: string;
+  onHinweis: (h: Hinweis) => void;
+  /** Was gewählt bzw. eingegeben wurde – damit die KI-Hilfe darauf eingehen kann. */
+  auswahl?: number[];
+  eingabe?: string;
+  ohneKi?: boolean;
+}) {
   const { stand, frageKarteUmschalten } = useStand();
   const [ansehen, setAnsehen] = useState(false);
+  const [kiAnker, setKiAnker] = useState<KiAnker | null>(null);
+  const kiRef = useRef<View>(null);
+  const frage = frageVon(frageId);
   const id = frageKarteId(frageId);
   const gespeichert = stand.karteikarten.karten.some((k) => k.id === id);
 
   return (
     <View style={{ flexDirection: "row", gap: 10 }}>
-      <AktionsKnopf
-        icon="sparkles"
-        titel="KI-Hilfe"
-        marke="BALD"
-        label="KI-Hilfe, kommt bald"
-        onPress={() => {
-          tippen();
-          onHinweis({ icon: "sparkles", text: "KI-Hilfe kommt bald" });
-        }}
-      />
+      {ohneKi || !frage ? null : (
+        <>
+          <View ref={kiRef} style={{ flex: 1 }}>
+            <AktionsKnopf
+              icon="sparkles"
+              titel="KI-Hilfe"
+              label="KI-Hilfe: Frage erklären lassen oder etwas fragen"
+              onPress={() => {
+                tippen();
+                kiRef.current?.measureInWindow((x, y, breite, hoehe) => setKiAnker({ x, y, breite, hoehe, text: "KI-Hilfe" }));
+              }}
+            />
+          </View>
+          <KiBlase kontext={{ frage, auswahl, eingabe }} anker={kiAnker} onSchliessen={() => setKiAnker(null)} />
+        </>
+      )}
       <AktionsKnopf
         icon={gespeichert ? "albums" : "albums-outline"}
         titel={gespeichert ? "Karte ansehen" : "Karteikarte"}

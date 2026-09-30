@@ -148,6 +148,40 @@ Einrichten:
    unter `extra.eas.projectId`). iPhone: Beim ersten `eas build` den Push-Key
    anlegen lassen. Android: Firebase (FCM) in EAS eintragen.
 
+## KI-Hilfe
+
+Eine Sprechblase aus Glas, die auf den KI-Knopf zeigt: „Ich verstehe diese
+Frage nicht“ erklärt die Frage, im Feld darunter kann man alles Mögliche
+fragen – auch ohne Bezug zur Frage. Danach gibt es „Erklärung in leichter
+Sprache“, „Gib mir ein Beispiel“, einen Merksatz und Daumen hoch/runter.
+
+- **Wo:** im Training über den ✨-Knopf unten links (auch vor dem Antworten),
+  in der Auflösung der Prüfungssimulation über „KI-Hilfe“. In der laufenden
+  Simulation gibt es keine Hilfe.
+- **Ohne Einrichtung** antwortet die App aus dem eigenen Lernstoff (Fragen,
+  Verkehrszeichen, Kurz erklärt, Faustformeln – z. B. „Bremsweg bei 80?“).
+  Solche Antworten tragen den Hinweis „Aus dem Lernstoff der App“.
+- **Mit echter KI** (Claude von Anthropic) beantwortet sie jede Frage. Der
+  API-Schlüssel liegt nur auf dem Server (Supabase Edge Function), nie in der
+  App. Nur angemeldete Nutzer, höchstens 40 Anfragen pro Person und Tag
+  (`LIMIT_PRO_TAG` in `supabase/functions/ki-hilfe/index.ts`). Gäste und
+  Fehlerfälle bekommen die Antwort aus dem Lernstoff.
+
+Einrichten:
+
+1. API-Schlüssel anlegen: console.anthropic.com → Settings → API Keys (und
+   unter Billing Guthaben aufladen).
+2. Supabase → Edge Functions → Secrets: `ANTHROPIC_API_KEY` (der Schlüssel)
+   und `KI_MODELL` (die Modell-ID aus der Anthropic-Doku, „Models overview“).
+3. Funktion bereitstellen – per Terminal im Ordner `theorie-app`:
+   `npx supabase login`, `npx supabase link --project-ref <Projekt-ID>`,
+   `npx supabase functions deploy ki-hilfe`. Oder im Dashboard: Edge
+   Functions → „Deploy a new function“ → Name `ki-hilfe` → Inhalt von
+   `supabase/functions/ki-hilfe/index.ts` einfügen → Deploy.
+4. Die Tabelle `lern_limit` (für das Tageslimit) kommt aus `schema.sql` bzw.
+   `update-crew.sql`. Unter Edge Functions → Logs steht je Antwort, wie viele
+   Tokens sie gebraucht hat.
+
 ## Live-Aktivität (Sperrbildschirm und Dynamic Island)
 
 Nur iPhone ab iOS 16.2; die Dynamic Island gibt es ab iPhone 14 Pro.

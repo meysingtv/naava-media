@@ -250,7 +250,7 @@ export default function Pruefung() {
                     FRAGE {ids.indexOf(id) + 1} · {q.punkte} FEHLERPUNKTE
                   </Text>
                   <FrageAnsicht frage={q} auswahl={a.auswahl} onAuswahl={() => {}} eingabe={a.eingabe} onEingabe={() => {}} aufgedeckt etikett="Prüfung" reihenfolge={reihenfolge(q)} />
-                  <FrageAktionen frageId={id} onHinweis={hinweis.zeigen} />
+                  <FrageAktionen frageId={id} onHinweis={hinweis.zeigen} auswahl={a.auswahl} eingabe={a.eingabe} />
                 </View>
               ) : null;
             })}

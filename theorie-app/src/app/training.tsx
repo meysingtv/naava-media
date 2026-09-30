@@ -10,6 +10,7 @@ import { FrageAktionen } from "@/components/frage-aktionen";
 import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
 import { AktionsLeiste, FrageKopf, FragenFortschritt, GlasRund, HauptKnopf, Kapsel, KopfPille, NebenKnopf, type Segment } from "@/components/frage-rahmen";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
+import { KiBlase, KiKnopf, type KiAnker } from "@/components/ki-hilfe";
 import { Kopfzeile } from "@/components/home";
 import { dialog } from "@/components/dialog";
 import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
@@ -69,6 +70,7 @@ export default function Training() {
   const [letzteXp, setLetzteXp] = useState(0);
   const [fertig, setFertig] = useState(false);
   const [dauerSek, setDauerSek] = useState(0);
+  const [kiAnker, setKiAnker] = useState<KiAnker | null>(null);
   const hinweis = useHinweis();
   const reihenfolge = useAntwortReihenfolge();
   const scroll = useRef<ScrollView>(null);
@@ -245,11 +247,12 @@ export default function Training() {
             />
             {aufgedeckt ? (
               <View style={{ marginTop: 14 }}>
-                <FrageAktionen frageId={frage.id} onHinweis={hinweis.zeigen} />
+                <FrageAktionen frageId={frage.id} onHinweis={hinweis.zeigen} ohneKi />
               </View>
             ) : null}
           </ScrollView>
           <AktionsLeiste unten={insets.bottom}>
+            <KiKnopf aktiv={kiAnker != null} onOeffnen={setKiAnker} />
             <NebenKnopf icon="flag-outline" onPress={() => frageMelden(frage.id)} style={{ width: 56 }} />
             {aufgedeckt ? (
               <HauptKnopf titel={letzte ? "Auswertung" : "Nächste Frage"} icon="arrow-forward" onPress={weiter} style={{ flex: 1 }} />
@@ -259,7 +262,15 @@ export default function Training() {
           </AktionsLeiste>
         </KeyboardAvoidingView>
 
-        {/* Karteikarte erstellt, KI-Hilfe … */}
+        {/* KI-Hilfe als Sprechblase über dem KI-Knopf – je Frage neu */}
+        <KiBlase
+          key={frage.id}
+          kontext={{ frage, auswahl: aufgedeckt ? auswahl : undefined, eingabe: aufgedeckt ? eingabe : undefined }}
+          anker={kiAnker}
+          onSchliessen={() => setKiAnker(null)}
+        />
+
+        {/* Karteikarte erstellt … */}
         <HinweisAnzeige wert={hinweis.wert} inhalt={hinweis.inhalt} oben={insets.top + 70} />
       </View>
     </FarbweltBereich>
