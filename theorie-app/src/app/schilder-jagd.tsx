@@ -8,6 +8,7 @@ import { Ring } from "@/components/grafik";
 import { Icon } from "@/components/icon";
 import { Chip, Knopf, Kopf, T } from "@/components/ui";
 import { Verkehrszeichen, ZEICHEN_INFO, type ZeichenInfo } from "@/components/zeichen";
+import { useDarstellung } from "@/lib/darstellung";
 import { datumKurz, datumLang } from "@/lib/format";
 import type { ZeichenKey } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
@@ -36,6 +37,7 @@ export default function SchilderJagd() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { stand } = useStand();
+  const { belohnungen } = useDarstellung();
   const [offen, setOffen] = useState<ZeichenInfo | null>(null);
   const [filter, setFilter] = useState<Filter>("alle");
   const kachel = Math.floor((width - RAND * 2 - 20) / 3);
@@ -74,7 +76,9 @@ export default function SchilderJagd() {
             <T v="text" style={{ fontSize: 14, lineHeight: 19 }}>
               {zuletzt
                 ? `Zuletzt: ${infoVon(zuletzt)?.kurz ?? infoVon(zuletzt)?.name ?? ""}`
-                : `Finde echte Schilder in deiner Umgebung und scanne sie – jedes neue bringt ${XP_JE_SCHILD} XP, das Quiz danach ${XP_QUIZ} mehr.`}
+                : belohnungen
+                  ? `Finde echte Schilder in deiner Umgebung und scanne sie – jedes neue bringt ${XP_JE_SCHILD} XP, das Quiz danach ${XP_QUIZ} mehr.`
+                  : "Finde echte Schilder in deiner Umgebung und scanne sie – jedes neue kommt in dein Album."}
             </T>
           </View>
         </View>

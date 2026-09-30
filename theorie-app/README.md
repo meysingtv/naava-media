@@ -63,6 +63,12 @@ schaltet die App dafür das Fenster auf hell (`DarstellungBruecke` in
 `src/lib/darstellung.tsx`), weil die native Liquid-Glass-Leiste sich nach der
 Darstellung des Fensters richtet; fürs System ist die App sonst fest dunkel.
 
+Ebenfalls unter Darstellung: „XP, HP & Abzeichen einblenden“ – von Haus aus
+**aus**. Dann gibt es beim Lernen keine XP-Kapseln, keine Treffer-Anzeige für
+den Crew-Boss und keinen Hinweis auf neue Abzeichen; in den Auswertungen steht
+statt XP die Zeit. XP und Abzeichen werden trotzdem gesammelt (Liga, Profil).
+Die Einstellung gilt fürs Gerät (`belohnungen` in `src/lib/darstellung.tsx`).
+
 ## Lernen und Prüfung
 
 **Lernen** zeigt oben eine schräge Wand aus allen Themenfotos, die langsam

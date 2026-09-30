@@ -36,7 +36,7 @@ export default function Einstellungen() {
   const { stand, setzen, zuruecksetzen } = useStand();
   const { session, profil, gast, anzeigeName, profilSpeichern, passwortAendern, benutzernameFrei, benutzernameAendern, rolleSetzen } = useKonto();
   const rechte = useClipRechte();
-  const { darstellung, setzen: darstellungSetzen } = useDarstellung();
+  const { darstellung, setzen: darstellungSetzen, belohnungen, belohnungenSetzen } = useDarstellung();
   const [name, setName] = useState(anzeigeName);
   const [nameAngefasst, setNameAngefasst] = useState(false);
   const [speichert, setSpeichert] = useState(false);
@@ -131,6 +131,15 @@ export default function Einstellungen() {
           <T v="klein" style={{ marginTop: abstand(2) }}>
             Gilt für Home, Lernen, Prüfung, Profil und die Fragen – die anderen Seiten folgen.
           </T>
+          <Gruppe style={{ marginTop: abstand(4) }}>
+            <Zeile
+              icon="flash"
+              iconFarbe={farben.orange}
+              titel="XP, HP & Abzeichen einblenden"
+              unter={belohnungen ? "Beim Lernen und in den Ergebnissen sichtbar" : "Aus – keine Einblendungen beim Lernen"}
+              rechts={<Schalter wert={belohnungen} onWechsel={belohnungenSetzen} />}
+            />
+          </Gruppe>
         </View>
 
         <View>

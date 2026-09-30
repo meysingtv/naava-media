@@ -11,6 +11,8 @@ import { farben } from "@/lib/theme";
 export type Darstellung = "dunkel" | "hell";
 
 const SPEICHER = "spur-darstellung";
+/** Einblendungen von XP, Crew-Boss-Treffern (HP) und neuen Abzeichen – von Haus aus aus. */
+const SPEICHER_BELOHNUNGEN = "spur-belohnungen";
 
 /** Farben, die zwischen Dunkel und Hell wechseln (Home und seine Bausteine). */
 export type Farbwelt = {
@@ -82,18 +84,29 @@ export const TAG: Farbwelt = {
   schatten: "rgba(60,44,24,0.18)",
 };
 
-type Kontext = { darstellung: Darstellung; farbwelt: Farbwelt; setzen: (d: Darstellung) => void };
+type Kontext = {
+  darstellung: Darstellung;
+  farbwelt: Farbwelt;
+  setzen: (d: Darstellung) => void;
+  /** XP, HP und neue Abzeichen beim Lernen einblenden. */
+  belohnungen: boolean;
+  belohnungenSetzen: (an: boolean) => void;
+};
 
-const DarstellungKontext = createContext<Kontext>({ darstellung: "dunkel", farbwelt: NACHT, setzen: () => {} });
+const DarstellungKontext = createContext<Kontext>({ darstellung: "dunkel", farbwelt: NACHT, setzen: () => {}, belohnungen: false, belohnungenSetzen: () => {} });
 
 export function DarstellungProvider({ children }: { children: ReactNode }) {
   const [darstellung, setDarstellung] = useState<Darstellung>("dunkel");
+  const [belohnungen, setBelohnungen] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(SPEICHER)
       .then((w) => {
         if (w === "hell" || w === "dunkel") setDarstellung(w);
       })
+      .catch(() => {});
+    AsyncStorage.getItem(SPEICHER_BELOHNUNGEN)
+      .then((w) => setBelohnungen(w === "an"))
       .catch(() => {});
   }, []);
 
@@ -105,8 +118,13 @@ export function DarstellungProvider({ children }: { children: ReactNode }) {
         setDarstellung(d);
         AsyncStorage.setItem(SPEICHER, d).catch(() => {});
       },
+      belohnungen,
+      belohnungenSetzen: (an) => {
+        setBelohnungen(an);
+        AsyncStorage.setItem(SPEICHER_BELOHNUNGEN, an ? "an" : "aus").catch(() => {});
+      },
     }),
-    [darstellung],
+    [darstellung, belohnungen],
   );
 
   return <DarstellungKontext.Provider value={wert}>{children}</DarstellungKontext.Provider>;

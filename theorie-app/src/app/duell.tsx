@@ -9,6 +9,7 @@ import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht"
 import { dialog } from "@/components/dialog";
 import { DUELL_RUNDEN, DUELL_SEKUNDEN, gegnerVon } from "@/lib/duell";
 import { antwortRichtig, frageVon, FRAGEN } from "@/lib/fragen";
+import { useDarstellung } from "@/lib/darstellung";
 import { erfolg, fehler, stoss } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { gemischt, useStand } from "@/lib/stand";
@@ -42,6 +43,7 @@ export default function Duell() {
   const gegner = gegnerVon(gegnerId);
   const insets = useSafeAreaInsets();
   const { antwort, duellFertig } = useStand();
+  const { belohnungen } = useDarstellung();
   const { anzeigeName } = useKonto();
   const ichName = anzeigeName.split(" ")[0];
 
@@ -200,7 +202,7 @@ export default function Duell() {
             </T>
           </View>
           <View style={{ flexDirection: "row", justifyContent: "center", gap: abstand(2) }}>
-            <Chip text={`+${ende.xp} XP`} icon="flash" farbe={farben.orange} />
+            {belohnungen ? <Chip text={`+${ende.xp} XP`} icon="flash" farbe={farben.orange} /> : null}
             <Chip text={`Rating ${ende.rating >= 0 ? "+" : ""}${ende.rating}`} icon="trending-up" farbe={ende.rating >= 0 ? farben.gruen : farben.rot} />
           </View>
         </View>

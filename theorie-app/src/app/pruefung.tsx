@@ -8,7 +8,7 @@ import { kopfOben } from "@/components/ui";
 import { AllesRichtig, ErgebnisHeld, ErgebnisRing, ErgebnisWerte, FehlerKarte, Stempel } from "@/components/auswertung";
 import { FrageAktionen } from "@/components/frage-aktionen";
 import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
-import { AktionsLeiste, FrageKopf, FragenNavigator, GlasPille, GlasRund, HauptKnopf, Kapsel, NebenKnopf } from "@/components/frage-rahmen";
+import { AktionsLeiste, FrageKopf, FragenNavigator, GlasPille, GlasRund, HauptKnopf, KopfPille, NebenKnopf } from "@/components/frage-rahmen";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { Kopfzeile } from "@/components/home";
 import { Eckdaten, ErgebnisListe, RegelListe, type Regel } from "@/components/pruefen";
@@ -50,7 +50,7 @@ function beantwortet(f: Frage, a?: { auswahl: number[]; eingabe: string }) {
 
 export default function Pruefung() {
   const insets = useSafeAreaInsets();
-  const { farbwelt: f } = useDarstellung();
+  const { farbwelt: f, belohnungen } = useDarstellung();
   const { direkt } = useLocalSearchParams<{ direkt?: string }>();
   const { stand, antwort, pruefungFertig, zeitBuchen } = useStand();
   const [phase, setPhase] = useState<"start" | "laeuft" | "ergebnis" | "aufloesung">(direkt ? "laeuft" : "start");
@@ -238,7 +238,7 @@ export default function Pruefung() {
             links={<GlasRund icon="chevron-back" label="Zurück zum Ergebnis" onPress={() => setPhase("ergebnis")} />}
             rechts={null}
             titel="Auflösung"
-            unter={<Kapsel icon="close" text={`${ergebnis.falsche.length} falsch`} farbe={rot} />}
+            unter={<KopfPille icon="close" text={`${ergebnis.falsche.length} falsch`} warnung />}
           />
           <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: 8, paddingBottom: insets.bottom + 32, gap: 40 }} showsVerticalScrollIndicator={false}>
             {ergebnis.falsche.map((id) => {
@@ -292,7 +292,8 @@ export default function Pruefung() {
               werte={[
                 { icon: "checkmark-circle", farbe: gruen, wert: `${ergebnis.richtig}/${ids.length}`, label: "richtig" },
                 { icon: "time-outline", farbe: f.orange, wert: dauer(sekunden), label: "Zeit" },
-                { icon: "flash", farbe: f.orange, wert: `+${ergebnis.xp}`, label: "XP" },
+                // XP nur, wenn die Einblendungen in den Einstellungen an sind
+                ...(belohnungen ? [{ icon: "flash" as const, farbe: f.orange, wert: `+${ergebnis.xp}`, label: "XP" }] : []),
               ]}
               style={{ marginHorizontal: RAND, marginTop: -40 }}
             />
@@ -371,7 +372,7 @@ export default function Pruefung() {
           links={<GlasRund icon="close" label="Simulation abbrechen" onPress={abbrechenFragen} />}
           rechts={<GlasPille titel="Abgeben" onPress={abgebenFragen} />}
           titel={`Frage ${index + 1} von ${ids.length}`}
-          unter={<Kapsel icon="time-outline" text={`noch ${dauer(rest)}`} farbe={knapp ? rot : undefined} gefuellt={knapp} />}
+          unter={<KopfPille icon="time-outline" text={`noch ${dauer(rest)}`} warnung={knapp} />}
         >
           <FragenNavigator
             anzahl={ids.length}

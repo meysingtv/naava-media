@@ -7,6 +7,7 @@ import { Ring } from "@/components/grafik";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { FlipKarte } from "@/components/karteikarte";
 import { Chip, Knopf, kopfOben, KopfTaste, Plakette, T } from "@/components/ui";
+import { useDarstellung } from "@/lib/darstellung";
 import { erfolg, tippen } from "@/lib/haptik";
 import { karteInhalt, lernListe, stapelIds, stapelTitel, type LernAuswahl, type StapelId } from "@/lib/karteikarten";
 import { KARTEN_ABSTAENDE, karteFaellig, useStand } from "@/lib/stand";
@@ -29,6 +30,7 @@ export default function KartenLernen() {
   const alle = params.alle === "1";
   const insets = useSafeAreaInsets();
   const { stand, karteBewerten } = useStand();
+  const { belohnungen } = useDarstellung();
   const hinweis = useHinweis();
 
   const [schlange, setSchlange] = useState<string[]>(() => lernListe(stand, auswahl, alle));
@@ -70,7 +72,7 @@ export default function KartenLernen() {
       nochmal: e.nochmal + (erstesMal && !gewusst ? 1 : 0),
       xp: e.xp + xp,
     }));
-    if (xp > 0) hinweis.zeigen({ icon: "flash", text: `+${xp} XP`, textFarbe: farben.orange });
+    if (xp > 0 && belohnungen) hinweis.zeigen({ icon: "flash", text: `+${xp} XP`, textFarbe: farben.orange });
 
     let neu = schlange;
     if (!gewusst) {
@@ -140,7 +142,7 @@ export default function KartenLernen() {
               </T>
             </View>
             <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: abstand(2) }}>
-              {ergebnis.xp > 0 ? <Chip text={`+${ergebnis.xp} XP`} icon="flash" farbe={farben.orange} /> : null}
+              {ergebnis.xp > 0 && belohnungen ? <Chip text={`+${ergebnis.xp} XP`} icon="flash" farbe={farben.orange} /> : null}
               <Chip text={rest > 0 ? `Noch ${rest} dran` : "Für heute fertig"} icon={rest > 0 ? "albums-outline" : "checkmark-circle"} farbe={rest > 0 ? farben.text2 : farben.gruen} />
             </View>
           </View>

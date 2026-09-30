@@ -35,7 +35,7 @@ Notifications.setNotificationHandler({
 /** Kurzer Hinweis oben als kleine Kapsel, wenn ein Abzeichen freigeschaltet wurde. */
 function ErfolgHinweis() {
   const { neueErfolge, erfolgeGesehen } = useStand();
-  const { darstellung } = useDarstellung();
+  const { darstellung, belohnungen } = useDarstellung();
   const hell = istHelleSeite(darstellung, usePathname());
   const insets = useSafeAreaInsets();
   const [aktuell, setAktuell] = useState<string | null>(null);
@@ -43,6 +43,11 @@ function ErfolgHinweis() {
 
   useEffect(() => {
     if (aktuell || neueErfolge.length === 0) return;
+    // Einblendungen aus (Einstellungen): neue Abzeichen still als gesehen merken – sie stehen im Profil.
+    if (!belohnungen) {
+      erfolgeGesehen();
+      return;
+    }
     const id = neueErfolge[neueErfolge.length - 1];
     setAktuell(id);
     erfolgeGesehen();
@@ -52,7 +57,7 @@ function ErfolgHinweis() {
       Animated.delay(2600),
       Animated.timing(y, { toValue: -140, duration: 260, useNativeDriver: true }),
     ]).start(() => setAktuell(null));
-  }, [neueErfolge, aktuell, erfolgeGesehen, y]);
+  }, [neueErfolge, aktuell, erfolgeGesehen, y, belohnungen]);
 
   const e = aktuell ? erfolgVon(aktuell) : null;
   if (!e) return null;
@@ -96,6 +101,7 @@ function ErfolgHinweis() {
 function Navigation() {
   const { drin, laedt, session, passwortNeuFaellig } = useKonto();
   const { bereit } = useStand();
+  const { belohnungen } = useDarstellung();
   const fertig = !laedt && bereit;
 
   useEffect(() => {
@@ -156,7 +162,8 @@ function Navigation() {
         </Stack.Protected>
       </Stack>
       <ErfolgHinweis />
-      <BossTrefferAnzeige />
+      {/* „−5 HP“ beim Crew-Boss nur, wenn XP, HP & Abzeichen in den Einstellungen an sind */}
+      {belohnungen ? <BossTrefferAnzeige /> : null}
       <AuswahlBlattHost />
     </View>
   );

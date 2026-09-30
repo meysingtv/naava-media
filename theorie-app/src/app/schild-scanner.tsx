@@ -14,6 +14,7 @@ import { Lader } from "@/components/lader";
 import { Knopf, T } from "@/components/ui";
 import { Verkehrszeichen, ZEICHEN_INFO } from "@/components/zeichen";
 import type { ZeichenKey } from "@/lib/fragen";
+import { useDarstellung } from "@/lib/darstellung";
 import { erfolg, fehler, stoss, tippen } from "@/lib/haptik";
 import { ALBUM, mittelQuadrat, rahmenImFoto, schildErkennen, schildInfo, XP_JE_SCHILD, XP_QUIZ, type Erkennung } from "@/lib/schilder-jagd";
 import { gemischt, useStand } from "@/lib/stand";
@@ -418,6 +419,7 @@ function ErgebnisKarte({
   onQuiz: (i: number) => void;
 }) {
   const info = ergebnis?.art === "schild" ? schildInfo(ergebnis.key) : undefined;
+  const { belohnungen } = useDarstellung();
   return (
     <Animated.View
       style={{
@@ -448,7 +450,7 @@ function ErgebnisKarte({
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                 <Icon name={ergebnis.neu ? "sparkles" : "checkmark-circle"} size={14} color={ergebnis.neu ? farben.orange : farben.gruen} weight="semibold" />
                 <T v="mini" farbe={ergebnis.neu ? farben.orange : farben.gruen}>
-                  {ergebnis.neu ? `Neu im Album · +${ergebnis.xp} XP` : "Schon in deinem Album"}
+                  {ergebnis.neu ? (belohnungen ? `Neu im Album · +${ergebnis.xp} XP` : "Neu im Album") : "Schon in deinem Album"}
                 </T>
               </View>
               <T v="h2">{info.name}</T>
@@ -457,7 +459,15 @@ function ErgebnisKarte({
           {ergebnis.quiz ? (
             <View style={{ gap: 8 }}>
               <T v="textStark">
-                {quizWahl == null ? `Weißt du, was es bedeutet? (+${XP_QUIZ} XP)` : quizWahl === ergebnis.quiz.richtig ? `Richtig! +${XP_QUIZ} XP` : "Nicht ganz – richtig ist die grüne Antwort."}
+                {quizWahl == null
+                  ? belohnungen
+                    ? `Weißt du, was es bedeutet? (+${XP_QUIZ} XP)`
+                    : "Weißt du, was es bedeutet?"
+                  : quizWahl === ergebnis.quiz.richtig
+                    ? belohnungen
+                      ? `Richtig! +${XP_QUIZ} XP`
+                      : "Richtig!"
+                    : "Nicht ganz – richtig ist die grüne Antwort."}
               </T>
               {ergebnis.quiz.optionen.map((text, i) => {
                 const aufgedeckt = quizWahl != null;

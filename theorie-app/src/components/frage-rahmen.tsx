@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Animated, Easing, Pressable, ScrollView, Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
+import { Animated, Easing, Image, Pressable, ScrollView, Text, View, useWindowDimensions, type ImageSourcePropType, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import type { SFSymbol } from "expo-symbols";
 
@@ -136,6 +136,35 @@ export function FragenNavigator({ anzahl, aktiv, erledigt, onWahl }: { anzahl: n
         );
       })}
     </ScrollView>
+  );
+}
+
+/**
+ * Ruhige Pille unter dem Titel im Kopf – auf Glas wie die Knöpfe daneben: vorne
+ * ein rundes Themenfoto (oder ein Symbol), dahinter der Text. `warnung` färbt sie rot
+ * (z. B. wenn die Zeit knapp wird).
+ */
+export function KopfPille({ bild, icon, text, warnung }: { bild?: ImageSourcePropType; icon?: IconName; text: string; warnung?: boolean }) {
+  const f = useFarbwelt();
+  const rot = f.hell ? "#E5392C" : "#FF5A4E";
+  return (
+    <Glas
+      hell={f.hell}
+      toenung={warnung ? mitDeckkraft(rot, f.hell ? 0.14 : 0.24) : undefined}
+      style={[
+        { flexDirection: "row", alignItems: "center", gap: 6, height: 26, maxWidth: "100%", paddingLeft: bild ? 3 : 9, paddingRight: 11, borderRadius: 13 },
+        f.hell ? leuchten("#3C2C18", 0.07, 6, 2) : null,
+      ]}
+    >
+      {bild ? (
+        <Image source={bild} style={{ width: 20, height: 20, borderRadius: 10 }} resizeMode="cover" fadeDuration={0} />
+      ) : icon ? (
+        <Icon name={icon} size={12} color={warnung ? rot : f.orange} weight="semibold" />
+      ) : null}
+      <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 12.5, color: warnung ? rot : f.text2, flexShrink: 1, fontVariant: ["tabular-nums"] }}>
+        {text}
+      </Text>
+    </Glas>
   );
 }
 

@@ -4,16 +4,16 @@ import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { type IconName } from "@/components/icon";
 import { kopfOben } from "@/components/ui";
 import { AllesRichtig, ErgebnisHeld, ErgebnisRing, ErgebnisWerte, FehlerKarte, LeerZustand, type Ton } from "@/components/auswertung";
 import { FrageAktionen } from "@/components/frage-aktionen";
 import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
-import { AktionsLeiste, FrageKopf, FragenFortschritt, GlasRund, HauptKnopf, Kapsel, NebenKnopf, type Segment } from "@/components/frage-rahmen";
+import { AktionsLeiste, FrageKopf, FragenFortschritt, GlasRund, HauptKnopf, Kapsel, KopfPille, NebenKnopf, type Segment } from "@/components/frage-rahmen";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { Kopfzeile } from "@/components/home";
 import { dialog } from "@/components/dialog";
 import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
+import { dauer } from "@/lib/format";
 import { FOTOS, themaFoto } from "@/lib/fotos";
 import { antwortRichtig, frageVon, FRAGEN, fragenZuThema, istBildfrage, istZeichen, themaVon, zahlLesen, type ThemaId } from "@/lib/fragen";
 import { erfolg, fehler } from "@/lib/haptik";
@@ -55,7 +55,7 @@ function fragenFuer(p: Params, s: Stand): string[] {
 export default function Training() {
   const params = useLocalSearchParams<Params>();
   const insets = useSafeAreaInsets();
-  const { farbwelt: f } = useDarstellung();
+  const { farbwelt: f, belohnungen } = useDarstellung();
   const { stand, antwort, merken, trainingFertig } = useStand();
 
   const [ids] = useState(() => fragenFuer(params, stand));
@@ -68,10 +68,12 @@ export default function Training() {
   const [xpSumme, setXpSumme] = useState(0);
   const [letzteXp, setLetzteXp] = useState(0);
   const [fertig, setFertig] = useState(false);
+  const [dauerSek, setDauerSek] = useState(0);
   const hinweis = useHinweis();
   const reihenfolge = useAntwortReihenfolge();
   const scroll = useRef<ScrollView>(null);
   const frageSeit = useRef(Date.now());
+  const startMs = useRef(Date.now());
 
   const frage = ids[index] ? frageVon(ids[index]) : undefined;
 
@@ -113,6 +115,7 @@ export default function Training() {
     }
     const richtig = ergebnisse.filter((e) => e.richtig).length;
     trainingFertig(richtig, ergebnisse.length);
+    setDauerSek(Math.round((Date.now() - startMs.current) / 1000));
     setFertig(true);
   }
 
@@ -161,7 +164,8 @@ export default function Training() {
 
             <ErgebnisWerte
               werte={[
-                { icon: "flash", farbe: f.orange, wert: `+${xpSumme}`, label: "XP" },
+                // XP nur, wenn die Einblendungen an sind – sonst die Zeit der Runde
+                belohnungen ? { icon: "flash", farbe: f.orange, wert: `+${xpSumme}`, label: "XP" } : { icon: "time-outline", farbe: f.orange, wert: dauer(dauerSek), label: "Zeit" },
                 { icon: "flame", farbe: "#FF8A2A", wert: `${serie}`, label: serie === 1 ? "Tag Serie" : "Tage Serie" },
                 { icon: "checkmark-circle", farbe: heute >= stand.tagesziel ? gruen : "#FFB45C", wert: `${Math.min(heute, 999)}/${stand.tagesziel}`, label: "heute" },
               ]}
@@ -218,7 +222,7 @@ export default function Training() {
           links={<GlasRund icon="close" label="Training beenden" onPress={schliessen} />}
           rechts={<GlasRund icon={gemerkt ? "heart" : "heart-outline"} farbe={gemerkt ? f.orange : undefined} label={gemerkt ? "Aus den Favoriten entfernen" : "Zu den Favoriten"} onPress={() => merken(frage.id)} />}
           titel={`Frage ${index + 1} von ${ids.length}`}
-          unter={<Kapsel icon={thema.icon as IconName} text={thema.titel} />}
+          unter={<KopfPille bild={themaFoto(frage.thema)} text={thema.titel} />}
         >
           <View style={{ paddingHorizontal: RAND }}>
             <FragenFortschritt segmente={segmente} />
@@ -235,7 +239,7 @@ export default function Training() {
               onEingabe={setEingabe}
               aufgedeckt={aufgedeckt}
               reihenfolge={reihenfolge(frage)}
-              xp={letzteXp}
+              xp={belohnungen ? letzteXp : undefined}
               // Nach dem Prüfen so weit rollen, dass Ergebnis und Erklärung ins Bild kommen.
               onErgebnisY={(y) => scroll.current?.scrollTo({ y: Math.max(0, y - 4), animated: true })}
             />
