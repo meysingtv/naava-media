@@ -5,13 +5,16 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
 import { FlipKarte } from "@/components/karteikarte";
-import { Knopf, Kopf, KopfTaste, T } from "@/components/ui";
+import { AktionsLeiste, HauptKnopf } from "@/components/frage-rahmen";
+import { Seite } from "@/components/seite";
+import { Kopf, KopfTaste, T } from "@/components/ui";
 import { Verkehrszeichen, ZEICHEN_INFO } from "@/components/zeichen";
 import { dialog } from "@/components/dialog";
+import { useDarstellung, useFarbwelt } from "@/lib/darstellung";
 import type { ZeichenKey } from "@/lib/fragen";
 import { erfolg, tippen } from "@/lib/haptik";
 import { useStand } from "@/lib/stand";
-import { abstand, farben, RAND, schrift } from "@/lib/theme";
+import { farben, leuchten, mitDeckkraft, RAND, schrift } from "@/lib/theme";
 import { useZurueckTaste } from "@/lib/zurueck-taste";
 
 const MAX_VORNE = 200;
@@ -34,11 +37,12 @@ function Feld({
   hoehe: number;
   autoFocus?: boolean;
 }) {
+  const f = useFarbwelt();
   return (
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" }}>
         <T v="mini">{titel}</T>
-        <Text style={{ ...schrift.textMittel, fontSize: 12, color: wert.length > max * 0.9 ? farben.orange : farben.text4, fontVariant: ["tabular-nums"] }}>
+        <Text style={{ ...schrift.textMittel, fontSize: 12, color: wert.length > max * 0.9 ? f.orange : f.text3, fontVariant: ["tabular-nums"] }}>
           {wert.length}/{max}
         </Text>
       </View>
@@ -46,27 +50,30 @@ function Feld({
         value={wert}
         onChangeText={(t) => onWechsel(t.slice(0, max))}
         placeholder={platzhalter}
-        placeholderTextColor={farben.text4}
-        selectionColor={farben.orange}
-        cursorColor={farben.orange}
-        selectionHandleColor={farben.orange}
-        keyboardAppearance="dark"
+        placeholderTextColor={f.hell ? "#A3A8AF" : farben.text4}
+        selectionColor={f.orange}
+        cursorColor={f.orange}
+        selectionHandleColor={f.orange}
+        keyboardAppearance={f.hell ? "light" : "dark"}
         multiline
         autoFocus={autoFocus}
         textAlignVertical="top"
-        style={{
-          minHeight: hoehe,
-          padding: 14,
-          paddingTop: 14,
-          borderRadius: 16,
-          backgroundColor: farben.flaeche,
-          borderWidth: 1,
-          borderColor: wert ? "rgba(252,91,14,0.45)" : farben.linieStark,
-          ...schrift.textMittel,
-          fontSize: 16.5,
-          lineHeight: 22,
-          color: farben.text,
-        }}
+        style={[
+          {
+            minHeight: hoehe,
+            padding: 16,
+            paddingTop: 16,
+            borderRadius: 20,
+            backgroundColor: f.hell ? "#FFFFFF" : f.flaeche,
+            borderWidth: 1,
+            borderColor: wert ? mitDeckkraft(f.orange, 0.45) : f.hell ? "rgba(20,23,27,0.08)" : farben.linieStark,
+            ...schrift.textMittel,
+            fontSize: 16.5,
+            lineHeight: 22,
+            color: f.text,
+          },
+          f.hell ? leuchten("#3C2C18", 0.05, 8, 2) : null,
+        ]}
       />
     </View>
   );
@@ -76,6 +83,7 @@ function Feld({
 export default function KarteBearbeiten() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const insets = useSafeAreaInsets();
+  const { farbwelt: f } = useDarstellung();
   const { stand, eigeneKarteSpeichern, karteLoeschen } = useStand();
   const alt = id ? stand.karteikarten.karten.find((k) => k.id === id && k.art === "eigen") : undefined;
   const altEigen = alt?.art === "eigen" ? alt : undefined;
@@ -125,15 +133,15 @@ export default function KarteBearbeiten() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund }}>
+    <Seite>
       <Kopf
         titel={altEigen ? "Karte bearbeiten" : "Neue Karte"}
         schliessen
         onZurueck={schliessen}
-        rechts={altEigen ? <KopfTaste icon="trash-outline" farbe={farben.rot} label="Karte löschen" onPress={loeschen} /> : undefined}
+        rechts={altEigen ? <KopfTaste icon="trash-outline" farbe={f.hell ? "#E5392C" : farben.rot} label="Karte löschen" onPress={loeschen} /> : undefined}
       />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-        <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: abstand(8), gap: 20 }} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: 8, paddingBottom: 32, gap: 22 }} keyboardShouldPersistTaps="handled">
           <Feld titel="Vorderseite" wert={vorne} onWechsel={setVorne} platzhalter="Frage oder Begriff, z. B. „Was gilt bei Zeichen 205?“" max={MAX_VORNE} hoehe={96} autoFocus={!altEigen} />
           <Feld titel="Rückseite" wert={hinten} onWechsel={setHinten} platzhalter="Antwort oder Merksatz" max={MAX_HINTEN} hoehe={120} />
 
@@ -149,10 +157,10 @@ export default function KarteBearbeiten() {
                   hitSlop={8}
                   style={{ flexDirection: "row", alignItems: "center", gap: 4, maxWidth: "55%" }}
                 >
-                  <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 12.5, color: farben.orange, flexShrink: 1 }}>
+                  <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 12.5, color: f.orange, flexShrink: 1 }}>
                     {zeichenName}
                   </Text>
-                  <Icon name="close-circle" size={15} color={farben.orange} />
+                  <Icon name="close-circle" size={15} color={f.orange} />
                 </Pressable>
               ) : (
                 <T v="klein" style={{ fontSize: 12 }}>
@@ -172,16 +180,19 @@ export default function KarteBearbeiten() {
                       setZeichen(aktiv ? undefined : z.key);
                     }}
                     accessibilityLabel={z.name}
-                    style={{
-                      width: 58,
-                      height: 58,
-                      borderRadius: 14,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: aktiv ? farben.orangeSoft : farben.flaeche,
-                      borderWidth: aktiv ? 2 : 1,
-                      borderColor: aktiv ? farben.orange : "rgba(255,255,255,0.08)",
-                    }}
+                    style={[
+                      {
+                        width: 60,
+                        height: 60,
+                        borderRadius: 18,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: aktiv ? f.orangeSoft : f.hell ? "#FFFFFF" : f.flaeche,
+                        borderWidth: aktiv ? 2 : f.hell ? 0 : 1,
+                        borderColor: aktiv ? f.orange : f.linie,
+                      },
+                      f.hell && !aktiv ? leuchten("#3C2C18", 0.06, 6, 2) : null,
+                    ]}
                   >
                     <Verkehrszeichen zeichen={z.key} groesse={38} />
                   </Pressable>
@@ -202,10 +213,10 @@ export default function KarteBearbeiten() {
             </View>
           ) : null}
         </ScrollView>
-        <View style={{ paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: insets.bottom + abstand(3), borderTopWidth: 1, borderColor: farben.linie, backgroundColor: farben.grund }}>
-          <Knopf titel={altEigen ? "Speichern" : "Karte speichern"} icon="checkmark" deaktiviert={!fertig} onPress={speichern} />
-        </View>
+        <AktionsLeiste unten={insets.bottom}>
+          <HauptKnopf titel={altEigen ? "Speichern" : "Karte speichern"} icon="checkmark" deaktiviert={!fertig} onPress={speichern} style={{ flex: 1 }} />
+        </AktionsLeiste>
       </KeyboardAvoidingView>
-    </View>
+    </Seite>
   );
 }

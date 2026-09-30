@@ -6,9 +6,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, type IconName } from "@/components/icon";
 import { FachPunkte, KartenVorschau } from "@/components/karteikarte";
 import { StapelSymbol } from "@/components/karteikarten-karte";
-import { Knopf, Kopf, KopfTaste, T } from "@/components/ui";
+import { StartKnopf } from "@/components/home";
+import { Seite } from "@/components/seite";
+import { kartenFlaeche, Knopf, Kopf, KopfTaste, T } from "@/components/ui";
 import { Verkehrszeichen } from "@/components/zeichen";
 import { dialog } from "@/components/dialog";
+import { useDarstellung, useFarbwelt } from "@/lib/darstellung";
 import { istZeichen, themaVon, type ZeichenKey } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
 import { GRUPPE_TITEL, istEingebaut, karteInhalt, naechsteText, stapelInfo, vorneText, type KartenInhalt, type StapelId } from "@/lib/karteikarten";
@@ -19,45 +22,50 @@ const GUELTIG = /^(eigen|zeichen|t:[a-z]+)$/;
 
 /** Kleines Bild vorn in der Zeile: Zeichen, wenn es eins gibt, sonst ein Symbol. */
 function Vorschaubild({ inhalt }: { inhalt: KartenInhalt }) {
+  const f = useFarbwelt();
+  const flaeche = f.hell ? "#F1EDE6" : farben.iconKreis;
   const zeichen: ZeichenKey | undefined =
     inhalt.art === "zeichen" ? inhalt.info.key : inhalt.art === "eigen" ? inhalt.zeichen : istZeichen(inhalt.frage.bild) ? (inhalt.frage.bild as ZeichenKey) : undefined;
   if (zeichen) {
     return (
-      <View style={{ width: 40, height: 40, borderRadius: 11, backgroundColor: farben.iconKreis, alignItems: "center", justifyContent: "center" }}>
+      <View style={{ width: 42, height: 42, borderRadius: 13, backgroundColor: flaeche, alignItems: "center", justifyContent: "center" }}>
         <Verkehrszeichen zeichen={zeichen} groesse={30} />
       </View>
     );
   }
   const icon: IconName = inhalt.art === "frage" ? (themaVon(inhalt.frage.thema).icon as IconName) : "create-outline";
   return (
-    <View style={{ width: 40, height: 40, borderRadius: 11, backgroundColor: farben.iconKreis, alignItems: "center", justifyContent: "center" }}>
-      <Icon name={icon} size={19} color={farben.text2} />
+    <View style={{ width: 42, height: 42, borderRadius: 13, backgroundColor: flaeche, alignItems: "center", justifyContent: "center" }}>
+      <Icon name={icon} size={19} color={f.text2} />
     </View>
   );
 }
 
 /** Verteilung der Karten auf die Lernfächer – von „Neu“ bis „sitzt“. */
 function Faecher({ ids, faecher }: { ids: string[]; faecher: Record<string, { fach: number }> }) {
+  const f = useFarbwelt();
+  const gruen = f.hell ? "#23A548" : "#4ED053";
+  const rot = f.hell ? "#E5392C" : "#FF5A4E";
   const zahlen = Array.from({ length: KARTEN_ABSTAENDE.length }, () => 0);
   let neu = 0;
   for (const id of ids) {
-    const f = faecher[id];
-    if (!f) neu++;
-    else zahlen[f.fach]++;
+    const fach = faecher[id];
+    if (!fach) neu++;
+    else zahlen[fach.fach]++;
   }
   const spalten = [
-    { titel: "Neu", n: neu, farbe: farben.text3 },
-    { titel: "Falsch", n: zahlen[0], farbe: farben.rot },
-    ...zahlen.slice(1).map((n, i) => ({ titel: `Fach ${i + 1}`, n, farbe: i + 1 >= 3 ? farben.gruen : farben.orange })),
+    { titel: "Neu", n: neu, farbe: f.hell ? "#B8B2A8" : farben.text3 },
+    { titel: "Falsch", n: zahlen[0], farbe: rot },
+    ...zahlen.slice(1).map((n, i) => ({ titel: `Fach ${i + 1}`, n, farbe: i + 1 >= 3 ? gruen : f.orange })),
   ];
   const max = Math.max(1, ...spalten.map((s) => s.n));
   return (
     <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 6, height: 92 }}>
       {spalten.map((s) => (
         <View key={s.titel} style={{ flex: 1, alignItems: "center", gap: 4 }}>
-          <Text style={{ ...schrift.textHalb, fontSize: 12, color: s.n > 0 ? "#FFFFFF" : farben.text4, fontVariant: ["tabular-nums"] }}>{s.n}</Text>
-          <View style={{ width: "100%", height: 4 + (s.n / max) * 44, borderRadius: 5, backgroundColor: s.n > 0 ? s.farbe : "rgba(255,255,255,0.08)" }} />
-          <Text numberOfLines={1} style={{ ...schrift.textMittel, fontSize: 10, color: farben.text3 }}>
+          <Text style={{ ...schrift.textHalb, fontSize: 12, color: s.n > 0 ? f.text : f.text3, fontVariant: ["tabular-nums"] }}>{s.n}</Text>
+          <View style={{ width: "100%", height: 4 + (s.n / max) * 44, borderRadius: 5, backgroundColor: s.n > 0 ? s.farbe : f.hell ? "rgba(20,23,27,0.07)" : "rgba(255,255,255,0.08)" }} />
+          <Text numberOfLines={1} style={{ ...schrift.textMittel, fontSize: 10, color: f.text3 }}>
             {s.titel.replace("Fach ", "")}
           </Text>
         </View>
@@ -70,6 +78,7 @@ export default function StapelAnsicht() {
   const { id: roh } = useLocalSearchParams<{ id: string }>();
   const id = (roh && GUELTIG.test(roh) ? roh : "eigen") as StapelId;
   const insets = useSafeAreaInsets();
+  const { farbwelt: f } = useDarstellung();
   const { stand, karteLoeschen, frageKarteUmschalten } = useStand();
   const [offen, setOffen] = useState<string | null>(null);
 
@@ -105,28 +114,28 @@ export default function StapelAnsicht() {
   const kopfbereich = (
     <View style={{ gap: 16, paddingBottom: 16 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-        <StapelSymbol id={id} groesse={52} />
+        <StapelSymbol id={id} groesse={58} />
         <View style={{ flex: 1 }}>
-          <T v="titel" style={{ fontSize: 22, lineHeight: 27 }}>
+          <T v="titel" style={{ fontSize: 28, lineHeight: 33, letterSpacing: -0.4 }}>
             {info.titel}
           </T>
-          <T v="klein">{info.unter}</T>
+          <T v="klein" style={{ fontSize: 14 }}>{info.unter}</T>
         </View>
       </View>
 
       {zeilen.length > 0 ? (
         <>
-          <View style={{ padding: 14, borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", gap: 10 }}>
+          <View style={[{ padding: 16, borderRadius: 22, gap: 12 }, kartenFlaeche(f)]}>
             <T v="mini">Lernfächer</T>
             <Faecher ids={info.ids} faecher={stand.karteikarten.faecher} />
           </View>
           <View style={{ gap: 10 }}>
             {dran > 0 ? (
-              <Knopf titel={`Lernen · ${dran} dran`} icon="arrow-forward" onPress={() => router.push({ pathname: "/karten-lernen", params: { stapel: id } })} />
+              <StartKnopf titel="Lernen" unter={`${dran} ${dran === 1 ? "Karte" : "Karten"} dran`} onPress={() => router.push({ pathname: "/karten-lernen", params: { stapel: id } })} />
             ) : (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 4 }}>
-                <Icon name="checkmark-circle" size={18} color={farben.gruen} />
-                <T v="textStark" farbe={farben.gruen}>
+                <Icon name="checkmark-circle" size={18} color={f.hell ? "#23A548" : "#4ED053"} />
+                <T v="textStark" farbe={f.hell ? "#23A548" : "#4ED053"}>
                   Alles wiederholt – die nächsten Karten kommen bald.
                 </T>
               </View>
@@ -136,12 +145,12 @@ export default function StapelAnsicht() {
         </>
       ) : null}
 
-      <Text style={{ ...schrift.titelFett, fontSize: 18, color: "#FFFFFF", marginTop: 4 }}>Karten</Text>
+      <Text style={{ ...schrift.titel, fontSize: 21, lineHeight: 26, color: f.text, marginTop: 10 }}>Karten</Text>
     </View>
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund }}>
+    <Seite>
       <Kopf
         rechts={id === "eigen" ? <KopfTaste icon="add" label="Neue Karte schreiben" onPress={() => router.push("/karte-bearbeiten")} /> : undefined}
       />
@@ -154,8 +163,8 @@ export default function StapelAnsicht() {
         initialNumToRender={14}
         ListEmptyComponent={
           <View style={{ alignItems: "center", gap: 12, paddingVertical: 36, paddingHorizontal: 20 }}>
-            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center" }}>
-              <Icon name={id === "eigen" ? "create-outline" : "albums-outline"} size={28} color={farben.orange} />
+            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: f.orangeSoft, alignItems: "center", justifyContent: "center" }}>
+              <Icon name={id === "eigen" ? "create-outline" : "albums-outline"} size={28} color={f.orange} />
             </View>
             <T v="h3" zentriert>
               {id === "eigen" ? "Noch keine eigenen Karten" : "Keine Karten"}
@@ -181,25 +190,25 @@ export default function StapelAnsicht() {
                 gap: 12,
                 paddingVertical: 12,
                 paddingHorizontal: 14,
-                backgroundColor: pressed ? farben.flaeche2 : farben.flaeche,
-                borderColor: "rgba(255,255,255,0.08)",
-                borderLeftWidth: 1,
-                borderRightWidth: 1,
-                borderTopWidth: erste ? 1 : 0,
-                borderBottomWidth: letzte ? 1 : 0,
-                borderTopLeftRadius: erste ? 16 : 0,
-                borderTopRightRadius: erste ? 16 : 0,
-                borderBottomLeftRadius: letzte ? 16 : 0,
-                borderBottomRightRadius: letzte ? 16 : 0,
+                backgroundColor: pressed ? (f.hell ? "#F7F4EF" : farben.flaeche2) : f.hell ? "#FFFFFF" : f.flaeche,
+                borderColor: f.hell ? "transparent" : f.linie,
+                borderLeftWidth: f.hell ? 0 : 1,
+                borderRightWidth: f.hell ? 0 : 1,
+                borderTopWidth: erste && !f.hell ? 1 : 0,
+                borderBottomWidth: letzte && !f.hell ? 1 : 0,
+                borderTopLeftRadius: erste ? 22 : 0,
+                borderTopRightRadius: erste ? 22 : 0,
+                borderBottomLeftRadius: letzte ? 22 : 0,
+                borderBottomRightRadius: letzte ? 22 : 0,
               })}
             >
-              {!erste ? <View style={{ position: "absolute", top: 0, left: 66, right: 0, height: 1, backgroundColor: "rgba(255,255,255,0.06)" }} /> : null}
+              {!erste ? <View style={{ position: "absolute", top: 0, left: 68, right: 0, height: 1, backgroundColor: f.linie }} /> : null}
               <Vorschaubild inhalt={item} />
               <View style={{ flex: 1, gap: 2 }}>
-                <Text numberOfLines={2} style={{ ...schrift.textHalb, fontSize: 15, lineHeight: 20, color: "#FFFFFF" }}>
+                <Text numberOfLines={2} style={{ ...schrift.textHalb, fontSize: 15, lineHeight: 20, color: f.text }}>
                   {vorneText(item)}
                 </Text>
-                <Text style={{ ...schrift.text, fontSize: 12.5, color: farben.text3 }}>{unterzeile(item)}</Text>
+                <Text style={{ ...schrift.text, fontSize: 12.5, color: f.text3 }}>{unterzeile(item)}</Text>
               </View>
               <FachPunkte fach={stand.karteikarten.faecher[item.id]?.fach ?? null} klein />
             </Pressable>
@@ -237,6 +246,6 @@ export default function StapelAnsicht() {
         ) : null}
         {offenInhalt && istEingebaut(offenInhalt.id) ? <Knopf titel="Fertig" klein style={{ flex: 1 }} onPress={() => setOffen(null)} /> : null}
       </KartenVorschau>
-    </View>
+    </Seite>
   );
 }

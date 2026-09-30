@@ -5,9 +5,11 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Chip, Knopf, KopfTaste, Plakette, T, zurueck } from "@/components/ui";
+import { Seite } from "@/components/seite";
+import { Chip, kartenFlaeche, Knopf, KopfTaste, Plakette, T, zurueck } from "@/components/ui";
 import { ClipBild } from "@/components/clip-bild";
 import { CLIPS, type Clip } from "@/lib/clips";
+import { useFarbwelt } from "@/lib/darstellung";
 import { stoss, tippen } from "@/lib/haptik";
 import { useStand } from "@/lib/stand";
 import { abstand, farben, RAND, schrift } from "@/lib/theme";
@@ -15,6 +17,7 @@ import { abstand, farben, RAND, schrift } from "@/lib/theme";
 const SICHTBAR_AB = { itemVisiblePercentThreshold: 60 };
 
 function Punkt({ text, index, aktiv }: { text: string; index: number; aktiv: boolean }) {
+  const f = useFarbwelt();
   const a = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     a.setValue(0);
@@ -32,12 +35,12 @@ function Punkt({ text, index, aktiv }: { text: string; index: number; aktiv: boo
         transform: [{ translateY: a.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
       }}
     >
-      <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center", marginTop: 1 }}>
-        <T v="klein" farbe={farben.orange} style={{ ...schrift.textFett, fontSize: 12 }}>
+      <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: f.orangeSoft, alignItems: "center", justifyContent: "center", marginTop: 1 }}>
+        <T v="klein" farbe={f.orange} style={{ ...schrift.textFett, fontSize: 12 }}>
           {index + 1}
         </T>
       </View>
-      <T v="text" style={{ flex: 1, color: farben.text }}>
+      <T v="text" style={{ flex: 1, color: f.text }}>
         {text}
       </T>
     </Animated.View>
@@ -45,6 +48,8 @@ function Punkt({ text, index, aktiv }: { text: string; index: number; aktiv: boo
 }
 
 function Aktion({ icon, aktiv, farbe, text, onPress, label }: { icon: keyof typeof Ionicons.glyphMap; aktiv?: boolean; farbe?: string; text?: string; onPress: () => void; label: string }) {
+  const f = useFarbwelt();
+  const c = farbe ?? f.orange;
   return (
     <Pressable
       onPress={() => {
@@ -62,15 +67,15 @@ function Aktion({ icon, aktiv, farbe, text, onPress, label }: { icon: keyof type
         alignItems: "center",
         justifyContent: "center",
         gap: 5,
-        backgroundColor: aktiv ? (farbe ?? farben.orange) + "22" : farben.flaeche2,
+        backgroundColor: aktiv ? c + "22" : f.hell ? "#F1EDE6" : farben.flaeche2,
         borderWidth: 1,
-        borderColor: aktiv ? (farbe ?? farben.orange) + "66" : farben.linie,
+        borderColor: aktiv ? c + "66" : f.linie,
         opacity: pressed ? 0.8 : 1,
       })}
     >
-      <Icon name={icon} size={20} color={aktiv ? farbe ?? farben.orange : farben.text2} />
+      <Icon name={icon} size={20} color={aktiv ? c : f.text2} />
       {text ? (
-        <T v="klein" farbe={aktiv ? farbe ?? farben.orange : farben.text2} style={{ ...schrift.textHalb, fontVariant: ["tabular-nums"] }}>
+        <T v="klein" farbe={aktiv ? c : f.text2} style={{ ...schrift.textHalb, fontVariant: ["tabular-nums"] }}>
           {text}
         </T>
       ) : null}
@@ -79,6 +84,7 @@ function Aktion({ icon, aktiv, farbe, text, onPress, label }: { icon: keyof type
 }
 
 function ClipKarte({ clip, index, anzahl, hoehe, aktiv }: { clip: Clip; index: number; anzahl: number; hoehe: number; aktiv: boolean }) {
+  const f = useFarbwelt();
   const { width } = useWindowDimensions();
   const { stand, clipUmschalten } = useStand();
   const breite = width - RAND * 2;
@@ -103,7 +109,8 @@ function ClipKarte({ clip, index, anzahl, hoehe, aktiv }: { clip: Clip; index: n
 
   return (
     <View style={{ height: hoehe, paddingHorizontal: RAND, paddingBottom: abstand(4) }}>
-      <View style={{ flex: 1, borderRadius: 26, overflow: "hidden", backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
+      <View style={[{ flex: 1, borderRadius: 28 }, kartenFlaeche(f)]}>
+        <View style={{ flex: 1, borderRadius: 28, overflow: "hidden" }}>
         <Pressable onPress={doppeltippen}>
           <ClipBild bild={clip.bild} breite={breite} aktiv={aktiv} />
           <Animated.View
@@ -116,13 +123,13 @@ function ClipKarte({ clip, index, anzahl, hoehe, aktiv }: { clip: Clip; index: n
               transform: [{ scale: herz.interpolate({ inputRange: [0, 1, 2], outputRange: [0.4, 1, 1.25] }) }],
             }}
           >
-            <Icon name="heart" size={84} color={farben.orange} />
+            <Icon name="heart" size={84} color={f.orange} />
           </Animated.View>
         </Pressable>
 
         <View style={{ flex: 1, padding: abstand(5), paddingTop: abstand(4), gap: abstand(3) }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-            <Chip text={clip.kategorie} farbe={farben.orange} />
+            <Chip text={clip.kategorie} farbe={f.orange} />
             <T v="klein" style={{ fontVariant: ["tabular-nums"] }}>
               {index + 1} / {anzahl}
             </T>
@@ -146,6 +153,7 @@ function ClipKarte({ clip, index, anzahl, hoehe, aktiv }: { clip: Clip; index: n
               label="Teilen"
             />
           </View>
+        </View>
         </View>
       </View>
     </View>
@@ -183,16 +191,17 @@ export default function KurzErklaert() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund, paddingTop: insets.top + abstand(1.5), paddingBottom: insets.bottom }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(2), paddingHorizontal: RAND - 8, paddingBottom: abstand(3) }}>
-        <KopfTaste icon="arrow-back" label="Zurück" onPress={zurueck} />
+    <Seite>
+    <View style={{ flex: 1, paddingTop: insets.top + abstand(1.5), paddingBottom: insets.bottom }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(2.5), paddingHorizontal: RAND, paddingBottom: abstand(3) }}>
+        <KopfTaste icon="chevron-back" label="Zurück" onPress={zurueck} />
         <View style={{ flex: 1 }}>
           <T v="h3" style={{ fontSize: 19 }}>
             Kurz erklärt
           </T>
-          <T v="klein">Wisch nach oben für die nächste Regel</T>
+          <T v="klein" numberOfLines={1}>Nach oben wischen</T>
         </View>
-        <View style={{ flexDirection: "row", gap: abstand(2), paddingRight: 8 }}>
+        <View style={{ flexDirection: "row", gap: abstand(2) }}>
           <Chip text="Für dich" aktiv={ansicht === "alle"} onPress={() => wechsel("alle")} />
           <Chip text={String(stand.clips.gemerkt.length)} icon="bookmark" aktiv={ansicht === "gemerkt"} onPress={() => wechsel("gemerkt")} />
         </View>
@@ -228,5 +237,6 @@ export default function KurzErklaert() {
         ) : null}
       </View>
     </View>
+    </Seite>
   );
 }

@@ -151,11 +151,56 @@ export function useFarbwelt(): Farbwelt {
 }
 
 /** Seiten, die im hellen Modus hell sind – alle anderen bleiben dunkel. */
-const HELLE_SEITEN = new Set(["heute", "lernen", "pruefen", "profil", "training", "pruefung"]);
+const HELLE_SEITEN = new Set([
+  "heute",
+  "lernen",
+  "pruefen",
+  "profil",
+  "training",
+  "pruefung",
+  "thema",
+  "statistik",
+  "karteikarten",
+  "stapel",
+  "karten-lernen",
+  "karte-bearbeiten",
+  "favoriten",
+  "zeichen",
+  "formeln",
+  "kurz-erklaert",
+  "schilder-jagd",
+]);
 
-/** Ist die Seite (Name der Route oder Pfad wie „/heute“) gerade hell? */
+/** Ist die Seite (Name der Route oder Pfad wie „/heute“ oder „/thema/vorfahrt“) gerade hell? */
 export function istHelleSeite(darstellung: Darstellung, seite: string | null | undefined): boolean {
-  return darstellung === "hell" && !!seite && HELLE_SEITEN.has(seite.replace(/^\//, ""));
+  return darstellung === "hell" && !!seite && HELLE_SEITEN.has(seite.replace(/^\//, "").split("/")[0]);
+}
+
+/** Ist die gerade offene Seite hell? Für Bausteine über allen Seiten (Dialoge, Blätter). */
+export function useHelleSeite(): boolean {
+  const { darstellung } = useDarstellung();
+  return istHelleSeite(darstellung, usePathname());
+}
+
+/**
+ * Feste Farben der dunklen Palette (Grautöne, Grün, Rot) auf die helle Farbwelt
+ * abbilden – für Stellen, die noch `farben.…` übergeben. Weiß bleibt Weiß.
+ */
+export function farbeFuer(f: Farbwelt, farbe: string | undefined): string | undefined {
+  if (!farbe || !f.hell) return farbe;
+  switch (farbe) {
+    case farben.text2:
+      return f.text2;
+    case farben.text3:
+    case farben.text4:
+      return f.text3;
+    case farben.gruen:
+      return f.gruen;
+    case farben.rot:
+      return "#E5392C";
+    default:
+      return farbe;
+  }
 }
 
 /**

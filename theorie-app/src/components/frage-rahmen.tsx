@@ -229,6 +229,16 @@ export function FragenFortschritt({ segmente }: { segmente: Segment[] }) {
   );
 }
 
+/** Durchgehender Fortschrittsbalken (0–1) mit orangem Verlauf. */
+export function FortschrittBalken({ anteil }: { anteil: number }) {
+  const f = useFarbwelt();
+  return (
+    <View style={{ height: 6, borderRadius: 3, backgroundColor: f.hell ? "rgba(20,23,27,0.08)" : "rgba(255,255,255,0.09)", overflow: "hidden" }}>
+      <LinearGradient colors={verlauf.balken} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ width: `${Math.max(3, Math.min(1, anteil) * 100)}%`, height: "100%", borderRadius: 3 }} />
+    </View>
+  );
+}
+
 /**
  * Großer orangefarbener Knopf mit Schein und einem Glanz, der ab und zu
  * darüberläuft. Ausgegraut, solange er noch nicht geht.
