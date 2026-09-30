@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, LinearGradient as SvgVerlauf, Path, Stop } from "react-native-svg";
 
+import { HauptKnopf } from "@/components/frage-rahmen";
 import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
 import { useFarbwelt } from "@/lib/darstellung";
@@ -70,7 +71,7 @@ function BlasenGlas({ style, children }: { style?: StyleProp<ViewStyle>; childre
   return (
     <View style={[{ overflow: "hidden" }, style]}>
       <BlurView tint={f.hell ? "light" : "dark"} intensity={85} experimentalBlurMethod="dimezisBlurView" style={FUELLEN} />
-      <View style={[FUELLEN, { backgroundColor: f.hell ? "rgba(255,255,255,0.8)" : "rgba(26,28,33,0.74)" }]} />
+      <View style={[FUELLEN, { backgroundColor: f.hell ? "rgba(255,255,255,0.84)" : "rgba(24,26,31,0.84)" }]} />
       {children}
     </View>
   );
@@ -430,10 +431,10 @@ export function KiBlase({ kontext, anker, onSchliessen }: { kontext: KiKontext; 
   const gefragt = new Set(nachrichten.filter((m) => m.rolle === "ich").map((m) => m.text));
   const vorschlaege = NACHFRAGEN.filter((q) => !gefragt.has(q)).slice(0, 2);
 
-  async function senden(eingabe: string, art: "erklaeren" | "frage") {
+  async function senden(eingabe: string, art: "erklaeren" | "frage", haptik = true) {
     const t = eingabe.trim();
     if (!t || laedt) return;
-    tippen();
+    if (haptik) tippen();
     Keyboard.dismiss();
     const neu: KiNachricht[] = [...nachrichten, { id: `${Date.now()}-ich`, rolle: "ich", text: t }];
     setNachrichten(neu);
@@ -556,17 +557,8 @@ export function KiBlase({ kontext, anker, onSchliessen }: { kontext: KiKontext; 
                   <Text style={{ ...schrift.titelFett, fontSize: 18, lineHeight: 23, color: f.text, flex: 1 }}>Wir helfen dir bei dieser Frage!</Text>
                 </View>
 
-                <Pressable
-                  onPress={() => senden(NICHT_VERSTANDEN, "erklaeren")}
-                  accessibilityRole="button"
-                  accessibilityLabel={NICHT_VERSTANDEN}
-                  style={({ pressed }) => [{ height: 52, borderRadius: 26, transform: [{ scale: pressed ? 0.98 : 1 }] }, leuchten(f.orange, f.hell ? 0.3 : 0.45, 12, 4)]}
-                >
-                  <LinearGradient colors={verlauf.knopf} locations={[0, 0.5, 1]} style={{ flex: 1, borderRadius: 26, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 }}>
-                    <Icon name="help-circle-outline" size={20} color="#FFFFFF" />
-                    <Text style={{ ...schrift.textFett, fontSize: 16.5, color: "#FFFFFF" }}>{NICHT_VERSTANDEN}</Text>
-                  </LinearGradient>
-                </Pressable>
+                {/* Wie die Hauptknöpfe der App: Verlauf, Schein und ab und zu ein Glanz */}
+                <HauptKnopf titel={NICHT_VERSTANDEN} onPress={() => senden(NICHT_VERSTANDEN, "erklaeren", false)} />
 
                 {eingabeZeile}
                 {hinweis}
