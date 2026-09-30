@@ -88,8 +88,8 @@ export default function NutzerProfil() {
 
   const kopf = (
     <View style={{ paddingTop: kopfOben(insets.top), paddingBottom: 14 }}>
-      <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", paddingHorizontal: 8 }}>
-        <KopfTaste icon="arrow-back" label="Zurück" onPress={zurueck} />
+      <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", paddingHorizontal: 16 }}>
+        <KopfTaste icon="chevron-back" label="Zurück" onPress={zurueck} />
         <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
           <Text numberOfLines={1} style={{ ...schrift.titelFett, fontSize: 18, color: "#FFFFFF" }}>
             {name}

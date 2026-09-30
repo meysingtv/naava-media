@@ -4,10 +4,13 @@ import { router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Abschnitt, Avatar, Chip, Eingabe, Gruppe, Karte, Knopf, kopfOben, KopfTaste, Segment, T, Zeile, zurueck } from "@/components/ui";
+import { FotoKopf, Seite } from "@/components/seite";
+import { Abschnitt, Avatar, Chip, Eingabe, Gruppe, Karte, kartenFlaeche, Knopf, Segment, T, Zeile } from "@/components/ui";
 import { dialog } from "@/components/dialog";
 import { Lader } from "@/components/lader";
+import { useDarstellung, useFarbwelt } from "@/lib/darstellung";
 import { GEGNER } from "@/lib/duell";
+import { FOTOS } from "@/lib/fotos";
 import { tausender } from "@/lib/format";
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
@@ -15,13 +18,16 @@ import { freundDuellBeitreten, freundDuellErstellen, meineDuelle, rangDuellSuche
 import { demoRangliste, ligaVon, ranglisteLaden, type RangEintrag } from "@/lib/rangliste";
 import { schutzFrei, serieAktuell, useStand, xpWoche } from "@/lib/stand";
 import { serverVerbunden } from "@/lib/supabase";
-import { abstand, farben, radius, RAND, schrift } from "@/lib/theme";
+import { abstand, farben, mitDeckkraft, RAND, schrift } from "@/lib/theme";
 
 type Ansicht = "rangliste" | "duell";
 
+/** Farben für Platz 1–3 – Silber im hellen Modus etwas dunkler, damit es auf Weiß trägt. */
 const PODEST = [farben.orange, "#C7CDDA", "#B98A5E"];
+const PODEST_HELL = [farben.orange, "#8E97A3", "#B07A48"];
 
 function Rangzeile({ e }: { e: RangEintrag }) {
+  const f = useFarbwelt();
   return (
     <View
       style={{
@@ -30,16 +36,16 @@ function Rangzeile({ e }: { e: RangEintrag }) {
         gap: abstand(3),
         paddingVertical: abstand(3),
         paddingHorizontal: abstand(3.5),
-        borderRadius: radius.m,
-        backgroundColor: e.ich ? farben.flaeche2 : "transparent",
+        borderRadius: 18,
+        backgroundColor: e.ich ? (f.hell ? "#FFF1E8" : farben.flaeche2) : "transparent",
         borderWidth: 1,
-        borderColor: e.ich ? farben.orangeLinie : "transparent",
+        borderColor: e.ich ? mitDeckkraft(f.orange, 0.5) : "transparent",
       }}
     >
-      <T v="h3" farbe={e.platz <= 3 ? PODEST[e.platz - 1] : farben.text3} style={{ width: 26, fontVariant: ["tabular-nums"] }}>
+      <T v="h3" farbe={e.platz <= 3 ? (f.hell ? PODEST_HELL : PODEST)[e.platz - 1] : f.text3} style={{ width: 26, fontVariant: ["tabular-nums"] }}>
         {e.platz}
       </T>
-      <Avatar name={e.name} groesse={36} farbe={e.platz <= 3 ? PODEST[e.platz - 1] : farben.linieStark} />
+      <Avatar name={e.name} groesse={36} farbe={e.platz <= 3 ? (f.hell ? PODEST_HELL : PODEST)[e.platz - 1] : f.linieStark} />
       <View style={{ flex: 1 }}>
         <T v="textStark" numberOfLines={1}>
           {e.ich ? `${e.name} (du)` : e.name}
@@ -48,7 +54,7 @@ function Rangzeile({ e }: { e: RangEintrag }) {
           @{e.benutzername}
         </T>
       </View>
-      <T v="textStark" farbe={e.ich ? farben.orange : farben.text2} style={{ fontVariant: ["tabular-nums"] }}>
+      <T v="textStark" farbe={e.ich ? f.orange : f.text2} style={{ fontVariant: ["tabular-nums"] }}>
         {tausender(e.xp)} XP
       </T>
     </View>
@@ -68,6 +74,8 @@ function duellStatus(d: DuellMitNamen, ich: string) {
 }
 
 export default function Liga() {
+  // Die Seite legt die Farbwelt erst fest – daher hier aus der Darstellung lesen
+  const { farbwelt: f } = useDarstellung();
   const insets = useSafeAreaInsets();
   const { stand } = useStand();
   const { session, profil, gast, anzeigeName, abmelden, profilNeuLaden } = useKonto();
@@ -138,31 +146,27 @@ export default function Liga() {
   }
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: farben.grund }}
-      contentContainerStyle={{ paddingTop: kopfOben(insets.top), paddingHorizontal: RAND, paddingBottom: insets.bottom + 24, gap: abstand(4) }}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginHorizontal: -8 }}>
-        <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
-          <T v="h3" style={{ fontSize: 19 }}>
-            Rangliste
-          </T>
-        </View>
-        <KopfTaste icon="arrow-back" label="Zurück" onPress={zurueck} />
-        <Pressable
-          onPress={() => {
-            tippen();
-            router.navigate("/profil");
-          }}
-          hitSlop={6}
-          accessibilityLabel="Profil"
-          style={{ marginRight: 6 }}
-        >
-          <Avatar name={anzeigeName} groesse={36} />
-        </Pressable>
-      </View>
-
+    <Seite>
+    <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 24 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <FotoKopf
+        bild={FOTOS.autobahn}
+        hoehe={220}
+        titel="Rangliste"
+        unter={`${liga.name} · noch ${tageRest} ${tageRest === 1 ? "Tag" : "Tage"}`}
+        rechts={
+          <Pressable
+            onPress={() => {
+              tippen();
+              router.navigate("/profil");
+            }}
+            hitSlop={6}
+            accessibilityLabel="Profil"
+          >
+            <Avatar name={anzeigeName} groesse={40} />
+          </Pressable>
+        }
+      />
+      <View style={{ paddingHorizontal: RAND, marginTop: 8, gap: abstand(4) }}>
       <Segment<Ansicht>
         wert={ansicht}
         onWechsel={setAnsicht}
@@ -195,12 +199,12 @@ export default function Liga() {
               </View>
             </View>
             <View style={{ flexDirection: "row", gap: abstand(2) }}>
-              <Chip text={`${serieAktuell(stand)} Tage Serie`} icon="flame" farbe={farben.orange} />
-              <Chip text={schutzFrei(stand) ? "Serien-Schutz bereit" : "Schutz verbraucht"} icon="shield-checkmark" farbe={schutzFrei(stand) ? farben.blau : farben.text4} />
+              <Chip text={`${serieAktuell(stand)} Tage Serie`} icon="flame" farbe={f.orange} />
+              <Chip text={schutzFrei(stand) ? "Serien-Schutz bereit" : "Schutz verbraucht"} icon="shield-checkmark" farbe={schutzFrei(stand) ? farben.blau : f.text3} />
             </View>
             {liga.bis ? (
               <View style={{ gap: abstand(1.5) }}>
-                <View style={{ height: 6, borderRadius: 3, backgroundColor: farben.flaeche3, overflow: "hidden" }}>
+                <View style={{ height: 6, borderRadius: 3, backgroundColor: f.hell ? "rgba(20,23,27,0.08)" : farben.flaeche3, overflow: "hidden" }}>
                   <View style={{ width: `${Math.min(100, (stand.xp / liga.bis) * 100)}%`, height: "100%", backgroundColor: liga.farbe }} />
                 </View>
                 <T v="klein" style={{ fontSize: 12 }}>
@@ -220,14 +224,14 @@ export default function Liga() {
           />
 
           {!session ? (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(3), padding: abstand(4), borderRadius: radius.l, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
-              <Icon name="people-outline" size={22} color={farben.text2} />
+            <View style={[{ flexDirection: "row", alignItems: "center", gap: abstand(3), padding: abstand(4), borderRadius: 22 }, kartenFlaeche(f)]}>
+              <Icon name="people-outline" size={22} color={f.text2} />
               <T v="klein" style={{ flex: 1 }}>
                 Übungsrangliste. Mit Konto trittst du gegen echte Lernende an.
               </T>
               {gast ? (
                 <Pressable onPress={kontoErstellen} hitSlop={8}>
-                  <T v="klein" farbe={farben.orange} style={{ ...schrift.textHalb }}>
+                  <T v="klein" farbe={f.orange} style={{ ...schrift.textHalb }}>
                     Konto erstellen
                   </T>
                 </Pressable>
@@ -236,18 +240,18 @@ export default function Liga() {
           ) : null}
 
           {laedt || !liste ? (
-            <Lader color={farben.orange} style={{ marginTop: abstand(6) }} />
+            <Lader color={f.orange} style={{ marginTop: abstand(6) }} />
           ) : (
-            <View>
+            <View style={[{ borderRadius: 24, padding: 6 }, kartenFlaeche(f)]}>
               {liste.slice(0, 30).map((e, i) => (
                 <View key={e.id}>
                   {i === 3 ? (
                     <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(2), marginVertical: abstand(2) }}>
-                      <View style={{ flex: 1, height: 1, borderTopWidth: 1, borderStyle: "dashed", borderColor: farben.orangeLinie }} />
-                      <T v="mini" farbe={farben.orange}>
+                      <View style={{ flex: 1, height: 1, borderTopWidth: 1, borderStyle: "dashed", borderColor: f.orangeLinie }} />
+                      <T v="mini" farbe={f.orange}>
                         Aufstiegszone
                       </T>
-                      <View style={{ flex: 1, height: 1, borderTopWidth: 1, borderStyle: "dashed", borderColor: farben.orangeLinie }} />
+                      <View style={{ flex: 1, height: 1, borderTopWidth: 1, borderStyle: "dashed", borderColor: f.orangeLinie }} />
                     </View>
                   ) : null}
                   <Rangzeile e={e} />
@@ -266,8 +270,8 @@ export default function Liga() {
           {/* Online: Rangliste-Duell */}
           <Karte hervorgehoben={online} style={{ gap: abstand(4) }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(3.5) }}>
-              <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center" }}>
-                <Icon name="trophy" size={22} color={farben.orange} />
+              <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: f.orangeSoft, alignItems: "center", justifyContent: "center" }}>
+                <Icon name="trophy" size={22} color={f.orange} />
               </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <T v="h3">Rangliste-Duell</T>
@@ -293,7 +297,7 @@ export default function Liga() {
               <T v="textStark">Top 100 nach Elo</T>
               <T v="klein">Die besten Duellantinnen und Duellanten</T>
             </View>
-            <Icon name="chevron-forward" size={18} color={farben.text4} />
+            <Icon name="chevron-forward" size={18} color={f.text3} />
           </Karte>
 
           {/* Online: Freundes-Duell */}
@@ -368,7 +372,7 @@ export default function Liga() {
                     <T v="klein" numberOfLines={1}>
                       {g.titel}
                     </T>
-                    <T v="klein" farbe={farben.text4} style={{ fontSize: 12 }}>
+                    <T v="klein" farbe={f.text3} style={{ fontSize: 12 }}>
                       Rating {g.rating}
                     </T>
                   </View>
@@ -379,6 +383,8 @@ export default function Liga() {
           </View>
         </>
       )}
+      </View>
     </ScrollView>
+    </Seite>
   );
 }

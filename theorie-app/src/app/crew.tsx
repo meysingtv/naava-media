@@ -9,11 +9,15 @@ import { CrewFlamme, EreignisZeile, QrCode } from "@/components/crew";
 import { dialog } from "@/components/dialog";
 import { Icon } from "@/components/icon";
 import { NutzerBild } from "@/components/profilbild";
-import { Abschnitt, Balken, Eingabe, Gruppe, Knopf, Kopf, KopfTaste, Segment, T } from "@/components/ui";
+import { Kopfzeile } from "@/components/home";
+import { FotoKopf, Seite } from "@/components/seite";
+import { Balken, Eingabe, Gruppe, kartenFlaeche, Knopf, KopfTaste, Segment, T } from "@/components/ui";
 import { CREW_MAX, crewLink, heuteGeschafft, useCrew, type CrewMitglied } from "@/lib/crew";
+import { useDarstellung, useFarbwelt } from "@/lib/darstellung";
+import { FOTOS } from "@/lib/fotos";
 import { erfolg, tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
-import { abstand, farben, RAND, schrift } from "@/lib/theme";
+import { abstand, RAND, schrift } from "@/lib/theme";
 
 type Teilen = "link" | "qr" | "code";
 
@@ -22,6 +26,8 @@ function einladungsText(crewName: string, code: string) {
 }
 
 function MitgliedZeile({ m, onStupsen, gestupst }: { m: CrewMitglied; onStupsen: () => void; gestupst: boolean }) {
+  const f = useFarbwelt();
+  const gruen = f.hell ? "#23A548" : "#4ED053";
   const fertig = m.heute >= m.ziel;
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, paddingHorizontal: 14 }}>
@@ -30,18 +36,18 @@ function MitgliedZeile({ m, onStupsen, gestupst }: { m: CrewMitglied; onStupsen:
       </Pressable>
       <View style={{ flex: 1, gap: 6 }}>
         <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
-          <Text style={{ ...schrift.textHalb, fontSize: 15.5, color: "#FFFFFF" }} numberOfLines={1}>
+          <Text style={{ ...schrift.textHalb, fontSize: 15.5, color: f.text }} numberOfLines={1}>
             {m.ich ? `${m.name} (du)` : m.name}
           </Text>
         </View>
-        <Balken wert={Math.min(1, m.heute / Math.max(1, m.ziel))} farbe={fertig ? farben.gruen : farben.orange} hoehe={6} />
-        <Text style={{ ...schrift.text, fontSize: 12, color: farben.text3, fontVariant: ["tabular-nums"] }}>
+        <Balken wert={Math.min(1, m.heute / Math.max(1, m.ziel))} farbe={fertig ? gruen : f.orange} hoehe={6} />
+        <Text style={{ ...schrift.text, fontSize: 12, color: f.text3, fontVariant: ["tabular-nums"] }}>
           {Math.min(m.heute, 999)} / {m.ziel} Fragen heute
         </Text>
       </View>
       {fertig ? (
-        <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: farben.gruenSoft, alignItems: "center", justifyContent: "center" }}>
-          <Icon name="checkmark" size={17} color={farben.gruen} weight="bold" />
+        <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: f.gruenSoft, alignItems: "center", justifyContent: "center" }}>
+          <Icon name="checkmark" size={17} color={gruen} weight="bold" />
         </View>
       ) : m.ich ? null : (
         <Pressable
@@ -50,10 +56,10 @@ function MitgliedZeile({ m, onStupsen, gestupst }: { m: CrewMitglied; onStupsen:
             onStupsen();
           }}
           disabled={gestupst}
-          style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, height: 32, borderRadius: 16, backgroundColor: gestupst ? farben.flaeche2 : farben.orangeSoft }}
+          style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, height: 32, borderRadius: 16, backgroundColor: gestupst ? (f.hell ? "#F1EDE6" : f.flaeche2) : f.orangeSoft }}
         >
-          <Icon name="paper-plane" size={13} color={gestupst ? farben.text3 : farben.orange} />
-          <Text style={{ ...schrift.textHalb, fontSize: 13, color: gestupst ? farben.text3 : farben.orange }}>{gestupst ? "Gestupst" : "Anstupsen"}</Text>
+          <Icon name="paper-plane" size={13} color={gestupst ? f.text3 : f.orange} />
+          <Text style={{ ...schrift.textHalb, fontSize: 13, color: gestupst ? f.text3 : f.orange }}>{gestupst ? "Gestupst" : "Anstupsen"}</Text>
         </Pressable>
       )}
     </View>
@@ -62,6 +68,7 @@ function MitgliedZeile({ m, onStupsen, gestupst }: { m: CrewMitglied; onStupsen:
 
 /** Noch keine Crew: gründen (oder zum Code wechseln). */
 function Gruenden() {
+  const f = useFarbwelt();
   const insets = useSafeAreaInsets();
   const { gruenden, moeglich } = useCrew();
   const { profil } = useKonto();
@@ -77,15 +84,12 @@ function Gruenden() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <Kopf titel="Crew gründen" />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(8), gap: abstand(5) }} keyboardShouldPersistTaps="handled">
-        <View style={{ alignItems: "center", gap: 10, paddingTop: abstand(4) }}>
-          <Text style={{ fontSize: 56 }}>🔥</Text>
-          <T v="titel" zentriert style={{ fontSize: 26, lineHeight: 31 }}>
-            Lernt zusammen.{"\n"}Besteht zusammen.
-          </T>
-          <T v="text" zentriert farbe={farben.text2}>
+    <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + abstand(8) }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <FotoKopf bild={FOTOS.tagesziel} hoehe={250} titel="Crew gründen" unter="Lernt zusammen. Besteht zusammen." />
+      <View style={{ paddingHorizontal: RAND, marginTop: 8, gap: abstand(5) }}>
+        <View style={[{ flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: 22 }, kartenFlaeche(f)]}>
+          <Text style={{ fontSize: 40 }}>🔥</Text>
+          <T v="text" style={{ flex: 1, fontSize: 14.5, lineHeight: 20 }}>
             Bis zu 6 Freunde, eine gemeinsame Flamme und jede Woche ein Boss, den ihr zusammen besiegt.
           </T>
         </View>
@@ -95,15 +99,17 @@ function Gruenden() {
         </View>
         <Knopf titel="Crew gründen" icon="arrow-forward" onPress={los} laedt={laeuft} deaktiviert={!moeglich} />
         <Pressable onPress={() => router.replace("/crew-beitreten")} hitSlop={8} style={{ alignSelf: "center" }}>
-          <Text style={{ ...schrift.textHalb, fontSize: 15, color: farben.orange }}>Ich habe schon einen Code</Text>
+          <Text style={{ ...schrift.textHalb, fontSize: 15, color: f.orange }}>Ich habe schon einen Code</Text>
         </Pressable>
-      </ScrollView>
-    </View>
+      </View>
+    </ScrollView>
   );
 }
 
 /** Meine Crew: Flamme, Mitglieder, Einladen (Link, QR-Code, Code) und was los war. */
 export default function CrewSeite() {
+  // Die Seite legt die Farbwelt erst fest – daher hier aus der Darstellung lesen
+  const { farbwelt: f } = useDarstellung();
   const insets = useSafeAreaInsets();
   const { daten, laedt, neuLaden, verlassen, stupsen } = useCrew();
   const [teilen, setTeilen] = useState<Teilen>("qr");
@@ -115,7 +121,12 @@ export default function CrewSeite() {
     }, [neuLaden]),
   );
 
-  if (!daten?.crew || !daten.mitglieder) return <Gruenden />;
+  if (!daten?.crew || !daten.mitglieder)
+    return (
+      <Seite>
+        <Gruenden />
+      </Seite>
+    );
   const crew = daten.crew;
   const mitglieder = daten.mitglieder;
   const voll = mitglieder.length >= CREW_MAX;
@@ -149,13 +160,21 @@ export default function CrewSeite() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <Kopf titel={crew.name} rechts={<KopfTaste icon="ellipsis-horizontal" label="Mehr" onPress={menue} />} />
+    <Seite>
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(10), gap: abstand(6) }}
-        refreshControl={<RefreshControl refreshing={laedt} onRefresh={neuLaden} tintColor={farben.orange} />}
+        contentContainerStyle={{ paddingBottom: insets.bottom + abstand(10) }}
+        refreshControl={<RefreshControl refreshing={laedt} onRefresh={neuLaden} tintColor={f.orange} />}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={{ borderRadius: 22, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie, paddingTop: 6, paddingBottom: 14 }}>
+        <FotoKopf
+          bild={FOTOS.tagesziel}
+          hoehe={230}
+          titel={crew.name}
+          unter={`${mitglieder.length} von ${CREW_MAX} · Flamme seit ${crew.flamme} ${crew.flamme === 1 ? "Tag" : "Tagen"}`}
+          rechts={<KopfTaste icon="ellipsis-horizontal" label="Mehr" onPress={menue} />}
+        />
+        <View style={{ paddingHorizontal: RAND, marginTop: 8 }}>
+        <View style={[{ borderRadius: 26, paddingTop: 6, paddingBottom: 16 }, kartenFlaeche(f)]}>
           <CrewFlamme mitglieder={mitglieder} flamme={crew.flamme} heuteZaehlt={crew.flamme_heute} hoehe={250} />
           <View style={{ flexDirection: "row", paddingHorizontal: 10 }}>
             {[
@@ -164,15 +183,16 @@ export default function CrewSeite() {
               { w: `${heuteGeschafft(mitglieder)}/${mitglieder.length}`, l: "heute geschafft" },
             ].map((x) => (
               <View key={x.l} style={{ flex: 1, alignItems: "center", gap: 2 }}>
-                <Text style={{ ...schrift.titel, fontSize: 21, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{x.w}</Text>
-                <Text style={{ ...schrift.text, fontSize: 12.5, color: farben.text3 }}>{x.l}</Text>
+                <Text style={{ ...schrift.titel, fontSize: 21, color: f.text, fontVariant: ["tabular-nums"] }}>{x.w}</Text>
+                <Text style={{ ...schrift.text, fontSize: 12.5, color: f.text3 }}>{x.l}</Text>
               </View>
             ))}
           </View>
         </View>
+        </View>
 
-        <View>
-          <Abschnitt titel={`Mitglieder ${mitglieder.length}/${CREW_MAX}`} />
+        <Kopfzeile titel="Mitglieder" link={`${mitglieder.length}/${CREW_MAX}`} style={{ marginTop: 30 }} />
+        <View style={{ paddingHorizontal: RAND }}>
           <Gruppe>
             {mitglieder.map((m) => (
               <MitgliedZeile key={m.id} m={m} gestupst={!!gestupst[m.id]} onStupsen={() => anstupsen(m)} />
@@ -184,8 +204,9 @@ export default function CrewSeite() {
         </View>
 
         {!voll ? (
-          <View style={{ gap: abstand(3) }}>
-            <Abschnitt titel="Freunde einladen" />
+          <>
+          <Kopfzeile titel="Freunde einladen" style={{ marginTop: 30 }} />
+          <View style={{ paddingHorizontal: RAND, gap: abstand(3) }}>
             <Segment<Teilen>
               optionen={[
                 { id: "link", titel: "Link" },
@@ -195,7 +216,7 @@ export default function CrewSeite() {
               wert={teilen}
               onWechsel={setTeilen}
             />
-            <View style={{ alignItems: "center", gap: 12, padding: abstand(5), borderRadius: 20, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
+            <View style={[{ alignItems: "center", gap: 12, padding: abstand(5), borderRadius: 24 }, kartenFlaeche(f)]}>
               {teilen === "qr" ? (
                 <>
                   <QrCode wert={crewLink(crew.code)} groesse={184} />
@@ -205,7 +226,7 @@ export default function CrewSeite() {
                 </>
               ) : teilen === "code" ? (
                 <>
-                  <Text selectable style={{ ...schrift.titel, fontSize: 36, letterSpacing: 3, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>
+                  <Text selectable style={{ ...schrift.titel, fontSize: 36, letterSpacing: 3, color: f.text, fontVariant: ["tabular-nums"] }}>
                     {crew.code}
                   </Text>
                   <T v="klein" zentriert>
@@ -225,7 +246,7 @@ export default function CrewSeite() {
                 </>
               ) : (
                 <>
-                  <Icon name="link-outline" size={34} color={farben.orange} />
+                  <Icon name="link-outline" size={34} color={f.orange} />
                   <T v="klein" zentriert>
                     Schick den Link per WhatsApp, Instagram oder SMS – mit dem Code als Rückfall.
                   </T>
@@ -234,19 +255,22 @@ export default function CrewSeite() {
               <Knopf titel="Einladung teilen" icon="share-outline" klein onPress={() => Share.share({ message: einladungsText(crew.name, crew.code) })} style={{ alignSelf: "stretch" }} />
             </View>
           </View>
+          </>
         ) : null}
 
         {daten.ereignisse && daten.ereignisse.length > 0 ? (
-          <View>
-            <Abschnitt titel="Was in der Crew los war" />
+          <>
+          <Kopfzeile titel="Was los war" style={{ marginTop: 30 }} />
+          <View style={{ paddingHorizontal: RAND }}>
             <Gruppe>
               {daten.ereignisse.slice(0, 12).map((e) => (
                 <EreignisZeile key={e.id} e={e} />
               ))}
             </Gruppe>
           </View>
+          </>
         ) : null}
       </ScrollView>
-    </View>
+    </Seite>
   );
 }

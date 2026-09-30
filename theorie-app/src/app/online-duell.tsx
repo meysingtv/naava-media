@@ -4,16 +4,19 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Avatar, Chip, Knopf, Kopf, T } from "@/components/ui";
+import { Avatar, Chip, kartenFlaeche, Kopf, kopfOben, T } from "@/components/ui";
 import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
+import { AktionsLeiste, FrageKopf, GlasRund, HauptKnopf, KopfPille, NebenKnopf } from "@/components/frage-rahmen";
+import { Seite } from "@/components/seite";
 import { dialog } from "@/components/dialog";
 import { Lader } from "@/components/lader";
+import { useDarstellung } from "@/lib/darstellung";
 import { antwortRichtig, frageVon } from "@/lib/fragen";
 import { erfolg, fehler, stoss } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { duellLaden, ergebnisMelden, ONLINE_SEKUNDEN, sicht, type DuellMitNamen, type OnlineDuell } from "@/lib/online-duell";
 import { useStand } from "@/lib/stand";
-import { abstand, farben, radius, RAND, schrift } from "@/lib/theme";
+import { abstand, farben, leuchten, mitDeckkraft, RAND, schrift } from "@/lib/theme";
 import { useZurueckTaste } from "@/lib/zurueck-taste";
 
 type Phase = "laden" | "start" | "runde" | "senden" | "ende";
@@ -21,6 +24,7 @@ type Phase = "laden" | "start" | "runde" | "senden" | "ende";
 export default function OnlineDuellSeite() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  const { farbwelt: f } = useDarstellung();
   const { session, anzeigeName } = useKonto();
   const { antwort } = useStand();
   const ich = session?.user.id ?? "";
@@ -129,10 +133,12 @@ export default function OnlineDuellSeite() {
   // ------------------------------------------------------------------ Laden / Senden
   if (phase === "laden" || phase === "senden") {
     return (
-      <View style={{ flex: 1, backgroundColor: farben.grund, alignItems: "center", justifyContent: "center", gap: abstand(4) }}>
-        <Lader color={farben.orange} />
-        <T v="klein">{phase === "senden" ? "Ergebnis wird gespeichert …" : "Duell wird geladen …"}</T>
-      </View>
+      <Seite>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: abstand(4) }}>
+          <Lader color={f.orange} />
+          <T v="klein">{phase === "senden" ? "Ergebnis wird gespeichert …" : "Duell wird geladen …"}</T>
+        </View>
+      </Seite>
     );
   }
 
@@ -141,7 +147,7 @@ export default function OnlineDuellSeite() {
   // ------------------------------------------------------------------ Start
   if (phase === "start" && duell) {
     return (
-      <View style={{ flex: 1, backgroundColor: farben.grund }}>
+      <Seite>
         <Kopf schliessen />
         <View style={{ flex: 1, paddingHorizontal: RAND, justifyContent: "center", gap: abstand(8) }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-around" }}>
@@ -149,30 +155,30 @@ export default function OnlineDuellSeite() {
               <Avatar name={anzeigeName} groesse={76} />
               <T v="h3">Du</T>
             </View>
-            <T v="display" farbe={farben.orange}>
+            <T v="display" farbe={f.orange} style={{ textShadowColor: mitDeckkraft(f.orange, 0.55), textShadowRadius: 18 }}>
               VS
             </T>
             <View style={{ alignItems: "center", gap: abstand(2) }}>
               {gegnerName ? (
                 <Avatar name={gegnerName} groesse={76} farbe={farben.blau} />
               ) : (
-                <View style={{ width: 76, height: 76, borderRadius: 38, borderWidth: 1.5, borderStyle: "dashed", borderColor: farben.linieStark, alignItems: "center", justifyContent: "center" }}>
-                  <Icon name="help" size={30} color={farben.text4} />
+                <View style={{ width: 76, height: 76, borderRadius: 38, borderWidth: 1.5, borderStyle: "dashed", borderColor: f.linieStark, alignItems: "center", justifyContent: "center" }}>
+                  <Icon name="help" size={30} color={f.text3} />
                 </View>
               )}
               <T v="h3">{gegnerName ?? "Offen"}</T>
             </View>
           </View>
           <View style={{ alignItems: "center", gap: abstand(2) }}>
-            <Chip text={duell.art === "rangliste" ? "Rangliste-Duell" : `Freundes-Duell · ${duell.code}`} farbe={farben.orange} />
+            <Chip text={duell.art === "rangliste" ? "Rangliste-Duell" : `Freundes-Duell · ${duell.code}`} farbe={f.orange} />
             <T v="text" zentriert>
               {fragen.length} Fragen, je {ONLINE_SEKUNDEN} Sekunden. Bei Gleichstand gewinnt, wer schneller war.
               {gegnerName ? "" : " Du spielst zuerst – dein Gegner spielt dieselben Fragen später."}
             </T>
           </View>
         </View>
-        <View style={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(3) }}>
-          <Knopf
+        <AktionsLeiste unten={insets.bottom}>
+          <HauptKnopf
             titel="Los geht's"
             icon="play"
             onPress={() => {
@@ -182,9 +188,10 @@ export default function OnlineDuellSeite() {
               setRichtig([]);
               setPhase("runde");
             }}
+            style={{ flex: 1 }}
           />
-        </View>
-      </View>
+        </AktionsLeiste>
+      </Seite>
     );
   }
 
@@ -194,14 +201,16 @@ export default function OnlineDuellSeite() {
     const s = d ? sicht(duell ? { ...d, p1: duell.p1, p2: duell.p2 } : d, ich) : null;
     const fertig = d?.status === "fertig";
     const titel = !d ? "Hoppla." : fertig ? (s?.gewonnen ? "Sieg!" : s?.verloren ? "Knapp daneben." : "Unentschieden.") : "Vorgelegt!";
-    const farbe = !d ? farben.rot : fertig ? (s?.gewonnen ? farben.gruen : s?.verloren ? farben.rot : farben.text2) : farben.orange;
+    const gruen = f.hell ? "#23A548" : "#4ED053";
+    const rot = f.hell ? "#E5392C" : "#FF5A4E";
+    const farbe = !d ? rot : fertig ? (s?.gewonnen ? gruen : s?.verloren ? rot : f.text2) : f.orange;
     const offenerCode = d && d.art === "freund" && !d.spieler2 ? d.code : null;
     return (
-      <View style={{ flex: 1, backgroundColor: farben.grund }}>
+      <Seite>
         <Kopf schliessen />
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: RAND, gap: abstand(6) }}>
           <View style={{ alignItems: "center", gap: abstand(3) }}>
-            <View style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: farbe + "22", alignItems: "center", justifyContent: "center" }}>
+            <View style={[{ width: 92, height: 92, borderRadius: 46, backgroundColor: mitDeckkraft(farbe, 0.14), borderWidth: 1, borderColor: mitDeckkraft(farbe, 0.35), alignItems: "center", justifyContent: "center" }, leuchten(farbe, 0.3, 18, 0)]}>
               <Icon name={!d ? "alert" : fertig ? (s?.gewonnen ? "trophy" : s?.verloren ? "flag" : "git-compare") : "hourglass"} size={38} color={farbe} />
             </View>
             <T v="display" farbe={farbe}>
@@ -230,7 +239,7 @@ export default function OnlineDuellSeite() {
           ) : null}
 
           {offenerCode ? (
-            <View style={{ alignItems: "center", gap: abstand(3), padding: abstand(5), borderRadius: radius.l, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.orangeLinie }}>
+            <View style={[{ alignItems: "center", gap: abstand(3), padding: abstand(5), borderRadius: 24 }, kartenFlaeche(f), { borderWidth: 1.5, borderColor: mitDeckkraft(f.orange, 0.45) }]}>
               <T v="mini">Dein Duell-Code</T>
               <T v="display" style={{ letterSpacing: 6, ...schrift.titel }}>
                 {offenerCode}
@@ -240,18 +249,18 @@ export default function OnlineDuellSeite() {
                 style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
                 hitSlop={8}
               >
-                <Icon name="share-outline" size={18} color={farben.orange} />
-                <T v="textStark" farbe={farben.orange}>
+                <Icon name="share-outline" size={18} color={f.orange} />
+                <T v="textStark" farbe={f.orange}>
                   Code teilen
                 </T>
               </Pressable>
             </View>
           ) : null}
         </ScrollView>
-        <View style={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(3) }}>
-          <Knopf titel="Zurück zur Liga" art="sekundaer" onPress={() => router.back()} />
-        </View>
-      </View>
+        <AktionsLeiste unten={insets.bottom}>
+          <NebenKnopf titel="Zurück zur Liga" onPress={() => router.back()} style={{ flex: 1 }} />
+        </AktionsLeiste>
+      </Seite>
     );
   }
 
@@ -261,24 +270,20 @@ export default function OnlineDuellSeite() {
   const punkte = richtig.filter(Boolean).length;
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <View style={{ paddingTop: insets.top + abstand(2), paddingHorizontal: RAND - 6, flexDirection: "row", alignItems: "center" }}>
-        <Pressable onPress={schliessen} hitSlop={10} style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}>
-          <Icon name="close" size={26} color={farben.text} />
-        </Pressable>
-        <T v="klein" style={{ flex: 1, textAlign: "center" }}>
-          Frage {runde + 1} von {fragen.length}
-        </T>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, width: 70, justifyContent: "flex-end", paddingRight: 6 }}>
-          <Icon name="checkmark-circle" size={16} color={farben.gruen} />
-          <T v="textStark">{punkte}</T>
+    <Seite>
+      <FrageKopf
+        oben={kopfOben(insets.top)}
+        links={<GlasRund icon="close" label="Duell verlassen" onPress={schliessen} />}
+        rechts={<KopfPille icon="checkmark-circle" text={`${punkte} richtig`} />}
+        titel={`Frage ${runde + 1} von ${fragen.length}`}
+        unter={<KopfPille icon="flash" text={gegnerName ? `gegen ${gegnerName}` : "Online-Duell"} />}
+      >
+        <View style={{ marginHorizontal: RAND, height: 6, borderRadius: 3, backgroundColor: f.hell ? "rgba(20,23,27,0.08)" : farben.flaeche3, overflow: "hidden" }}>
+          <Animated.View style={{ height: "100%", borderRadius: 3, backgroundColor: f.orange, width: zeit.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }) }} />
         </View>
-      </View>
-      <View style={{ marginHorizontal: RAND, marginTop: abstand(2), height: 6, borderRadius: 3, backgroundColor: farben.flaeche3, overflow: "hidden" }}>
-        <Animated.View style={{ height: "100%", backgroundColor: farben.orange, width: zeit.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }) }} />
-      </View>
+      </FrageKopf>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(5), paddingBottom: abstand(8) }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(3), paddingBottom: abstand(8) }} showsVerticalScrollIndicator={false}>
         <FrageAnsicht
           frage={frage}
           auswahl={auswahl}
@@ -294,9 +299,9 @@ export default function OnlineDuellSeite() {
         />
       </ScrollView>
 
-      <View style={{ paddingHorizontal: RAND, paddingTop: abstand(3), paddingBottom: insets.bottom + abstand(3), borderTopWidth: 1, borderColor: farben.linie }}>
-        <Knopf titel={gesperrt ? "Weiter …" : "Antwort abgeben"} deaktiviert={gesperrt || auswahl.length === 0} onPress={einloggen} />
-      </View>
-    </View>
+      <AktionsLeiste unten={insets.bottom}>
+        <HauptKnopf titel={gesperrt ? "Weiter …" : "Antwort abgeben"} deaktiviert={gesperrt || auswahl.length === 0} onPress={einloggen} style={{ flex: 1 }} />
+      </AktionsLeiste>
+    </Seite>
   );
 }

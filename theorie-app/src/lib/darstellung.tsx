@@ -169,6 +169,13 @@ const HELLE_SEITEN = new Set([
   "formeln",
   "kurz-erklaert",
   "schilder-jagd",
+  "crew",
+  "crew-boss",
+  "crew-beitreten",
+  "liga",
+  "elo",
+  "duell",
+  "online-duell",
 ]);
 
 /** Ist die Seite (Name der Route oder Pfad wie „/heute“ oder „/thema/vorfahrt“) gerade hell? */

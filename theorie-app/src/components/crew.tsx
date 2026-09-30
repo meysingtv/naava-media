@@ -153,21 +153,22 @@ function ereignisText(e: CrewEreignis): { icon: IconName; farbe: string; text: s
 }
 
 export function EreignisZeile({ e }: { e: CrewEreignis }) {
+  const f = useFarbwelt();
   const x = ereignisText(e);
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 14 }}>
       {e.user_id && e.name ? (
         <NutzerBild pfad={e.bild} name={e.name} farbe={e.farbe ?? undefined} groesse={34} />
       ) : (
-        <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: farben.flaeche2, alignItems: "center", justifyContent: "center" }}>
+        <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: f.hell ? "#F1EDE6" : farben.flaeche2, alignItems: "center", justifyContent: "center" }}>
           <Icon name={x.icon} size={17} color={x.farbe} />
         </View>
       )}
       <View style={{ flex: 1 }}>
-        <Text style={{ ...schrift.textMittel, fontSize: 14.5, color: "#FFFFFF" }} numberOfLines={2}>
+        <Text style={{ ...schrift.textMittel, fontSize: 14.5, color: f.text }} numberOfLines={2}>
           {x.text}
         </Text>
-        <Text style={{ ...schrift.text, fontSize: 12, color: farben.text3 }}>{zeitVor(e.zeit)}</Text>
+        <Text style={{ ...schrift.text, fontSize: 12, color: f.text3 }}>{zeitVor(e.zeit)}</Text>
       </View>
       {x.wert ? <Text style={{ ...schrift.titelFett, fontSize: 15, color: x.wertFarbe, fontVariant: ["tabular-nums"] }}>{x.wert}</Text> : null}
     </View>

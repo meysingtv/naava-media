@@ -7,11 +7,13 @@ import { BossBild, EreignisZeile, HpBalken } from "@/components/crew";
 import { dialog } from "@/components/dialog";
 import { Icon } from "@/components/icon";
 import { NutzerBild } from "@/components/profilbild";
-import { Abschnitt, Gruppe, Knopf, Kopf, T } from "@/components/ui";
+import { Seite } from "@/components/seite";
+import { Abschnitt, Gruppe, kartenFlaeche, Knopf, Kopf, T } from "@/components/ui";
 import { bossVon, HEILUNG_FALSCH, SCHADEN_RICHTIG, useCrew, XP_TRUHE } from "@/lib/crew";
+import { useDarstellung } from "@/lib/darstellung";
 import { themaVon } from "@/lib/fragen";
 import { erfolg } from "@/lib/haptik";
-import { abstand, farben, RAND, schrift } from "@/lib/theme";
+import { abstand, farben, mitDeckkraft, RAND, schrift } from "@/lib/theme";
 
 function restZeit(bis: string): string {
   const ende = new Date(`${bis}T00:00:00`);
@@ -26,6 +28,8 @@ function restZeit(bis: string): string {
 /** Wochen-Boss der Crew: Lebensbalken, Angreifen, Live-Liste der Treffer, Belohnung. */
 export default function CrewBoss() {
   const insets = useSafeAreaInsets();
+  const { farbwelt: f, belohnungen } = useDarstellung();
+  const gruen = f.hell ? "#23A548" : "#4ED053";
   const { daten, laedt, neuLaden, belohnungenAbholen } = useCrew();
 
   useFocusEffect(
@@ -41,7 +45,12 @@ export default function CrewBoss() {
   useEffect(() => {
     if (daten && !daten.crew) router.replace("/crew");
   }, [daten]);
-  if (!boss || !daten?.crew) return <View style={{ flex: 1, backgroundColor: farben.grund }}><Kopf titel="Wochen-Boss" /></View>;
+  if (!boss || !daten?.crew)
+    return (
+      <Seite>
+        <Kopf titel="Wochen-Boss" />
+      </Seite>
+    );
 
   const b = bossVon(boss.thema);
   const thema = themaVon(boss.thema);
@@ -51,18 +60,19 @@ export default function CrewBoss() {
     const xp = await belohnungenAbholen();
     if (xp > 0) {
       erfolg();
-      dialog("XP-Truhe geöffnet!", `+${xp} XP und das Abzeichen „Bossbezwinger“ gehören dir.`);
+      dialog("XP-Truhe geöffnet!", belohnungen ? `+${xp} XP und das Abzeichen „Bossbezwinger“ gehören dir.` : "Das Abzeichen „Bossbezwinger“ gehört dir.");
     }
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund }}>
+    <Seite>
       <Kopf titel="Wochen-Boss" />
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(10), gap: abstand(6) }}
-        refreshControl={<RefreshControl refreshing={laedt} onRefresh={neuLaden} tintColor={farben.orange} />}
+        refreshControl={<RefreshControl refreshing={laedt} onRefresh={neuLaden} tintColor={f.orange} />}
+        showsVerticalScrollIndicator={false}
       >
-        <BossBild thema={boss.thema} hoehe={330} emojiGroesse={96} radius={24} besiegt={boss.besiegt}>
+        <BossBild thema={boss.thema} hoehe={330} emojiGroesse={96} radius={28} besiegt={boss.besiegt}>
           <View style={{ position: "absolute", top: 14, left: 14, paddingHorizontal: 10, height: 26, borderRadius: 13, backgroundColor: boss.besiegt ? farben.gruen : farben.orange, justifyContent: "center" }}>
             <Text style={{ ...schrift.textFett, fontSize: 12.5, color: "#FFFFFF" }}>{boss.besiegt ? "Besiegt!" : `Diese Woche · ${restZeit(boss.bis)}`}</Text>
           </View>
@@ -82,16 +92,16 @@ export default function CrewBoss() {
           {(daten.mitglieder ?? []).map((m) => (
             <View key={m.id} style={{ alignItems: "center", gap: 3 }}>
               <NutzerBild pfad={m.bild} name={m.name} farbe={m.farbe} groesse={40} rand={2} />
-              <Text style={{ ...schrift.text, fontSize: 11.5, color: farben.text3 }}>{m.ich ? "Du" : m.name.split(" ")[0]}</Text>
+              <Text style={{ ...schrift.textMittel, fontSize: 11.5, color: f.text3 }}>{m.ich ? "Du" : m.name.split(" ")[0]}</Text>
             </View>
           ))}
         </View>
 
         {daten.belohnungen ? (
-          <Knopf titel={`XP-Truhe öffnen (+${XP_TRUHE * daten.belohnungen} XP)`} icon="gift" onPress={abholen} />
+          <Knopf titel={belohnungen ? `XP-Truhe öffnen (+${XP_TRUHE * daten.belohnungen} XP)` : "Truhe öffnen"} icon="gift" onPress={abholen} />
         ) : boss.besiegt ? (
-          <View style={{ alignItems: "center", gap: 4, padding: abstand(4), borderRadius: 18, backgroundColor: farben.gruenDunkel, borderWidth: 1, borderColor: farben.gruen }}>
-            <Text style={{ ...schrift.titelFett, fontSize: 17, color: farben.gruen }}>Stark gemacht, Crew!</Text>
+          <View style={{ alignItems: "center", gap: 4, padding: abstand(4), borderRadius: 22, backgroundColor: f.hell ? mitDeckkraft(gruen, 0.1) : farben.gruenDunkel, borderWidth: 1, borderColor: gruen }}>
+            <Text style={{ ...schrift.titelFett, fontSize: 17, color: gruen }}>Stark gemacht, Crew!</Text>
             <T v="klein" zentriert>
               Am Montag wartet der nächste Boss – aus eurem dann schwächsten Thema.
             </T>
@@ -118,8 +128,8 @@ export default function CrewBoss() {
               ))}
             </Gruppe>
           ) : (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: abstand(4), borderRadius: 16, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
-              <Icon name="flash" size={20} color={farben.text3} />
+            <View style={[{ flexDirection: "row", alignItems: "center", gap: 12, padding: abstand(4), borderRadius: 22 }, kartenFlaeche(f)]}>
+              <Icon name="flash" size={20} color={f.text3} />
               <T v="klein" style={{ flex: 1 }}>
                 Noch keine Treffer diese Woche – mach den ersten!
               </T>
@@ -132,17 +142,17 @@ export default function CrewBoss() {
           <View style={{ flexDirection: "row", gap: abstand(3) }}>
             {[
               { emoji: "🛡️", titel: "Crew-Abzeichen", unter: "„Bossbezwinger“ für alle" },
-              { emoji: "🎁", titel: "XP-Truhe", unter: `+${XP_TRUHE} XP für alle` },
+              { emoji: "🎁", titel: belohnungen ? "XP-Truhe" : "Truhe", unter: belohnungen ? `+${XP_TRUHE} XP für alle` : "Für alle in der Crew" },
             ].map((x) => (
-              <View key={x.titel} style={{ flex: 1, alignItems: "center", gap: 6, paddingVertical: abstand(4), paddingHorizontal: abstand(2), borderRadius: 18, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie }}>
+              <View key={x.titel} style={[{ flex: 1, alignItems: "center", gap: 6, paddingVertical: abstand(4), paddingHorizontal: abstand(2), borderRadius: 22 }, kartenFlaeche(f)]}>
                 <Text style={{ fontSize: 34 }}>{x.emoji}</Text>
-                <Text style={{ ...schrift.textFett, fontSize: 14.5, color: "#FFFFFF" }}>{x.titel}</Text>
-                <Text style={{ ...schrift.text, fontSize: 12, color: farben.text3, textAlign: "center" }}>{x.unter}</Text>
+                <Text style={{ ...schrift.textFett, fontSize: 14.5, color: f.text }}>{x.titel}</Text>
+                <Text style={{ ...schrift.text, fontSize: 12, color: f.text3, textAlign: "center" }}>{x.unter}</Text>
               </View>
             ))}
           </View>
         </View>
       </ScrollView>
-    </View>
+    </Seite>
   );
 }

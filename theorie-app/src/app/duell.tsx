@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Easing, Pressable, ScrollView, View } from "react-native";
+import { Animated, Easing, ScrollView, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
-import { Avatar, Chip, Knopf, T } from "@/components/ui";
+import { Avatar, Chip, kartenFlaeche, kopfOben, T } from "@/components/ui";
 import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
+import { AktionsLeiste, FrageKopf, GlasRund, HauptKnopf, KopfPille, NebenKnopf } from "@/components/frage-rahmen";
+import { Seite } from "@/components/seite";
 import { dialog } from "@/components/dialog";
 import { DUELL_RUNDEN, DUELL_SEKUNDEN, gegnerVon } from "@/lib/duell";
 import { antwortRichtig, frageVon, FRAGEN } from "@/lib/fragen";
@@ -13,13 +15,13 @@ import { useDarstellung } from "@/lib/darstellung";
 import { erfolg, fehler, stoss } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { gemischt, useStand } from "@/lib/stand";
-import { abstand, farben, radius, RAND, schrift } from "@/lib/theme";
+import { abstand, farben, leuchten, mitDeckkraft, RAND, schrift } from "@/lib/theme";
 import { useZurueckTaste } from "@/lib/zurueck-taste";
 
 type Phase = "intro" | "runde" | "ende";
 type Ende = { ergebnis: "sieg" | "remis" | "niederlage"; xp: number; rating: number };
 
-function Seite({ name, farbe, punkte, status, rechts }: { name: string; farbe?: string; punkte: number; status: string; rechts?: boolean }) {
+function Spieler({ name, farbe, punkte, status, rechts }: { name: string; farbe?: string; punkte: number; status: string; rechts?: boolean }) {
   return (
     <View style={{ flex: 1, alignItems: rechts ? "flex-end" : "flex-start", gap: abstand(2) }}>
       <View style={{ flexDirection: rechts ? "row-reverse" : "row", alignItems: "center", gap: abstand(2.5) }}>
@@ -43,7 +45,7 @@ export default function Duell() {
   const gegner = gegnerVon(gegnerId);
   const insets = useSafeAreaInsets();
   const { antwort, duellFertig } = useStand();
-  const { belohnungen } = useDarstellung();
+  const { belohnungen, farbwelt: f } = useDarstellung();
   const { anzeigeName } = useKonto();
   const ichName = anzeigeName.split(" ")[0];
 
@@ -152,14 +154,15 @@ export default function Duell() {
     const links = intro.interpolate({ inputRange: [0, 1], outputRange: [-220, 0] });
     const rechts = intro.interpolate({ inputRange: [0, 1], outputRange: [220, 0] });
     return (
-      <View style={{ flex: 1, backgroundColor: farben.grund, justifyContent: "center", paddingHorizontal: RAND, gap: abstand(10) }}>
+      <Seite>
+      <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: RAND, gap: abstand(10) }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <Animated.View style={{ alignItems: "center", gap: abstand(3), transform: [{ translateX: links }] }}>
             <Avatar name={ichName} groesse={84} />
             <T v="h3">{ichName}</T>
           </Animated.View>
           <Animated.View style={{ opacity: intro, transform: [{ scale: intro.interpolate({ inputRange: [0, 1], outputRange: [2, 1] }) }] }}>
-            <T v="display" farbe={farben.orange} style={{ fontSize: 40 }}>
+            <T v="display" farbe={f.orange} style={{ fontSize: 44, lineHeight: 50, textShadowColor: mitDeckkraft(f.orange, 0.55), textShadowRadius: 18 }}>
               VS
             </T>
           </Animated.View>
@@ -169,7 +172,7 @@ export default function Duell() {
           </Animated.View>
         </View>
         <Animated.View style={{ opacity: intro, alignItems: "center", gap: abstand(1) }}>
-          <T v="mini" farbe={farben.orange}>
+          <T v="mini" farbe={f.orange}>
             Duell
           </T>
           <T v="text" zentriert>
@@ -177,18 +180,20 @@ export default function Duell() {
           </T>
         </Animated.View>
       </View>
+      </Seite>
     );
   }
 
   // ------------------------------------------------------------------ Ende
   if (phase === "ende" && ende) {
     const titel = ende.ergebnis === "sieg" ? "Sieg!" : ende.ergebnis === "remis" ? "Unentschieden." : "Knapp daneben.";
-    const farbe = ende.ergebnis === "sieg" ? farben.gruen : ende.ergebnis === "remis" ? farben.text2 : farben.rot;
+    const farbe = ende.ergebnis === "sieg" ? (f.hell ? "#23A548" : "#4ED053") : ende.ergebnis === "remis" ? (f.hell ? "#4D535B" : "#D3D7DC") : f.hell ? "#E5392C" : "#FF5A4E";
     return (
-      <View style={{ flex: 1, backgroundColor: farben.grund, paddingTop: insets.top }}>
+      <Seite>
+      <View style={{ flex: 1, paddingTop: insets.top }}>
         <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: RAND, gap: abstand(6) }}>
           <View style={{ alignItems: "center", gap: abstand(3) }}>
-            <View style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: farbe + "22", alignItems: "center", justifyContent: "center" }}>
+            <View style={[{ width: 92, height: 92, borderRadius: 46, backgroundColor: mitDeckkraft(farbe, 0.14), borderWidth: 1, borderColor: mitDeckkraft(farbe, 0.35), alignItems: "center", justifyContent: "center" }, leuchten(farbe, 0.3, 18, 0)]}>
               <Icon name={ende.ergebnis === "sieg" ? "trophy" : ende.ergebnis === "remis" ? "git-compare" : "flag"} size={38} color={farbe} />
             </View>
             <T v="display" farbe={farbe}>
@@ -202,15 +207,16 @@ export default function Duell() {
             </T>
           </View>
           <View style={{ flexDirection: "row", justifyContent: "center", gap: abstand(2) }}>
-            {belohnungen ? <Chip text={`+${ende.xp} XP`} icon="flash" farbe={farben.orange} /> : null}
+            {belohnungen ? <Chip text={`+${ende.xp} XP`} icon="flash" farbe={f.orange} /> : null}
             <Chip text={`Rating ${ende.rating >= 0 ? "+" : ""}${ende.rating}`} icon="trending-up" farbe={ende.rating >= 0 ? farben.gruen : farben.rot} />
           </View>
         </View>
-        <View style={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(3), gap: abstand(3) }}>
-          <Knopf titel="Revanche" icon="refresh" onPress={() => router.replace({ pathname: "/duell", params: { gegner: gegner.id } })} />
-          <Knopf titel="Zurück zur Liga" art="sekundaer" onPress={() => router.back()} />
-        </View>
+        <AktionsLeiste unten={insets.bottom}>
+          <NebenKnopf titel="Zur Liga" onPress={() => router.back()} style={{ flex: 1 }} />
+          <HauptKnopf titel="Revanche" icon="refresh" onPress={() => router.replace({ pathname: "/duell", params: { gegner: gegner.id } })} style={{ flex: 1.4 }} />
+        </AktionsLeiste>
       </View>
+      </Seite>
     );
   }
 
@@ -220,24 +226,23 @@ export default function Duell() {
   const gesperrt = meins !== null;
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <View style={{ paddingTop: insets.top + abstand(2), paddingHorizontal: RAND - 6, flexDirection: "row", alignItems: "center" }}>
-        <Pressable onPress={schliessen} hitSlop={10} style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}>
-          <Icon name="close" size={26} color={farben.text} />
-        </Pressable>
-        <T v="klein" style={{ flex: 1, textAlign: "center", marginRight: 40 }}>
-          Runde {runde + 1} von {fragen.length}
-        </T>
-      </View>
+    <Seite>
+      <FrageKopf
+        oben={kopfOben(insets.top)}
+        links={<GlasRund icon="close" label="Duell aufgeben" onPress={schliessen} />}
+        rechts={null}
+        titel={`Runde ${runde + 1} von ${fragen.length}`}
+        unter={<KopfPille icon="flash" text={`Duell gegen ${gegner.name}`} />}
+      />
 
       {/* Anzeigetafel */}
-      <View style={{ marginHorizontal: RAND, marginTop: abstand(2), padding: abstand(4), borderRadius: radius.l, backgroundColor: farben.flaeche, borderWidth: 1, borderColor: farben.linie, gap: abstand(4) }}>
+      <View style={[{ marginHorizontal: RAND, marginTop: abstand(1), padding: abstand(4), borderRadius: 24, gap: abstand(4) }, kartenFlaeche(f)]}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Seite name={ichName} punkte={punkte.ich} status={aufgedeckt ? (meins ? "richtig" : "falsch") : gesperrt ? "abgegeben" : "am Zug"} />
-          <T v="h3" farbe={farben.orange} style={{ ...schrift.titel, marginHorizontal: abstand(2) }}>
+          <Spieler name={ichName} punkte={punkte.ich} status={aufgedeckt ? (meins ? "richtig" : "falsch") : gesperrt ? "abgegeben" : "am Zug"} />
+          <T v="h3" farbe={f.orange} style={{ ...schrift.titel, marginHorizontal: abstand(2) }}>
             VS
           </T>
-          <Seite
+          <Spieler
             name={gegner.name}
             farbe={gegner.farbe}
             punkte={punkte.bot}
@@ -245,19 +250,19 @@ export default function Duell() {
             rechts
           />
         </View>
-        <View style={{ height: 6, borderRadius: 3, backgroundColor: farben.flaeche3, overflow: "hidden" }}>
+        <View style={{ height: 6, borderRadius: 3, backgroundColor: f.hell ? "rgba(20,23,27,0.08)" : farben.flaeche3, overflow: "hidden" }}>
           <Animated.View
             style={{
               height: "100%",
               borderRadius: 3,
-              backgroundColor: farben.orange,
+              backgroundColor: f.orange,
               width: zeit.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }),
             }}
           />
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(5), paddingBottom: abstand(8) }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(4), paddingBottom: abstand(8) }} showsVerticalScrollIndicator={false}>
         <FrageAnsicht
           frage={frage}
           auswahl={auswahl}
@@ -273,13 +278,14 @@ export default function Duell() {
         />
       </ScrollView>
 
-      <View style={{ paddingHorizontal: RAND, paddingTop: abstand(3), paddingBottom: insets.bottom + abstand(3), borderTopWidth: 1, borderColor: farben.linie }}>
-        <Knopf
+      <AktionsLeiste unten={insets.bottom}>
+        <HauptKnopf
           titel={aufgedeckt ? (runde + 1 < fragen.length ? "Nächste Runde …" : "Auswertung …") : gesperrt ? `Warte auf ${gegner.name} …` : "Antwort abgeben"}
           deaktiviert={gesperrt || auswahl.length === 0}
           onPress={abgeben}
+          style={{ flex: 1 }}
         />
-      </View>
-    </View>
+      </AktionsLeiste>
+    </Seite>
   );
 }

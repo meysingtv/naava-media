@@ -5,14 +5,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { dialog } from "@/components/dialog";
 import { Icon } from "@/components/icon";
-import { Eingabe, Knopf, Kopf, T } from "@/components/ui";
+import { FotoKopf, Seite } from "@/components/seite";
+import { Eingabe, Knopf, T } from "@/components/ui";
 import { codeFormatieren, useCrew } from "@/lib/crew";
+import { useDarstellung } from "@/lib/darstellung";
+import { FOTOS } from "@/lib/fotos";
 import { erfolg } from "@/lib/haptik";
-import { abstand, farben, leuchten, RAND, schrift } from "@/lib/theme";
+import { abstand, leuchten, RAND, schrift } from "@/lib/theme";
 
 /** Crew per Code beitreten – auch direkt über den Einladungslink oder QR-Code. */
 export default function CrewBeitreten() {
   const insets = useSafeAreaInsets();
+  const { farbwelt: f } = useDarstellung();
   const params = useLocalSearchParams<{ crew?: string }>();
   const { moeglich, daten, beitreten } = useCrew();
   const [code, setCode] = useState(codeFormatieren(params.crew ?? ""));
@@ -37,18 +41,16 @@ export default function CrewBeitreten() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <Kopf titel="Crew beitreten" />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(8), gap: abstand(6) }} keyboardShouldPersistTaps="handled">
-        <View style={{ alignItems: "center", gap: 12, paddingTop: abstand(6) }}>
-          <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: farben.orangeSoft, alignItems: "center", justifyContent: "center", ...leuchten(farben.orange, 0.35, 18) }}>
-            <Icon name="people" size={48} color={farben.orange} />
+    <Seite>
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + abstand(8) }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <FotoKopf bild={FOTOS.tagesziel} hoehe={250} titel="Crew beitreten" unter="Lernt zusammen – mit Flamme und Wochen-Boss." />
+        <View style={{ paddingHorizontal: RAND, marginTop: 12, gap: abstand(6) }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+          <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: f.orangeSoft, alignItems: "center", justifyContent: "center", ...leuchten(f.orange, 0.3, 14) }}>
+            <Icon name="people" size={28} color={f.orange} />
           </View>
-          <T v="titel" zentriert style={{ fontSize: 24, lineHeight: 29 }}>
-            Werde Teil einer Crew
-          </T>
-          <T v="text" zentriert farbe={farben.text2}>
-            und lernt zusammen – mit gemeinsamer Flamme und Wochen-Boss.
+          <T v="text" style={{ flex: 1, fontSize: 15 }}>
+            Werde Teil einer Crew – bis zu 6 Freunde, eine gemeinsame Flamme.
           </T>
         </View>
 
@@ -82,12 +84,13 @@ export default function CrewBeitreten() {
               style={{ ...schrift.titelFett, fontSize: 20, letterSpacing: 2 }}
             />
             <Knopf titel="Beitreten" icon="arrow-forward" onPress={los} laedt={laeuft} deaktiviert={!vollstaendig} />
-            <Text style={{ ...schrift.text, fontSize: 13, color: farben.text3, textAlign: "center" }}>
+            <Text style={{ ...schrift.text, fontSize: 13, color: f.text3, textAlign: "center" }}>
               Den Code findest du bei deinen Freunden unter Profil → Meine Crew.
             </Text>
           </View>
         )}
+        </View>
       </ScrollView>
-    </View>
+    </Seite>
   );
 }
