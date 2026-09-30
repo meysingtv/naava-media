@@ -22,7 +22,7 @@ import { abstand, RAND, schrift } from "@/lib/theme";
 type Teilen = "link" | "qr" | "code";
 
 function einladungsText(crewName: string, code: string) {
-  return `Lern mit mir für den Führerschein! Komm in meine Crew „${crewName}“ bei Fahrschule Pro.\n\nCode: ${code}\n${crewLink(code)}`;
+  return `Lern mit mir für den Führerschein! Komm in meine Crew „${crewName}“ bei Fahrschul Pro.\n\nCode: ${code}\n${crewLink(code)}`;
 }
 
 function MitgliedZeile({ m, onStupsen, gestupst }: { m: CrewMitglied; onStupsen: () => void; gestupst: boolean }) {

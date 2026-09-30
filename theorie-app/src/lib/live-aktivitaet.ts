@@ -47,7 +47,7 @@ function melden(was: string, gestartet: boolean, erfolgZeigen = true) {
     grund = "Das native Modul fehlt, die App ist ohne Live-Aktivität gebaut. Einmal „npx expo prebuild --clean -p ios“, dann „npx expo run:ios“.";
   } else if (!liveAktivitaetMoeglich()) {
     grund =
-      "iOS erlaubt sie nicht. Entweder fehlt NSSupportsLiveActivities (App mit „npx expo prebuild --clean -p ios“ neu bauen) oder Live-Aktivitäten sind unter Einstellungen → Fahrschule Pro aus.";
+      "iOS erlaubt sie nicht. Entweder fehlt NSSupportsLiveActivities (App mit „npx expo prebuild --clean -p ios“ neu bauen) oder Live-Aktivitäten sind unter Einstellungen → Fahrschul Pro aus.";
   } else {
     grund = sicher((n) => n.letzterFehler?.() ?? "", "") || jsFehler || "unbekannt";
   }

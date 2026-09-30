@@ -4,7 +4,7 @@
 module.exports = {
   type: "widget",
   name: "PruefungLive",
-  displayName: "Fahrschule Pro",
+  displayName: "Fahrschul Pro",
   bundleIdentifier: ".pruefunglive",
   // Live-Aktivitäten mit ActivityContent und „stale“-Zustand gibt es ab iOS 16.2.
   deploymentTarget: "16.2",

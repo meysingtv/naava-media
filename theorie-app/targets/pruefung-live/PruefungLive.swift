@@ -2,7 +2,7 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
-// Live-Aktivitäten von Fahrschule Pro: Sperrbildschirm und Dynamic Island.
+// Live-Aktivitäten von Fahrschul Pro: Sperrbildschirm und Dynamic Island.
 // Gestartet und aktualisiert werden sie aus der App (modules/live-aktivitaet).
 
 @main

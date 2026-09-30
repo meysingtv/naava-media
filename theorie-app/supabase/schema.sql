@@ -1,5 +1,5 @@
 -- =====================================================================
--- Fahrschule Pro – Lern-App für die Führerschein-Theorie
+-- Fahrschul Pro – Lern-App für die Führerschein-Theorie
 -- Einmal im SQL-Editor eines (am besten eigenen) Supabase-Projekts
 -- ausführen. Alle Tabellen beginnen mit lern_, stören also keine
 -- anderen Tabellen. Mehrfaches Ausführen ist unschädlich.

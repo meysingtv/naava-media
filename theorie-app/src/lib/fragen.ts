@@ -1,4 +1,4 @@
-// Beispielfragen für „Fahrschule Pro“ – selbst formuliert, NICHT aus dem amtlichen
+// Beispielfragen für „Fahrschul Pro“ – selbst formuliert, NICHT aus dem amtlichen
 // Fragenkatalog (der ist lizenzpflichtig). Aufbau wie in der echten Prüfung:
 // Mehrfachauswahl mit 1–3 richtigen Antworten oder Zahlenfragen, 2–5
 // Fehlerpunkte je Frage. Der amtliche Katalog kann später im selben Format

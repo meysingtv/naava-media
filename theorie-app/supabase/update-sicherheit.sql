@@ -1,5 +1,5 @@
 -- =====================================================================
--- Fahrschule Pro – Sicherheits-Update (steht auch als Abschnitt 14 in
+-- Fahrschul Pro – Sicherheits-Update (steht auch als Abschnitt 14 in
 -- schema.sql). Einmal im Supabase-SQL-Editor ausführen; mehrfaches
 -- Ausführen ist unschädlich.
 --

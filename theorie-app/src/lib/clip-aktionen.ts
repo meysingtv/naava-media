@@ -97,7 +97,7 @@ export function useClipAktionen(liste: Liste) {
 
   const onTeilen = useCallback(async (clip: ClipEintrag) => {
     try {
-      const text = `„${clip.titel}“ – ${clip.autor_name || clip.autor_benutzername} in Fahrschule Pro`;
+      const text = `„${clip.titel}“ – ${clip.autor_name || clip.autor_benutzername} in Fahrschul Pro`;
       const link = dateiUrl(clip.video_pfad);
       // Android übernimmt nur „message“, iOS zeigt den Link als eigenen Anhang.
       const r = await Share.share(Platform.OS === "ios" ? { message: text, url: link } : { message: `${text}\n${link}` });

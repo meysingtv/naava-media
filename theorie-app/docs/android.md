@@ -42,7 +42,7 @@ müssen dafür bei Expo unter Project → Environment variables stehen.
 
 1. Google-Play-Entwicklerkonto anlegen (einmalig 25 $): https://play.google.com/console
 2. `npx eas-cli build -p android --profile production` – erzeugt das App-Bundle (AAB).
-3. In der Play Console eine App anlegen (Name „Fahrschule Pro“), Store-Eintrag,
+3. In der Play Console eine App anlegen (Name „Fahrschul Pro“), Store-Eintrag,
    Datenschutzerklärung und den Fragebogen „Datensicherheit“ ausfüllen.
 4. Bundle hochladen (oder `npx eas-cli submit -p android`), zuerst in den
    internen Test, dann in die Produktion.

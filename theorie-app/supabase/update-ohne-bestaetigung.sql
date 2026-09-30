@@ -1,5 +1,5 @@
 -- =====================================================================
--- Fahrschule Pro – Anmelden ohne E-Mail-Bestätigung
+-- Fahrschul Pro – Anmelden ohne E-Mail-Bestätigung
 -- Im Supabase SQL Editor ausführen (mehrfach ausführbar). Steht auch als
 -- Abschnitt 15 in schema.sql.
 --

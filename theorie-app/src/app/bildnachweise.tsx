@@ -16,7 +16,7 @@ export default function Bildnachweise() {
       <GrossKopf titel="Bildnachweise" unter="Fotos unter freien Lizenzen" />
       <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(4), paddingBottom: insets.bottom + abstand(8), gap: abstand(3) }} showsVerticalScrollIndicator={false}>
         <T v="text" style={{ marginBottom: abstand(2) }}>
-          Die Fotos in Fahrschule Pro stehen unter freien Lizenzen. Wir haben sie für die App verkleinert und zugeschnitten. Verkehrszeichen, Lagepläne und Symbole sind eigene
+          Die Fotos in Fahrschul Pro stehen unter freien Lizenzen. Wir haben sie für die App verkleinert und zugeschnitten. Verkehrszeichen, Lagepläne und Symbole sind eigene
           Zeichnungen.
         </T>
         {NACHWEISE.map((n) => (

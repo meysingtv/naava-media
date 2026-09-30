@@ -149,7 +149,7 @@ function ClipKarte({ clip, index, anzahl, hoehe, aktiv }: { clip: Clip; index: n
             <Aktion icon={gemerkt ? "bookmark" : "bookmark-outline"} aktiv={gemerkt} farbe={farben.blau} onPress={() => clipUmschalten(clip.id, "gemerkt")} label="Merken" />
             <Aktion
               icon="share-outline"
-              onPress={() => Share.share({ message: `${clip.titel}\n\n• ${clip.punkte.join("\n• ")}\n\nAus der App Fahrschule Pro` }).catch(() => {})}
+              onPress={() => Share.share({ message: `${clip.titel}\n\n• ${clip.punkte.join("\n• ")}\n\nAus der App Fahrschul Pro` }).catch(() => {})}
               label="Teilen"
             />
           </View>

@@ -1,4 +1,4 @@
-# Fahrschule Pro – Theorie-App
+# Fahrschul Pro – Theorie-App
 
 Eigenständige App (iPhone und Android) zum Lernen der Führerschein-Theorie in Schwarz und
 Orange mit Fotokarten: Home mit Tagesziel und Schnellstart, Kategorien mit
@@ -182,7 +182,7 @@ wenn nicht, warum. Mit
 Für Builds in Xcode die Team-ID unter `ios.appleTeamId` in `app.json`
 eintragen (developer.apple.com → Membership). Zum Testen im Simulator ein
 iPhone 15 oder neuer wählen. Live-Aktivitäten lassen sich unter
-Einstellungen → Fahrschule Pro → Live-Aktivitäten ausschalten; dann macht
+Einstellungen → Fahrschul Pro → Live-Aktivitäten ausschalten; dann macht
 die App einfach ohne weiter.
 
 ## Fragen

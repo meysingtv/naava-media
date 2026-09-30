@@ -23,7 +23,7 @@ export function Logo({ groesse = 28, mitText = true }: { groesse?: number; mitTe
       </Svg>
       {mitText ? (
         <Text style={{ fontFamily: svgSchrift.schild, fontSize: groesse * 0.82, color: farben.text, letterSpacing: -0.6 }}>
-          Fahrschule<Text style={{ color: farben.orange }}> Pro</Text>
+          Fahrschul<Text style={{ color: farben.orange }}> Pro</Text>
         </Text>
       ) : null}
     </View>

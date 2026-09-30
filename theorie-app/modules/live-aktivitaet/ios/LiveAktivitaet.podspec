@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
   s.name           = 'LiveAktivitaet'
   s.version        = '1.0.0'
-  s.summary        = 'Live-Aktivitaeten (Sperrbildschirm und Dynamic Island) fuer Fahrschule Pro'
+  s.summary        = 'Live-Aktivitaeten (Sperrbildschirm und Dynamic Island) fuer Fahrschul Pro'
   s.description    = 'Startet, aktualisiert und beendet die Live-Aktivitaeten der Pruefungssimulation und des Pruefungstags.'
   s.author         = ''
   s.homepage       = 'https://docs.expo.dev/modules/'
