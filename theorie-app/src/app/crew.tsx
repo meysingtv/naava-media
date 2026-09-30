@@ -264,7 +264,7 @@ export default function CrewSeite() {
           <View style={{ paddingHorizontal: RAND }}>
             <Gruppe>
               {daten.ereignisse.slice(0, 12).map((e) => (
-                <EreignisZeile key={e.id} e={e} />
+                <EreignisZeile key={e.id} e={e} ich={daten.mitglieder?.find((m) => m.ich)?.id} />
               ))}
             </Gruppe>
           </View>

@@ -126,16 +126,20 @@ Woche“, außerdem unter Profil → Meine Crew.
   und zeigt, wer heute schon fertig ist. Wer fehlt, kann angestupst werden.
 - **Wochen-Boss:** Jeden Montag kommt ein Boss aus dem schwächsten Thema der
   Crew. Jede richtige Antwort in diesem Thema macht 5 Schaden, jede falsche
-  heilt ihn um 3. Die Treffer erscheinen live auf der Boss-Seite und beim
-  Lernen als „−5 HP“. Nach dem Sieg bekommen alle eine XP-Truhe (+150 XP) und
-  das Abzeichen „Bossbezwinger“.
+  heilt ihn um 3. Die Boss-Seite zeigt die Lebenspunkte als Ring, wie viele
+  richtige Antworten noch fehlen, den Schaden je Mitglied in dieser Woche und
+  den Kampfverlauf live. Beim Lernen erscheint „−5 HP“ (wenn eingeschaltet).
+  Nach dem Sieg bekommen alle eine XP-Truhe (+150 XP) und das Abzeichen
+  „Bossbezwinger“.
 - **Einladen:** per Link, QR-Code oder Code (Meine Crew). Auf fremden
   Profilen gibt es „In Crew einladen“; die Einladung erscheint dort auf Home.
 
 Einrichten:
 
 1. `supabase/update-crew.sql` im SQL-Editor ausführen (steht auch als
-   Abschnitt 16 in `schema.sql`, wiederholbar).
+   Abschnitt 16 in `schema.sql`, wiederholbar). Wer die Crew schon eingerichtet
+   hat, braucht für den Schaden je Mitglied nur noch
+   `supabase/update-boss-schaden.sql`.
 2. Push-Mitteilungen (Anstupsen, Einladung, Boss besiegt) verschickt die
    Datenbank selbst über die Erweiterung `pg_net` (Database → Extensions →
    pg_net; das Skript schaltet sie ein, wenn es darf). Ohne `pg_net`

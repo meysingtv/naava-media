@@ -17,7 +17,18 @@ import { serverVerbunden, supabase } from "./supabase";
  */
 
 export type Crew = { id: string; name: string; code: string; flamme: number; flamme_heute: boolean; flamme_beste: number; gruender: boolean };
-export type CrewMitglied = { id: string; name: string; benutzername: string; bild: string | null; farbe: string; heute: number; ziel: number; ich: boolean };
+export type CrewMitglied = {
+  id: string;
+  name: string;
+  benutzername: string;
+  bild: string | null;
+  farbe: string;
+  heute: number;
+  ziel: number;
+  ich: boolean;
+  /** Schaden am Boss dieser Woche (Treffer minus Heilung) – fehlt bei älteren Servern. */
+  schaden?: number;
+};
 export type CrewBoss = { id: string; thema: ThemaId; hp: number; hp_max: number; woche: string; bis: string; besiegt: boolean };
 export type CrewEreignis = {
   id: number;

@@ -15,9 +15,9 @@ import { bossTrefferHoeren, bossVon, heuteGeschafft, useCrew, type CrewEinladung
 import { themaFoto } from "@/lib/fotos";
 import { themaVon, type ThemaId } from "@/lib/fragen";
 import { erfolg, tippen } from "@/lib/haptik";
-import { useFarbwelt } from "@/lib/darstellung";
+import { farbeFuer, useFarbwelt } from "@/lib/darstellung";
 import { serverVerbunden } from "@/lib/supabase";
-import { farben, leuchten, schrift, verlauf } from "@/lib/theme";
+import { farben, leuchten, mitDeckkraft, schrift, verlauf } from "@/lib/theme";
 
 // ---------------------------------------------------------------------------
 // Kleine Bausteine
@@ -123,21 +123,23 @@ export function BossBild({
 // Was in der Crew passiert ist
 // ---------------------------------------------------------------------------
 
-function ereignisText(e: CrewEreignis): { icon: IconName; farbe: string; text: string; wert?: string; wertFarbe?: string } {
-  const wer = e.name ?? "Jemand";
+function ereignisText(e: CrewEreignis, ich?: string): { icon: IconName; farbe: string; text: string; wert?: string; wertFarbe?: string } {
+  const du = !!ich && e.user_id === ich;
+  const wer = du ? "Du" : (e.name ?? "Jemand");
+  const hat = du ? "hast" : "hat";
   switch (e.art) {
     case "gruendung":
-      return { icon: "sparkles", farbe: farben.orange, text: `${wer} hat die Crew gegründet` };
+      return { icon: "sparkles", farbe: farben.orange, text: `${wer} ${hat} die Crew gegründet` };
     case "beitritt":
-      return { icon: "person-add-outline", farbe: farben.gruen, text: `${wer} ist dabei` };
+      return { icon: "person-add-outline", farbe: farben.gruen, text: du ? "Du bist dabei" : `${wer} ist dabei` };
     case "austritt":
-      return { icon: "log-out-outline", farbe: farben.text3, text: `${wer} hat die Crew verlassen` };
+      return { icon: "log-out-outline", farbe: farben.text3, text: `${wer} ${hat} die Crew verlassen` };
     case "stupser":
-      return { icon: "paper-plane", farbe: farben.orange, text: e.an_mich ? `${wer} hat dich angestupst` : `${wer} hat ${e.ziel_name ?? "jemanden"} angestupst` };
+      return { icon: "paper-plane", farbe: farben.orange, text: e.an_mich ? `${wer} ${hat} dich angestupst` : `${wer} ${hat} ${e.ziel_name ?? "jemanden"} angestupst` };
     case "flamme":
       return { icon: "flame", farbe: farben.flamme, text: `Alle haben es geschafft – Tag ${e.wert}!` };
     case "sieg":
-      return { icon: "trophy", farbe: farben.gelb, text: `${wer} hat den Boss erledigt!` };
+      return { icon: "trophy", farbe: farben.gelb, text: `${wer} ${hat} den Boss erledigt!` };
     case "treffer":
     default: {
       const schaden = e.wert >= 0;
@@ -152,16 +154,18 @@ function ereignisText(e: CrewEreignis): { icon: IconName; farbe: string; text: s
   }
 }
 
-export function EreignisZeile({ e }: { e: CrewEreignis }) {
+/** Ein Ereignis der Crew. `ich` (eigene Nutzer-ID) macht eigene Ereignisse zu „Du …“. */
+export function EreignisZeile({ e, ich }: { e: CrewEreignis; ich?: string }) {
   const f = useFarbwelt();
-  const x = ereignisText(e);
+  const x = ereignisText(e, ich);
+  const wertFarbe = farbeFuer(f, x.wertFarbe) ?? f.text;
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 14 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 11, paddingHorizontal: 14 }}>
       {e.user_id && e.name ? (
-        <NutzerBild pfad={e.bild} name={e.name} farbe={e.farbe ?? undefined} groesse={34} />
+        <NutzerBild pfad={e.bild} name={e.name} farbe={e.farbe ?? undefined} groesse={36} />
       ) : (
-        <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: f.hell ? "#F1EDE6" : farben.flaeche2, alignItems: "center", justifyContent: "center" }}>
-          <Icon name={x.icon} size={17} color={x.farbe} />
+        <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: f.hell ? "#F1EDE6" : farben.flaeche2, alignItems: "center", justifyContent: "center" }}>
+          <Icon name={x.icon} size={17} color={farbeFuer(f, x.farbe) ?? x.farbe} />
         </View>
       )}
       <View style={{ flex: 1 }}>
@@ -170,7 +174,11 @@ export function EreignisZeile({ e }: { e: CrewEreignis }) {
         </Text>
         <Text style={{ ...schrift.text, fontSize: 12, color: f.text3 }}>{zeitVor(e.zeit)}</Text>
       </View>
-      {x.wert ? <Text style={{ ...schrift.titelFett, fontSize: 15, color: x.wertFarbe, fontVariant: ["tabular-nums"] }}>{x.wert}</Text> : null}
+      {x.wert ? (
+        <View style={{ paddingHorizontal: 10, height: 28, borderRadius: 14, justifyContent: "center", backgroundColor: mitDeckkraft(wertFarbe, f.hell ? 0.11 : 0.14) }}>
+          <Text style={{ ...schrift.titelFett, fontSize: 13.5, color: wertFarbe, fontVariant: ["tabular-nums"] }}>{x.wert}</Text>
+        </View>
+      ) : null}
     </View>
   );
 }

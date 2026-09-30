@@ -66,8 +66,8 @@ export function ErgebnisRing({ anteil, wert, einheit, unter, ton, spur, groesse 
   );
 }
 
-/** Stempel „Bestanden“ / „Nicht bestanden“ – knallt nach dem Ring aufs Foto. */
-export function Stempel({ bestanden, style }: { bestanden: boolean; style?: StyleProp<ViewStyle> }) {
+/** Stempel „Bestanden“ / „Nicht bestanden“ (oder eigener Text) – knallt nach dem Ring aufs Foto. */
+export function Stempel({ bestanden, text, style }: { bestanden: boolean; text?: string; style?: StyleProp<ViewStyle> }) {
   const c = bestanden ? "#4ED053" : "#FF5A4E";
   const w = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -86,7 +86,7 @@ export function Stempel({ bestanden, style }: { bestanden: boolean; style?: Styl
     >
       <View style={[{ padding: 3, borderRadius: 13, borderWidth: 3, borderColor: c, backgroundColor: "rgba(6,8,10,0.62)" }, leuchten(c, 0.45, 14, 0)]}>
         <View style={{ paddingHorizontal: 16, paddingVertical: 5, borderRadius: 8, borderWidth: 1.5, borderColor: mitDeckkraft(c, 0.75) }}>
-          <Text style={{ ...schrift.titel, fontSize: bestanden ? 25 : 21, lineHeight: 30, letterSpacing: 2.5, color: c }}>{bestanden ? "BESTANDEN" : "NICHT BESTANDEN"}</Text>
+          <Text style={{ ...schrift.titel, fontSize: text ? 23 : bestanden ? 25 : 21, lineHeight: 30, letterSpacing: 2.5, color: c }}>{text ?? (bestanden ? "BESTANDEN" : "NICHT BESTANDEN")}</Text>
         </View>
       </View>
     </Animated.View>

@@ -1982,7 +1982,13 @@ begin
                'farbe', p.avatar_farbe,
                'heute', case when p.xp_tag = v_heute then p.fragen_heute else 0 end,
                'ziel', lern_intern.tagesziel(s.daten),
-               'ich', p.id = v_ich)
+               'ich', p.id = v_ich,
+               -- Schaden am Boss dieser Woche (Treffer minus Heilung)
+               'schaden', coalesce((
+                 select sum(e.wert)
+                   from public.lern_crew_ereignis e
+                  where e.crew_id = c.id and e.user_id = p.id and e.art = 'treffer'
+                    and e.erstellt_am >= (v_boss.woche::timestamp at time zone 'Europe/Berlin')), 0))
              order by m.beigetreten_am)
         from public.lern_crew_mitglied m
         join public.lern_profil p on p.id = m.user_id
