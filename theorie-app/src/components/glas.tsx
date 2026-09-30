@@ -15,6 +15,7 @@ export function Glas({
   toenung,
   klar,
   interaktiv,
+  hell,
   pointerEvents,
 }: {
   style?: StyleProp<ViewStyle>;
@@ -25,6 +26,8 @@ export function Glas({
   klar?: boolean;
   /** Glas reagiert auf Berührung (nur iOS 26+). */
   interaktiv?: boolean;
+  /** Helles Glas für helle Hintergründe. */
+  hell?: boolean;
   pointerEvents?: "auto" | "none" | "box-none" | "box-only";
 }) {
   if (Platform.OS === "ios" && isLiquidGlassAvailable()) {
@@ -34,7 +37,7 @@ export function Glas({
         glassEffectStyle={klar ? "clear" : "regular"}
         tintColor={toenung}
         isInteractive={interaktiv}
-        colorScheme="dark"
+        colorScheme={hell ? "light" : "dark"}
         pointerEvents={pointerEvents}
       >
         {children}
@@ -48,9 +51,9 @@ export function Glas({
       style={[
         {
           overflow: "hidden",
-          backgroundColor: toenung ?? (klar ? "rgba(22,24,28,0.34)" : "rgba(22,24,28,0.58)"),
+          backgroundColor: toenung ?? (hell ? (klar ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.72)") : klar ? "rgba(22,24,28,0.34)" : "rgba(22,24,28,0.58)"),
           borderWidth: 1,
-          borderColor: "rgba(255,255,255,0.17)",
+          borderColor: hell ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.17)",
         },
         style,
       ]}

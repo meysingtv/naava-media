@@ -68,6 +68,7 @@ export function KinoHeld({
   bild,
   hoehe: vorgabe,
   ausblendenAb,
+  abdunkeln = true,
   children,
 }: {
   zeit?: Tageszeit;
@@ -75,6 +76,8 @@ export function KinoHeld({
   hoehe?: number;
   /** Ab welcher Höhe (Anteil) das Foto in den Grund übergeht. */
   ausblendenAb?: number;
+  /** Oben und links abdunkeln, damit weiße Schrift trägt (bei hellen Grafiken aus). */
+  abdunkeln?: boolean;
   children?: ReactNode;
 }) {
   const f = useFarbwelt();
@@ -99,10 +102,14 @@ export function KinoHeld({
   return (
     <View style={{ width, height: hoehe, overflow: "hidden", backgroundColor: f.grund }}>
       <Animated.Image source={bild ?? HELD_FOTO[zeit]} resizeMode="cover" fadeDuration={0} style={{ position: "absolute", width, height: hoehe, transform: [{ scale }, { translateY }] }} />
-      {/* Oben abgedunkelt für Statusleiste und Begrüßung */}
-      <LinearGradient colors={["rgba(0,0,0,0.6)", "rgba(0,0,0,0.26)", "rgba(0,0,0,0)"]} locations={[0, 0.2, 0.44]} style={FUELLEN} />
-      {/* Links etwas dunkler, damit die Schrift trägt */}
-      <LinearGradient colors={["rgba(0,0,0,0.32)", "rgba(0,0,0,0)"]} start={{ x: 0, y: 0.5 }} end={{ x: 0.75, y: 0.5 }} style={FUELLEN} />
+      {abdunkeln ? (
+        <>
+          {/* Oben abgedunkelt für Statusleiste und Begrüßung */}
+          <LinearGradient colors={["rgba(0,0,0,0.6)", "rgba(0,0,0,0.26)", "rgba(0,0,0,0)"]} locations={[0, 0.2, 0.44]} style={FUELLEN} />
+          {/* Links etwas dunkler, damit die Schrift trägt */}
+          <LinearGradient colors={["rgba(0,0,0,0.32)", "rgba(0,0,0,0)"]} start={{ x: 0, y: 0.5 }} end={{ x: 0.75, y: 0.5 }} style={FUELLEN} />
+        </>
+      ) : null}
       {/* Unten weich in den Grund – ohne sichtbare Kante */}
       <LinearGradient
         colors={[mitAlpha(f.grund, 0), mitAlpha(f.grund, 0.3), mitAlpha(f.grund, 0.72), mitAlpha(f.grund, 0.94), f.grund]}
@@ -163,7 +170,7 @@ export function Handschrift({ zeilen, style }: { zeilen: string[]; style?: Style
 
 export type GlasWertDaten = { icon: IconName; farbe: string; wert: string; label: string; onPress: () => void };
 
-function GlasWert({ icon, farbe, wert, label, onPress }: GlasWertDaten) {
+function GlasWert({ icon, farbe, wert, label, onPress, hell }: GlasWertDaten & { hell?: boolean }) {
   return (
     <Pressable
       onPress={() => {
@@ -175,9 +182,9 @@ function GlasWert({ icon, farbe, wert, label, onPress }: GlasWertDaten) {
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
         <Icon name={icon} size={17} color={farbe} />
-        <Text style={{ ...schrift.titel, fontSize: 20, lineHeight: 24, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{wert}</Text>
+        <Text style={{ ...schrift.titel, fontSize: 20, lineHeight: 24, color: hell ? "#14171B" : "#FFFFFF", fontVariant: ["tabular-nums"] }}>{wert}</Text>
       </View>
-      <Text style={{ ...schrift.textMittel, fontSize: 12, color: "rgba(255,255,255,0.72)" }} numberOfLines={1}>
+      <Text style={{ ...schrift.textMittel, fontSize: 12, color: hell ? "rgba(20,23,27,0.62)" : "rgba(255,255,255,0.72)" }} numberOfLines={1}>
         {label}
       </Text>
     </Pressable>
@@ -187,13 +194,13 @@ function GlasWert({ icon, farbe, wert, label, onPress }: GlasWertDaten) {
 const glasTrenner = <View style={{ width: 1, alignSelf: "stretch", marginVertical: 4, backgroundColor: "rgba(255,255,255,0.14)" }} />;
 
 /** Einige Werte nebeneinander auf Glas über einem Foto. */
-export function GlasLeiste({ werte, style }: { werte: GlasWertDaten[]; style?: StyleProp<ViewStyle> }) {
+export function GlasLeiste({ werte, hell, style }: { werte: GlasWertDaten[]; hell?: boolean; style?: StyleProp<ViewStyle> }) {
   return (
-    <Glas style={[{ borderRadius: 26, flexDirection: "row", alignItems: "center", paddingVertical: 13, paddingHorizontal: 4 }, style]}>
+    <Glas hell={hell} style={[{ borderRadius: 26, flexDirection: "row", alignItems: "center", paddingVertical: 13, paddingHorizontal: 4 }, hell ? leuchten("#3C2C18", 0.1, 14, 4) : null, style]}>
       {werte.map((w, i) => (
         <View key={w.label} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
-          {i > 0 ? glasTrenner : null}
-          <GlasWert {...w} />
+          {i > 0 ? (hell ? <View style={{ width: 1, alignSelf: "stretch", marginVertical: 4, backgroundColor: "rgba(20,23,27,0.1)" }} /> : glasTrenner) : null}
+          <GlasWert {...w} hell={hell} />
         </View>
       ))}
     </Glas>

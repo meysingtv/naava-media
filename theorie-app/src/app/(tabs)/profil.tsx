@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Pressable, ScrollView, Text, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
@@ -43,7 +42,6 @@ export default function Profil() {
   const { daten: crewDaten } = useCrew();
   const { profil, gast, anzeigeName, abmelden, session, profilNeuLaden } = useKonto();
   const bild = useProfilbild();
-  const [ueberFoto, setUeberFoto] = useState(true);
 
   const hatBild = Boolean(bild || profil?.bild_pfad);
   const freigeschaltet = ERFOLGE.filter((e) => stand.erfolge[e.id]).length;
@@ -122,13 +120,10 @@ export default function Profil() {
     dialog(e.titel, wann ? `${e.text}\nFreigeschaltet am ${wann.split("-").reverse().join(".")}.` : e.text);
   }
 
-  // Über dem Foto helle Statusleiste, darunter (im hellen Modus) dunkle.
   const heldHoehe = Math.round(width * 1.22);
-  function beimScrollen(e: NativeSyntheticEvent<NativeScrollEvent>) {
-    leistenScroll.onScroll?.(e);
-    const oben = e.nativeEvent.contentOffset.y < heldHoehe - insets.top - 60;
-    if (oben !== ueberFoto) setUeberFoto(oben);
-  }
+
+  // Auf dem hellen Hintergrund dunkle Schrift, auf dem dunklen helle.
+  const kopfText = f.hell ? "#14171B" : "#FFFFFF";
 
   const unterzeile = [profil ? `@${profil.benutzername}` : gast ? "Gastmodus" : session?.user.email ?? null, profil?.rolle === "fahrlehrer" ? "Fahrlehrer" : `Klasse ${stand.klasse}`, profil?.bundesland ?? null]
     .filter(Boolean)
@@ -136,13 +131,13 @@ export default function Profil() {
 
   return (
     <FarbweltBereich farbwelt={f}>
-      {fokus ? <StatusBar style={f.hell && !ueberFoto ? "dark" : "light"} /> : null}
+      {fokus ? <StatusBar style={f.hell ? "dark" : "light"} /> : null}
       <View style={{ flex: 1, backgroundColor: f.grund }}>
-        <ScrollView onScroll={beimScrollen} scrollEventThrottle={16} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
-          <KinoHeld bild={FOTOS.heldProfil} hoehe={heldHoehe} ausblendenAb={f.hell ? 0.74 : 0.62}>
+        <ScrollView {...leistenScroll} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
+          <KinoHeld bild={f.hell ? FOTOS.heldProfilHell : FOTOS.heldProfilDunkel} hoehe={heldHoehe} ausblendenAb={f.hell ? 0.8 : 0.66} abdunkeln={false}>
             {/* Oben rechts: Einstellungen */}
             <View style={{ position: "absolute", top: insets.top + 4, left: RAND, right: RAND, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <Text style={{ ...schrift.titel, fontSize: 30, color: "#FFFFFF", letterSpacing: -0.4, textShadowColor: "rgba(0,0,0,0.35)", textShadowRadius: 8 }}>Profil</Text>
+              <Text style={{ ...schrift.titel, fontSize: 30, color: kopfText, letterSpacing: -0.4 }}>Profil</Text>
               <Pressable
                 onPress={() => {
                   tippen();
@@ -151,8 +146,8 @@ export default function Profil() {
                 accessibilityLabel="Einstellungen"
                 hitSlop={8}
               >
-                <Glas klar style={{ width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" }}>
-                  <Icon name="settings-outline" size={21} color="#FFFFFF" />
+                <Glas klar hell={f.hell} style={{ width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" }}>
+                  <Icon name="settings-outline" size={21} color={kopfText} />
                 </Glas>
               </Pressable>
             </View>
@@ -162,20 +157,24 @@ export default function Profil() {
               <ProfilRing onPress={bildAendern}>
                 <ProfilBild name={anzeigeName} groesse={108} rand={0} />
               </ProfilRing>
-              <Text style={{ ...schrift.titel, fontSize: 30, lineHeight: 36, color: "#FFFFFF", marginTop: 14, letterSpacing: -0.3, textShadowColor: "rgba(0,0,0,0.4)", textShadowRadius: 10 }} numberOfLines={1}>
+              <Text
+                style={{ ...schrift.titel, fontSize: 30, lineHeight: 36, color: kopfText, marginTop: 14, letterSpacing: -0.3, textShadowColor: f.hell ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.5)", textShadowRadius: 10 }}
+                numberOfLines={1}
+              >
                 {anzeigeName}
               </Text>
-              <Text style={{ ...schrift.textMittel, fontSize: 14.5, color: "rgba(255,255,255,0.82)", marginTop: 2 }} numberOfLines={1}>
+              <Text style={{ ...schrift.textMittel, fontSize: 14.5, color: f.hell ? "rgba(20,23,27,0.7)" : "rgba(255,255,255,0.82)", marginTop: 2 }} numberOfLines={1}>
                 {unterzeile}
               </Text>
-              <Glas klar style={{ flexDirection: "row", alignItems: "center", gap: 7, height: 32, paddingHorizontal: 13, borderRadius: 16, marginTop: 12 }}>
+              <Glas klar hell={f.hell} style={{ flexDirection: "row", alignItems: "center", gap: 7, height: 32, paddingHorizontal: 13, borderRadius: 16, marginTop: 12 }}>
                 <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: liga.farbe }} />
-                <Text style={{ ...schrift.textHalb, fontSize: 13, color: "#FFFFFF" }}>{liga.name}</Text>
+                <Text style={{ ...schrift.textHalb, fontSize: 13, color: kopfText }}>{liga.name}</Text>
               </Glas>
             </View>
 
             <View style={{ position: "absolute", left: RAND, right: RAND, bottom: 18 }}>
               <GlasLeiste
+                hell={f.hell}
                 werte={[
                   { icon: "star", farbe: "#FFC857", wert: tausender(stand.xp), label: "Punkte", onPress: () => router.push("/liga") },
                   { icon: "flame", farbe: "#FF8A2A", wert: `${serie}`, label: serie === 1 ? "Tag Serie" : "Tage Serie", onPress: () => router.push("/statistik") },

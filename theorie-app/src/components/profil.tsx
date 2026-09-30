@@ -343,6 +343,7 @@ export function MenueGruppe({ children, style }: { children: ReactNode; style?: 
 
 /** Profilbild mit leuchtendem orangem Ring und Kamera-Knopf. */
 export function ProfilRing({ children, onPress }: { children: ReactNode; onPress: () => void }) {
+  const f = useFarbwelt();
   return (
     <Pressable
       onPress={() => {
@@ -354,7 +355,7 @@ export function ProfilRing({ children, onPress }: { children: ReactNode; onPress
     >
       <View style={[{ padding: 4, borderRadius: 70 }, leuchten("#FC5B0E", 0.7, 20, 0)]}>
         <LinearGradient colors={verlauf.ring} style={{ padding: 3, borderRadius: 70 }}>
-          <View style={{ padding: 3, borderRadius: 70, backgroundColor: "rgba(10,8,14,0.85)" }}>{children}</View>
+          <View style={{ padding: 3, borderRadius: 70, backgroundColor: f.hell ? "#FFFFFF" : "rgba(10,8,14,0.9)" }}>{children}</View>
         </LinearGradient>
       </View>
       <View style={{ position: "absolute", right: 4, bottom: 6, width: 32, height: 32, borderRadius: 16, backgroundColor: "#FC5B0E", borderWidth: 3, borderColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
