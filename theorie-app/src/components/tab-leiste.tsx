@@ -18,6 +18,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon, type IconName } from "@/components/icon";
+import { istHelleSeite, TAG, useDarstellung } from "@/lib/darstellung";
 import { tippen } from "@/lib/haptik";
 import { leisteAufklappen, leisteKlein } from "@/lib/leisten-scroll";
 import { farben, schrift } from "@/lib/theme";
@@ -30,6 +31,7 @@ import { farben, schrift } from "@/lib/theme";
 //  • Finger drauf → die Blase wird zur Lupe, wächst über die Leiste hinaus
 //    und folgt dem Finger; bei jedem Reiter ein kurzes Ticken
 //  • beim Runterscrollen klappt die Leiste zur kleinen Kapsel zusammen
+//  • auf hellen Seiten (heller Modus) weißes statt dunkles Glas
 
 /** Höhe der Glaskapsel. */
 const KAPSEL = 62;
@@ -75,6 +77,7 @@ function Reiter({
   titel,
   name,
   aktiv,
+  hell,
   breite,
   unterFinger,
   lupe,
@@ -84,13 +87,14 @@ function Reiter({
   titel: string;
   name: string;
   aktiv: boolean;
+  hell: boolean;
   breite: number;
   unterFinger: SharedValue<number>;
   lupe: SharedValue<number>;
   onWahl: () => void;
 }) {
   const symbol = symbolVon(name);
-  const farbe = aktiv ? farben.orange : "rgba(255,255,255,0.78)";
+  const farbe = aktiv ? (hell ? TAG.orange : farben.orange) : hell ? "rgba(20,23,27,0.72)" : "rgba(255,255,255,0.78)";
   const stil = useAnimatedStyle(() => ({
     transform: [{ scale: 1 + 0.14 * lupe.value * (unterFinger.value === index ? 1 : 0) }],
   }));
@@ -116,6 +120,8 @@ function Reiter({
 export function TabLeiste({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const { darstellung } = useDarstellung();
+  const hell = istHelleSeite(darstellung, state.routes[state.index]?.name);
   const anzahl = state.routes.length;
   const breite = width - 2 * SEITE;
   const feld = (breite - 2 * INNEN) / anzahl;
@@ -240,7 +246,7 @@ export function TabLeiste({ state, descriptors, navigation }: BottomTabBarProps)
       {/* Inhalt läuft unten weich aus – wie der Rand-Effekt unter der iOS-Leiste */}
       <LinearGradient
         pointerEvents="none"
-        colors={["rgba(3,5,7,0)", "rgba(3,5,7,0.7)", "rgba(3,5,7,0.92)"]}
+        colors={hell ? ["rgba(244,241,236,0)", "rgba(244,241,236,0.7)", "rgba(244,241,236,0.94)"] : ["rgba(3,5,7,0)", "rgba(3,5,7,0.7)", "rgba(3,5,7,0.92)"]}
         locations={[0, 0.55, 1]}
         style={StyleSheet.absoluteFill}
       />
@@ -248,15 +254,21 @@ export function TabLeiste({ state, descriptors, navigation }: BottomTabBarProps)
       <GestureDetector gesture={geste}>
         <Animated.View style={[{ position: "absolute", left: SEITE, bottom: insets.bottom + UNTEN, borderRadius: KAPSEL / 2 }, kapselStil]}>
           {/* Weicher Schatten unter der Kapsel */}
-          <View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: KAPSEL / 2, boxShadow: "0px 12px 32px rgba(0,0,0,0.55)" }]} />
+          <View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, { borderRadius: KAPSEL / 2, boxShadow: hell ? "0px 10px 30px rgba(60,44,24,0.2)" : "0px 12px 32px rgba(0,0,0,0.55)" }]}
+          />
 
           {/* Das Glas: Unschärfe, Tönung, Glanz, Lichtkante */}
           <View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFill, { borderRadius: KAPSEL / 2, overflow: "hidden", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }]}
+            style={[
+              StyleSheet.absoluteFill,
+              { borderRadius: KAPSEL / 2, overflow: "hidden", borderWidth: 1, borderColor: hell ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.12)" },
+            ]}
           >
-            <BlurView tint="dark" intensity={75} experimentalBlurMethod="dimezisBlurView" style={StyleSheet.absoluteFill} />
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(14,16,20,0.3)" }]} />
+            <BlurView tint={hell ? "light" : "dark"} intensity={hell ? 80 : 75} experimentalBlurMethod="dimezisBlurView" style={StyleSheet.absoluteFill} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: hell ? "rgba(255,255,255,0.62)" : "rgba(14,16,20,0.3)" }]} />
             <LinearGradient
               colors={["rgba(255,255,255,0.16)", "rgba(255,255,255,0.04)", "rgba(255,255,255,0)", "rgba(255,255,255,0.05)"]}
               locations={[0, 0.4, 0.75, 1]}
@@ -284,7 +296,13 @@ export function TabLeiste({ state, descriptors, navigation }: BottomTabBarProps)
             <Animated.View
               style={[
                 StyleSheet.absoluteFill,
-                { borderRadius: KAPSEL / 2, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.12)", borderWidth: 1, borderColor: "rgba(255,255,255,0.16)" },
+                {
+                  borderRadius: KAPSEL / 2,
+                  overflow: "hidden",
+                  backgroundColor: hell ? "rgba(20,23,27,0.06)" : "rgba(255,255,255,0.12)",
+                  borderWidth: 1,
+                  borderColor: hell ? "rgba(20,23,27,0.04)" : "rgba(255,255,255,0.16)",
+                },
                 blaseFuellung,
               ]}
             >
@@ -296,9 +314,9 @@ export function TabLeiste({ state, descriptors, navigation }: BottomTabBarProps)
                 {
                   borderRadius: KAPSEL / 2,
                   borderWidth: 1.5,
-                  borderColor: "rgba(255,255,255,0.42)",
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  boxShadow: "0px 6px 18px rgba(0,0,0,0.35)",
+                  borderColor: hell ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.42)",
+                  backgroundColor: hell ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.05)",
+                  boxShadow: hell ? "0px 6px 18px rgba(60,44,24,0.22)" : "0px 6px 18px rgba(0,0,0,0.35)",
                 },
                 lupenKante,
               ]}
@@ -315,6 +333,7 @@ export function TabLeiste({ state, descriptors, navigation }: BottomTabBarProps)
                   name={route.name}
                   titel={descriptors[route.key]?.options.title ?? route.name}
                   aktiv={state.index === i}
+                  hell={hell}
                   breite={feld}
                   unterFinger={unterFinger}
                   lupe={lupe}
@@ -326,7 +345,7 @@ export function TabLeiste({ state, descriptors, navigation }: BottomTabBarProps)
               pointerEvents="none"
               style={[{ position: "absolute", top: 0, bottom: 0, left: 0, width: KLEIN_BREITE, alignItems: "center", justifyContent: "center" }, miniStil]}
             >
-              <Icon name={mini.an} size={24} color={farben.orange} />
+              <Icon name={mini.an} size={24} color={hell ? TAG.orange : farben.orange} />
             </Animated.View>
           </View>
         </Animated.View>

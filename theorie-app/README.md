@@ -56,7 +56,11 @@ Startknopf, Schnellstart, das Thema mit dem meisten Nachholbedarf, alle Themen
 als Karussell, die Prüfungssimulation, die Crew und ein Spruch des Tages.
 
 Unter Einstellungen → Darstellung gibt es „Nachtfahrt (dunkel)“ und
-„Tagfahrt (hell)“. Die helle Darstellung gilt zuerst für die Startseite.
+„Tagfahrt (hell)“. Die helle Darstellung gilt zuerst für Startseite und
+Profil – dort ist auch die Tab-Leiste unten helles Glas. Auf dem iPhone
+schaltet die App dafür das Fenster auf hell (`DarstellungBruecke` in
+`src/lib/darstellung.tsx`), weil die native Liquid-Glass-Leiste sich nach der
+Darstellung des Fensters richtet; fürs System ist die App sonst fest dunkel.
 
 ## Clips (kurze Videos)
 

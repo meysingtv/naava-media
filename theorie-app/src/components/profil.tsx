@@ -57,8 +57,10 @@ export function Fuehrerscheinweg({ meilensteine, anteil, zeile, zwischen = 0.5, 
   const alle = punkte.map((p) => `${p.x},${p.y}`).join(" ");
   const gefahren = bisAuto.map((p) => `${p.x},${p.y}`).join(" ");
 
-  const asphalt = f.hell ? "#4B5058" : "#262B32";
-  const bankett = f.hell ? "#E3DDD3" : "#15191E";
+  // Heller Asphalt, damit die Straße nicht wie ein schwerer Balken wirkt.
+  const asphalt = f.hell ? "#80868F" : "#353B44";
+  const bankett = f.hell ? "#E9E4DC" : "#1B2128";
+  const mittellinie = f.hell ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.55)";
 
   return (
     <Pressable
@@ -90,7 +92,7 @@ export function Fuehrerscheinweg({ meilensteine, anteil, zeile, zwischen = 0.5, 
           {/* Bankett, Asphalt, Mittellinie – gefahrene Strecke orange */}
           <Polyline points={alle} fill="none" stroke={bankett} strokeWidth={26} strokeLinecap="round" strokeLinejoin="round" />
           <Polyline points={alle} fill="none" stroke={asphalt} strokeWidth={19} strokeLinecap="round" strokeLinejoin="round" />
-          <Polyline points={alle} fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth={1.6} strokeDasharray="7 7" strokeLinecap="butt" />
+          <Polyline points={alle} fill="none" stroke={mittellinie} strokeWidth={1.6} strokeDasharray="7 7" strokeLinecap="butt" />
           {bisAuto.length > 1 ? <Polyline points={gefahren} fill="none" stroke="#FF8A2A" strokeWidth={3} strokeDasharray="9 5" strokeLinecap="round" /> : null}
           {meilensteine.map((s, k) => {
             const p = punktBei(lage[k]);

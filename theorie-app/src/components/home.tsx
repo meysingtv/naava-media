@@ -191,7 +191,10 @@ function GlasWert({ icon, farbe, wert, label, onPress, hell }: GlasWertDaten & {
   );
 }
 
-const glasTrenner = <View style={{ width: 1, alignSelf: "stretch", marginVertical: 4, backgroundColor: "rgba(255,255,255,0.14)" }} />;
+/** Senkrechter Strich zwischen zwei Werten auf dem Glas. */
+function GlasTrenner({ hell }: { hell?: boolean }) {
+  return <View style={{ width: 1, alignSelf: "stretch", marginVertical: 4, backgroundColor: hell ? "rgba(20,23,27,0.1)" : "rgba(255,255,255,0.14)" }} />;
+}
 
 /** Einige Werte nebeneinander auf Glas über einem Foto. */
 export function GlasLeiste({ werte, hell, style }: { werte: GlasWertDaten[]; hell?: boolean; style?: StyleProp<ViewStyle> }) {
@@ -199,7 +202,7 @@ export function GlasLeiste({ werte, hell, style }: { werte: GlasWertDaten[]; hel
     <Glas hell={hell} style={[{ borderRadius: 26, flexDirection: "row", alignItems: "center", paddingVertical: 13, paddingHorizontal: 4 }, hell ? leuchten("#3C2C18", 0.1, 14, 4) : null, style]}>
       {werte.map((w, i) => (
         <View key={w.label} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
-          {i > 0 ? (hell ? <View style={{ width: 1, alignSelf: "stretch", marginVertical: 4, backgroundColor: "rgba(20,23,27,0.1)" }} /> : glasTrenner) : null}
+          {i > 0 ? <GlasTrenner hell={hell} /> : null}
           <GlasWert {...w} hell={hell} />
         </View>
       ))}
@@ -207,7 +210,10 @@ export function GlasLeiste({ werte, hell, style }: { werte: GlasWertDaten[]; hel
   );
 }
 
-/** Prüfungsreife als leuchtender Ring, daneben Serie und Tagesziel – alles auf Glas über dem Foto. */
+/**
+ * Prüfungsreife als leuchtender Ring, daneben Serie und Tagesziel – alles auf Glas über dem Foto.
+ * Im hellen Modus helles Glas mit dunkler Schrift, wie die Werte im Profil.
+ */
 export function HeldWerte({
   reife,
   sicher,
@@ -229,9 +235,13 @@ export function HeldWerte({
   onSerie: () => void;
   onHeute: () => void;
 }) {
-  const trenner = glasTrenner;
+  const { hell } = useFarbwelt();
+  const text = hell ? "#14171B" : "#FFFFFF";
   return (
-    <Glas style={{ borderRadius: 26, flexDirection: "row", alignItems: "center", paddingVertical: 13, paddingLeft: 12, paddingRight: 4 }}>
+    <Glas
+      hell={hell}
+      style={[{ borderRadius: 26, flexDirection: "row", alignItems: "center", paddingVertical: 13, paddingLeft: 12, paddingRight: 4 }, hell ? leuchten("#3C2C18", 0.1, 14, 4) : null]}
+    >
       <Pressable
         onPress={() => {
           tippen();
@@ -239,22 +249,22 @@ export function HeldWerte({
         }}
         style={{ flex: 1.9, flexDirection: "row", alignItems: "center", gap: 9 }}
       >
-        <Ring anteil={reife} groesse={50} dicke={5} verlauf={verlauf.ring} spur="rgba(255,255,255,0.14)" leuchten>
-          <Text style={{ ...schrift.titel, fontSize: 13.5, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{Math.round(reife * 100)}%</Text>
+        <Ring anteil={reife} groesse={50} dicke={5} verlauf={verlauf.ring} spur={hell ? "rgba(20,23,27,0.09)" : "rgba(255,255,255,0.14)"} leuchten>
+          <Text style={{ ...schrift.titel, fontSize: 13.5, color: text, fontVariant: ["tabular-nums"] }}>{Math.round(reife * 100)}%</Text>
         </Ring>
         <View style={{ flex: 1 }}>
-          <Text style={{ ...schrift.titelFett, fontSize: 14.5, color: "#FFFFFF" }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+          <Text style={{ ...schrift.titelFett, fontSize: 14.5, color: text }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
             Prüfungsreif
           </Text>
-          <Text style={{ ...schrift.text, fontSize: 12, color: "rgba(255,255,255,0.72)" }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+          <Text style={{ ...schrift.text, fontSize: 12, color: hell ? "rgba(20,23,27,0.62)" : "rgba(255,255,255,0.72)" }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
             {sicher}/{gesamt} sicher
           </Text>
         </View>
       </Pressable>
-      {trenner}
-      <GlasWert icon="flame" farbe="#FF8A2A" wert={`${serie}`} label={serie === 1 ? "Tag Serie" : "Tage Serie"} onPress={onSerie} />
-      {trenner}
-      <GlasWert icon="checkmark-circle" farbe={heute >= ziel ? "#4ED053" : "#FFB45C"} wert={`${Math.min(heute, 999)}/${ziel}`} label="heute" onPress={onHeute} />
+      <GlasTrenner hell={hell} />
+      <GlasWert icon="flame" farbe="#FF8A2A" wert={`${serie}`} label={serie === 1 ? "Tag Serie" : "Tage Serie"} onPress={onSerie} hell={hell} />
+      <GlasTrenner hell={hell} />
+      <GlasWert icon="checkmark-circle" farbe={heute >= ziel ? (hell ? "#23A548" : "#4ED053") : "#FFB45C"} wert={`${Math.min(heute, 999)}/${ziel}`} label="heute" onPress={onHeute} hell={hell} />
     </Glas>
   );
 }

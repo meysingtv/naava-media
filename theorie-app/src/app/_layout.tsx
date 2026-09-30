@@ -18,7 +18,7 @@ import { T } from "@/components/ui";
 import { erfolgVon } from "@/lib/erfolge";
 import { erfolg } from "@/lib/haptik";
 import { CrewProvider } from "@/lib/crew";
-import { DarstellungProvider } from "@/lib/darstellung";
+import { DarstellungBruecke, DarstellungProvider } from "@/lib/darstellung";
 import { KontoProvider, useKonto } from "@/lib/konto";
 import { StandProvider, useStand } from "@/lib/stand";
 import { ProfilbildAbgleich } from "@/lib/profilbild";
@@ -174,6 +174,7 @@ export default function RootLayout() {
         <DarstellungProvider>
           <KontoProvider>
             <StatusBar style="light" />
+            <DarstellungBruecke />
             <SyncBruecke />
             <PruefungstagBruecke />
             <ProfilbildAbgleich />

@@ -51,7 +51,7 @@ export function Glas({
       style={[
         {
           overflow: "hidden",
-          backgroundColor: toenung ?? (hell ? (klar ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.72)") : klar ? "rgba(22,24,28,0.34)" : "rgba(22,24,28,0.58)"),
+          backgroundColor: toenung ?? (hell ? (klar ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.82)") : klar ? "rgba(22,24,28,0.34)" : "rgba(22,24,28,0.58)"),
           borderWidth: 1,
           borderColor: hell ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.17)",
         },

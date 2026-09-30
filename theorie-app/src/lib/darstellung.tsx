@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Appearance, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { usePathname } from "expo-router";
 
 import { farben } from "@/lib/theme";
 
@@ -128,4 +130,29 @@ export function FarbweltBereich({ farbwelt, children }: { farbwelt: Farbwelt; ch
 /** Farben des umgebenden Bereichs – außerhalb von Home immer dunkel. */
 export function useFarbwelt(): Farbwelt {
   return useContext(FarbweltKontext);
+}
+
+/** Tab-Seiten, die im hellen Modus hell sind – alle anderen bleiben dunkel. */
+const HELLE_SEITEN = new Set(["heute", "profil"]);
+
+/** Ist die Seite (Name der Route oder Pfad wie „/heute“) gerade hell? */
+export function istHelleSeite(darstellung: Darstellung, seite: string | null | undefined): boolean {
+  return darstellung === "hell" && !!seite && HELLE_SEITEN.has(seite.replace(/^\//, ""));
+}
+
+/**
+ * Fürs System ist die App fest dunkel (app.json). Die native iOS-Tab-Leiste
+ * (Liquid Glass) richtet sich nach der Darstellung des Fensters – auf den hellen
+ * Seiten schaltet das Fenster deshalb auf hell, dann ist die Leiste helles Glas.
+ * Android hat eine eigene Leiste (tab-leiste.tsx), die das selbst regelt.
+ */
+export function DarstellungBruecke() {
+  const { darstellung } = useDarstellung();
+  const hell = istHelleSeite(darstellung, usePathname());
+
+  useEffect(() => {
+    if (Platform.OS === "ios") Appearance.setColorScheme(hell ? "light" : "dark");
+  }, [hell]);
+
+  return null;
 }
