@@ -62,6 +62,21 @@ schaltet die App dafür das Fenster auf hell (`DarstellungBruecke` in
 `src/lib/darstellung.tsx`), weil die native Liquid-Glass-Leiste sich nach der
 Darstellung des Fensters richtet; fürs System ist die App sonst fest dunkel.
 
+## Lernen und Prüfung
+
+**Lernen** zeigt oben eine schräge Wand aus allen Themenfotos, die langsam
+vorbeizieht. Darauf die Suche und der Stand aller Fragen (sicher, offene Fehler,
+noch neu) als geteilter Balken. Darunter „Smart lernen“, die Lernmodi
+(Karteikarten, Schilder-Jagd, Fehler üben, Favoriten, schwierige Fragen,
+Verkehrszeichen, Formeln, Kurz erklärt) und alle Themen als Poster mit Filter
+nach Schwierigkeit (`src/components/lernen.tsx`).
+
+**Prüfung** zeigt die Prüfungsreife als Tacho (grüner Bereich ab 90 %, beim
+ersten Öffnen einmal Vollausschlag wie beim Motorstart), den Startknopf für die
+Simulation, den Prüfungstermin als Ticket, die Fehlerpunkte der letzten zehn
+Simulationen mit der Grenze bei 10 Punkten, die schwächsten Themen zum Üben und
+den Ablauf der Prüfung (`src/components/pruefen.tsx`).
+
 ## Clips (kurze Videos)
 
 Der Reiter „Clips“ zeigt kurze Videos: oben „Entdecken“ und „Folge ich“,

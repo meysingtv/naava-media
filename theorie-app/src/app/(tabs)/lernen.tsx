@@ -1,30 +1,41 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { KategorieZeile } from "@/components/foto";
-import { FrageZeile, LeerHinweis } from "@/components/frage-liste";
-import { KarteikartenKarte } from "@/components/karteikarten-karte";
-import { SchilderJagdKarte } from "@/components/schilder-jagd-karte";
+import { Glas } from "@/components/glas";
+import { Kopfzeile, StartKnopf } from "@/components/home";
+import { Icon } from "@/components/icon";
+import {
+  GrundstoffKarte,
+  LernStand,
+  ModusKarte,
+  ModusRaster,
+  StapelBild,
+  StufenFilter,
+  SucherSchild,
+  SuchHinweis,
+  SuchLeiste,
+  SuchPille,
+  SuchVorschlaege,
+  Themenwand,
+  ThemenRaster,
+  TrefferZeile,
+  type Modus,
+  type Stufe,
+  type ThemaPosterDaten,
+} from "@/components/lernen";
 import { useInhaltUnten } from "@/components/tab-leiste";
-import { Eingabe, KopfTaste, kopfOben } from "@/components/ui";
-import { FOTOS, themaFoto } from "@/lib/fotos";
-import { FRAGEN, THEMEN, fragenZuThema, themaVon, type ThemaId } from "@/lib/fragen";
-import { tippen } from "@/lib/haptik";
-import { fortschritt, useStand } from "@/lib/stand";
-import { farben, leuchten, schrift, verlauf } from "@/lib/theme";
+import { Verkehrszeichen } from "@/components/zeichen";
+import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
+import { FRAGEN, THEMEN, fragenZuThema, themaVon, type ThemaId, type ZeichenKey } from "@/lib/fragen";
+import { heuteDran, kartenZahlen } from "@/lib/karteikarten";
 import { useLeistenScroll } from "@/lib/leisten-scroll";
-
-type Stufe = "alle" | "leicht" | "mittel" | "schwer";
-
-const STUFEN: { id: Stufe; titel: string }[] = [
-  { id: "alle", titel: "Alle" },
-  { id: "leicht", titel: "Leicht" },
-  { id: "mittel", titel: "Mittel" },
-  { id: "schwer", titel: "Schwer" },
-];
+import { ALBUM } from "@/lib/schilder-jagd";
+import { fehlerIds, fortschritt, gemerktIds, schwierigeIds, useStand } from "@/lib/stand";
+import { RAND, schrift } from "@/lib/theme";
 
 /** Schwierigkeit eines Themas nach den Fehlerpunkten seiner Fragen (2–5). */
 function stufeVon(thema: ThemaId): Exclude<Stufe, "alle"> {
@@ -35,50 +46,16 @@ function stufeVon(thema: ThemaId): Exclude<Stufe, "alle"> {
   return "schwer";
 }
 
-function Filter({ wert, onWechsel }: { wert: Stufe; onWechsel: (s: Stufe) => void }) {
-  return (
-    <View style={{ flexDirection: "row", gap: 8 }}>
-      {STUFEN.map((s) => {
-        const aktiv = s.id === wert;
-        return (
-          <Pressable
-            key={s.id}
-            onPress={() => {
-              if (aktiv) return;
-              tippen();
-              onWechsel(s.id);
-            }}
-            style={{
-              flex: 1,
-              height: 38,
-              borderRadius: 19,
-              overflow: "hidden",
-              borderWidth: aktiv ? 0 : 1,
-              borderColor: "rgba(255,255,255,0.1)",
-              backgroundColor: aktiv ? undefined : farben.flaeche2,
-              ...(aktiv ? { ...leuchten(farben.orange, 0.45, 10, 3) } : null),
-            }}
-          >
-            {aktiv ? (
-              <LinearGradient colors={verlauf.chip} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ ...schrift.textHalb, fontSize: 15, color: "#FFFFFF" }}>{s.titel}</Text>
-              </LinearGradient>
-            ) : (
-              <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ ...schrift.textMittel, fontSize: 15, color: "#E4E7EA" }}>{s.titel}</Text>
-              </View>
-            )}
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
+/** Begriffe, die in den Fragen wirklich vorkommen. */
+const VORSCHLAEGE = ["Kreisverkehr", "Rettungsgasse", "Promille", "Überholen", "Schulbus", "Reifen", "Bahnübergang", "Anhalteweg"];
 
-export default function Kategorien() {
+export default function Lernen() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const inhaltUnten = useInhaltUnten();
   const leistenScroll = useLeistenScroll();
+  const fokus = useIsFocused();
+  const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();
   const [stufe, setStufe] = useState<Stufe>("alle");
   const [suche, setSuche] = useState<string | null>(null);
@@ -86,77 +63,162 @@ export default function Kategorien() {
   const treffer = useMemo(() => {
     const q = (suche ?? "").trim().toLowerCase();
     if (q.length < 2) return [];
-    return FRAGEN.filter((f) => f.text.toLowerCase().includes(q) || themaVon(f.thema).titel.toLowerCase().includes(q)).slice(0, 40);
+    return FRAGEN.filter((fr) => fr.text.toLowerCase().includes(q) || themaVon(fr.thema).titel.toLowerCase().includes(q)).slice(0, 40);
   }, [suche]);
 
-  const themen = THEMEN.filter((t) => stufe === "alle" || stufeVon(t.id) === stufe);
+  // Stand aller Fragen: sicher (zuletzt richtig), offene Fehler, noch nie beantwortet.
   const gesamt = fortschritt(stand);
+  const fehler = fehlerIds(stand).length;
+  const gesehen = FRAGEN.filter((q) => {
+    const fs = stand.fragen[q.id];
+    return fs != null && fs.r + fs.f > 0;
+  }).length;
+  const neu = FRAGEN.length - gesehen;
+
+  const gemerkt = gemerktIds(stand).length;
+  const schwierig = schwierigeIds(stand).length;
+  const dran = heuteDran(stand);
+  const karten = kartenZahlen(stand);
+  const kartenBegonnen = karten.gelernt > 0 || karten.eigene > 0;
+  const gefunden = ALBUM.filter((k) => stand.schilder[k]);
+  const letztesSchild: ZeichenKey = [...gefunden].sort((a, b) => (stand.schilder[b] ?? "").localeCompare(stand.schilder[a] ?? ""))[0] ?? "z206";
+
+  const modi: Modus[] = [
+    {
+      titel: "Fehler üben",
+      unter: fehler > 0 ? `${fehler} offen` : "Alles erledigt",
+      akzent: "#FF4A3D",
+      icon: "refresh",
+      sf: "arrow.counterclockwise",
+      onPress: () => router.push({ pathname: "/training", params: { modus: "fehler" } }),
+    },
+    { titel: "Favoriten", unter: gemerkt > 0 ? `${gemerkt} gemerkt` : "Noch leer", akzent: "#FF8A1E", icon: "heart", onPress: () => router.push("/favoriten") },
+    {
+      titel: "Schwierige Fragen",
+      unter: schwierig > 0 ? `${schwierig} ${schwierig === 1 ? "Frage" : "Fragen"}` : "Noch keine",
+      akzent: "#FFB400",
+      icon: "flame",
+      sf: "flame.fill",
+      onPress: () => router.push({ pathname: "/training", params: { modus: "schwierig" } }),
+    },
+    { titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", akzent: "#4DA3FF", bild: <Verkehrszeichen zeichen="z205" groesse={27} />, onPress: () => router.push("/zeichen") },
+    { titel: "Formeln", unter: "Anhalteweg & Co.", akzent: "#E0A100", icon: "calculator", sf: "function", onPress: () => router.push("/formeln") },
+    { titel: "Kurz erklärt", unter: "Regeln in 30 Sekunden", akzent: "#FF4D6D", icon: "bulb", sf: "lightbulb.fill", onPress: () => router.push("/kurz-erklaert") },
+  ];
+
+  const themen: ThemaPosterDaten[] = THEMEN.filter((t) => stufe === "alle" || stufeVon(t.id) === stufe).map((t) => {
+    const liste = fragenZuThema(t.id);
+    return { id: t.id, anteil: fortschritt(stand, liste).anteil, anzahl: liste.length, stufe: stufeVon(t.id) };
+  });
+
+  const kopfText = f.hell ? "#14171B" : "#FFFFFF";
+  const statusLeiste = fokus ? <StatusBar style={f.hell ? "dark" : "light"} /> : null;
+
+  if (suche != null) {
+    const q = suche.trim();
+    return (
+      <FarbweltBereich farbwelt={f}>
+        {statusLeiste}
+        <View style={{ flex: 1, backgroundColor: f.grund, paddingTop: insets.top + 10 }}>
+          <SuchLeiste wert={suche} onWechsel={setSuche} onAbbrechen={() => setSuche(null)} />
+          <ScrollView
+            {...leistenScroll}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingTop: 20, paddingBottom: inhaltUnten }}
+          >
+            {q.length < 2 ? (
+              <SuchVorschlaege woerter={VORSCHLAEGE} onWahl={setSuche} />
+            ) : treffer.length > 0 ? (
+              <View style={{ paddingHorizontal: RAND, gap: 10 }}>
+                <Text style={{ ...schrift.textHalb, fontSize: 13, letterSpacing: 0.6, color: f.text3 }}>
+                  {treffer.length === 40 ? "40+ TREFFER" : `${treffer.length} TREFFER`}
+                </Text>
+                {treffer.map((fr) => (
+                  <TrefferZeile key={fr.id} frage={fr} onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: fr.thema, start: fr.id } })} />
+                ))}
+              </View>
+            ) : (
+              <SuchHinweis icon="search" titel="Nichts gefunden" text="Versuch es mit einem anderen Begriff, zum Beispiel „Kreisverkehr“ oder „Promille“." />
+            )}
+          </ScrollView>
+        </View>
+      </FarbweltBereich>
+    );
+  }
+
+  const heldHoehe = Math.max(Math.round(width * 1.2), insets.top + 410);
 
   return (
-    <View style={{ flex: 1, backgroundColor: farben.grund }}>
-      <View style={{ paddingTop: kopfOben(insets.top), paddingHorizontal: 8, paddingBottom: 4 }}>
-        <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
-            <Text style={{ ...schrift.titelFett, fontSize: 20, color: "#FFFFFF" }}>{suche == null ? "Kategorien" : "Suche"}</Text>
-          </View>
-          <KopfTaste icon="arrow-back" label="Zur Startseite" onPress={() => (suche == null ? router.navigate("/heute") : setSuche(null))} />
-          <KopfTaste icon={suche == null ? "search" : "close"} label={suche == null ? "Suchen" : "Suche schließen"} onPress={() => setSuche(suche == null ? "" : null)} />
-        </View>
-      </View>
+    <FarbweltBereich farbwelt={f}>
+      {statusLeiste}
+      <View style={{ flex: 1, backgroundColor: f.grund }}>
+        <ScrollView {...leistenScroll} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
+          <Themenwand hoehe={heldHoehe}>
+            <View style={{ position: "absolute", top: insets.top + 4, left: RAND, right: RAND }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                <Text style={{ ...schrift.titel, fontSize: 34, lineHeight: 40, color: kopfText, letterSpacing: -0.5 }}>Lernen</Text>
+                <Pressable onPress={() => router.push("/statistik")} accessibilityLabel="Mein Fortschritt" hitSlop={8}>
+                  <Glas klar hell={f.hell} style={{ width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" }}>
+                    <Icon name="stats-chart" size={19} color={kopfText} />
+                  </Glas>
+                </Pressable>
+              </View>
+              <Text style={{ ...schrift.textMittel, fontSize: 15, color: f.hell ? "rgba(20,23,27,0.66)" : "rgba(255,255,255,0.78)", marginTop: 1 }}>
+                {THEMEN.length} Themen · {FRAGEN.length} Fragen · Klasse {stand.klasse}
+              </Text>
+              <SuchPille onPress={() => setSuche("")} style={{ marginTop: 16 }} />
+            </View>
 
-      <ScrollView
-        {...leistenScroll}
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: inhaltUnten, gap: 8 }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {suche != null ? (
-          <>
-            <Eingabe icon="search" value={suche} onChangeText={setSuche} placeholder="Frage oder Thema suchen" autoFocus returnKeyType="search" />
-            {suche.trim().length >= 2 ? (
-              treffer.length > 0 ? (
-                treffer.map((f) => <FrageZeile key={f.id} frage={f} />)
-              ) : (
-                <LeerHinweis icon="search" titel="Nichts gefunden" text="Versuch es mit einem anderen Begriff, zum Beispiel „Kreisverkehr“ oder „Promille“." />
-              )
-            ) : (
-              <Text style={{ ...schrift.textMittel, fontSize: 13, color: farben.text3, paddingHorizontal: 4 }}>Mindestens zwei Buchstaben eingeben.</Text>
-            )}
-          </>
-        ) : (
-          <>
-            <Filter wert={stufe} onWechsel={setStufe} />
-            {stufe === "alle" ? <SchilderJagdKarte /> : null}
-            {stufe === "alle" ? <KarteikartenKarte /> : null}
-            {stufe === "alle" ? (
-              <KategorieZeile
-                id="grundstoff"
-                titel="Grundstoff"
-                anzahl={FRAGEN.length}
-                anteil={gesamt.anteil}
-                quelle={FOTOS.grundstoff}
-                onPress={() => router.push({ pathname: "/training", params: { modus: "alle" } })}
-              />
-            ) : null}
-            {themen.map((t) => {
-              const liste = fragenZuThema(t.id);
-              return (
-                <KategorieZeile
-                  key={t.id}
-                  id={t.id}
-                  titel={t.titel}
-                  anzahl={liste.length}
-                  anteil={fortschritt(stand, liste).anteil}
-                  quelle={themaFoto(t.id)}
-                  onPress={() => router.push({ pathname: "/thema/[id]", params: { id: t.id } })}
-                />
-              );
-            })}
-            {themen.length === 0 ? <LeerHinweis icon="layers-outline" titel="Keine Themen" text="In dieser Stufe gibt es gerade keine Themen." /> : null}
-          </>
-        )}
-      </ScrollView>
-    </View>
+            <View style={{ position: "absolute", left: RAND, right: RAND, bottom: 104 }}>
+              <LernStand sicher={gesamt.richtig} fehler={fehler} neu={neu} onPress={() => router.push("/statistik")} />
+            </View>
+          </Themenwand>
+
+          <View style={{ marginTop: -80, paddingHorizontal: RAND }}>
+            <StartKnopf titel="Smart lernen" unter="Die Fragen, die dich jetzt weiterbringen" onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })} />
+          </View>
+
+          <Kopfzeile titel="Lernmodi" style={{ marginTop: 32 }} />
+          <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: RAND }}>
+            <ModusKarte
+              titel="Karteikarten"
+              unter={dran.gesamt > 0 ? `${dran.gesamt} ${dran.gesamt === 1 ? "Karte" : "Karten"} heute dran` : kartenBegonnen ? "Alles wiederholt" : "Als Karten lernen"}
+              akzent="#4ED053"
+              bild={<StapelBild />}
+              zahl={dran.gesamt}
+              anteil={karten.gelernt > 0 ? karten.sicher / karten.gelernt : 0}
+              onPress={() => router.push("/karteikarten")}
+            />
+            <ModusKarte
+              titel="Schilder-Jagd"
+              unter={gefunden.length > 0 ? `${gefunden.length} von ${ALBUM.length} gefunden` : "Schilder scannen"}
+              akzent="#4DA3FF"
+              bild={<SucherSchild zeichen={letztesSchild} groesse={28} />}
+              anteil={gefunden.length / ALBUM.length}
+              onPress={() => router.push("/schilder-jagd")}
+            />
+          </View>
+          <ModusRaster modi={modi} style={{ marginTop: 10 }} />
+
+          <Kopfzeile titel="Alle Themen" link={`${THEMEN.length} Themen`} style={{ marginTop: 32 }} />
+          <StufenFilter wert={stufe} onWechsel={setStufe} style={{ marginBottom: 14 }} />
+          {stufe === "alle" ? (
+            <GrundstoffKarte
+              anzahl={FRAGEN.length}
+              anteil={gesamt.anteil}
+              onPress={() => router.push({ pathname: "/training", params: { modus: "alle" } })}
+              style={{ marginHorizontal: RAND, marginBottom: 12 }}
+            />
+          ) : null}
+          {themen.length > 0 ? (
+            <ThemenRaster themen={themen} onThema={(id) => router.push({ pathname: "/thema/[id]", params: { id } })} />
+          ) : (
+            <SuchHinweis icon="layers-outline" titel="Keine Themen" text="In dieser Stufe gibt es gerade keine Themen." />
+          )}
+        </ScrollView>
+      </View>
+    </FarbweltBereich>
   );
 }

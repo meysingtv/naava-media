@@ -117,9 +117,9 @@ export function useDarstellung(): Kontext {
 }
 
 /**
- * Bausteine wie die Crew-Karten gibt es auf Home (hell oder dunkel) und auf
- * dunklen Seiten. Home legt die Farbwelt für seinen Bereich fest, alle anderen
- * Seiten bleiben dunkel.
+ * Bausteine wie die Crew-Karten gibt es auf hellen und dunklen Seiten. Home,
+ * Lernen, Prüfung und Profil legen die Farbwelt für ihren Bereich fest, alle
+ * anderen Seiten bleiben dunkel.
  */
 const FarbweltKontext = createContext<Farbwelt>(NACHT);
 
@@ -127,13 +127,13 @@ export function FarbweltBereich({ farbwelt, children }: { farbwelt: Farbwelt; ch
   return <FarbweltKontext.Provider value={farbwelt}>{children}</FarbweltKontext.Provider>;
 }
 
-/** Farben des umgebenden Bereichs – außerhalb von Home immer dunkel. */
+/** Farben des umgebenden Bereichs – außerhalb der hellen Tab-Seiten immer dunkel. */
 export function useFarbwelt(): Farbwelt {
   return useContext(FarbweltKontext);
 }
 
 /** Tab-Seiten, die im hellen Modus hell sind – alle anderen bleiben dunkel. */
-const HELLE_SEITEN = new Set(["heute", "profil"]);
+const HELLE_SEITEN = new Set(["heute", "lernen", "pruefen", "profil"]);
 
 /** Ist die Seite (Name der Route oder Pfad wie „/heute“) gerade hell? */
 export function istHelleSeite(darstellung: Darstellung, seite: string | null | undefined): boolean {
