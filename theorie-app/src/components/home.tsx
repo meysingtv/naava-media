@@ -59,11 +59,27 @@ export function heldHoehe(breite: number): number {
   return Math.round(breite * HELD_VERHAELTNIS);
 }
 
-/** Foto über die ganze Breite, fährt ganz langsam heran (wie eine Kamerafahrt) und läuft unten in den Grund aus. */
-export function KinoHeld({ zeit, children }: { zeit: Tageszeit; children?: ReactNode }) {
+/**
+ * Foto über die ganze Breite, fährt ganz langsam heran (wie eine Kamerafahrt) und läuft unten in den Grund aus.
+ * Ohne eigenes Bild das Foto zur Tageszeit.
+ */
+export function KinoHeld({
+  zeit = "tag",
+  bild,
+  hoehe: vorgabe,
+  ausblendenAb,
+  children,
+}: {
+  zeit?: Tageszeit;
+  bild?: ImageSourcePropType;
+  hoehe?: number;
+  /** Ab welcher Höhe (Anteil) das Foto in den Grund übergeht. */
+  ausblendenAb?: number;
+  children?: ReactNode;
+}) {
   const f = useFarbwelt();
   const { width } = useWindowDimensions();
-  const hoehe = heldHoehe(width);
+  const hoehe = vorgabe ?? heldHoehe(width);
   const fahrt = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -82,7 +98,7 @@ export function KinoHeld({ zeit, children }: { zeit: Tageszeit; children?: React
 
   return (
     <View style={{ width, height: hoehe, overflow: "hidden", backgroundColor: f.grund }}>
-      <Animated.Image source={HELD_FOTO[zeit]} resizeMode="cover" fadeDuration={0} style={{ position: "absolute", width, height: hoehe, transform: [{ scale }, { translateY }] }} />
+      <Animated.Image source={bild ?? HELD_FOTO[zeit]} resizeMode="cover" fadeDuration={0} style={{ position: "absolute", width, height: hoehe, transform: [{ scale }, { translateY }] }} />
       {/* Oben abgedunkelt für Statusleiste und Begrüßung */}
       <LinearGradient colors={["rgba(0,0,0,0.6)", "rgba(0,0,0,0.26)", "rgba(0,0,0,0)"]} locations={[0, 0.2, 0.44]} style={FUELLEN} />
       {/* Links etwas dunkler, damit die Schrift trägt */}
@@ -90,12 +106,18 @@ export function KinoHeld({ zeit, children }: { zeit: Tageszeit; children?: React
       {/* Unten weich in den Grund – ohne sichtbare Kante */}
       <LinearGradient
         colors={[mitAlpha(f.grund, 0), mitAlpha(f.grund, 0.3), mitAlpha(f.grund, 0.72), mitAlpha(f.grund, 0.94), f.grund]}
-        locations={f.hell ? [0.7, 0.8, 0.9, 0.96, 1] : [0.46, 0.62, 0.78, 0.9, 1]}
+        locations={auslauf(ausblendenAb ?? (f.hell ? 0.7 : 0.46))}
         style={[FUELLEN, { bottom: -1 }]}
       />
       {children}
     </View>
   );
+}
+
+/** Stützpunkte des Übergangs ins Grund, beginnend bei `ab`. */
+function auslauf(ab: number): [number, number, number, number, number] {
+  const rest = 1 - ab;
+  return [ab, ab + rest * 0.3, ab + rest * 0.6, ab + rest * 0.85, 1];
 }
 
 /** Oranger Pinselstrich unter der Handschrift. */
@@ -139,7 +161,9 @@ export function Handschrift({ zeilen, style }: { zeilen: string[]; style?: Style
 // Werte auf Glas
 // ---------------------------------------------------------------------------
 
-function GlasWert({ icon, farbe, wert, label, onPress }: { icon: IconName; farbe: string; wert: string; label: string; onPress: () => void }) {
+export type GlasWertDaten = { icon: IconName; farbe: string; wert: string; label: string; onPress: () => void };
+
+function GlasWert({ icon, farbe, wert, label, onPress }: GlasWertDaten) {
   return (
     <Pressable
       onPress={() => {
@@ -157,6 +181,22 @@ function GlasWert({ icon, farbe, wert, label, onPress }: { icon: IconName; farbe
         {label}
       </Text>
     </Pressable>
+  );
+}
+
+const glasTrenner = <View style={{ width: 1, alignSelf: "stretch", marginVertical: 4, backgroundColor: "rgba(255,255,255,0.14)" }} />;
+
+/** Einige Werte nebeneinander auf Glas über einem Foto. */
+export function GlasLeiste({ werte, style }: { werte: GlasWertDaten[]; style?: StyleProp<ViewStyle> }) {
+  return (
+    <Glas style={[{ borderRadius: 26, flexDirection: "row", alignItems: "center", paddingVertical: 13, paddingHorizontal: 4 }, style]}>
+      {werte.map((w, i) => (
+        <View key={w.label} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
+          {i > 0 ? glasTrenner : null}
+          <GlasWert {...w} />
+        </View>
+      ))}
+    </Glas>
   );
 }
 
@@ -182,7 +222,7 @@ export function HeldWerte({
   onSerie: () => void;
   onHeute: () => void;
 }) {
-  const trenner = <View style={{ width: 1, alignSelf: "stretch", marginVertical: 4, backgroundColor: "rgba(255,255,255,0.14)" }} />;
+  const trenner = glasTrenner;
   return (
     <Glas style={{ borderRadius: 26, flexDirection: "row", alignItems: "center", paddingVertical: 13, paddingLeft: 12, paddingRight: 4 }}>
       <Pressable
@@ -296,6 +336,8 @@ export function Kopfzeile({ titel, link, onLink, style }: { titel: string; link?
           <Text style={{ ...schrift.text, fontSize: 15, color: f.text2 }}>{link}</Text>
           <Icon name="chevron-forward" size={15} color={f.text2} />
         </Pressable>
+      ) : link ? (
+        <Text style={{ ...schrift.text, fontSize: 15, color: f.text2 }}>{link}</Text>
       ) : null}
     </View>
   );

@@ -34,6 +34,8 @@ export const FOTOS = {
   heldTag: require("../../assets/images/home/held-tag.jpg"),
   heldAbend: require("../../assets/images/home/held-abend.jpg"),
   heldNacht: require("../../assets/images/home/held-nacht.jpg"),
+  // Titelbild des Profils
+  heldProfil: require("../../assets/images/home/held-profil.jpg"),
 } satisfies Record<string, ImageSourcePropType>;
 
 export type FotoKey = keyof typeof FOTOS;
@@ -107,6 +109,7 @@ const roh: [FotoKey, string, string, string, string][] = [
   ["heldTag", "A car driving on a road going through the mountain valleys", "Nithin John", "cc0 1.0", "https://wordpress.org/photos/photo/57365be3ed/"],
   ["heldAbend", "Sunset view over a rural road", "Angel Zinsel", "cc0 1.0", "https://wordpress.org/photos/photo/34768b4c09/"],
   ["heldNacht", "Driving at Night, Rest Stop Ahead", "Marcus Kazmierczak", "cc0 1.0", "https://wordpress.org/photos/photo/73161c9d1f/"],
+  ["heldProfil", "Orange sunset view with cars passing by", "jeffrojas", "cc0 1.0", "https://wordpress.org/photos/photo/89269d0202/"],
 ];
 
 export const NACHWEISE: Nachweis[] = roh.map(([foto, titel, urheber, lizenz, seite]) => ({ foto, titel, urheber, lizenz: LIZENZ_NAME[lizenz] ?? lizenz, seite }));
