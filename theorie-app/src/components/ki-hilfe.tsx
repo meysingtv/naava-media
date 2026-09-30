@@ -4,7 +4,7 @@ import { BlurView } from "expo-blur";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Circle, Defs, LinearGradient as SvgVerlauf, Path, Rect, Stop } from "react-native-svg";
+import Svg, { Circle, Defs, LinearGradient as SvgVerlauf, Path, Stop } from "react-native-svg";
 
 import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
@@ -19,8 +19,22 @@ import { leuchten, mitDeckkraft, RAND, schrift, verlauf } from "@/lib/theme";
 
 const FUELLEN = { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } as const;
 
-/** Rand und Spitze der Blase: Gold → Orange → tiefes Rotorange. */
+/** Ring des KI-Knopfs: Gold → Orange → tiefes Rotorange. */
 const RAND_FARBEN = ["#FFD27A", "#FF9A3C", "#FC5B0E", "#F2360C"] as const;
+
+/** Rand der Blase – am Knopf kräftig orange, nach oben rechts immer feiner (Stelle, Farbe, Deckkraft). */
+const RAND_HELL: [number, string, number][] = [
+  [0, "#F2540A", 1],
+  [0.3, "#FF8A2A", 0.9],
+  [0.65, "#FFB56B", 0.55],
+  [1, "#FFD9B0", 0.45],
+];
+const RAND_DUNKEL: [number, string, number][] = [
+  [0, "#FF6A10", 1],
+  [0.3, "#FF9A3C", 0.85],
+  [0.65, "#FFB060", 0.42],
+  [1, "#FFD3A0", 0.22],
+];
 
 /** Wo der Knopf liegt, auf den die Blase zeigt (Fensterkoordinaten). */
 export type KiAnker = { x: number; y: number; breite: number; hoehe: number; text?: string };
@@ -226,7 +240,7 @@ function Denkt() {
   );
 }
 
-function RundKnopf({ icon, label, farbe, onPress }: { icon: IconName; label: string; farbe?: string; onPress: () => void }) {
+function RundKnopf({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
   const f = useFarbwelt();
   return (
     <Pressable
@@ -234,22 +248,120 @@ function RundKnopf({ icon, label, farbe, onPress }: { icon: IconName; label: str
         tippen();
         onPress();
       }}
-      hitSlop={6}
+      hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={label}
       style={({ pressed }) => ({
-        width: 38,
-        height: 38,
-        borderRadius: 19,
+        width: 34,
+        height: 34,
+        borderRadius: 17,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: f.hell ? "rgba(20,23,27,0.06)" : "rgba(255,255,255,0.09)",
+        backgroundColor: f.hell ? "rgba(20,23,27,0.06)" : "rgba(255,255,255,0.08)",
         transform: [{ scale: pressed ? 0.92 : 1 }],
       })}
     >
-      <Icon name={icon} size={19} color={farbe ?? f.text} weight="semibold" />
+      <Icon name={icon} size={17} color={f.text2} weight="semibold" />
     </Pressable>
   );
+}
+
+/** Daumen als feine Linie (außerhalb von iOS; dort gibt es SF Symbols). */
+function DaumenLinie({ runter, voll, farbe, groesse }: { runter?: boolean; voll: boolean; farbe: string; groesse: number }) {
+  return (
+    <Svg width={groesse} height={groesse} viewBox="0 0 24 24" style={runter ? { transform: [{ scaleY: -1 }] } : undefined}>
+      <Path
+        d="M4.8 10.6H7.2V20.2H4.8A1.8 1.8 0 0 1 3 18.4V12.4A1.8 1.8 0 0 1 4.8 10.6ZM7.2 10.6L10.5 4A1.7 1.7 0 0 1 13.7 4.9L13.1 9.1H18.2A2 2 0 0 1 20.2 11.4L19 18.5A2 2 0 0 1 17 20.2H7.2Z"
+        fill={voll ? farbe : "none"}
+        stroke={farbe}
+        strokeWidth={1.7}
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function DaumenKnopf({ runter, aktiv, onPress }: { runter?: boolean; aktiv: boolean; onPress: () => void }) {
+  const f = useFarbwelt();
+  const farbe = aktiv ? f.orange : f.text2;
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={4}
+      accessibilityRole="button"
+      accessibilityLabel={runter ? "Nicht hilfreich" : "Hilfreich"}
+      accessibilityState={{ selected: aktiv }}
+      style={({ pressed }) => ({
+        width: 42,
+        height: 32,
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 16,
+        backgroundColor: aktiv ? mitDeckkraft(f.orange, f.hell ? 0.12 : 0.18) : "transparent",
+        transform: [{ scale: pressed ? 0.9 : 1 }],
+      })}
+    >
+      <Icon
+        name={runter ? "thumbs-down-outline" : "thumbs-up-outline"}
+        sf={runter ? (aktiv ? "hand.thumbsdown.fill" : "hand.thumbsdown") : aktiv ? "hand.thumbsup.fill" : "hand.thumbsup"}
+        fallback={<DaumenLinie runter={runter} voll={aktiv} farbe={farbe} groesse={17} />}
+        size={17}
+        color={farbe}
+      />
+    </Pressable>
+  );
+}
+
+/** „Hilfreich?“ mit Daumen hoch/runter in einer schmalen Glas-Pille. */
+function Bewertung({ wert, onWahl }: { wert: boolean | undefined; onWahl: (gut: boolean) => void }) {
+  const f = useFarbwelt();
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+      <Text style={{ ...schrift.textMittel, fontSize: 12.5, color: wert === undefined ? f.text3 : f.orange }}>{wert === undefined ? "Hilfreich?" : "Danke!"}</Text>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          padding: 1,
+          borderRadius: 17,
+          borderWidth: 1,
+          borderColor: f.hell ? "rgba(20,23,27,0.09)" : "rgba(255,255,255,0.12)",
+          backgroundColor: f.hell ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.05)",
+        }}
+      >
+        <DaumenKnopf aktiv={wert === true} onPress={() => onWahl(true)} />
+        <View style={{ width: 1, height: 14, backgroundColor: f.hell ? "rgba(20,23,27,0.1)" : "rgba(255,255,255,0.12)" }} />
+        <DaumenKnopf runter aktiv={wert === false} onPress={() => onWahl(false)} />
+      </View>
+    </View>
+  );
+}
+
+const RADIUS = 26;
+const SPITZE = 15;
+
+/**
+ * Umriss der Blase als ein Pfad – die Spitze wächst aus der Unterkante heraus
+ * und zeigt auf `zielX` (bei Knöpfen nah am Rand leicht schräg). Dazu die
+ * Fläche der Spitze, damit sie aussieht wie ein Stück vom Glas.
+ */
+function blasenUmriss(b: number, h: number, zielX: number | null): { umriss: string; flaeche: string | null; spitze: { x: number; y: number } | null } {
+  const r = RADIUS;
+  const i = 0.75;
+  const [L, R, T, B] = [i, b - i, i, h - i];
+  const anfang = `M ${L + r} ${T} H ${R - r} A ${r} ${r} 0 0 1 ${R} ${T + r} V ${B - r} A ${r} ${r} 0 0 1 ${R - r} ${B}`;
+  const ende = `H ${L + r} A ${r} ${r} 0 0 1 ${L} ${B - r} V ${T + r} A ${r} ${r} 0 0 1 ${L + r} ${T} Z`;
+  if (zielX == null) return { umriss: `${anfang} ${ende}`, flaeche: null, spitze: null };
+  const mitte = Math.min(R - r - 16, Math.max(L + r + 16, zielX));
+  const [x1, x2] = [mitte - 16, mitte + 16];
+  const tx = Math.min(R - 4, Math.max(L + 4, zielX));
+  const ty = B + SPITZE;
+  const kurve = `C ${x2 - 9} ${B} ${tx + 3.5} ${ty - 8} ${tx} ${ty} C ${tx - 2.5} ${ty - 7} ${x1 + 7} ${B} ${x1} ${B}`;
+  return {
+    umriss: `${anfang} H ${x2} ${kurve} ${ende}`,
+    flaeche: `M ${x2 + 3} ${B - 2} L ${x2} ${B} ${kurve} L ${x1 - 3} ${B - 2} Z`,
+    spitze: { x: tx, y: ty },
+  };
 }
 
 /** Heller Pillen-Knopf mit orangem Rand (Nachfragen). */
@@ -351,7 +463,7 @@ export function KiBlase({ kontext, anker, onSchliessen }: { kontext: KiKontext; 
   // Lage: über dem Knopf (unten auf dem Bildschirm) oder darunter; mit Tastatur direkt darüber.
   const drueber = !a || a.y > height * 0.42;
   const breite = width - RAND * 2;
-  const spitzeX = a ? Math.min(breite - 32, Math.max(32, a.x + a.breite / 2 - RAND)) : breite / 2;
+  const spitzeX = a ? Math.min(breite - 8, Math.max(8, a.x + a.breite / 2 - RAND)) : breite / 2;
   let lage: ViewStyle;
   let maxHoehe: number;
   if (tastatur > 0) {
@@ -368,6 +480,7 @@ export function KiBlase({ kontext, anker, onSchliessen }: { kontext: KiKontext; 
   }
   maxHoehe = Math.min(maxHoehe, height * 0.74);
   const mitSpitze = tastatur === 0 && a != null;
+  const umriss = mass.b > 0 ? blasenUmriss(mass.b, mass.h, mitSpitze ? spitzeX : null) : null;
 
   const eingabeZeile = (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -424,8 +537,11 @@ export function KiBlase({ kontext, anker, onSchliessen }: { kontext: KiKontext; 
           },
         ]}
       >
-        <View onLayout={(e) => setMass({ b: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })} style={[{ borderRadius: 28 }, leuchten(f.orange, f.hell ? 0.3 : 0.5, 24, 0)]}>
-          <BlasenGlas style={{ borderRadius: 28, maxHeight: maxHoehe }}>
+        <View
+          onLayout={(e) => setMass({ b: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
+          style={[{ borderRadius: RADIUS }, f.hell ? leuchten("#7A3208", 0.2, 22, 6) : leuchten(f.orange, 0.32, 24, 2)]}
+        >
+          <BlasenGlas style={{ borderRadius: RADIUS, maxHeight: maxHoehe }}>
             {/* Leichter Farbhauch von oben – macht das Glas warm */}
             <LinearGradient pointerEvents="none" colors={[mitDeckkraft(f.orange, f.hell ? 0.1 : 0.16), mitDeckkraft(f.orange, 0)]} locations={[0, 0.45]} style={FUELLEN} />
 
@@ -459,7 +575,7 @@ export function KiBlase({ kontext, anker, onSchliessen }: { kontext: KiKontext; 
               <View style={{ paddingHorizontal: 18, paddingTop: 14, paddingBottom: 16, gap: 12, flexShrink: 1 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                   <RundKnopf
-                    icon="arrow-back"
+                    icon="chevron-back"
                     label="Zurück"
                     onPress={() => {
                       setNachrichten([]);
@@ -467,13 +583,7 @@ export function KiBlase({ kontext, anker, onSchliessen }: { kontext: KiKontext; 
                     }}
                   />
                   <View style={{ flex: 1 }} />
-                  {antwort && !laedt ? (
-                    <>
-                      {antwort.id in bewertet ? <Text style={{ ...schrift.textHalb, fontSize: 13, color: f.text3, marginRight: 2 }}>Danke!</Text> : null}
-                      <RundKnopf icon={bewertet[antwort.id] === false ? "thumbs-down" : "thumbs-down-outline"} label="Nicht hilfreich" farbe={bewertet[antwort.id] === false ? f.orange : undefined} onPress={() => bewerten(false)} />
-                      <RundKnopf icon={bewertet[antwort.id] === true ? "thumbs-up" : "thumbs-up-outline"} label="Hilfreich" farbe={bewertet[antwort.id] === true ? f.orange : undefined} onPress={() => bewerten(true)} />
-                    </>
-                  ) : null}
+                  {antwort && !laedt ? <Bewertung wert={bewertet[antwort.id]} onWahl={bewerten} /> : null}
                 </View>
 
                 {frage ? (
@@ -520,22 +630,23 @@ export function KiBlase({ kontext, anker, onSchliessen }: { kontext: KiKontext; 
             )}
           </BlasenGlas>
 
-          {/* Verlaufsrand und Spitze, die auf den Knopf zeigt */}
-          {mass.b > 0 ? (
-            <Svg width={mass.b} height={mass.h} style={FUELLEN} pointerEvents="none">
-              <RandVerlauf id="ki-rand" />
-              <Rect x={1} y={1} width={mass.b - 2} height={mass.h - 2} rx={27} ry={27} fill="none" stroke="url(#ki-rand)" strokeWidth={2} />
-            </Svg>
-          ) : null}
-          {mitSpitze ? (
+          {/* Rand und Spitze als ein Umriss: hell am Knopf, oben feiner */}
+          {umriss ? (
             <Svg
-              width={26}
-              height={14}
+              width={mass.b}
+              height={mass.h + SPITZE + 2}
               pointerEvents="none"
-              style={{ position: "absolute", left: spitzeX - 13, ...(drueber ? { bottom: -12 } : { top: -12, transform: [{ rotate: "180deg" }] }) }}
+              style={{ position: "absolute", left: 0, top: drueber ? 0 : -(SPITZE + 2), transform: drueber ? undefined : [{ scaleY: -1 }] }}
             >
-              <RandVerlauf id="ki-spitze" />
-              <Path d="M0 0 H26 L15.6 11.6 Q13 14.2 10.4 11.6 Z" fill="url(#ki-spitze)" />
+              <Defs>
+                <SvgVerlauf id="ki-umriss" gradientUnits="userSpaceOnUse" x1={umriss.spitze?.x ?? mass.b * 0.2} y1={umriss.spitze?.y ?? mass.h} x2={mass.b * 0.85} y2={0}>
+                  {(f.hell ? RAND_HELL : RAND_DUNKEL).map(([o, c, d]) => (
+                    <Stop key={o} offset={o} stopColor={c} stopOpacity={d} />
+                  ))}
+                </SvgVerlauf>
+              </Defs>
+              {umriss.flaeche ? <Path d={umriss.flaeche} fill={f.hell ? "#F8F8F8" : "#181B1F"} /> : null}
+              <Path d={umriss.umriss} fill="none" stroke="url(#ki-umriss)" strokeWidth={1.5} strokeLinejoin="round" />
             </Svg>
           ) : null}
         </View>
