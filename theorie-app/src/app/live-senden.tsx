@@ -13,6 +13,7 @@ import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { Icon, type IconName } from "@/components/icon";
 import { Lader } from "@/components/lader";
 import { LiveBuehne } from "@/components/live-buehne";
+import { LiveEnde, type TopChatter } from "@/components/live-ende";
 import { LiveChat, LiveEingabe, LiveSchild, LIVE_ROT, useHerzen, ZuschauerZahl } from "@/components/live";
 import { Knopf } from "@/components/ui";
 import { erfolg, stoss, tippen } from "@/lib/haptik";
@@ -76,7 +77,7 @@ function Werkzeug({ icon, sf, label, aus, onPress }: { icon: IconName; sf: strin
 export default function LiveSenden() {
   useKeepAwake();
   const insets = useSafeAreaInsets();
-  const { session } = useKonto();
+  const { session, profil, anzeigeName } = useKonto();
   const ich = session?.user.id ?? null;
   const hinweis = useHinweis();
   const { ausloesen, herzen } = useHerzen();
@@ -94,6 +95,7 @@ export default function LiveSenden() {
   const [start, setStart] = useState<number | null>(null);
   const [jetzt, setJetzt] = useState(Date.now());
   const [ende, setEnde] = useState<number | null>(null);
+  const [runde, setRunde] = useState(0);
 
   const steuerung = useRef<LiveSteuerung | null>(null);
   const idRef = useRef<string | null>(null);
@@ -101,6 +103,26 @@ export default function LiveSenden() {
   zuschauerRef.current = zuschauer;
   const countdownWert = useRef(new Animated.Value(0)).current;
   const nachrichten = useLiveChat(phase === "live" || phase === "ende" ? liveId : null);
+
+  // Für den Abschluss: alle Nachrichten des Lives zählen, je Person (ohne den Gastgeber).
+  const gezaehlt = useRef(new Set<number>());
+  const [chatZahl, setChatZahl] = useState(0);
+  const [proPerson, setProPerson] = useState<Record<string, TopChatter>>({});
+  useEffect(() => {
+    const neu = nachrichten.filter((n) => !gezaehlt.current.has(n.id));
+    if (!neu.length) return;
+    neu.forEach((n) => gezaehlt.current.add(n.id));
+    setChatZahl((z) => z + neu.length);
+    setProPerson((alt) => {
+      const naechst = { ...alt };
+      for (const n of neu) {
+        if (n.user_id === ich) continue;
+        const bisher = naechst[n.user_id];
+        naechst[n.user_id] = { id: n.user_id, name: n.name, bild_pfad: n.bild_pfad, anzahl: (bisher?.anzahl ?? 0) + 1 };
+      }
+      return naechst;
+    });
+  }, [nachrichten, ich]);
 
   // 1) Live vorbereiten (noch unsichtbar) und Zugang zum Senden holen.
   useEffect(() => {
@@ -138,7 +160,7 @@ export default function LiveSenden() {
     return () => {
       aktiv = false;
     };
-  }, []);
+  }, [runde]);
 
   // Beim Verlassen der Seite endet das Live.
   useEffect(
@@ -197,6 +219,24 @@ export default function LiveSenden() {
     if (id) await liveBeenden(id);
   }
 
+  /** Nach dem Abschluss direkt ein neues Live vorbereiten. */
+  function nochmal() {
+    gezaehlt.current = new Set();
+    setChatZahl(0);
+    setProPerson({});
+    setZugang(null);
+    setLiveId(null);
+    setZuschauer(0);
+    setMaxZuschauer(0);
+    setHerzZahl(0);
+    setMikroAn(true);
+    setStart(null);
+    setEnde(null);
+    setTitel("");
+    setPhase("start");
+    setRunde((r) => r + 1);
+  }
+
   function beenden() {
     dialog("Live beenden?", "Alle Zuschauer sehen dann „Das Live ist vorbei“.", [
       { text: "Weiter live", style: "cancel" },
@@ -247,6 +287,7 @@ export default function LiveSenden() {
 
       {zeigtBuehne ? (
         <LiveBuehne
+          key={zugang.token}
           url={zugang.url}
           token={zugang.token}
           senden
@@ -394,27 +435,24 @@ export default function LiveSenden() {
         </KeyboardAvoidingView>
       ) : null}
 
-      {/* Ende: kurze Zusammenfassung */}
+      {/* Ende: Abschluss mit Zahlen */}
       {phase === "ende" ? (
-        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center", paddingHorizontal: 28 }}>
-          <LinearGradient colors={["#2A0A12", "#000000"]} locations={[0, 0.75]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
-          <Text style={{ ...schrift.titelFett, fontSize: 26, color: "#FFFFFF" }}>Live beendet</Text>
-          <Text style={{ ...schrift.text, fontSize: 15, color: "#AEB3BA", marginTop: 6 }}>Stark, dass du live warst!</Text>
-          <View style={{ flexDirection: "row", gap: 10, marginTop: 26, alignSelf: "stretch" }}>
-            {[
-              { wert: start && ende ? dauerText(ende - start) : "–", text: "Dauer" },
-              { wert: String(maxZuschauer), text: "Zuschauer" },
-              { wert: String(herzZahl), text: "Herzen" },
-            ].map((k) => (
-              <View key={k.text} style={{ flex: 1, alignItems: "center", paddingVertical: 16, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" }}>
-                <Text style={{ ...schrift.titel, fontSize: 24, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{k.wert}</Text>
-                <Text style={{ ...schrift.textHalb, fontSize: 12.5, color: "#AEB3BA", marginTop: 2 }}>{k.text}</Text>
-              </View>
-            ))}
-          </View>
-          <View style={{ alignSelf: "stretch", marginTop: 28 }}>
-            <Knopf titel="Fertig" onPress={() => router.back()} />
-          </View>
+        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+          <LiveEnde
+            name={profil?.name || anzeigeName}
+            bildPfad={profil?.bild_pfad}
+            farbe={profil?.avatar_farbe}
+            titel={titel.trim()}
+            dauerMs={start && ende ? ende - start : 0}
+            zuschauer={maxZuschauer}
+            herzen={herzZahl}
+            nachrichten={chatZahl}
+            topChatter={Object.values(proPerson).sort((a, b) => b.anzahl - a.anzahl)}
+            oben={insets.top + 14}
+            unten={Math.max(insets.bottom, 16) + 8}
+            onFertig={() => router.back()}
+            onNochmal={nochmal}
+          />
         </View>
       ) : null}
 
