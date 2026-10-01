@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Circle } from "react-native-svg";
 
 import { DekoSvg } from "@/components/grafik";
-import { Icon } from "@/components/icon";
+import { Icon, type IconName } from "@/components/icon";
 import { Lageplan } from "@/components/lagen";
 import { Kontrollleuchte } from "@/components/leuchten";
 import { NutzerBild } from "@/components/profilbild";
@@ -17,8 +17,9 @@ import { farben, leuchten, mitDeckkraft, schrift, verlauf } from "@/lib/theme";
 
 // Live-Quiz über dem Video: die Karte für Zuschauer (antworten, Auflösung,
 // Rangliste), die Karte für den Gastgeber (Stimmen live, auflösen, weiter) und
-// die Auswahl der Frage aus dem Katalog. Immer dunkel und fast deckend, damit
-// man die Frage auch über einem hellen Video gut lesen kann.
+// die Auswahl der Frage aus dem Katalog. Oben auf jeder Karte sitzt ein rundes
+// Abzeichen über dem Rand – erst der Countdown, dann Ergebnis oder Pokal. Die
+// Karten sind fast deckend, damit man sie auch über hellem Video gut liest.
 
 const BUCHSTABEN = ["A", "B", "C", "D", "E", "F"];
 const GRUEN = farben.gruen;
@@ -28,7 +29,12 @@ const GOLD = "#F5C451";
 const MEDAILLE = [GOLD, "#C9D1DB", "#D99A6C"];
 const LIVE_VERLAUF = ["#FF5A5F", "#FF2D55", "#E0124A"] as const;
 const FUELLEN = { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } as const;
+const ABZEICHEN_GRUND = "#15161B";
 const BEKANNTE_BILDER = new Set<string>(FRAGEN.flatMap((f) => (f.bild ? [f.bild] : [])));
+
+/** Durchmesser des runden Abzeichens oben und wie weit es über die Karte ragt. */
+const ABZEICHEN = 52;
+const UEBERSTAND = 24;
 
 type Zustand = "offen" | "gewaehlt" | "richtig" | "falsch" | "verpasst";
 
@@ -74,7 +80,7 @@ function useZeitUm(quiz: LiveQuiz | null): boolean {
   return um;
 }
 
-/** Karte erscheint von oben, sobald eine neue Frage kommt. */
+/** Karte gleitet von oben herein, sobald eine neue Frage kommt. */
 function useAuftritt(schluessel: string | null) {
   const wert = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -89,76 +95,134 @@ function useAuftritt(schluessel: string | null) {
 }
 
 // ---------------------------------------------------------------------------
-// Bausteine
+// Rahmen und Abzeichen
 // ---------------------------------------------------------------------------
 
-/** Dunkle Karte mit warmem Schein oben (grün oder rot nach der Auflösung). */
-function Rahmen({ schein = farben.orange, children }: { schein?: string; children: ReactNode }) {
+/** Dunkle Karte; das Abzeichen sitzt oben in der Mitte und ragt über den Rand. */
+function Rahmen({ abzeichen, children }: { abzeichen: ReactNode; children: ReactNode }) {
   return (
-    <View style={[{ borderRadius: 26 }, leuchten("#000000", 0.45, 18, 6)]}>
-      <View style={{ borderRadius: 26, overflow: "hidden", backgroundColor: "rgba(12,13,17,0.9)", borderWidth: 1, borderColor: "rgba(255,255,255,0.11)" }}>
-        <LinearGradient pointerEvents="none" colors={[mitDeckkraft(schein, 0.24), mitDeckkraft(schein, 0)]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 110 }} />
+    <View style={{ paddingTop: UEBERSTAND }}>
+      <View style={[{ borderRadius: 28 }, leuchten("#000000", 0.5, 22, 8)]}>
+        <View style={{ borderRadius: 28, overflow: "hidden", backgroundColor: "rgba(16,17,22,0.95)", borderWidth: 1, borderColor: "rgba(255,255,255,0.09)" }}>
+          <LinearGradient pointerEvents="none" colors={["rgba(255,255,255,0.08)", "rgba(255,255,255,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 80 }} />
+          {children}
+        </View>
+      </View>
+      <View pointerEvents="box-none" style={{ position: "absolute", top: 0, left: 0, right: 0, alignItems: "center" }}>
+        {abzeichen}
+      </View>
+    </View>
+  );
+}
+
+/** Abzeichen springt beim Wechsel (Auflösung, Rangliste) kurz auf. */
+function Aufploppen({ schluessel, children }: { schluessel: string; children: ReactNode }) {
+  const w = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    w.setValue(0);
+    Animated.spring(w, { toValue: 1, friction: 5, tension: 140, useNativeDriver: true }).start();
+  }, [schluessel, w]);
+  return <Animated.View style={{ transform: [{ scale: w.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) }] }}>{children}</Animated.View>;
+}
+
+/** Ring mit Anteil (0–1) und Inhalt in der Mitte – für Countdown und Trefferquote. */
+function Ring({ anteil, farbe, children }: { anteil: number; farbe: string; children: ReactNode }) {
+  const d = ABZEICHEN;
+  const r = d / 2 - 5;
+  const umfang = 2 * Math.PI * r;
+  return (
+    <View style={[{ width: d, height: d, borderRadius: d / 2 }, leuchten(farbe, 0.6, 12, 0)]}>
+      <View style={{ width: d, height: d, borderRadius: d / 2, backgroundColor: ABZEICHEN_GRUND, alignItems: "center", justifyContent: "center" }}>
+        <DekoSvg width={d} height={d} style={{ position: "absolute", top: 0, left: 0 }}>
+          <Circle cx={d / 2} cy={d / 2} r={r} stroke="rgba(255,255,255,0.12)" strokeWidth={4} fill="none" />
+          {anteil > 0.005 ? (
+            <Circle
+              cx={d / 2}
+              cy={d / 2}
+              r={r}
+              stroke={farbe}
+              strokeWidth={4}
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={`${umfang} ${umfang}`}
+              strokeDashoffset={umfang * (1 - Math.min(1, anteil))}
+              transform={`rotate(-90 ${d / 2} ${d / 2})`}
+            />
+          ) : null}
+        </DekoSvg>
         {children}
       </View>
     </View>
   );
 }
 
-/** Zündschnur oben an der Karte: läuft in der Antwortzeit ab. */
-function ZeitBalken({ quiz }: { quiz: LiveQuiz }) {
-  const wert = useRef(new Animated.Value(1)).current;
-  useEffect(() => {
-    const rest = quizRestzeit(quiz);
-    wert.setValue(Math.min(1, rest / Math.max(1, quiz.dauer * 1000)));
-    const a = Animated.timing(wert, { toValue: 0, duration: rest, easing: Easing.linear, useNativeDriver: true });
-    a.start();
-    return () => a.stop();
-  }, [quiz, wert]);
-  return (
-    <View style={{ height: 4, backgroundColor: "rgba(255,255,255,0.08)" }}>
-      <Animated.View style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: "100%", transformOrigin: "left", transform: [{ scaleX: wert }] }}>
-        <LinearGradient colors={["#FFB25C", farben.orange, LIVE_ROT]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={FUELLEN} />
-      </Animated.View>
-    </View>
-  );
-}
-
-/** Sekunden im Ring, die letzten fünf rot. */
-function Countdown({ quiz }: { quiz: LiveQuiz }) {
+/** Countdown: Sekunden im Ring, die letzten fünf rot und pulsierend. */
+function ZeitRing({ quiz }: { quiz: LiveQuiz }) {
   const rest = useRestzeit(quiz);
   const sek = Math.ceil(rest / 1000);
-  const anteil = Math.min(1, rest / Math.max(1, quiz.dauer * 1000));
-  const knapp = sek <= 5;
-  const r = 17;
-  const umfang = 2 * Math.PI * r;
+  const knapp = rest > 0 && sek <= 5;
+  const puls = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!knapp) return;
+    const a = Animated.loop(
+      Animated.sequence([
+        Animated.timing(puls, { toValue: 1, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(puls, { toValue: 0, duration: 580, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      ]),
+    );
+    a.start();
+    return () => {
+      a.stop();
+      puls.setValue(0);
+    };
+  }, [knapp, puls]);
   return (
-    <View style={{ width: 42, height: 42, alignItems: "center", justifyContent: "center" }} accessibilityLabel={`Noch ${sek} Sekunden`}>
-      <DekoSvg width={42} height={42} style={{ position: "absolute", top: 0, left: 0 }}>
-        <Circle cx={21} cy={21} r={r} stroke="rgba(255,255,255,0.12)" strokeWidth={3.5} fill="rgba(0,0,0,0.25)" />
-        <Circle
-          cx={21}
-          cy={21}
-          r={r}
-          stroke={knapp ? LIVE_ROT : "#FF8A2A"}
-          strokeWidth={3.5}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={`${umfang} ${umfang}`}
-          strokeDashoffset={umfang * (1 - anteil)}
-          transform="rotate(-90 21 21)"
-        />
-      </DekoSvg>
-      <Text style={{ ...schrift.titel, fontSize: 15, color: knapp ? "#FF6B85" : "#FFFFFF", fontVariant: ["tabular-nums"] }}>{sek}</Text>
+    <Animated.View accessibilityLabel={rest > 0 ? `Noch ${sek} Sekunden` : "Zeit ist um"} style={{ transform: [{ scale: puls.interpolate({ inputRange: [0, 1], outputRange: [1, 1.1] }) }] }}>
+      <Ring anteil={rest / Math.max(1, quiz.dauer * 1000)} farbe={knapp ? LIVE_ROT : farben.orange}>
+        {rest > 0 ? (
+          <Text style={{ ...schrift.titel, fontSize: 19, color: knapp ? "#FF6B85" : "#FFFFFF", fontVariant: ["tabular-nums"] }}>{sek}</Text>
+        ) : (
+          <Icon name="hourglass-outline" size={20} color="rgba(255,255,255,0.75)" />
+        )}
+      </Ring>
+    </Animated.View>
+  );
+}
+
+/** Rundes Abzeichen mit Symbol: Haken, Kreuz, Uhr oder Pokal. */
+function SymbolAbzeichen({ icon, farbe, verlaufFarben, dunkel }: { icon: IconName; farbe: string; verlaufFarben?: readonly [string, string]; dunkel?: boolean }) {
+  const d = ABZEICHEN;
+  return (
+    <View style={[{ width: d, height: d, borderRadius: d / 2 }, leuchten(farbe, 0.6, 14, 0)]}>
+      <View style={{ width: d, height: d, borderRadius: d / 2, borderWidth: 3, borderColor: ABZEICHEN_GRUND, overflow: "hidden", alignItems: "center", justifyContent: "center", backgroundColor: farbe }}>
+        {verlaufFarben ? <LinearGradient colors={verlaufFarben} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={FUELLEN} /> : null}
+        <Icon name={icon} size={24} color={dunkel ? "#3A2600" : "#FFFFFF"} weight="bold" />
+      </View>
     </View>
   );
 }
 
-function QuizMarke() {
+const Pokal = () => <SymbolAbzeichen icon="trophy" farbe={GOLD} verlaufFarben={["#FFE08A", "#F5A524"]} dunkel />;
+
+/** Kopfzeile in der Karte – links und rechts vom Abzeichen. */
+function KopfZeile({ links, rechts }: { links: ReactNode; rechts?: ReactNode }) {
   return (
-    <LinearGradient colors={verlauf.knopf} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 24, paddingHorizontal: 9, borderRadius: 12 }}>
-      <Icon name="flash" size={12} color="#FFFFFF" />
-      <Text style={{ ...schrift.textFett, fontSize: 11.5, letterSpacing: 1, color: "#FFFFFF" }}>QUIZ</Text>
-    </LinearGradient>
+    <View style={{ flexDirection: "row", alignItems: "center", height: 30 }}>
+      <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 5, paddingRight: 6 }}>{links}</View>
+      <View style={{ width: ABZEICHEN }} />
+      <View style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "flex-end", paddingLeft: 6 }}>{rechts}</View>
+    </View>
+  );
+}
+
+function Etikett({ text, icon, farbe = "rgba(255,255,255,0.75)" }: { text: string; icon?: "flash" | "trophy"; farbe?: string }) {
+  return (
+    <>
+      {icon ? <Icon name={icon} size={12} color={icon === "trophy" ? GOLD : farben.orange} /> : null}
+      <Text style={{ ...schrift.textFett, fontSize: 11.5, letterSpacing: 1.1, color: farbe, flexShrink: 1 }} numberOfLines={1}>
+        {text}
+      </Text>
+    </>
   );
 }
 
@@ -172,30 +236,19 @@ function RundKnopf({ onPress, label }: { onPress: () => void; label: string }) {
       hitSlop={10}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => ({ width: 30, height: 30, borderRadius: 15, backgroundColor: "rgba(255,255,255,0.1)", alignItems: "center", justifyContent: "center", opacity: pressed ? 0.6 : 1 })}
+      style={({ pressed }) => ({ width: 28, height: 28, borderRadius: 14, backgroundColor: "rgba(255,255,255,0.1)", alignItems: "center", justifyContent: "center", opacity: pressed ? 0.6 : 1 })}
     >
-      <Icon name="close" size={15} color="rgba(255,255,255,0.85)" weight="semibold" />
+      <Icon name="close" size={14} color="rgba(255,255,255,0.85)" weight="semibold" />
     </Pressable>
   );
 }
 
-function Kopf({ quiz, rechts }: { quiz: LiveQuiz; rechts?: ReactNode }) {
-  const thema = THEMEN.find((t) => t.id === quiz.thema);
-  return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, minHeight: 42 }}>
-      <QuizMarke />
-      <Text style={{ ...schrift.textHalb, fontSize: 13, color: "rgba(255,255,255,0.62)", flexShrink: 1 }} numberOfLines={1}>
-        Frage {quiz.nummer}
-        {thema ? ` · ${thema.titel}` : ""}
-      </Text>
-      <View style={{ flex: 1 }} />
-      {rechts}
-    </View>
-  );
-}
+// ---------------------------------------------------------------------------
+// Frage und Antworten
+// ---------------------------------------------------------------------------
 
 /** Kleines Bild zur Frage (Zeichen, Lageplan, Leuchte) – antippen vergrößert. */
-function QuizBild({ bild, klein }: { bild: string | null; klein?: boolean }) {
+function QuizBild({ bild }: { bild: string | null }) {
   const [gross, setGross] = useState(false);
   const { width } = useWindowDimensions();
   if (!bild || !BEKANNTE_BILDER.has(bild)) return null;
@@ -203,7 +256,7 @@ function QuizBild({ bild, klein }: { bild: string | null; klein?: boolean }) {
   const leuchte = bild.startsWith("leuchte_");
   const inhalt = (b: number) =>
     lage ? <Lageplan lage={bild as LageKey} breite={b} /> : leuchte ? <Kontrollleuchte leuchte={bild as LeuchteKey} groesse={b * 0.8} /> : <Verkehrszeichen zeichen={bild as ZeichenKey} groesse={b * 0.86} />;
-  const breite = lage ? (klein ? 80 : 104) : klein ? 50 : 64;
+  const breite = lage ? 96 : 60;
   const hoehe = lage ? Math.round((breite * 220) / 300) : breite;
   return (
     <>
@@ -214,7 +267,7 @@ function QuizBild({ bild, klein }: { bild: string | null; klein?: boolean }) {
         }}
         accessibilityRole="imagebutton"
         accessibilityLabel="Bild vergrößern"
-        style={{ width: breite, height: hoehe, borderRadius: 12, overflow: "hidden", backgroundColor: lage ? farben.gelaende : "rgba(255,255,255,0.07)", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.1)" }}
+        style={{ width: breite, height: hoehe, borderRadius: 14, overflow: "hidden", backgroundColor: lage ? farben.gelaende : "rgba(255,255,255,0.07)", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.1)" }}
       >
         {inhalt(breite)}
       </Pressable>
@@ -227,25 +280,22 @@ function QuizBild({ bild, klein }: { bild: string | null; klein?: boolean }) {
   );
 }
 
-function FrageText({ quiz, zeilen, ohneBild }: { quiz: LiveQuiz; zeilen?: number; ohneBild?: boolean }) {
+function FrageText({ quiz }: { quiz: LiveQuiz }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-      {ohneBild ? null : <QuizBild bild={quiz.bild} />}
-      <Text style={{ ...schrift.titelHalb, flex: 1, fontSize: 16.5, lineHeight: 22, color: "#FFFFFF" }} numberOfLines={zeilen}>
-        {quiz.frage}
-      </Text>
+      <QuizBild bild={quiz.bild} />
+      <Text style={{ ...schrift.titelHalb, flex: 1, fontSize: 17, lineHeight: 23, color: "#FFFFFF" }}>{quiz.frage}</Text>
     </View>
   );
 }
 
 /** Buchstabe links an der Antwort: Haken beim Wählen, grün oder rot nach der Auflösung. */
 function Marke({ zustand, buchstabe }: { zustand: Zustand; buchstabe: string }) {
-  const basis = { width: 28, height: 28, borderRadius: 9, alignItems: "center", justifyContent: "center", overflow: "hidden" } as const;
+  const basis = { width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center" } as const;
   if (zustand === "gewaehlt") {
     return (
-      <View style={basis}>
-        <LinearGradient colors={verlauf.knopf} style={FUELLEN} />
-        <Icon name="checkmark" size={16} color="#FFFFFF" weight="bold" />
+      <View style={[basis, { backgroundColor: "#FFFFFF" }]}>
+        <Icon name="checkmark" size={16} color={farben.orange} weight="bold" />
       </View>
     );
   }
@@ -257,13 +307,13 @@ function Marke({ zustand, buchstabe }: { zustand: Zustand; buchstabe: string }) 
     );
   }
   return (
-    <View style={[basis, zustand === "verpasst" ? { borderWidth: 2, borderColor: GRUEN } : { backgroundColor: "rgba(255,255,255,0.08)", borderWidth: 1, borderColor: "rgba(255,255,255,0.1)" }]}>
-      <Text style={{ ...schrift.textFett, fontSize: 13, color: zustand === "verpasst" ? GRUEN : "rgba(255,255,255,0.85)" }}>{buchstabe}</Text>
+    <View style={[basis, zustand === "verpasst" ? { borderWidth: 2, borderColor: GRUEN } : { backgroundColor: "rgba(255,255,255,0.1)" }]}>
+      <Text style={{ ...schrift.textFett, fontSize: 13.5, color: zustand === "verpasst" ? GRUEN : "#FFFFFF" }}>{buchstabe}</Text>
     </View>
   );
 }
 
-/** Eine Antwort; dahinter auf Wunsch ein Balken (Stimmen), rechts Zahl oder Prozent. */
+/** Eine Antwort als Pille; gewählt leuchtet sie orange. Dahinter auf Wunsch ein Balken (Stimmen). */
 function AntwortZeile({
   buchstabe,
   text,
@@ -291,16 +341,17 @@ function AntwortZeile({
   }, [anteil, breite]);
   useEffect(() => {
     if (zustand !== "gewaehlt") return;
-    skala.setValue(0.97);
+    skala.setValue(0.96);
     Animated.spring(skala, { toValue: 1, friction: 5, tension: 220, useNativeDriver: true }).start();
   }, [zustand, skala]);
 
-  const rand = zustand === "gewaehlt" ? farben.orange : zustand === "richtig" || zustand === "verpasst" ? GRUEN : zustand === "falsch" ? ROT : "rgba(255,255,255,0.1)";
-  const grund = zustand === "gewaehlt" ? "rgba(252,91,14,0.16)" : zustand === "richtig" ? "rgba(78,208,83,0.1)" : zustand === "falsch" ? "rgba(255,90,78,0.1)" : "rgba(255,255,255,0.05)";
-  const balken = balkenFarbe ?? (zustand === "richtig" || zustand === "verpasst" ? "rgba(78,208,83,0.3)" : zustand === "falsch" ? "rgba(255,90,78,0.26)" : "rgba(255,255,255,0.12)");
+  const gewaehlt = zustand === "gewaehlt";
+  const rand = gewaehlt ? "rgba(255,255,255,0.22)" : zustand === "richtig" || zustand === "verpasst" ? GRUEN : zustand === "falsch" ? ROT : "rgba(255,255,255,0.1)";
+  const grund = zustand === "richtig" ? "rgba(78,208,83,0.1)" : zustand === "falsch" ? "rgba(255,90,78,0.1)" : "rgba(255,255,255,0.06)";
+  const balken = balkenFarbe ?? (zustand === "richtig" || zustand === "verpasst" ? "rgba(78,208,83,0.28)" : zustand === "falsch" ? "rgba(255,90,78,0.24)" : "rgba(255,255,255,0.1)");
 
   return (
-    <Animated.View style={{ transform: [{ scale: skala }] }}>
+    <Animated.View style={[{ borderRadius: 18, transform: [{ scale: skala }] }, gewaehlt ? leuchten(farben.orange, 0.5, 14, 3) : null]}>
       <Pressable
         disabled={!onPress}
         onPress={() => {
@@ -308,27 +359,28 @@ function AntwortZeile({
           onPress?.();
         }}
         accessibilityRole={onPress ? "checkbox" : undefined}
-        accessibilityState={onPress ? { checked: zustand === "gewaehlt" } : undefined}
+        accessibilityState={onPress ? { checked: gewaehlt } : undefined}
         accessibilityLabel={`Antwort ${buchstabe}: ${text}${rechts ? `, ${rechts}` : ""}`}
         style={({ pressed }) => ({
-          minHeight: 48,
-          borderRadius: 16,
+          minHeight: 52,
+          borderRadius: 18,
           borderWidth: zustand === "offen" ? 1 : 1.5,
           borderStyle: zustand === "verpasst" ? "dashed" : "solid",
           borderColor: rand,
-          backgroundColor: grund,
+          backgroundColor: gewaehlt ? undefined : grund,
           overflow: "hidden",
-          opacity: pressed ? 0.85 : 1,
+          opacity: pressed ? 0.88 : 1,
         })}
       >
+        {gewaehlt ? <LinearGradient colors={verlauf.knopf} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={FUELLEN} /> : null}
         {anteil !== undefined ? (
           <Animated.View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: breite.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }), backgroundColor: balken }} />
         ) : null}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 11, paddingVertical: 9, paddingLeft: 10, paddingRight: 12, minHeight: 46 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingLeft: 10, paddingRight: 14, minHeight: 50 }}>
           <Marke zustand={zustand} buchstabe={buchstabe} />
-          <Text style={{ ...(zustand === "offen" ? schrift.textMittel : schrift.textHalb), flex: 1, fontSize: 14.5, lineHeight: 19, color: "#FFFFFF" }}>{text}</Text>
-          {loesung ? <Icon name="checkmark-circle" size={17} color={GRUEN} /> : null}
-          {rechts ? <Text style={{ ...schrift.textFett, fontSize: 14, color: "#FFFFFF", fontVariant: ["tabular-nums"], minWidth: 38, textAlign: "right" }}>{rechts}</Text> : null}
+          <Text style={{ ...(zustand === "offen" ? schrift.textMittel : schrift.textHalb), flex: 1, fontSize: 15, lineHeight: 20, color: "#FFFFFF" }}>{text}</Text>
+          {loesung ? <Icon name="checkmark-circle" size={18} color={GRUEN} /> : null}
+          {rechts ? <Text style={{ ...schrift.textFett, fontSize: 14.5, color: "#FFFFFF", fontVariant: ["tabular-nums"], minWidth: 40, textAlign: "right" }}>{rechts}</Text> : null}
         </View>
       </Pressable>
     </Animated.View>
@@ -336,7 +388,7 @@ function AntwortZeile({
 }
 
 /** Großer Knopf in der Karte: Orange (Haupt) oder Glas (Neben). */
-function KartenKnopf({ titel, icon, haupt, aus, onPress, style }: { titel: string; icon?: "flash" | "trophy" | "arrow-forward" | "log-in-outline" | "paper-plane"; haupt?: boolean; aus?: boolean; onPress: () => void; style?: StyleProp<ViewStyle> }) {
+function KartenKnopf({ titel, icon, haupt, aus, onPress, style }: { titel: string; icon?: IconName; haupt?: boolean; aus?: boolean; onPress: () => void; style?: StyleProp<ViewStyle> }) {
   return (
     <Pressable
       disabled={aus}
@@ -347,16 +399,27 @@ function KartenKnopf({ titel, icon, haupt, aus, onPress, style }: { titel: strin
       accessibilityRole="button"
       accessibilityLabel={titel}
       accessibilityState={{ disabled: aus }}
-      style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.98 : 1 }] }, haupt && !aus ? leuchten(farben.orange, 0.4, 12, 3) : null, style]}
+      style={({ pressed }) => [{ borderRadius: 25, transform: [{ scale: pressed ? 0.98 : 1 }] }, haupt && !aus ? leuchten(farben.orange, 0.45, 14, 4) : null, style]}
     >
-      <View style={{ height: 46, borderRadius: 23, overflow: "hidden", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, paddingHorizontal: 16, backgroundColor: haupt ? undefined : "rgba(255,255,255,0.1)", borderWidth: haupt ? 0 : 1, borderColor: "rgba(255,255,255,0.12)", opacity: aus ? 0.5 : 1 }}>
-        {haupt ? <LinearGradient colors={aus ? ["#3A3D44", "#2E3137"] : verlauf.knopf} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={FUELLEN} /> : null}
-        {icon ? <Icon name={icon} size={16} color="#FFFFFF" /> : null}
-        <Text style={{ ...schrift.textFett, fontSize: 15, color: "#FFFFFF" }} numberOfLines={1}>
+      <View style={{ height: 50, borderRadius: 25, overflow: "hidden", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 18, backgroundColor: haupt && !aus ? undefined : "rgba(255,255,255,0.08)", borderWidth: haupt && !aus ? 0 : 1, borderColor: "rgba(255,255,255,0.1)" }}>
+        {haupt && !aus ? <LinearGradient colors={verlauf.knopf} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={FUELLEN} /> : null}
+        {icon ? <Icon name={icon} size={17} color={aus ? "rgba(255,255,255,0.45)" : "#FFFFFF"} /> : null}
+        <Text style={{ ...schrift.textFett, fontSize: 15.5, color: aus ? "rgba(255,255,255,0.45)" : "#FFFFFF" }} numberOfLines={1}>
           {titel}
         </Text>
       </View>
     </Pressable>
+  );
+}
+
+/** Ruhiger Hinweis anstelle des Knopfs („Antwort ist drin“, „Zeit ist um“). */
+function Hinweispille({ icon, farbe, text, zusatz }: { icon: IconName; farbe: string; text: string; zusatz?: string }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 50, borderRadius: 25, backgroundColor: mitDeckkraft(farbe, 0.12), borderWidth: 1, borderColor: mitDeckkraft(farbe, 0.35) }}>
+      <Icon name={icon} size={18} color={farbe} />
+      <Text style={{ ...schrift.textFett, fontSize: 15, color: "#FFFFFF" }}>{text}</Text>
+      {zusatz ? <Text style={{ ...schrift.textMittel, fontSize: 13.5, color: "rgba(255,255,255,0.6)" }}>{zusatz}</Text> : null}
+    </View>
   );
 }
 
@@ -365,9 +428,9 @@ function Erklaerung({ text }: { text: string }) {
   const [ganz, setGanz] = useState(false);
   if (!text) return null;
   return (
-    <Pressable onPress={() => setGanz((g) => !g)} accessibilityRole="button" accessibilityLabel="Erklärung" style={{ flexDirection: "row", gap: 9, paddingVertical: 9, paddingHorizontal: 11, borderRadius: 14, backgroundColor: "rgba(255,178,122,0.08)", borderWidth: 1, borderColor: "rgba(255,178,122,0.16)" }}>
+    <Pressable onPress={() => setGanz((g) => !g)} accessibilityRole="button" accessibilityLabel="Erklärung" style={{ flexDirection: "row", gap: 9, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16, backgroundColor: "rgba(255,178,122,0.08)", borderWidth: 1, borderColor: "rgba(255,178,122,0.16)" }}>
       <Icon name="bulb" size={15} color="#FFB27A" style={{ marginTop: 1 }} />
-      <Text style={{ ...schrift.text, flex: 1, fontSize: 13, lineHeight: 18, color: "rgba(255,255,255,0.86)" }} numberOfLines={ganz ? undefined : 2}>
+      <Text style={{ ...schrift.text, flex: 1, fontSize: 13.5, lineHeight: 19, color: "rgba(255,255,255,0.88)" }} numberOfLines={ganz ? undefined : 2}>
         {text}
       </Text>
     </Pressable>
@@ -381,8 +444,8 @@ function PunkteChip({ punkte }: { punkte: number }) {
     Animated.spring(w, { toValue: 1, friction: 4, tension: 120, delay: 250, useNativeDriver: true }).start();
   }, [w]);
   return (
-    <Animated.View style={[{ transform: [{ scale: w.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) }], opacity: w }, leuchten(GOLD, 0.5, 10, 0)]}>
-      <LinearGradient colors={["#FFD66B", "#F5A524"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flexDirection: "row", alignItems: "center", gap: 3, height: 30, paddingHorizontal: 11, borderRadius: 15 }}>
+    <Animated.View style={[{ borderRadius: 15, transform: [{ scale: w.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) }], opacity: w }, leuchten(GOLD, 0.5, 10, 0)]}>
+      <LinearGradient colors={["#FFD66B", "#F5A524"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flexDirection: "row", alignItems: "center", gap: 3, height: 30, paddingHorizontal: 12, borderRadius: 15 }}>
         <Icon name="flash" size={13} color="#2A1A05" />
         <Text style={{ ...schrift.titel, fontSize: 15, color: "#2A1A05", fontVariant: ["tabular-nums"] }}>+{zahl(punkte)}</Text>
       </LinearGradient>
@@ -390,55 +453,35 @@ function PunkteChip({ punkte }: { punkte: number }) {
   );
 }
 
-function Platz({ platz }: { platz: number }) {
-  const medaille = MEDAILLE[platz - 1];
-  if (medaille) {
-    return (
-      <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: medaille, alignItems: "center", justifyContent: "center" }}>
-        <Text style={{ ...schrift.textFett, fontSize: 12.5, color: "#1A1208" }}>{platz}</Text>
-      </View>
-    );
-  }
-  return (
-    <View style={{ width: 24, alignItems: "center" }}>
-      <Text style={{ ...schrift.textFett, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>{platz}</Text>
-    </View>
-  );
-}
+// ---------------------------------------------------------------------------
+// Rangliste mit Podest
+// ---------------------------------------------------------------------------
 
-/** Die Besten im Live mit Medaillen; die eigene Zeile ist orange umrandet. */
-export function Bestenliste({ spieler, ichId, max = 5 }: { spieler: QuizSpieler[]; ichId?: string | null; max?: number }) {
+/** Die drei Besten auf dem Podest: Platz 2 links, 1 in der Mitte, 3 rechts. */
+function Podest({ spieler, ichId }: { spieler: QuizSpieler[]; ichId?: string | null }) {
+  const plaetze = [2, 1, 3].map((p) => spieler.find((s) => s.platz === p));
+  const sockel = [36, 52, 26];
+  const bild = [44, 54, 44];
   return (
-    <View style={{ gap: 6 }}>
-      {spieler.slice(0, max).map((s) => {
-        const ich = s.id === ichId;
-        const erster = s.platz === 1;
+    <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 8 }}>
+      {plaetze.map((s, i) => {
+        if (!s) return <View key={i} style={{ flex: 1 }} />;
+        const m = MEDAILLE[s.platz - 1];
         return (
-          <View
-            key={s.id}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
-              paddingVertical: 6,
-              paddingLeft: 8,
-              paddingRight: 12,
-              borderRadius: 14,
-              backgroundColor: ich ? "rgba(252,91,14,0.16)" : erster ? "rgba(245,196,81,0.1)" : "rgba(255,255,255,0.05)",
-              borderWidth: 1,
-              borderColor: ich ? "rgba(252,91,14,0.6)" : erster ? "rgba(245,196,81,0.32)" : "rgba(255,255,255,0.07)",
-            }}
-          >
-            <Platz platz={s.platz} />
-            <NutzerBild pfad={s.bild_pfad} name={s.name} farbe={s.avatar_farbe} groesse={30} rand={0} />
-            <View style={{ flex: 1 }}>
-              <Text style={{ ...schrift.textHalb, fontSize: 14.5, color: "#FFFFFF" }} numberOfLines={1}>
-                {s.name}
-                {ich ? " (du)" : ""}
-              </Text>
-              <Text style={{ ...schrift.textMittel, fontSize: 11.5, color: "rgba(255,255,255,0.55)" }}>{s.richtige} richtig</Text>
+          <View key={s.id} style={{ flex: 1, alignItems: "center" }}>
+            {s.platz === 1 ? <Icon name="trophy" size={18} color={GOLD} style={{ marginBottom: 5 }} /> : null}
+            <View style={[{ borderRadius: 40 }, leuchten(m, 0.55, 10, 0)]}>
+              <View style={{ padding: 2.5, borderRadius: 40, backgroundColor: m }}>
+                <NutzerBild pfad={s.bild_pfad} name={s.name} farbe={s.avatar_farbe} groesse={bild[i]} rand={0} />
+              </View>
             </View>
-            <Text style={{ ...schrift.titel, fontSize: 15.5, color: erster ? GOLD : "#FFFFFF", fontVariant: ["tabular-nums"] }}>{zahl(s.punkte)}</Text>
+            <Text style={{ ...schrift.textFett, fontSize: 13.5, color: "#FFFFFF", marginTop: 6, maxWidth: "100%" }} numberOfLines={1}>
+              {s.id === ichId ? "Du" : s.name}
+            </Text>
+            <Text style={{ ...schrift.textHalb, fontSize: 12.5, color: s.platz === 1 ? GOLD : "rgba(255,255,255,0.7)", fontVariant: ["tabular-nums"] }}>{zahl(s.punkte)}</Text>
+            <LinearGradient colors={[mitDeckkraft(m, 0.42), mitDeckkraft(m, 0.06)]} style={{ alignSelf: "stretch", height: sockel[i], marginTop: 6, borderTopLeftRadius: 12, borderTopRightRadius: 12, alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ ...schrift.titel, fontSize: 17, color: m }}>{s.platz}</Text>
+            </LinearGradient>
           </View>
         );
       })}
@@ -446,29 +489,44 @@ export function Bestenliste({ spieler, ichId, max = 5 }: { spieler: QuizSpieler[
   );
 }
 
-function RanglisteInhalt({ quiz, ichId, stand }: { quiz: LiveQuiz; ichId?: string | null; stand?: QuizStand | null }) {
-  const draussen = stand && stand.platz > 5;
+function RanglistenZeile({ platz, name, bildPfad, farbe, punkte, ich }: { platz: number; name: string; bildPfad?: string | null; farbe?: string; punkte: number; ich?: boolean }) {
   return (
-    <View style={{ gap: 10 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <Icon name="trophy" size={18} color={GOLD} />
-        <Text style={{ ...schrift.titel, fontSize: 18, color: "#FFFFFF" }}>Rangliste</Text>
-        <Text style={{ ...schrift.textMittel, fontSize: 12.5, color: "rgba(255,255,255,0.55)" }}>
-          nach {quiz.nummer} {quiz.nummer === 1 ? "Frage" : "Fragen"}
-        </Text>
-      </View>
-      {quiz.bestenliste.length ? (
-        <Bestenliste spieler={quiz.bestenliste} ichId={ichId} />
-      ) : (
-        <Text style={{ ...schrift.textMittel, fontSize: 14, color: "rgba(255,255,255,0.65)" }}>Noch hat niemand Punkte – bei der nächsten Frage!</Text>
-      )}
-      {draussen ? (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 14, backgroundColor: "rgba(252,91,14,0.14)", borderWidth: 1, borderColor: "rgba(252,91,14,0.5)" }}>
-          <Text style={{ ...schrift.textFett, fontSize: 13, color: "rgba(255,255,255,0.75)" }}>{stand.platz}.</Text>
-          <Text style={{ ...schrift.textHalb, flex: 1, fontSize: 14, color: "#FFFFFF" }}>Du · von {stand.spieler}</Text>
-          <Text style={{ ...schrift.titel, fontSize: 15, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{zahl(stand.punkte)}</Text>
-        </View>
-      ) : null}
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        paddingVertical: 7,
+        paddingLeft: 10,
+        paddingRight: 14,
+        borderRadius: 14,
+        backgroundColor: ich ? "rgba(252,91,14,0.15)" : "rgba(255,255,255,0.05)",
+        borderWidth: 1,
+        borderColor: ich ? "rgba(252,91,14,0.55)" : "rgba(255,255,255,0.07)",
+      }}
+    >
+      <Text style={{ ...schrift.textFett, width: 24, textAlign: "center", fontSize: 13.5, color: "rgba(255,255,255,0.65)" }}>{platz}</Text>
+      {bildPfad !== undefined ? <NutzerBild pfad={bildPfad} name={name} farbe={farbe} groesse={26} rand={0} /> : null}
+      <Text style={{ ...schrift.textHalb, flex: 1, fontSize: 14.5, color: "#FFFFFF" }} numberOfLines={1}>
+        {name}
+      </Text>
+      <Text style={{ ...schrift.titel, fontSize: 14.5, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{zahl(punkte)}</Text>
+    </View>
+  );
+}
+
+function RanglisteInhalt({ quiz, ichId, stand }: { quiz: LiveQuiz; ichId?: string | null; stand?: QuizStand | null }) {
+  if (!quiz.bestenliste.length) {
+    return <Text style={{ ...schrift.textMittel, fontSize: 14.5, lineHeight: 20, color: "rgba(255,255,255,0.7)", textAlign: "center", paddingVertical: 10 }}>Noch hat niemand Punkte – bei der nächsten Frage!</Text>;
+  }
+  const rest = quiz.bestenliste.filter((s) => s.platz > 3).slice(0, 2);
+  return (
+    <View style={{ gap: 8 }}>
+      <Podest spieler={quiz.bestenliste} ichId={ichId} />
+      {rest.map((s) => (
+        <RanglistenZeile key={s.id} platz={s.platz} name={s.id === ichId ? `${s.name} (du)` : s.name} bildPfad={s.bild_pfad} farbe={s.avatar_farbe} punkte={s.punkte} ich={s.id === ichId} />
+      ))}
+      {stand && stand.platz > 5 ? <RanglistenZeile platz={stand.platz} name={`Du · von ${stand.spieler}`} punkte={stand.punkte} ich /> : null}
     </View>
   );
 }
@@ -527,7 +585,7 @@ export function QuizZuschauerKarte({
   const zeitUm = offen && zeitVorbei;
   const beantwortet = Boolean(mein);
   const loesung = quiz.richtig ?? [];
-  const schein = quiz.status === "aufgeloest" && mein ? (mein.richtig ? GRUEN : ROT) : farben.orange;
+  const thema = THEMEN.find((t) => t.id === quiz.thema);
 
   async function abschicken() {
     if (!auswahl.length || sendet) return;
@@ -537,6 +595,18 @@ export function QuizZuschauerKarte({
     if (problem) onFehler(problem);
     else erfolg();
   }
+
+  const abzeichen = offen ? (
+    <ZeitRing quiz={quiz} />
+  ) : quiz.status === "rangliste" ? (
+    <Aufploppen schluessel={`${quiz.id}-rangliste`}>
+      <Pokal />
+    </Aufploppen>
+  ) : (
+    <Aufploppen schluessel={`${quiz.id}-ergebnis`}>
+      {mein ? <SymbolAbzeichen icon={mein.richtig ? "checkmark" : "close"} farbe={mein.richtig ? GRUEN : ROT} /> : <SymbolAbzeichen icon="time-outline" farbe="#3A3D44" />}
+    </Aufploppen>
+  );
 
   const zeilen = quiz.reihenfolge.map((i, p) => {
     const text = quiz.antworten[i] ?? "";
@@ -562,48 +632,52 @@ export function QuizZuschauerKarte({
 
   return (
     <Animated.View style={[style, auftritt]} onLayout={onLayout}>
-      <Rahmen schein={schein}>
-        {offen ? <ZeitBalken quiz={quiz} /> : null}
-        <View style={{ padding: 14, paddingTop: offen ? 10 : 12, gap: 11 }}>
-          <Kopf quiz={quiz} rechts={offen ? <Countdown quiz={quiz} /> : <RundKnopf label="Quiz ausblenden" onPress={onAusblenden} />} />
-
+      <Rahmen abzeichen={abzeichen}>
+        <View style={{ paddingHorizontal: 14, paddingTop: 6, paddingBottom: 14, gap: 12 }}>
           {quiz.status === "rangliste" ? (
-            <RanglisteInhalt quiz={quiz} ichId={ichId} stand={stand} />
+            <>
+              <KopfZeile links={<Etikett icon="trophy" text="RANGLISTE" />} rechts={<RundKnopf label="Quiz ausblenden" onPress={onAusblenden} />} />
+              <RanglisteInhalt quiz={quiz} ichId={ichId} stand={stand} />
+            </>
+          ) : offen ? (
+            <>
+              <KopfZeile links={<Etikett icon="flash" text={`FRAGE ${quiz.nummer}`} />} rechts={thema ? <Text style={{ ...schrift.textHalb, fontSize: 12.5, color: "rgba(255,255,255,0.5)", flexShrink: 1 }} numberOfLines={1}>{thema.titel}</Text> : null} />
+              <FrageText quiz={quiz} />
+              {!beantwortet && !zeitUm && ichId ? <Text style={{ ...schrift.textMittel, fontSize: 12.5, color: "rgba(255,255,255,0.5)", marginTop: -4 }}>Eine oder mehrere Antworten sind richtig</Text> : null}
+              <View style={{ gap: 8 }}>{zeilen}</View>
+              {!ichId ? (
+                <KartenKnopf titel="Zum Mitspielen anmelden" icon="log-in-outline" onPress={onAnmelden} />
+              ) : beantwortet ? (
+                <Hinweispille icon="checkmark-circle" farbe={GRUEN} text="Antwort ist drin" zusatz="· gleich gibt's die Lösung" />
+              ) : zeitUm ? (
+                <Hinweispille icon="hourglass-outline" farbe="#AEB3BA" text="Zeit ist um" />
+              ) : (
+                <KartenKnopf titel={auswahl.length ? "Antwort abschicken" : "Antwort wählen"} icon={auswahl.length ? "paper-plane" : undefined} haupt aus={!auswahl.length || sendet} onPress={abschicken} />
+              )}
+            </>
           ) : (
             <>
-              {quiz.status === "aufgeloest" ? <Ergebnis quiz={quiz} mein={mein} /> : null}
-              <FrageText quiz={quiz} zeilen={offen ? undefined : 2} ohneBild={!offen} />
-              {offen && !beantwortet && !zeitUm && ichId ? (
-                <Text style={{ ...schrift.textMittel, fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: -4 }}>Eine oder mehrere Antworten sind richtig</Text>
-              ) : null}
+              <KopfZeile links={<Etikett icon="flash" text={`FRAGE ${quiz.nummer}`} />} rechts={<RundKnopf label="Quiz ausblenden" onPress={onAusblenden} />} />
+              <Ergebnis quiz={quiz} mein={mein} />
+              <Text style={{ ...schrift.textHalb, fontSize: 14, lineHeight: 19, color: "rgba(255,255,255,0.72)" }} numberOfLines={2}>
+                {quiz.frage}
+              </Text>
               <View style={{ gap: 7 }}>{zeilen}</View>
-
-              {offen ? (
-                !ichId ? (
-                  <KartenKnopf titel="Zum Mitspielen anmelden" icon="log-in-outline" onPress={onAnmelden} />
-                ) : beantwortet ? (
-                  <Hinweiszeile icon="checkmark-circle" farbe={GRUEN} text="Antwort ist drin – gleich kommt die Auflösung" />
-                ) : zeitUm ? (
-                  <Hinweiszeile icon="time-outline" farbe="rgba(255,255,255,0.6)" text="Zeit ist um" />
-                ) : (
-                  <KartenKnopf titel={auswahl.length ? "Antwort abschicken" : "Antwort wählen"} icon={auswahl.length ? "paper-plane" : undefined} haupt aus={!auswahl.length || sendet} onPress={abschicken} />
-                )
-              ) : (
-                <>
-                  <Erklaerung text={quiz.erklaerung} />
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                    <Icon name="people" size={14} color="rgba(255,255,255,0.55)" />
-                    <Text style={{ ...schrift.textMittel, flex: 1, fontSize: 12.5, color: "rgba(255,255,255,0.6)" }}>
-                      {quiz.richtige} von {quiz.teilnehmer} richtig
+              <Erklaerung text={quiz.erklaerung} />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Icon name="people" size={14} color="rgba(255,255,255,0.55)" />
+                <Text style={{ ...schrift.textMittel, flex: 1, fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
+                  {quiz.richtige} von {quiz.teilnehmer} richtig
+                </Text>
+                {stand ? (
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 5, height: 26, paddingHorizontal: 10, borderRadius: 13, backgroundColor: "rgba(245,196,81,0.12)" }}>
+                    <Icon name="trophy" size={12} color={GOLD} />
+                    <Text style={{ ...schrift.textFett, fontSize: 13, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>
+                      Platz {stand.platz} · {zahl(stand.punkte)}
                     </Text>
-                    {stand ? (
-                      <Text style={{ ...schrift.textFett, fontSize: 13, color: "#FFFFFF" }}>
-                        Platz {stand.platz} · {zahl(stand.punkte)} P.
-                      </Text>
-                    ) : null}
                   </View>
-                </>
-              )}
+                ) : null}
+              </View>
             </>
           )}
         </View>
@@ -612,31 +686,19 @@ export function QuizZuschauerKarte({
   );
 }
 
-function Hinweiszeile({ icon, farbe, text }: { icon: "checkmark-circle" | "time-outline"; farbe: string; text: string }) {
-  return (
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, height: 46, borderRadius: 23, backgroundColor: "rgba(255,255,255,0.06)" }}>
-      <Icon name={icon} size={17} color={farbe} />
-      <Text style={{ ...schrift.textHalb, fontSize: 14, color: "#FFFFFF" }}>{text}</Text>
-    </View>
-  );
-}
-
-/** Ergebnis oben in der Karte: richtig mit Punkten, falsch oder nicht dabei. */
+/** Ergebnis groß in der Mitte: richtig mit Punkten, falsch oder nicht dabei. */
 function Ergebnis({ quiz, mein }: { quiz: LiveQuiz; mein: QuizLage["mein"] }) {
   const dabei = Boolean(mein);
   const gut = Boolean(mein?.richtig);
-  const c = !dabei ? "#AEB3BA" : gut ? GRUEN : ROT;
+  const c = !dabei ? "#FFFFFF" : gut ? GRUEN : ROT;
   const loesung = loesungText(quiz, quiz.richtig ?? []);
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 11, paddingVertical: 9, paddingHorizontal: 10, borderRadius: 18, backgroundColor: mitDeckkraft(dabei ? c : "#FFFFFF", dabei ? 0.13 : 0.06), borderWidth: 1, borderColor: dabei ? mitDeckkraft(c, 0.4) : "rgba(255,255,255,0.1)" }}>
-      <View style={[{ width: 36, height: 36, borderRadius: 18, backgroundColor: dabei ? c : "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" }, dabei ? leuchten(c, 0.55, 10, 0) : null]}>
-        <Icon name={!dabei ? "time-outline" : gut ? "checkmark" : "close"} size={20} color="#FFFFFF" weight="bold" />
+    <View style={{ alignItems: "center", gap: 8, marginTop: -2 }}>
+      <Text style={{ ...schrift.titel, fontSize: 27, lineHeight: 32, color: c, textShadowColor: mitDeckkraft(c, 0.45), textShadowRadius: 18 }}>{!dabei ? "Nicht mitgespielt" : gut ? "Richtig!" : "Leider falsch"}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        {gut && mein && mein.punkte > 0 ? <PunkteChip punkte={mein.punkte} /> : null}
+        {loesung ? <Text style={{ ...schrift.textHalb, fontSize: 13.5, color: "rgba(255,255,255,0.7)" }}>Richtig ist {loesung}</Text> : null}
       </View>
-      <View style={{ flex: 1 }}>
-        <Text style={{ ...schrift.titel, fontSize: 17, lineHeight: 21, color: dabei ? c : "#FFFFFF" }}>{!dabei ? "Nicht mitgespielt" : gut ? "Richtig!" : "Leider falsch"}</Text>
-        <Text style={{ ...schrift.textMittel, fontSize: 12.5, color: "rgba(255,255,255,0.7)" }}>{loesung ? `Richtig ist ${loesung}` : ""}</Text>
-      </View>
-      {gut && mein && mein.punkte > 0 ? <PunkteChip punkte={mein.punkte} /> : null}
     </View>
   );
 }
@@ -671,20 +733,29 @@ export function QuizGastgeberKarte({
   const loesung = quizLoesung(quiz);
   const verteilung = offen ? zwischen?.verteilung : quiz.verteilung;
   const teilnehmer = offen ? (zwischen?.teilnehmer ?? 0) : quiz.teilnehmer;
+  const quote = quiz.teilnehmer ? quiz.richtige / quiz.teilnehmer : 0;
+
+  const abzeichen = offen ? (
+    <ZeitRing quiz={quiz} />
+  ) : quiz.status === "rangliste" ? (
+    <Aufploppen schluessel={`${quiz.id}-rangliste`}>
+      <Pokal />
+    </Aufploppen>
+  ) : (
+    <Aufploppen schluessel={`${quiz.id}-quote`}>
+      <Ring anteil={quote} farbe={GRUEN}>
+        <Text style={{ ...schrift.titel, fontSize: 14, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{Math.round(quote * 100)}%</Text>
+      </Ring>
+    </Aufploppen>
+  );
 
   return (
     <Animated.View style={[style, auftritt]} onLayout={onLayout}>
-      <Rahmen>
-        {offen ? <ZeitBalken quiz={quiz} /> : null}
-        <View style={{ padding: 13, paddingTop: offen ? 9 : 11, gap: 10 }}>
-          <Kopf
-            quiz={quiz}
-            rechts={
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                {offen ? <Countdown quiz={quiz} /> : null}
-                <RundKnopf label={offen ? "Frage abbrechen" : "Quiz schließen"} onPress={onSchliessen} />
-              </View>
-            }
+      <Rahmen abzeichen={abzeichen}>
+        <View style={{ paddingHorizontal: 13, paddingTop: 6, paddingBottom: 13, gap: 11 }}>
+          <KopfZeile
+            links={quiz.status === "rangliste" ? <Etikett icon="trophy" text="RANGLISTE" /> : <Etikett icon="flash" text={`FRAGE ${quiz.nummer}`} />}
+            rechts={<RundKnopf label={offen ? "Frage abbrechen" : "Quiz schließen"} onPress={onSchliessen} />}
           />
 
           {quiz.status === "rangliste" ? (
@@ -692,7 +763,7 @@ export function QuizGastgeberKarte({
           ) : (
             <>
               <FrageText quiz={quiz} />
-              <View style={{ gap: 6 }}>
+              <View style={{ gap: 7 }}>
                 {quiz.reihenfolge.map((i, p) => {
                   const stimmen = verteilung?.[i] ?? 0;
                   const richtig = loesung.includes(i);
@@ -712,10 +783,10 @@ export function QuizGastgeberKarte({
               </View>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
                 <Icon name="people" size={14} color="rgba(255,255,255,0.6)" />
-                <Text style={{ ...schrift.textHalb, fontSize: 13, color: "rgba(255,255,255,0.75)" }}>
-                  {offen ? `${teilnehmer} ${teilnehmer === 1 ? "Antwort" : "Antworten"}` : `${quiz.richtige} von ${quiz.teilnehmer} richtig (${prozent(quiz.richtige, quiz.teilnehmer)} %)`}
+                <Text style={{ ...schrift.textHalb, fontSize: 13, color: "rgba(255,255,255,0.78)" }}>
+                  {offen ? `${teilnehmer} ${teilnehmer === 1 ? "Antwort" : "Antworten"}` : `${quiz.richtige} von ${quiz.teilnehmer} richtig`}
                 </Text>
-                {offen ? <Text style={{ ...schrift.textMittel, fontSize: 12, color: "rgba(255,255,255,0.45)" }}>· nur du siehst die Lösung</Text> : null}
+                {offen ? <Text style={{ ...schrift.textMittel, flexShrink: 1, fontSize: 12, color: "rgba(255,255,255,0.45)" }} numberOfLines={1}>· nur du siehst die Lösung</Text> : null}
               </View>
               {offen ? null : <Erklaerung text={quiz.erklaerung} />}
             </>
@@ -733,9 +804,9 @@ export function QuizGastgeberKarte({
                 }}
                 accessibilityRole="button"
                 accessibilityLabel="Rangliste zeigen"
-                style={({ pressed }) => ({ width: 46, height: 46, borderRadius: 23, backgroundColor: "rgba(245,196,81,0.14)", borderWidth: 1, borderColor: "rgba(245,196,81,0.4)", alignItems: "center", justifyContent: "center", opacity: beschaeftigt ? 0.5 : pressed ? 0.75 : 1 })}
+                style={({ pressed }) => ({ width: 50, height: 50, borderRadius: 25, backgroundColor: "rgba(245,196,81,0.14)", borderWidth: 1, borderColor: "rgba(245,196,81,0.4)", alignItems: "center", justifyContent: "center", opacity: beschaeftigt ? 0.5 : pressed ? 0.75 : 1 })}
               >
-                <Icon name="trophy" size={19} color={GOLD} />
+                <Icon name="trophy" size={20} color={GOLD} />
               </Pressable>
               <KartenKnopf titel="Nächste Frage" icon="arrow-forward" haupt aus={beschaeftigt} onPress={onNaechste} style={{ flex: 1 }} />
             </View>

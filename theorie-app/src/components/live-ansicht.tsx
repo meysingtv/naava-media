@@ -346,8 +346,8 @@ export function LiveAnsicht({
           onAnmelden={() => router.push("/anmelden")}
           onAusblenden={() => setQuizWeg(quizSchluessel(quiz.lage))}
           onFehler={(text) => hinweis.zeigen({ icon: "alert-circle", text, farbe: LIVE_ROT })}
-          onLayout={(e) => setKartenUnten(oben + 54 + e.nativeEvent.layout.height)}
-          style={{ position: "absolute", top: oben + 54, left: 12, right: 12 }}
+          onLayout={(e) => setKartenUnten(oben + 48 + e.nativeEvent.layout.height)}
+          style={{ position: "absolute", top: oben + 48, left: 12, right: 12 }}
         />
       ) : null}
 

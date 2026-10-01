@@ -316,7 +316,7 @@ export default function LiveSenden() {
   // ------------------------------------------------------------------ Anzeige
   const zeigtBuehne = zugang && (phase === "bereit" || phase === "countdown" || phase === "live");
   // Mit Quizkarte bekommt der Chat nur den Platz zwischen Karte und Eingabe.
-  const chatPlatz = quiz.quiz && quizHoehe > 0 ? fensterHoehe - (insets.top + 58 + quizHoehe) - (Math.max(insets.bottom, 12) + 4) - 46 - 10 - 14 : 300;
+  const chatPlatz = quiz.quiz && quizHoehe > 0 ? fensterHoehe - (insets.top + 52 + quizHoehe) - (Math.max(insets.bottom, 12) + 4) - 46 - 10 - 14 : 300;
   const chatHoehe = Math.max(0, Math.min(300, chatPlatz));
 
   return (
@@ -413,7 +413,7 @@ export default function LiveSenden() {
           onNaechste={() => setQuizWahl(true)}
           onSchliessen={quizSchliessen}
           onLayout={(e) => setQuizHoehe(e.nativeEvent.layout.height)}
-          style={{ position: "absolute", top: insets.top + 58, left: 12, right: 70 }}
+          style={{ position: "absolute", top: insets.top + 52, left: 12, right: 70 }}
         />
       ) : null}
 

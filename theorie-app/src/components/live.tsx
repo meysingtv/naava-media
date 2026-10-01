@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { Animated, Easing, FlatList, Pressable, Text, TextInput, View, type StyleProp, type ViewStyle } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Animated, Easing, Pressable, ScrollView, Text, TextInput, View, type NativeScrollEvent, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { Glas } from "@/components/glas";
@@ -10,7 +10,8 @@ import type { ChatNachricht, LiveInfo } from "@/lib/live";
 import { leuchten, schrift } from "@/lib/theme";
 
 // Bausteine für den Live-Stream: rotes LIVE-Schild, Profilbild mit
-// pulsierendem Ring, Zuschauerzahl, Chat, Herzen und Eingabe.
+// pulsierendem Ring, Zuschauerzahl, Chat (ohne Kästen, oben verblassend),
+// Herzen und Eingabe.
 
 export const LIVE_ROT = "#FF2D55";
 const LIVE_VERLAUF = ["#FF5A5F", "#FF2D55", "#E0124A"] as const;
@@ -89,14 +90,44 @@ export function ZuschauerZahl({ anzahl }: { anzahl: number }) {
 // Chat
 // ---------------------------------------------------------------------------
 
-function ChatZeile({ n, gastgeber, onLangDruck }: { n: ChatNachricht; gastgeber: boolean; onLangDruck?: (n: ChatNachricht) => void }) {
+/** Schatten statt Kasten: Text bleibt über hellem wie dunklem Video lesbar. */
+const TEXT_SCHATTEN = { textShadowColor: "rgba(0,0,0,0.75)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 } as const;
+/** Auf dieser Höhe am oberen Rand verblassen Nachrichten, statt hart abgeschnitten zu werden. */
+const AUSBLENDEN = 64;
+
+function ChatZeile({
+  n,
+  gastgeber,
+  onLangDruck,
+  scrollY,
+  verblassen,
+}: {
+  n: ChatNachricht;
+  gastgeber: boolean;
+  onLangDruck?: (n: ChatNachricht) => void;
+  scrollY: Animated.Value;
+  verblassen: boolean;
+}) {
+  const [lage, setLage] = useState<{ y: number; h: number } | null>(null);
+  // Je näher die Mitte der Nachricht am oberen Rand liegt, desto blasser – wie eine weiche Maske.
+  const deckkraft = useMemo(() => {
+    if (!verblassen || !lage) return 1;
+    const mitte = lage.y + lage.h / 2;
+    return scrollY.interpolate({ inputRange: [mitte - AUSBLENDEN, mitte], outputRange: [1, 0], extrapolate: "clamp" });
+  }, [verblassen, lage, scrollY]);
   return (
-    <Pressable onLongPress={onLangDruck ? () => onLangDruck(n) : undefined} delayLongPress={350} style={{ alignSelf: "flex-start", maxWidth: "100%" }}>
-      <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 8, paddingVertical: 6, paddingLeft: 6, paddingRight: 12, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.32)" }}>
-        <NutzerBild pfad={n.bild_pfad} name={n.name} groesse={26} rand={gastgeber ? 1.5 : 0} />
+    <Animated.View
+      onLayout={(e) => {
+        const { y, height } = e.nativeEvent.layout;
+        setLage((alt) => (alt && alt.y === y && alt.h === height ? alt : { y, h: height }));
+      }}
+      style={{ opacity: deckkraft }}
+    >
+      <Pressable onLongPress={onLangDruck ? () => onLangDruck(n) : undefined} delayLongPress={350} style={{ flexDirection: "row", alignItems: "flex-start", gap: 9, alignSelf: "flex-start", maxWidth: "100%", paddingVertical: 3 }}>
+        <NutzerBild pfad={n.bild_pfad} name={n.name} groesse={28} rand={gastgeber ? 1.5 : 0} />
         <View style={{ flexShrink: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Text style={{ ...schrift.textFett, fontSize: 12.5, color: gastgeber ? "#FFB27A" : "rgba(255,255,255,0.72)" }} numberOfLines={1}>
+            <Text style={{ ...schrift.textFett, fontSize: 13, color: gastgeber ? "#FFB27A" : "rgba(255,255,255,0.8)", ...TEXT_SCHATTEN }} numberOfLines={1}>
               {n.name}
             </Text>
             {gastgeber ? (
@@ -105,14 +136,19 @@ function ChatZeile({ n, gastgeber, onLangDruck }: { n: ChatNachricht; gastgeber:
               </View>
             ) : null}
           </View>
-          <Text style={{ ...schrift.textMittel, fontSize: 14.5, lineHeight: 19, color: "#FFFFFF" }}>{n.text}</Text>
+          <Text style={{ ...schrift.textHalb, fontSize: 15, lineHeight: 20, color: "#FFFFFF", ...TEXT_SCHATTEN }}>{n.text}</Text>
         </View>
-      </View>
-    </Pressable>
+      </Pressable>
+    </Animated.View>
   );
 }
 
-/** Chat über dem Video: neueste Nachricht unten, oben weich ausgeblendet. */
+/** Ist die Liste (fast) ganz unten? */
+function ganzUnten({ contentOffset, contentSize, layoutMeasurement }: NativeScrollEvent): boolean {
+  return contentOffset.y + layoutMeasurement.height >= contentSize.height - 40;
+}
+
+/** Chat über dem Video: neueste Nachricht unten, ältere verblassen oben. */
 export function LiveChat({
   nachrichten,
   gastgeberId,
@@ -124,20 +160,58 @@ export function LiveChat({
   onLangDruck?: (n: ChatNachricht) => void;
   style?: StyleProp<ViewStyle>;
 }) {
-  const daten = [...nachrichten].reverse();
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const liste = useRef<ScrollView>(null);
+  // Läuft der Chat unten mit? Nur echtes Wischen ändert das – nicht, wenn der Chat kleiner wird.
+  const amEnde = useRef(true);
+  const wischt = useRef(false);
+  const [sicht, setSicht] = useState(0);
+  const [inhalt, setInhalt] = useState(0);
+  // Nur wenn mehr da ist, als hineinpasst, verblasst der obere Rand.
+  const verblassen = inhalt > sicht + 2;
+
+  const beimScrollen = useMemo(
+    () =>
+      Animated.event<NativeScrollEvent>([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+        useNativeDriver: true,
+        listener: (e) => {
+          if (wischt.current) amEnde.current = ganzUnten(e.nativeEvent);
+        },
+      }),
+    [scrollY],
+  );
+
   return (
     <View style={style}>
-      <FlatList
-        data={daten}
-        inverted
-        keyExtractor={(n) => String(n.id)}
-        renderItem={({ item }) => <ChatZeile n={item} gastgeber={item.user_id === gastgeberId} onLangDruck={onLangDruck} />}
-        ItemSeparatorComponent={() => <View style={{ height: 6 }} />}
+      <Animated.ScrollView
+        ref={liste}
+        style={{ flexGrow: 0 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingTop: 4 }}
-      />
-      <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.55)", "rgba(0,0,0,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 36 }} />
+        scrollEventThrottle={16}
+        onScroll={beimScrollen}
+        onScrollBeginDrag={() => (wischt.current = true)}
+        onScrollEndDrag={(e) => {
+          amEnde.current = ganzUnten(e.nativeEvent);
+          wischt.current = false;
+        }}
+        onMomentumScrollEnd={(e) => (amEnde.current = ganzUnten(e.nativeEvent))}
+        onLayout={(e) => {
+          setSicht(e.nativeEvent.layout.height);
+          // Wird der Chat kleiner (z. B. wenn eine Quizkarte erscheint), bleibt die neueste Nachricht sichtbar.
+          if (amEnde.current) requestAnimationFrame(() => liste.current?.scrollToEnd({ animated: false }));
+        }}
+        onContentSizeChange={(_, hoehe) => {
+          setInhalt(hoehe);
+          // Neue Nachricht: nach unten mitlaufen – außer man liest gerade weiter oben.
+          if (amEnde.current) liste.current?.scrollToEnd({ animated: true });
+        }}
+        contentContainerStyle={{ gap: 5, paddingTop: 2 }}
+      >
+        {nachrichten.map((n) => (
+          <ChatZeile key={n.id} n={n} gastgeber={n.user_id === gastgeberId} onLangDruck={onLangDruck} scrollY={scrollY} verblassen={verblassen} />
+        ))}
+      </Animated.ScrollView>
     </View>
   );
 }
