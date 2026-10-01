@@ -370,7 +370,7 @@ export function PruefungZuschauerBereich({
             links={<Etikett icon="document-text" text={laeuft ? "ABGEGEBEN" : "ERGEBNIS"} />}
             rechts={laeuft ? <Etikett text="WARTE AUF ALLE" farbe="rgba(255,255,255,0.5)" /> : <RundKnopf label="Prüfung ausblenden" onPress={onAusblenden} />}
           />
-          <ScrollView style={{ maxHeight: inhaltMax + 120 }} contentContainerStyle={{ gap: 14, paddingBottom: 4 }} showsVerticalScrollIndicator={false}>
+          <ScrollView style={{ maxHeight: inhaltMax + 120, marginHorizontal: -16 }} contentContainerStyle={{ gap: 14, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 8 }} showsVerticalScrollIndicator={false}>
             <FarbweltBereich farbwelt={NACHT}>
               {mein?.abgegeben ? (
                 <EigenesErgebnis mein={mein} gesamt={gesamt} xp={xp} />
@@ -428,7 +428,7 @@ export function PruefungZuschauerBereich({
             </FarbweltBereich>
           </View>
 
-          <ScrollView ref={scroll} style={{ height: inhaltMax }} contentContainerStyle={{ gap: 12 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <ScrollView ref={scroll} style={{ height: inhaltMax, marginHorizontal: -16 }} contentContainerStyle={{ gap: 12, paddingHorizontal: 16, paddingTop: 2, paddingBottom: 10 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             {frage ? (
               <>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
@@ -559,7 +559,7 @@ export function PruefungGastgeberBereich({
           unten={unten}
         >
           <KopfZeile links={<Etikett icon="document-text" text="ERGEBNIS" />} rechts={<RundKnopf label="Prüfung schließen" onPress={onSchliessen} />} />
-          <ScrollView style={{ maxHeight: listeMax + 150 }} contentContainerStyle={{ gap: 14 }} showsVerticalScrollIndicator={false}>
+          <ScrollView style={{ maxHeight: listeMax + 150, marginHorizontal: -16 }} contentContainerStyle={{ gap: 14, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 8 }} showsVerticalScrollIndicator={false}>
             <Werte
               werte={[
                 { wert: `${pruefung.bestanden}/${pruefung.teilnehmer}`, text: "bestanden", farbe: GRUEN },
@@ -628,7 +628,7 @@ export function PruefungGastgeberBereich({
           <Fortschritt anteil={schnitt} />
         </View>
 
-        <ScrollView style={{ height: listeMax }} contentContainerStyle={{ gap: 6 }} showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ height: listeMax, marginHorizontal: -16 }} contentContainerStyle={{ gap: 6, paddingHorizontal: 16 }} showsVerticalScrollIndicator={false}>
           {spieler.length ? (
             spieler.map((p) => (
               <View key={p.id} style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 6 }}>

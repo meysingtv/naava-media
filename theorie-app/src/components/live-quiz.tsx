@@ -38,6 +38,8 @@ export const QUIZ_UEBERBLEND = 96;
 const BEREICH_GRUND = "#0C0D11";
 /** Abstand der ersten Zeile im Bereich; das Abzeichen sitzt auf ihrer Höhe. */
 const INHALT_OBEN = 52;
+/** So weit reicht das Leuchten über den Bereich nach oben (ins Video). */
+const GLUT_OBEN = 60;
 
 export type Zustand = "offen" | "gewaehlt" | "richtig" | "falsch" | "verpasst";
 
@@ -115,7 +117,8 @@ export function Bereich({ abzeichen, glut = farben.orange, unten, children }: { 
     <View>
       <LinearGradient pointerEvents="none" colors={["rgba(12,13,17,0)", "rgba(12,13,17,0.8)", BEREICH_GRUND]} locations={[0, 0.5, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: QUIZ_UEBERBLEND }} />
       <View pointerEvents="none" style={{ position: "absolute", top: QUIZ_UEBERBLEND, left: 0, right: 0, bottom: 0, backgroundColor: BEREICH_GRUND }} />
-      <DekoSvg width={width} height={INHALT_OBEN + 15 + 90} style={{ position: "absolute", top: 0, left: 0 }}>
+      {/* Leuchten hinter dem Abzeichen – ragt nach oben ins Video, damit es nirgends hart abgeschnitten wird */}
+      <DekoSvg width={width} height={GLUT_OBEN + INHALT_OBEN + 15 + 100} style={{ position: "absolute", top: -GLUT_OBEN, left: 0 }}>
         <Defs>
           <RadialGradient id="quiz-glut" cx="50%" cy="50%" r="50%">
             <Stop offset="0" stopColor={glut} stopOpacity={0.42} />
@@ -123,7 +126,7 @@ export function Bereich({ abzeichen, glut = farben.orange, unten, children }: { 
             <Stop offset="1" stopColor={glut} stopOpacity={0} />
           </RadialGradient>
         </Defs>
-        <Ellipse cx={width / 2} cy={INHALT_OBEN + 15} rx={width * 0.55} ry={90} fill="url(#quiz-glut)" />
+        <Ellipse cx={width / 2} cy={GLUT_OBEN + INHALT_OBEN + 15} rx={width * 0.5} ry={88} fill="url(#quiz-glut)" />
       </DekoSvg>
       <View style={{ paddingTop: INHALT_OBEN, paddingHorizontal: 16, paddingBottom: unten, gap: 12 }}>{children}</View>
       <View pointerEvents="box-none" style={{ position: "absolute", top: INHALT_OBEN + 15 - ABZEICHEN / 2, left: 0, right: 0, alignItems: "center" }}>
