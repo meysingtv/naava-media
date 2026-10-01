@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, type ViewStyle } from "react-native";
 import {
   AudioSession,
@@ -27,11 +27,26 @@ export const liveVideoMoeglich = true;
 const GASTGEBER = "gastgeber-";
 const HERZ = new Uint8Array([1]);
 const VOLL: ViewStyle = { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 };
+const KAMERA = { facingMode: "user" as const, resolution: VideoPresets.h720.resolution };
+const RAUM_OPTIONEN = {
+  adaptiveStream: true,
+  dynacast: true,
+  publishDefaults: { simulcast: true, videoSimulcastLayers: [VideoPresets.h180, VideoPresets.h360] },
+};
 
 type Geraet = { kind?: string; deviceId?: string; facing?: string };
 
 export function LiveBuehne(props: LiveBuehneProps) {
-  const { url, token, senden, onVerbindung, style } = props;
+  const { url, token, senden, style } = props;
+
+  // LiveKitRoom verbindet neu, sobald sich Rückruf-Funktionen ändern – daher feste Funktionen.
+  const rueck = useRef(props.onVerbindung);
+  rueck.current = props.onVerbindung;
+  const verbunden = useCallback(() => rueck.current?.("verbunden"), []);
+  const getrennt = useCallback(() => rueck.current?.("getrennt"), []);
+  const fehler = useCallback((e: Error) => rueck.current?.("fehler", e.message), []);
+  const geraetFehlt = useCallback(() => rueck.current?.("fehler", "Kamera oder Mikrofon lassen sich nicht starten. Erlaube den Zugriff in den Einstellungen."), []);
+  const video = useMemo(() => (senden ? KAMERA : false), [senden]);
 
   useEffect(() => {
     AudioSession.startAudioSession();
@@ -47,16 +62,12 @@ export function LiveBuehne(props: LiveBuehneProps) {
         token={token}
         connect
         audio={senden}
-        video={senden ? { facingMode: "user", resolution: VideoPresets.h720.resolution } : false}
-        options={{
-          adaptiveStream: true,
-          dynacast: true,
-          publishDefaults: { simulcast: true, videoSimulcastLayers: [VideoPresets.h180, VideoPresets.h360] },
-        }}
-        onConnected={() => onVerbindung?.("verbunden")}
-        onDisconnected={() => onVerbindung?.("getrennt")}
-        onError={(e) => onVerbindung?.("fehler", e.message)}
-        onMediaDeviceFailure={() => onVerbindung?.("fehler", "Kamera oder Mikrofon lassen sich nicht starten. Erlaube den Zugriff in den Einstellungen.")}
+        video={video}
+        options={RAUM_OPTIONEN}
+        onConnected={verbunden}
+        onDisconnected={getrennt}
+        onError={fehler}
+        onMediaDeviceFailure={geraetFehlt}
       >
         <Innen {...props} />
       </LiveKitRoom>

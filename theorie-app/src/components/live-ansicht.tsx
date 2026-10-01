@@ -91,7 +91,8 @@ export function LiveAnsicht({
   const [langeWeg, setLangeWeg] = useState(false);
   const [abo, setAbo] = useState<boolean | null>(null);
   const steuerung = useRef<LiveSteuerung | null>(null);
-  const nachrichten = useLiveChat(live?.id ?? null);
+  // Chat nur, solange die Ansicht zu sehen ist (z. B. nicht unter der Sende-Seite).
+  const nachrichten = useLiveChat(aktiv ? (live?.id ?? null) : null);
   const verbunden = Boolean(live && aktiv && zugang);
 
   // Zugang zu LiveKit holen, sobald ein Live läuft und die Ansicht zu sehen ist.

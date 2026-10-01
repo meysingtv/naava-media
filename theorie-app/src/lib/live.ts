@@ -63,6 +63,10 @@ function meldung(fehler: unknown): string {
 // Läuft gerade ein Live? – ein gemeinsamer Stand für die ganze App
 // ---------------------------------------------------------------------------
 
+/** Eindeutiger Kanalname: Supabase gibt bei gleichem Namen den schon laufenden Kanal
+ *  zurück – ein zweites Abo darauf (z. B. Clips im Hintergrund + Sende-Seite) stürzt ab. */
+const kanalName = (basis: string) => `${basis}-${Math.random().toString(36).slice(2, 10)}`;
+
 let aktuell: LiveInfo | null = null;
 let geladen = false;
 const hoerer = new Set<() => void>();
@@ -88,7 +92,7 @@ function beobachten() {
   if (nutzer > 1 || !serverVerbunden) return;
   aktuellLaden();
   const kanal = supabase
-    .channel("live-status")
+    .channel(kanalName("live-status"))
     .on("postgres_changes", { event: "*", schema: "public", table: "lern_live" }, () => aktuellLaden())
     .subscribe();
   // Falls Echtzeit nicht durchkommt: jede Minute nachsehen, solange die App offen ist.
@@ -175,7 +179,7 @@ export function useLiveChat(liveId: string | null): ChatNachricht[] {
         return [...alt, n].sort((a, b) => a.id - b.id).slice(-80);
       });
     const kanal = supabase
-      .channel(`live-chat-${liveId}`)
+      .channel(kanalName(`live-chat-${liveId}`))
       .on("postgres_changes", { event: "*", schema: "public", table: "lern_live_chat", filter: `live_id=eq.${liveId}` }, (p) => {
         if (p.new && "id" in p.new) einfuegen(p.new as ChatNachricht);
       })
