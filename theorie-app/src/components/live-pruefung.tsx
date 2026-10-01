@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Easing, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions, type LayoutChangeEvent, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { ErgebnisRing, Stempel } from "@/components/auswertung";
 import { dialog } from "@/components/dialog";
 import { useAntwortReihenfolge } from "@/components/frage-ansicht";
 import { FragenNavigator } from "@/components/frage-rahmen";
@@ -150,26 +149,30 @@ function Pille({ titel, onPress, rot, aus, icon }: { titel: string; onPress: () 
   );
 }
 
-/** Eigenes Ergebnis wie in der App: Fehlerpunkte im Ring, Stempel darüber. */
+/** Eigenes Ergebnis kompakt: Fehlerpunkte im kleinen Ring, daneben bestanden oder nicht. */
 function EigenesErgebnis({ mein, gesamt, xp }: { mein: PruefungMeins; gesamt: number; xp?: number | null }) {
   const ok = Boolean(mein.bestanden);
   const fp = mein.fehlerpunkte ?? 0;
+  const c = ok ? GRUEN : ROT;
+  const fuenfer = !ok && (mein.fuenfer ?? 0) >= 2 && fp <= PRUEFUNG_MAX_FEHLER;
   return (
-    <View style={{ alignItems: "center", gap: 6 }}>
-      <View style={{ alignItems: "center" }}>
-        <ErgebnisRing anteil={Math.min(1, fp / PRUEFUNG_MAX_FEHLER)} wert={String(fp)} unter="Fehlerpunkte" ton={ok ? "gruen" : "rot"} spur={ok ? mitDeckkraft("#4ED053", 0.28) : undefined} groesse={152} />
-        <Stempel bestanden={ok} style={{ marginTop: -20 }} />
-      </View>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 2 }}>
-        <Text style={{ ...schrift.textHalb, fontSize: 14, color: "rgba(255,255,255,0.75)" }}>
-          {mein.richtig ?? 0} von {gesamt} richtig
-        </Text>
+    <Aufploppen schluessel={`ergebnis-${ok}-${fp}`}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 22, backgroundColor: mitDeckkraft(c, 0.1), borderWidth: 1, borderColor: mitDeckkraft(c, 0.3) }}>
+        <Ring anteil={Math.min(1, fp / PRUEFUNG_MAX_FEHLER)} farbe={c}>
+          <Text style={{ ...schrift.titel, fontSize: 18, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{fp}</Text>
+        </Ring>
+        <View style={{ flex: 1, gap: 2 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Icon name={ok ? "checkmark-circle" : "close-circle"} size={18} color={c} />
+            <Text style={{ ...schrift.titel, fontSize: 17, letterSpacing: 0.6, color: c }}>{ok ? "BESTANDEN" : "NICHT BESTANDEN"}</Text>
+          </View>
+          <Text style={{ ...schrift.textHalb, fontSize: 13, color: "rgba(255,255,255,0.72)" }} numberOfLines={2}>
+            {fuenfer ? "Zwei falsche 5-Punkte-Fragen" : `${fp} Fehlerpunkte · ${mein.richtig ?? 0} von ${gesamt} richtig`}
+          </Text>
+        </View>
         {xp ? <XpPille xp={xp} /> : null}
       </View>
-      {!ok && (mein.fuenfer ?? 0) >= 2 && fp <= PRUEFUNG_MAX_FEHLER ? (
-        <Text style={{ ...schrift.textMittel, fontSize: 12.5, color: "#FF8A80", textAlign: "center" }}>Zwei falsche 5-Punkte-Fragen – das reicht zum Durchfallen.</Text>
-      ) : null}
-    </View>
+    </Aufploppen>
   );
 }
 
