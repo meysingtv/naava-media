@@ -117,20 +117,23 @@ export function bossTrefferHoeren(h: (t: BossTreffer) => void): () => void {
 // Push: Token beim Server hinterlegen (Anstupsen, Einladungen, Boss-Sieg)
 // ---------------------------------------------------------------------------
 
-export async function pushEinrichten(fragen: boolean): Promise<void> {
-  if (Platform.OS === "web" || !serverVerbunden) return;
+/** Hinterlegt das Push-Token. `true`, wenn Mitteilungen erlaubt sind und das Token beim Server liegt. */
+export async function pushEinrichten(fragen: boolean): Promise<boolean> {
+  if (Platform.OS === "web" || !serverVerbunden) return false;
   try {
     const extra = Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined;
     const projectId = extra?.eas?.projectId ?? Constants.easConfig?.projectId;
     // Ohne EAS-Projekt (eas init) gibt es kein Push-Token – die Crew klappt trotzdem.
-    if (!projectId) return;
+    if (!projectId) return false;
     let rechte = await Notifications.getPermissionsAsync();
     if (!rechte.granted && fragen && rechte.canAskAgain) rechte = await Notifications.requestPermissionsAsync();
-    if (!rechte.granted) return;
+    if (!rechte.granted) return false;
     const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-    await supabase.rpc("lern_push_token_setzen", { p_token: token });
+    const { error } = await supabase.rpc("lern_push_token_setzen", { p_token: token });
+    return !error;
   } catch {
     // Push ist ein Zusatz.
+    return false;
   }
 }
 

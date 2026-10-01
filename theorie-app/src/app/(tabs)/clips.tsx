@@ -12,12 +12,14 @@ import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
 import { KommentarBlatt } from "@/components/kommentar-blatt";
 import { Lader } from "@/components/lader";
+import { LivePille, LIVE_ROT } from "@/components/live";
 import { useLeistenHoehe } from "@/components/tab-leiste";
 import { Knopf } from "@/components/ui";
 import { useClipAktionen } from "@/lib/clip-aktionen";
 import { beiNeuenClips, feedLaden, useClipRechte, type ClipEintrag, type FeedArt } from "@/lib/clips-server";
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
+import { useLive } from "@/lib/live";
 import { serverVerbunden } from "@/lib/supabase";
 import { farben, schrift } from "@/lib/theme";
 
@@ -53,7 +55,7 @@ function Umschalter({ wert, onWechsel }: { wert: FeedArt; onWechsel: (a: FeedArt
   );
 }
 
-function RundTaste({ icon, sf, label, onPress }: { icon: IconName; sf: SFSymbol; label: string; onPress: () => void }) {
+function RundTaste({ icon, sf, label, onPress, farbe = "#FFFFFF" }: { icon: IconName; sf: SFSymbol; label: string; onPress: () => void; farbe?: string }) {
   return (
     <Pressable
       onPress={() => {
@@ -66,7 +68,7 @@ function RundTaste({ icon, sf, label, onPress }: { icon: IconName; sf: SFSymbol;
     >
       {({ pressed }) => (
         <Glas interaktiv style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
-          <Icon name={icon} sf={sf} size={18} color="#FFFFFF" weight="semibold" />
+          <Icon name={icon} sf={sf} size={18} color={farbe} weight="semibold" />
         </Glas>
       )}
     </Pressable>
@@ -93,6 +95,7 @@ export default function Clips() {
   const navigation = useNavigation<BottomTabNavigationProp<Record<string, undefined>>>();
   const { session } = useKonto();
   const rechte = useClipRechte();
+  const { live } = useLive();
   const ich = session?.user.id ?? null;
 
   const [art, setArt] = useState<FeedArt>("entdecken");
@@ -346,15 +349,28 @@ export default function Clips() {
         pointerEvents="box-none"
         style={{ position: "absolute", top: insets.top + 4, left: 0, right: 0, height: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12 }}
       >
-        <View style={{ width: 40 }}>{rechte.ersteller ? <RundTaste icon="add" sf="plus" label="Clip hochladen" onPress={() => router.push("/clip-hochladen")} /> : null}</View>
+        <View style={{ flex: 1, flexDirection: "row", gap: 8 }}>
+          {rechte.ersteller ? <RundTaste icon="add" sf="plus" label="Clip hochladen" onPress={() => router.push("/clip-hochladen")} /> : null}
+          {/* Nur der Inhaber der App geht live */}
+          {rechte.inhaber ? <RundTaste icon="radio" sf="dot.radiowaves.left.and.right" label="Live gehen" farbe={LIVE_ROT} onPress={() => router.push("/live-senden")} /> : null}
+        </View>
         <Umschalter wert={art} onWechsel={wechseln} />
-        <RundTaste
-          icon={stumm ? "volume-mute" : "volume-high"}
-          sf={stumm ? "speaker.slash.fill" : "speaker.wave.2.fill"}
-          label={stumm ? "Ton an" : "Ton aus"}
-          onPress={() => setStumm((s) => !s)}
-        />
+        <View style={{ flex: 1, alignItems: "flex-end" }}>
+          <RundTaste
+            icon={stumm ? "volume-mute" : "volume-high"}
+            sf={stumm ? "speaker.slash.fill" : "speaker.wave.2.fill"}
+            label={stumm ? "Ton an" : "Ton aus"}
+            onPress={() => setStumm((s) => !s)}
+          />
+        </View>
       </View>
+
+      {/* Läuft gerade ein Live? Kapsel unter dem Kopf */}
+      {live ? (
+        <View pointerEvents="box-none" style={{ position: "absolute", top: insets.top + 58, left: 0, right: 0, alignItems: "center" }}>
+          <LivePille live={live} onPress={() => router.push("/live")} />
+        </View>
+      ) : null}
 
       <KommentarBlatt
         clip={kommentarClip}

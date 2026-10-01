@@ -20,6 +20,7 @@ import { erfolg } from "@/lib/haptik";
 import { CrewProvider } from "@/lib/crew";
 import { DarstellungBruecke, DarstellungProvider, istHelleSeite, useDarstellung } from "@/lib/darstellung";
 import { KontoProvider, useKonto } from "@/lib/konto";
+import { LiveBruecke } from "@/lib/live-bruecke";
 import { StandProvider, useStand } from "@/lib/stand";
 import { ProfilbildAbgleich } from "@/lib/profilbild";
 import { PruefungstagBruecke } from "@/lib/pruefungstag";
@@ -139,6 +140,8 @@ function Navigation() {
           <Stack.Screen name="clip-ersteller" />
           <Stack.Screen name="nutzer/[id]" />
           <Stack.Screen name="clip-ansicht" options={{ animation: "fade" }} />
+          <Stack.Screen name="live" options={{ animation: "slide_from_bottom", presentation: "fullScreenModal", gestureEnabled: false }} />
+          <Stack.Screen name="live-senden" options={{ animation: "slide_from_bottom", presentation: "fullScreenModal", gestureEnabled: false }} />
           <Stack.Screen name="liga" />
           <Stack.Screen name="favoriten" />
           <Stack.Screen name="kalender" options={{ animation: "slide_from_bottom" }} />
@@ -164,6 +167,7 @@ function Navigation() {
       <ErfolgHinweis />
       {/* „−5 HP“ beim Crew-Boss nur, wenn XP, HP & Abzeichen in den Einstellungen an sind */}
       {belohnungen ? <BossTrefferAnzeige /> : null}
+      <LiveBruecke />
       <AuswahlBlattHost />
     </View>
   );

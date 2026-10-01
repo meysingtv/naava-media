@@ -29,7 +29,8 @@
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT"
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.RECORD_AUDIO"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
@@ -61,15 +62,15 @@
         "expo-image-picker",
         {
           "photosPermission": "Fahrschul Pro greift nur auf deine Fotos und Videos zu, wenn du ein Profilbild, einen Clip zum Hochladen oder ein Schildfoto für die Schilder-Jagd auswählst.",
-          "cameraPermission": "Fahrschul Pro nutzt die Kamera für die Schilder-Jagd: Du scannst echte Verkehrsschilder für dein Album. Die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert.",
-          "microphonePermission": false
+          "cameraPermission": "Fahrschul Pro nutzt die Kamera für die Schilder-Jagd (du scannst echte Verkehrsschilder, die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert) und für Live-Streams in Clips.",
+          "microphonePermission": "Fahrschul Pro nutzt das Mikrofon nur, wenn du in Clips einen Live-Stream startest."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Fahrschul Pro nutzt die Kamera für die Schilder-Jagd: Du scannst echte Verkehrsschilder für dein Album. Die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert.",
-          "microphonePermission": false,
+          "cameraPermission": "Fahrschul Pro nutzt die Kamera für die Schilder-Jagd (du scannst echte Verkehrsschilder, die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert) und für Live-Streams in Clips.",
+          "microphonePermission": "Fahrschul Pro nutzt das Mikrofon nur, wenn du in Clips einen Live-Stream startest.",
           "recordAudioAndroid": false
         }
       ],
@@ -80,7 +81,22 @@
       "expo-secure-store",
       "react-native-compressor",
       "@bacons/apple-targets",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "@livekit/react-native-expo-plugin",
+        {
+          "android": {
+            "audioType": "media"
+          }
+        }
+      ],
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Fahrschul Pro nutzt die Kamera für die Schilder-Jagd (du scannst echte Verkehrsschilder, die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert) und für Live-Streams in Clips.",
+          "microphonePermission": "Fahrschul Pro nutzt das Mikrofon nur, wenn du in Clips einen Live-Stream startest."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

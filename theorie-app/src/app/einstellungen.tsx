@@ -14,6 +14,7 @@ import { useClipRechte } from "@/lib/clips-server";
 import { erinnerungPlanen } from "@/lib/erinnerung";
 import { uhrzeit } from "@/lib/format";
 import { useKonto } from "@/lib/konto";
+import { liveAboSetzen, liveAboStatus } from "@/lib/live";
 import { useStand } from "@/lib/stand";
 import { abstand, farben, RAND } from "@/lib/theme";
 
@@ -77,6 +78,27 @@ export default function Einstellungen() {
   }
   const [neuesPasswort, setNeuesPasswort] = useState("");
   const [aendertPasswort, setAendertPasswort] = useState(false);
+  const [liveAbo, setLiveAbo] = useState(false);
+
+  useEffect(() => {
+    if (session) liveAboStatus().then(setLiveAbo);
+  }, [session]);
+
+  async function liveAboAendern(an: boolean) {
+    setLiveAbo(an);
+    try {
+      const ergebnis = await liveAboSetzen(an);
+      if (ergebnis === "keine_erlaubnis") {
+        setLiveAbo(false);
+        dialog("Mitteilungen sind aus", "Erlaube Mitteilungen für Fahrschul Pro in den iPhone-Einstellungen, dann sagen wir dir Bescheid, wenn ein Live startet.");
+        return;
+      }
+      setLiveAbo(ergebnis);
+    } catch (e) {
+      setLiveAbo(!an);
+      dialog("Nicht gespeichert", (e as Error).message);
+    }
+  }
 
   async function passwortSpeichern() {
     setAendertPasswort(true);
@@ -187,7 +209,7 @@ export default function Einstellungen() {
         ) : null}
 
         <View>
-          <Abschnitt titel="Erinnerung" klein />
+          <Abschnitt titel="Mitteilungen" klein />
           <Gruppe>
             <Zeile
               icon="notifications-outline"
@@ -197,6 +219,14 @@ export default function Einstellungen() {
                 <Schalter wert={stand.erinnerung.an} onWechsel={(an) => erinnerungAendern(an)} />
               }
             />
+            {session ? (
+              <Zeile
+                icon="radio-outline"
+                titel="Live-Streams"
+                unter={liveAbo ? "Mitteilung, sobald ein Live startet" : "Aus"}
+                rechts={<Schalter wert={liveAbo} onWechsel={liveAboAendern} />}
+              />
+            ) : null}
           </Gruppe>
           {stand.erinnerung.an ? (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: abstand(2), marginTop: abstand(3) }}>

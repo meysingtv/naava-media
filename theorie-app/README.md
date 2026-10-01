@@ -182,6 +182,51 @@ Einrichten:
    `update-crew.sql`. Unter Edge Functions → Logs steht je Antwort, wie viele
    Tokens sie gebraucht hat.
 
+## Live-Stream in Clips
+
+Nur der Inhaber der App (E-Mail in `lern_inhaber`) geht live, direkt aus der
+App. Alle anderen schauen in Clips zu, schreiben im Chat und schicken Herzen.
+
+- **Live gehen:** In Clips oben links der rote Funk-Knopf (nur für den
+  Inhaber). Erst kommt eine Kamera-Vorschau mit Thema, dann „Live gehen“,
+  ein Countdown und das Live. Oben stehen Laufzeit und Zuschauer. Rechts
+  dreht man die Kamera und schaltet das Mikrofon. Lange auf eine
+  Chat-Nachricht drücken: löschen oder die Person stummschalten.
+  „Beenden“ oder die Seite verlassen beendet das Live. Ohne Lebenszeichen der
+  App (z. B. leerer Akku) verschwindet es nach 2 Minuten von selbst.
+- **Zuschauen:** In Clips erscheint oben die Kapsel „Leon ist live“, auf Home
+  eine Karte. Gäste schauen zu; schreiben kann nur, wer angemeldet ist (ohne
+  Links, mit Tempolimit und Schimpfwort-Sperre). Nachrichten lassen sich
+  melden (Tabelle `lern_live_meldung`).
+- **Mitteilung beim Start:** Nur für alle, die zugestimmt haben – über die
+  Glocke im Live, auf der Live-Seite oder unter Einstellungen → Mitteilungen →
+  „Live-Streams“. Das verlangt Apple bei solchen Mitteilungen. Pushes kommen
+  nur auf echten Geräten an und brauchen `eas init` (wie die Crew).
+- **Technik:** Bild und Ton über [LiveKit](https://livekit.io) (WebRTC, kaum
+  Verzögerung), Status und Chat über Supabase (`update-live.sql`, Abschnitt 17,
+  mit Echtzeit). Die Edge Function `live-token` gibt die Zugänge aus: senden
+  darf nur der Inhaber, alle anderen nur empfangen. LiveKit rechnet nach
+  Minuten und Zuschauern ab – den Verbrauch zeigt cloud.livekit.io.
+
+Einrichten:
+
+1. `supabase/update-live.sql` im SQL-Editor ausführen. Es hängt die Tabellen
+   an die Echtzeit-Publikation `supabase_realtime` (gibt es in jedem
+   Supabase-Projekt) – darüber kommen Chat und Live-Status sofort an.
+2. Auf cloud.livekit.io ein Projekt anlegen und unter Settings → API Keys einen
+   Schlüssel erzeugen (URL `wss://…livekit.cloud`, API Key, API Secret).
+3. Supabase → Edge Functions → Secrets: `LIVEKIT_URL`, `LIVEKIT_API_KEY`,
+   `LIVEKIT_API_SECRET`. Dann die Funktion bereitstellen – per Terminal im
+   Ordner `theorie-app`: `npx supabase functions deploy live-token --no-verify-jwt`
+   (Gäste schauen ohne Konto zu; wer senden will, prüft die Funktion selbst).
+   Im Dashboard: „Deploy a new function“ → Name `live-token` → Inhalt von
+   `supabase/functions/live-token/index.ts` → „Enforce JWT verification“ aus.
+4. Neuer App-Build (neue native Teile: LiveKit, WebRTC, Mikrofon):
+   `npm install`, `npx expo prebuild --clean -p ios`, `npx expo run:ios`.
+   Senden geht nur auf einem echten iPhone (der Simulator hat keine Kamera),
+   zuschauen auch im Simulator. Android kann nur zuschauen (das Mikrofon ist
+   dort bewusst gesperrt).
+
 ## Live-Aktivität (Sperrbildschirm und Dynamic Island)
 
 Nur iPhone ab iOS 16.2; die Dynamic Island gibt es ab iPhone 14 Pro.
