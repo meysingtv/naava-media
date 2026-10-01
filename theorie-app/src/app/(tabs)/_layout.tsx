@@ -1,9 +1,10 @@
 import { Platform } from "react-native";
 import { Tabs } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Icon, Label, NativeTabs, VectorIcon } from "expo-router/unstable-native-tabs";
+import { Badge, Icon, Label, NativeTabs, VectorIcon } from "expo-router/unstable-native-tabs";
 
 import { TabLeiste } from "@/components/tab-leiste";
+import { useLive } from "@/lib/live";
 import { farben } from "@/lib/theme";
 
 /**
@@ -14,6 +15,8 @@ import { farben } from "@/lib/theme";
  * Auf Android gibt es kein Liquid Glass – dort eine eigene Leiste im App-Look.
  */
 export default function TabsLayout() {
+  // Läuft ein Live, zeigt der Clips-Reiter einen roten Punkt.
+  const { live } = useLive();
   if (Platform.OS !== "ios") return <AndroidTabs />;
   return (
     <NativeTabs tintColor={farben.orange} minimizeBehavior="onScrollDown">
@@ -28,6 +31,7 @@ export default function TabsLayout() {
       <NativeTabs.Trigger name="clips">
         <Label>Clips</Label>
         <Icon sf={{ default: "play.rectangle.on.rectangle", selected: "play.rectangle.on.rectangle.fill" }} androidSrc={<VectorIcon family={Ionicons} name="film" />} />
+        <Badge hidden={!live} />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="pruefen">
         <Label>Prüfung</Label>

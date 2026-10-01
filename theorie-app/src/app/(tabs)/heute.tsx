@@ -8,7 +8,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CrewBereich } from "@/components/crew";
 import { FokusKarte, GRUSS, Handschrift, HeldWerte, heldHoehe, KinoHeld, Kopfzeile, PruefungKarte, Schnellstart, StartKnopf, tageszeit, ThemenKarussell, ZitatKarte } from "@/components/home";
 import { Icon } from "@/components/icon";
-import { LiveBanner } from "@/components/live";
 import { ProfilBild } from "@/components/profilbild";
 import { useInhaltUnten } from "@/components/tab-leiste";
 import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
@@ -17,7 +16,6 @@ import { tippen } from "@/lib/haptik";
 import { heuteDran } from "@/lib/karteikarten";
 import { useKonto } from "@/lib/konto";
 import { useLeistenScroll } from "@/lib/leisten-scroll";
-import { useLive } from "@/lib/live";
 import { tageBis, terminDatum } from "@/lib/pruefungstag";
 import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, serieAktuell, useStand } from "@/lib/stand";
 import { RAND, schrift } from "@/lib/theme";
@@ -38,7 +36,6 @@ export default function Home() {
   const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();
   const { anzeigeName } = useKonto();
-  const { live } = useLive();
   const [ueberFoto, setUeberFoto] = useState(true);
 
   const jetzt = new Date();
@@ -142,9 +139,6 @@ export default function Home() {
               onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
             />
           </View>
-
-          {/* Läuft gerade ein Live in Clips? */}
-          {live ? <LiveBanner live={live} onPress={() => router.push("/live")} style={{ marginTop: 18, marginHorizontal: RAND }} /> : null}
 
           <Schnellstart
             style={{ marginTop: 18 }}

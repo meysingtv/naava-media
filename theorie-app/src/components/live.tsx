@@ -5,13 +5,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Glas } from "@/components/glas";
 import { Icon } from "@/components/icon";
 import { NutzerBild } from "@/components/profilbild";
-import { useFarbwelt } from "@/lib/darstellung";
 import { tippen } from "@/lib/haptik";
 import type { ChatNachricht, LiveInfo } from "@/lib/live";
-import { leuchten, mitDeckkraft, schrift } from "@/lib/theme";
+import { leuchten, schrift } from "@/lib/theme";
 
 // Bausteine für den Live-Stream: rotes LIVE-Schild, Profilbild mit
-// pulsierendem Ring, Kapsel in Clips, Karte auf Home, Chat, Herzen, Eingabe.
+// pulsierendem Ring, Zuschauerzahl, Chat, Herzen und Eingabe.
 
 export const LIVE_ROT = "#FF2D55";
 const LIVE_VERLAUF = ["#FF5A5F", "#FF2D55", "#E0124A"] as const;
@@ -73,100 +72,6 @@ export function LiveRing({ gastgeber, groesse = 40 }: { gastgeber: LiveInfo["gas
         <NutzerBild pfad={gastgeber?.bild_pfad} name={gastgeber?.name ?? "Live"} farbe={gastgeber?.avatar_farbe} groesse={groesse} rand={0} />
       </View>
     </View>
-  );
-}
-
-/** Kapsel oben in Clips: „Leon ist live“ – antippen öffnet das Live. */
-export function LivePille({ live, onPress, style }: { live: LiveInfo; onPress: () => void; style?: StyleProp<ViewStyle> }) {
-  const name = live.gastgeber?.name ?? "Fahrschul Pro";
-  return (
-    <Pressable
-      onPress={() => {
-        tippen();
-        onPress();
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={`${name} ist live – zuschauen`}
-      style={style}
-    >
-      {({ pressed }) => (
-        <Glas interaktiv style={{ flexDirection: "row", alignItems: "center", gap: 9, paddingLeft: 4, paddingRight: 12, height: 50, borderRadius: 25, opacity: pressed ? 0.85 : 1 }}>
-          <LiveRing gastgeber={live.gastgeber} groesse={34} />
-          <View style={{ maxWidth: 210 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <LiveSchild klein />
-              <Text style={{ ...schrift.textFett, fontSize: 14, color: "#FFFFFF" }} numberOfLines={1}>
-                {name} ist live
-              </Text>
-            </View>
-            {live.titel ? (
-              <Text style={{ ...schrift.textMittel, fontSize: 12, color: "rgba(255,255,255,0.72)", marginTop: 1 }} numberOfLines={1}>
-                {live.titel}
-              </Text>
-            ) : null}
-          </View>
-          <Icon name="chevron-forward" sf="chevron.right" size={15} color="rgba(255,255,255,0.75)" weight="semibold" />
-        </Glas>
-      )}
-    </Pressable>
-  );
-}
-
-/** Karte auf Home, solange ein Live läuft. */
-export function LiveBanner({ live, onPress, style }: { live: LiveInfo; onPress: () => void; style?: StyleProp<ViewStyle> }) {
-  const f = useFarbwelt();
-  const name = live.gastgeber?.name ?? "Fahrschul Pro";
-  return (
-    <Pressable
-      onPress={() => {
-        tippen();
-        onPress();
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={`${name} ist live – zuschauen`}
-      style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.98 : 1 }] }, style]}
-    >
-      <View
-        style={[
-          {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-            padding: 12,
-            paddingRight: 14,
-            borderRadius: 22,
-            overflow: "hidden",
-            backgroundColor: f.hell ? "#FFFFFF" : "#170A0E",
-            borderWidth: 1,
-            borderColor: mitDeckkraft(LIVE_ROT, f.hell ? 0.28 : 0.45),
-          },
-          f.hell ? leuchten(LIVE_ROT, 0.16, 16, 4) : leuchten(LIVE_ROT, 0.3, 18, 2),
-        ]}
-      >
-        <LinearGradient
-          pointerEvents="none"
-          colors={[mitDeckkraft(LIVE_ROT, f.hell ? 0.08 : 0.22), mitDeckkraft(LIVE_ROT, 0)]}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-        />
-        <LiveRing gastgeber={live.gastgeber} groesse={44} />
-        <View style={{ flex: 1, gap: 3 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
-            <LiveSchild klein />
-            <Text style={{ ...schrift.textFett, fontSize: 15.5, color: f.text, flexShrink: 1 }} numberOfLines={1}>
-              {name} ist live
-            </Text>
-          </View>
-          <Text style={{ ...schrift.text, fontSize: 13.5, color: f.text2 }} numberOfLines={1}>
-            {live.titel || "Komm rein und stell deine Fragen!"}
-          </Text>
-        </View>
-        <LinearGradient colors={LIVE_VERLAUF} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 34, paddingHorizontal: 14, borderRadius: 17, justifyContent: "center" }}>
-          <Text style={{ ...schrift.textFett, fontSize: 13.5, color: "#FFFFFF" }}>Zuschauen</Text>
-        </LinearGradient>
-      </View>
-    </Pressable>
   );
 }
 

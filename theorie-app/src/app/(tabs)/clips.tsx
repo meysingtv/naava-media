@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AppState, FlatList, Pressable, RefreshControl, Text, View, type ViewToken } from "react-native";
+import { Animated, AppState, FlatList, Pressable, RefreshControl, Text, View, type ViewToken } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -12,7 +12,8 @@ import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
 import { KommentarBlatt } from "@/components/kommentar-blatt";
 import { Lader } from "@/components/lader";
-import { LivePille, LIVE_ROT } from "@/components/live";
+import { LIVE_ROT } from "@/components/live";
+import { LiveAnsicht } from "@/components/live-ansicht";
 import { useLeistenHoehe } from "@/components/tab-leiste";
 import { Knopf } from "@/components/ui";
 import { useClipAktionen } from "@/lib/clip-aktionen";
@@ -29,9 +30,23 @@ const LEER: Feed = { eintraege: [], laedt: false, mehr: true, fehler: null, gela
 const SEITE = 8;
 const SICHTBAR = { itemVisiblePercentThreshold: 70 };
 
-/** Umschalter „Entdecken / Folge ich“ als Glas-Kapsel mit orangem Schieber. */
-function Umschalter({ wert, onWechsel }: { wert: FeedArt; onWechsel: (a: FeedArt) => void }) {
-  const optionen: { id: FeedArt; titel: string }[] = [
+type Kategorie = FeedArt | "live";
+
+/** Roter Punkt, der langsam pulsiert – „gerade live“. */
+function LivePunkt() {
+  const puls = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const a = Animated.loop(Animated.sequence([Animated.timing(puls, { toValue: 1, duration: 700, useNativeDriver: true }), Animated.timing(puls, { toValue: 0, duration: 700, useNativeDriver: true })]));
+    a.start();
+    return () => a.stop();
+  }, [puls]);
+  return <Animated.View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: LIVE_ROT, opacity: puls.interpolate({ inputRange: [0, 1], outputRange: [1, 0.35] }) }} />;
+}
+
+/** Umschalter „Live / Entdecken / Folge ich“ als Glas-Kapsel. Läuft ein Live, pulsiert ein roter Punkt. */
+function Umschalter({ wert, live, onWechsel }: { wert: Kategorie; live: boolean; onWechsel: (k: Kategorie) => void }) {
+  const optionen: { id: Kategorie; titel: string }[] = [
+    { id: "live", titel: "Live" },
     { id: "entdecken", titel: "Entdecken" },
     { id: "folge_ich", titel: "Folge ich" },
   ];
@@ -39,15 +54,27 @@ function Umschalter({ wert, onWechsel }: { wert: FeedArt; onWechsel: (a: FeedArt
     <Glas style={{ flexDirection: "row", padding: 3, borderRadius: 21, gap: 2 }}>
       {optionen.map((o) => {
         const aktiv = o.id === wert;
+        const istLive = o.id === "live";
         return (
           <Pressable
             key={o.id}
             onPress={() => !aktiv && onWechsel(o.id)}
             accessibilityRole="tab"
             accessibilityState={{ selected: aktiv }}
-            style={{ height: 34, paddingHorizontal: 16, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: aktiv ? farben.orange : "transparent" }}
+            accessibilityLabel={istLive && live ? "Live – gerade läuft ein Live" : o.titel}
+            style={{
+              height: 34,
+              paddingHorizontal: 13,
+              borderRadius: 17,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 5,
+              backgroundColor: aktiv ? (istLive ? LIVE_ROT : farben.orange) : "transparent",
+            }}
           >
-            <Text style={{ ...(aktiv ? schrift.textFett : schrift.textHalb), fontSize: 14.5, color: aktiv ? "#FFFFFF" : "rgba(255,255,255,0.78)" }}>{o.titel}</Text>
+            {istLive && live && !aktiv ? <LivePunkt /> : null}
+            <Text style={{ ...(aktiv ? schrift.textFett : schrift.textHalb), fontSize: 14, color: aktiv ? "#FFFFFF" : "rgba(255,255,255,0.78)" }}>{o.titel}</Text>
           </Pressable>
         );
       })}
@@ -55,7 +82,7 @@ function Umschalter({ wert, onWechsel }: { wert: FeedArt; onWechsel: (a: FeedArt
   );
 }
 
-function RundTaste({ icon, sf, label, onPress, farbe = "#FFFFFF" }: { icon: IconName; sf: SFSymbol; label: string; onPress: () => void; farbe?: string }) {
+function RundTaste({ icon, sf, label, onPress }: { icon: IconName; sf: SFSymbol; label: string; onPress: () => void }) {
   return (
     <Pressable
       onPress={() => {
@@ -68,7 +95,7 @@ function RundTaste({ icon, sf, label, onPress, farbe = "#FFFFFF" }: { icon: Icon
     >
       {({ pressed }) => (
         <Glas interaktiv style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
-          <Icon name={icon} sf={sf} size={18} color={farbe} weight="semibold" />
+          <Icon name={icon} sf={sf} size={18} color="#FFFFFF" weight="semibold" />
         </Glas>
       )}
     </Pressable>
@@ -99,6 +126,7 @@ export default function Clips() {
   const ich = session?.user.id ?? null;
 
   const [art, setArt] = useState<FeedArt>("entdecken");
+  const [liveAn, setLiveAn] = useState(false);
   const [feeds, setFeeds] = useState<Record<FeedArt, Feed>>({ entdecken: LEER, folge_ich: LEER });
   const [aktivProFeed, setAktivProFeed] = useState<Record<FeedArt, string | null>>({ entdecken: null, folge_ich: null });
   const [stumm, setStumm] = useState(false);
@@ -120,7 +148,20 @@ export default function Clips() {
 
   const feed = feeds[art];
   const aktivId = aktivProFeed[art] ?? feed.eintraege[0]?.id ?? null;
-  const spielen = fokus && vordergrund;
+  const spielen = fokus && vordergrund && !liveAn;
+
+  // Kommt man (z. B. wegen des roten Punkts unten) nach Clips, während ein Live
+  // läuft, öffnet sich einmal pro Live die Kategorie „Live“.
+  const warFokus = useRef(false);
+  const liveGezeigt = useRef<string | null>(null);
+  useEffect(() => {
+    const neuImFokus = fokus && !warFokus.current;
+    warFokus.current = fokus;
+    if (neuImFokus && live && liveGezeigt.current !== live.id) {
+      liveGezeigt.current = live.id;
+      setLiveAn(true);
+    }
+  }, [fokus, live]);
 
   // ------------------------------------------------------------------ Laden
   const laden = useCallback(async (welche: FeedArt, neu: boolean) => {
@@ -224,9 +265,14 @@ export default function Clips() {
 
   const onKommentare = useCallback((clip: ClipEintrag) => setKommentarId(clip.id), []);
 
-  const wechseln = useCallback((neu: FeedArt) => {
+  const wechseln = useCallback((neu: Kategorie) => {
     tippen();
     setKommentarId(null);
+    if (neu === "live") {
+      setLiveAn(true);
+      return;
+    }
+    setLiveAn(false);
     setArt(neu);
   }, []);
 
@@ -269,7 +315,9 @@ export default function Clips() {
   const kommentarClip = kommentarId ? (feed.eintraege.find((c) => c.id === kommentarId) ?? null) : null;
 
   let inhalt: ReactNode;
-  if (!serverVerbunden) {
+  if (liveAn) {
+    inhalt = <LiveAnsicht oben={insets.top + 58} unten={leiste + 10} aktiv={fokus && vordergrund} stumm={stumm} />;
+  } else if (!serverVerbunden) {
     inhalt = (
       <Hinweis icon="film-outline" sf="play.rectangle.on.rectangle" titel="Clips kommen bald" text="Sobald die App mit dem Server verbunden ist, findest du hier kurze Videos rund um die Theorie." />
     );
@@ -350,11 +398,9 @@ export default function Clips() {
         style={{ position: "absolute", top: insets.top + 4, left: 0, right: 0, height: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12 }}
       >
         <View style={{ flex: 1, flexDirection: "row", gap: 8 }}>
-          {rechte.ersteller ? <RundTaste icon="add" sf="plus" label="Clip hochladen" onPress={() => router.push("/clip-hochladen")} /> : null}
-          {/* Nur der Inhaber der App geht live */}
-          {rechte.inhaber ? <RundTaste icon="radio" sf="dot.radiowaves.left.and.right" label="Live gehen" farbe={LIVE_ROT} onPress={() => router.push("/live-senden")} /> : null}
+          {rechte.ersteller && !liveAn ? <RundTaste icon="add" sf="plus" label="Clip hochladen" onPress={() => router.push("/clip-hochladen")} /> : null}
         </View>
-        <Umschalter wert={art} onWechsel={wechseln} />
+        <Umschalter wert={liveAn ? "live" : art} live={Boolean(live)} onWechsel={wechseln} />
         <View style={{ flex: 1, alignItems: "flex-end" }}>
           <RundTaste
             icon={stumm ? "volume-mute" : "volume-high"}
@@ -365,12 +411,6 @@ export default function Clips() {
         </View>
       </View>
 
-      {/* Läuft gerade ein Live? Kapsel unter dem Kopf */}
-      {live ? (
-        <View pointerEvents="box-none" style={{ position: "absolute", top: insets.top + 58, left: 0, right: 0, alignItems: "center" }}>
-          <LivePille live={live} onPress={() => router.push("/live")} />
-        </View>
-      ) : null}
 
       <KommentarBlatt
         clip={kommentarClip}

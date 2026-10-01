@@ -40,6 +40,8 @@ export type LiveBuehneProps = {
   token: string;
   /** Inhaber: Kamera und Mikrofon senden. */
   senden: boolean;
+  /** Zuschauer: Ton aus (wie der Ton-Knopf in Clips). */
+  stumm?: boolean;
   onVerbindung?: (status: LiveVerbindung, meldung?: string) => void;
   onZuschauer?: (anzahl: number) => void;
   /** Jemand hat ein Herz geschickt. */

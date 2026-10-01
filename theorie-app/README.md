@@ -187,15 +187,17 @@ Einrichten:
 Nur der Inhaber der App (E-Mail in `lern_inhaber`) geht live, direkt aus der
 App. Alle anderen schauen in Clips zu, schreiben im Chat und schicken Herzen.
 
-- **Live gehen:** In Clips oben links der rote Funk-Knopf (nur für den
-  Inhaber). Erst kommt eine Kamera-Vorschau mit Thema, dann „Live gehen“,
+- **Live gehen:** In Clips oben die Kategorie „Live“ → „Live gehen“ (den
+  Knopf sieht nur der Inhaber). Erst kommt eine Kamera-Vorschau mit Thema, dann „Live gehen“,
   ein Countdown und das Live. Oben stehen Laufzeit und Zuschauer. Rechts
   dreht man die Kamera und schaltet das Mikrofon. Lange auf eine
   Chat-Nachricht drücken: löschen oder die Person stummschalten.
   „Beenden“ oder die Seite verlassen beendet das Live. Ohne Lebenszeichen der
   App (z. B. leerer Akku) verschwindet es nach 2 Minuten von selbst.
-- **Zuschauen:** In Clips erscheint oben die Kapsel „Leon ist live“, auf Home
-  eine Karte. Gäste schauen zu; schreiben kann nur, wer angemeldet ist (ohne
+- **Zuschauen:** Läuft ein Live, hat der Clips-Reiter unten einen roten Punkt
+  und die Kategorie „Live“ oben in Clips einen pulsierenden Punkt. Wer Clips
+  dann öffnet, landet einmal direkt im Live; den Ton schaltet der Ton-Knopf
+  oben rechts. Gäste schauen zu; schreiben kann nur, wer angemeldet ist (ohne
   Links, mit Tempolimit und Schimpfwort-Sperre). Nachrichten lassen sich
   melden (Tabelle `lern_live_meldung`).
 - **Mitteilung beim Start:** Nur für alle, die zugestimmt haben – über die

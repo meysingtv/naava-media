@@ -13,7 +13,7 @@ import {
   VideoTrack,
 } from "@livekit/react-native";
 import { mediaDevices } from "@livekit/react-native-webrtc";
-import { Track, VideoPresets, type LocalVideoTrack } from "livekit-client";
+import { Track, VideoPresets, type LocalVideoTrack, type RemoteTrackPublication } from "livekit-client";
 
 import type { LiveBuehneProps } from "@/lib/live";
 
@@ -64,7 +64,7 @@ export function LiveBuehne(props: LiveBuehneProps) {
   );
 }
 
-function Innen({ senden, onZuschauer, onHerz, onBildWeg, onSteuerung }: LiveBuehneProps) {
+function Innen({ senden, stumm, onZuschauer, onHerz, onBildWeg, onSteuerung }: LiveBuehneProps) {
   const raum = useRoomContext();
   const { localParticipant } = useLocalParticipant();
   const teilnehmer = useParticipants();
@@ -80,6 +80,15 @@ function Innen({ senden, onZuschauer, onHerz, onBildWeg, onSteuerung }: LiveBueh
   const bildDa = Boolean(bild && isTrackReference(bild) && !bild.publication.isMuted);
 
   const zuschauer = teilnehmer.filter((t) => !t.identity.startsWith(GASTGEBER)).length;
+
+  // Ton aus: den Ton des Gastgebers gar nicht erst empfangen.
+  useEffect(() => {
+    if (senden) return;
+    for (const t of teilnehmer) {
+      if (t.isLocal) continue;
+      for (const pub of t.audioTrackPublications.values()) (pub as RemoteTrackPublication).setEnabled(!stumm);
+    }
+  }, [stumm, senden, teilnehmer]);
   useEffect(() => {
     rueck.current.onZuschauer?.(zuschauer);
   }, [zuschauer]);

@@ -21,6 +21,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { istHelleSeite, TAG, useDarstellung } from "@/lib/darstellung";
 import { tippen } from "@/lib/haptik";
 import { leisteAufklappen, leisteKlein } from "@/lib/leisten-scroll";
+import { useLive } from "@/lib/live";
 import { farben, schrift } from "@/lib/theme";
 
 // Auf dem iPhone ist die Tab-Leiste die native iOS-Leiste mit Liquid Glass
@@ -81,6 +82,7 @@ function Reiter({
   breite,
   unterFinger,
   lupe,
+  punkt,
   onWahl,
 }: {
   index: number;
@@ -91,6 +93,8 @@ function Reiter({
   breite: number;
   unterFinger: SharedValue<number>;
   lupe: SharedValue<number>;
+  /** Roter Punkt am Symbol (z. B. Clips, solange ein Live läuft). */
+  punkt?: boolean;
   onWahl: () => void;
 }) {
   const symbol = symbolVon(name);
@@ -108,7 +112,12 @@ function Reiter({
       onAccessibilityAction={onWahl}
       style={[{ width: breite, alignItems: "center", justifyContent: "center", gap: 2 }, stil]}
     >
-      <Icon name={aktiv ? symbol.an : symbol.aus} size={22} color={farbe} />
+      <View>
+        <Icon name={aktiv ? symbol.an : symbol.aus} size={22} color={farbe} />
+        {punkt ? (
+          <View style={{ position: "absolute", top: -1, right: -4, width: 9, height: 9, borderRadius: 4.5, backgroundColor: "#FF2D55", borderWidth: 1.5, borderColor: hell ? "#FFFFFF" : "#0E1014" }} />
+        ) : null}
+      </View>
       <Text numberOfLines={1} style={{ ...schrift.textHalb, fontSize: 10.5, lineHeight: 13, color: farbe }}>
         {titel}
       </Text>
@@ -119,6 +128,7 @@ function Reiter({
 /** Tab-Leiste für Android im Liquid-Glass-Look. */
 export function TabLeiste({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const { live } = useLive();
   const { width } = useWindowDimensions();
   const { darstellung } = useDarstellung();
   const hell = istHelleSeite(darstellung, state.routes[state.index]?.name);
@@ -337,6 +347,7 @@ export function TabLeiste({ state, descriptors, navigation }: BottomTabBarProps)
                   breite={feld}
                   unterFinger={unterFinger}
                   lupe={lupe}
+                  punkt={route.name === "clips" && Boolean(live)}
                   onWahl={() => waehlen(i, false)}
                 />
               ))}
