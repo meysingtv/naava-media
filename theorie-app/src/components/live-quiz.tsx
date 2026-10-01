@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Animated, Easing, FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions, type LayoutChangeEvent, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Circle } from "react-native-svg";
+import { Circle, Defs, Ellipse, RadialGradient, Stop } from "react-native-svg";
 
 import { DekoSvg } from "@/components/grafik";
 import { Icon, type IconName } from "@/components/icon";
@@ -15,11 +15,10 @@ import { erfolg, fehler as fehlerRuetteln, stoss, tippen } from "@/lib/haptik";
 import { QUIZ_DAUERN, QUIZ_FRAGEN, quizLoesung, quizRestzeit, type LiveQuiz, type QuizLage, type QuizSpieler, type QuizStand, type QuizZwischenstand } from "@/lib/live-quiz";
 import { farben, leuchten, mitDeckkraft, schrift, verlauf } from "@/lib/theme";
 
-// Live-Quiz über dem Video: die Karte für Zuschauer (antworten, Auflösung,
-// Rangliste), die Karte für den Gastgeber (Stimmen live, auflösen, weiter) und
-// die Auswahl der Frage aus dem Katalog. Oben auf jeder Karte sitzt ein rundes
-// Abzeichen über dem Rand – erst der Countdown, dann Ergebnis oder Pokal. Die
-// Karten sind fast deckend, damit man sie auch über hellem Video gut liest.
+// Live-Quiz: Läuft eine Frage, teilt sich der Bildschirm – oben die Kamera,
+// unten über die ganze Breite der Quiz-Bereich, der weich ins Video übergeht.
+// An der Naht sitzt ein rundes Abzeichen: erst der Countdown, dann Ergebnis,
+// Trefferquote oder Pokal. Dazu die Auswahl der Frage aus dem Katalog.
 
 const BUCHSTABEN = ["A", "B", "C", "D", "E", "F"];
 const GRUEN = farben.gruen;
@@ -32,9 +31,13 @@ const FUELLEN = { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } a
 const ABZEICHEN_GRUND = "#15161B";
 const BEKANNTE_BILDER = new Set<string>(FRAGEN.flatMap((f) => (f.bild ? [f.bild] : [])));
 
-/** Durchmesser des runden Abzeichens oben und wie weit es über die Karte ragt. */
+/** Durchmesser des runden Abzeichens an der Naht zwischen Video und Quiz. */
 const ABZEICHEN = 52;
-const UEBERSTAND = 24;
+/** Höhe des weichen Übergangs oben im Quiz-Bereich – so weit reicht das Video hinein. */
+export const QUIZ_UEBERBLEND = 96;
+const BEREICH_GRUND = "#0C0D11";
+/** Abstand der ersten Zeile im Bereich; das Abzeichen sitzt auf ihrer Höhe. */
+const INHALT_OBEN = 52;
 
 type Zustand = "offen" | "gewaehlt" | "richtig" | "falsch" | "verpasst";
 
@@ -80,35 +83,50 @@ function useZeitUm(quiz: LiveQuiz | null): boolean {
   return um;
 }
 
-/** Karte gleitet von oben herein, sobald eine neue Frage kommt. */
-function useAuftritt(schluessel: string | null) {
+/** Bereich gleitet von unten herein, sobald eine Frage kommt, und beim Ende wieder hinaus. */
+function useAuftritt(schluessel: string | null, weg: boolean) {
   const wert = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!schluessel) return;
     wert.setValue(0);
-    Animated.spring(wert, { toValue: 1, friction: 8, tension: 90, useNativeDriver: true }).start();
+    Animated.spring(wert, { toValue: 1, friction: 9, tension: 70, useNativeDriver: true }).start();
   }, [schluessel, wert]);
+  useEffect(() => {
+    if (!weg) return;
+    Animated.timing(wert, { toValue: 0, duration: 380, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start();
+  }, [weg, wert]);
   return {
-    opacity: wert.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 1, 1] }),
-    transform: [{ translateY: wert.interpolate({ inputRange: [0, 1], outputRange: [-24, 0] }) }, { scale: wert.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }],
+    opacity: wert.interpolate({ inputRange: [0, 0.35, 1], outputRange: [0, 1, 1] }),
+    transform: [{ translateY: wert.interpolate({ inputRange: [0, 1], outputRange: [90, 0] }) }],
   };
 }
 
 // ---------------------------------------------------------------------------
-// Rahmen und Abzeichen
+// Bereich und Abzeichen
 // ---------------------------------------------------------------------------
 
-/** Dunkle Karte; das Abzeichen sitzt oben in der Mitte und ragt über den Rand. */
-function Rahmen({ abzeichen, children }: { abzeichen: ReactNode; children: ReactNode }) {
+/**
+ * Quiz-Bereich über die ganze Breite: oben ein weicher Übergang ins Video, an
+ * der Naht das Abzeichen mit warmem Glühen (grün/rot/gold nach der Auflösung).
+ */
+function Bereich({ abzeichen, glut = farben.orange, unten, children }: { abzeichen: ReactNode; glut?: string; unten: number; children: ReactNode }) {
+  const { width } = useWindowDimensions();
   return (
-    <View style={{ paddingTop: UEBERSTAND }}>
-      <View style={[{ borderRadius: 28 }, leuchten("#000000", 0.5, 22, 8)]}>
-        <View style={{ borderRadius: 28, overflow: "hidden", backgroundColor: "rgba(16,17,22,0.95)", borderWidth: 1, borderColor: "rgba(255,255,255,0.09)" }}>
-          <LinearGradient pointerEvents="none" colors={["rgba(255,255,255,0.08)", "rgba(255,255,255,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 80 }} />
-          {children}
-        </View>
-      </View>
-      <View pointerEvents="box-none" style={{ position: "absolute", top: 0, left: 0, right: 0, alignItems: "center" }}>
+    <View>
+      <LinearGradient pointerEvents="none" colors={["rgba(12,13,17,0)", "rgba(12,13,17,0.8)", BEREICH_GRUND]} locations={[0, 0.5, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: QUIZ_UEBERBLEND }} />
+      <View pointerEvents="none" style={{ position: "absolute", top: QUIZ_UEBERBLEND, left: 0, right: 0, bottom: 0, backgroundColor: BEREICH_GRUND }} />
+      <DekoSvg width={width} height={INHALT_OBEN + 15 + 90} style={{ position: "absolute", top: 0, left: 0 }}>
+        <Defs>
+          <RadialGradient id="quiz-glut" cx="50%" cy="50%" r="50%">
+            <Stop offset="0" stopColor={glut} stopOpacity={0.42} />
+            <Stop offset="0.45" stopColor={glut} stopOpacity={0.14} />
+            <Stop offset="1" stopColor={glut} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Ellipse cx={width / 2} cy={INHALT_OBEN + 15} rx={width * 0.55} ry={90} fill="url(#quiz-glut)" />
+      </DekoSvg>
+      <View style={{ paddingTop: INHALT_OBEN, paddingHorizontal: 16, paddingBottom: unten, gap: 12 }}>{children}</View>
+      <View pointerEvents="box-none" style={{ position: "absolute", top: INHALT_OBEN + 15 - ABZEICHEN / 2, left: 0, right: 0, alignItems: "center" }}>
         {abzeichen}
       </View>
     </View>
@@ -541,6 +559,8 @@ export const quizSchluessel = (lage: QuizLage) => (lage.quiz ? `${lage.quiz.id}:
 export function QuizZuschauerKarte({
   lage,
   ichId,
+  unten,
+  weg = false,
   onAntworten,
   onAnmelden,
   onAusblenden,
@@ -551,6 +571,10 @@ export function QuizZuschauerKarte({
   lage: QuizLage;
   /** Angemeldet? Gäste sehen die Frage, mitspielen geht nur mit Konto. */
   ichId: string | null;
+  /** Abstand unten (Tab-Leiste bzw. sicherer Bereich). */
+  unten: number;
+  /** Quiz ist vorbei: Bereich gleitet hinaus. */
+  weg?: boolean;
   onAntworten: (auswahl: number[]) => Promise<string | null>;
   onAnmelden: () => void;
   /** Nach der Auflösung: Karte wegklicken (bis zur nächsten Änderung). */
@@ -563,7 +587,7 @@ export function QuizZuschauerKarte({
   const zeitVorbei = useZeitUm(quiz);
   const [auswahl, setAuswahl] = useState<number[]>([]);
   const [sendet, setSendet] = useState(false);
-  const auftritt = useAuftritt(quiz?.id ?? null);
+  const auftritt = useAuftritt(quiz?.id ?? null, weg);
 
   useEffect(() => {
     setAuswahl([]);
@@ -596,6 +620,7 @@ export function QuizZuschauerKarte({
     else erfolg();
   }
 
+  const glut = offen ? farben.orange : quiz.status === "rangliste" ? GOLD : mein ? (mein.richtig ? GRUEN : ROT) : "#8A8F98";
   const abzeichen = offen ? (
     <ZeitRing quiz={quiz} />
   ) : quiz.status === "rangliste" ? (
@@ -632,8 +657,7 @@ export function QuizZuschauerKarte({
 
   return (
     <Animated.View style={[style, auftritt]} onLayout={onLayout}>
-      <Rahmen abzeichen={abzeichen}>
-        <View style={{ paddingHorizontal: 14, paddingTop: 6, paddingBottom: 14, gap: 12 }}>
+      <Bereich abzeichen={abzeichen} glut={glut} unten={unten}>
           {quiz.status === "rangliste" ? (
             <>
               <KopfZeile links={<Etikett icon="trophy" text="RANGLISTE" />} rechts={<RundKnopf label="Quiz ausblenden" onPress={onAusblenden} />} />
@@ -659,9 +683,6 @@ export function QuizZuschauerKarte({
             <>
               <KopfZeile links={<Etikett icon="flash" text={`FRAGE ${quiz.nummer}`} />} rechts={<RundKnopf label="Quiz ausblenden" onPress={onAusblenden} />} />
               <Ergebnis quiz={quiz} mein={mein} />
-              <Text style={{ ...schrift.textHalb, fontSize: 14, lineHeight: 19, color: "rgba(255,255,255,0.72)" }} numberOfLines={2}>
-                {quiz.frage}
-              </Text>
               <View style={{ gap: 7 }}>{zeilen}</View>
               <Erklaerung text={quiz.erklaerung} />
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -680,8 +701,7 @@ export function QuizZuschauerKarte({
               </View>
             </>
           )}
-        </View>
-      </Rahmen>
+      </Bereich>
     </Animated.View>
   );
 }
@@ -715,6 +735,8 @@ export function QuizGastgeberKarte({
   onRangliste,
   onNaechste,
   onSchliessen,
+  unten,
+  weg = false,
   onLayout,
   style,
 }: {
@@ -725,10 +747,14 @@ export function QuizGastgeberKarte({
   onRangliste: () => void;
   onNaechste: () => void;
   onSchliessen: () => void;
+  /** Abstand unten (sicherer Bereich). */
+  unten: number;
+  /** Quiz ist vorbei: Bereich gleitet hinaus. */
+  weg?: boolean;
   onLayout?: (e: LayoutChangeEvent) => void;
   style?: StyleProp<ViewStyle>;
 }) {
-  const auftritt = useAuftritt(quiz.id);
+  const auftritt = useAuftritt(quiz.id, weg);
   const offen = quiz.status === "offen";
   const loesung = quizLoesung(quiz);
   const verteilung = offen ? zwischen?.verteilung : quiz.verteilung;
@@ -751,8 +777,7 @@ export function QuizGastgeberKarte({
 
   return (
     <Animated.View style={[style, auftritt]} onLayout={onLayout}>
-      <Rahmen abzeichen={abzeichen}>
-        <View style={{ paddingHorizontal: 13, paddingTop: 6, paddingBottom: 13, gap: 11 }}>
+      <Bereich abzeichen={abzeichen} glut={offen ? farben.orange : quiz.status === "rangliste" ? GOLD : GRUEN} unten={unten}>
           <KopfZeile
             links={quiz.status === "rangliste" ? <Etikett icon="trophy" text="RANGLISTE" /> : <Etikett icon="flash" text={`FRAGE ${quiz.nummer}`} />}
             rechts={<RundKnopf label={offen ? "Frage abbrechen" : "Quiz schließen"} onPress={onSchliessen} />}
@@ -762,7 +787,7 @@ export function QuizGastgeberKarte({
             <RanglisteInhalt quiz={quiz} />
           ) : (
             <>
-              <FrageText quiz={quiz} />
+              {offen ? <FrageText quiz={quiz} /> : null}
               <View style={{ gap: 7 }}>
                 {quiz.reihenfolge.map((i, p) => {
                   const stimmen = verteilung?.[i] ?? 0;
@@ -813,8 +838,7 @@ export function QuizGastgeberKarte({
           ) : (
             <KartenKnopf titel="Nächste Frage" icon="arrow-forward" haupt aus={beschaeftigt} onPress={onNaechste} />
           )}
-        </View>
-      </Rahmen>
+      </Bereich>
     </Animated.View>
   );
 }

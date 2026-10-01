@@ -214,9 +214,10 @@ App. Alle anderen schauen in Clips zu, schreiben im Chat und schicken Herzen.
   nur auf echten Geräten an und brauchen `eas init` (wie die Crew).
 - **Live-Quiz:** Im Live rechts auf „Quiz“ tippen, eine Frage aus dem Katalog
   wählen (Zufallsfrage, Suche oder nach Thema; schon gestellte sind markiert),
-  Zeit einstellen (15/20/30 s) und starten. Alle Zuschauer sehen die Frage als
-  Karte über dem Video und kreuzen an wie in der Prüfung (eine oder mehrere
-  richtige Antworten). Der Inhaber sieht die Stimmen live und die Lösung
+  Zeit einstellen (15/20/30 s) und starten. Dann teilt sich bei allen der
+  Bildschirm: oben die Kamera, unten das Quiz über die ganze Breite, weich ins
+  Video übergeblendet; Chat und Herzen sind so lange aus. Die Zuschauer kreuzen
+  an wie in der Prüfung (eine oder mehrere richtige Antworten). Der Inhaber sieht die Stimmen live und die Lösung
   vorab, nach Ablauf der Zeit löst die App von selbst auf (oder früher mit
   „Jetzt auflösen“). Dann sieht jeder Verteilung, Erklärung und seine Punkte:
   500 fürs Richtige plus bis zu 500 fürs Tempo. „Rangliste“ zeigt allen die

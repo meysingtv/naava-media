@@ -14,7 +14,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { Lader } from "@/components/lader";
 import { LiveBuehne } from "@/components/live-buehne";
 import { LiveEnde, type TopChatter } from "@/components/live-ende";
-import { QuizAuswahl, QuizGastgeberKarte } from "@/components/live-quiz";
+import { QUIZ_UEBERBLEND, QuizAuswahl, QuizGastgeberKarte } from "@/components/live-quiz";
 import { LiveChat, LiveEingabe, LiveSchild, LIVE_ROT, useHerzen, ZuschauerZahl } from "@/components/live";
 import { Knopf } from "@/components/ui";
 import { erfolg, stoss, tippen } from "@/lib/haptik";
@@ -33,12 +33,13 @@ import {
   type LiveSteuerung,
   type LiveZugang,
 } from "@/lib/live";
-import { useQuizGastgeber } from "@/lib/live-quiz";
+import { useQuizGastgeber, type LiveQuiz } from "@/lib/live-quiz";
 import { leuchten, schrift } from "@/lib/theme";
 
 // Live gehen (nur der Inhaber der App): Kamera-Vorschau, Thema, Countdown,
-// dann live mit Chat, Zuschauern, Herzen, Quiz und Moderation. Beim Verlassen
-// endet das Live automatisch.
+// dann live mit Chat, Zuschauern, Herzen, Quiz und Moderation. Während einer
+// Quizfrage teilt sich der Bildschirm (Kamera oben, Quiz unten, ohne Chat).
+// Beim Verlassen endet das Live automatisch.
 
 type Phase = "start" | "bereit" | "countdown" | "live" | "ende" | "fehler";
 
@@ -99,7 +100,7 @@ export default function LiveSenden() {
   const [ende, setEnde] = useState<number | null>(null);
   const [runde, setRunde] = useState(0);
   const [quizWahl, setQuizWahl] = useState(false);
-  const [quizHoehe, setQuizHoehe] = useState(0);
+  const [panelHoehe, setPanelHoehe] = useState(0);
   const { height: fensterHoehe } = useWindowDimensions();
 
   const steuerung = useRef<LiveSteuerung | null>(null);
@@ -108,6 +109,23 @@ export default function LiveSenden() {
     () => steuerung.current?.quiz(),
     (text) => hinweis.zeigen({ icon: "alert-circle", text, farbe: LIVE_ROT }),
   );
+
+  // Quiz: Kamera oben, Quiz unten. `panelQuiz` bleibt beim Ende kurz stehen, bis es hinausgeglitten ist.
+  const quizAn = phase === "live" && Boolean(quiz.quiz);
+  const [panelQuiz, setPanelQuiz] = useState<LiveQuiz | null>(null);
+  useEffect(() => {
+    if (quizAn) {
+      setPanelQuiz(quiz.quiz);
+      return;
+    }
+    const t = setTimeout(() => setPanelQuiz(null), 420);
+    return () => clearTimeout(t);
+  }, [quizAn, quiz.quiz]);
+  const videoZiel = quizAn && panelHoehe > 0 ? Math.max(fensterHoehe * 0.3, fensterHoehe - panelHoehe + QUIZ_UEBERBLEND) : fensterHoehe;
+  const videoHoehe = useRef(new Animated.Value(fensterHoehe)).current;
+  useEffect(() => {
+    Animated.timing(videoHoehe, { toValue: videoZiel, duration: 450, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+  }, [videoZiel, videoHoehe]);
   const idRef = useRef<string | null>(null);
   const zuschauerRef = useRef(0);
   zuschauerRef.current = zuschauer;
@@ -315,38 +333,38 @@ export default function LiveSenden() {
 
   // ------------------------------------------------------------------ Anzeige
   const zeigtBuehne = zugang && (phase === "bereit" || phase === "countdown" || phase === "live");
-  // Mit Quizkarte bekommt der Chat nur den Platz zwischen Karte und Eingabe.
-  const chatPlatz = quiz.quiz && quizHoehe > 0 ? fensterHoehe - (insets.top + 52 + quizHoehe) - (Math.max(insets.bottom, 12) + 4) - 46 - 10 - 14 : 300;
-  const chatHoehe = Math.max(0, Math.min(300, chatPlatz));
 
   return (
     <View style={{ flex: 1, backgroundColor: "#000000" }}>
       <StatusBar style="light" />
 
-      {zeigtBuehne ? (
-        <LiveBuehne
-          key={zugang.token}
-          url={zugang.url}
-          token={zugang.token}
-          senden
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-          onZuschauer={setZuschauer}
-          onHerz={() => {
-            ausloesen();
-            setHerzZahl((h) => h + 1);
-          }}
-          onSteuerung={(s) => (steuerung.current = s)}
-          onVerbindung={(s, meldung) => {
-            if (s === "fehler") {
-              setFehlerText(meldung ?? "Die Verbindung ist abgebrochen.");
-              setPhase("fehler");
-            }
-          }}
-        />
-      ) : null}
+      {/* Kamera – während eines Quiz nur oben (bleibt dabei verbunden) */}
+      <Animated.View style={{ position: "absolute", top: 0, left: 0, right: 0, height: videoHoehe, overflow: "hidden" }}>
+        {zeigtBuehne ? (
+          <LiveBuehne
+            key={zugang.token}
+            url={zugang.url}
+            token={zugang.token}
+            senden
+            style={{ flex: 1 }}
+            onZuschauer={setZuschauer}
+            onHerz={() => {
+              ausloesen();
+              setHerzZahl((h) => h + 1);
+            }}
+            onSteuerung={(s) => (steuerung.current = s)}
+            onVerbindung={(s, meldung) => {
+              if (s === "fehler") {
+                setFehlerText(meldung ?? "Die Verbindung ist abgebrochen.");
+                setPhase("fehler");
+              }
+            }}
+          />
+        ) : null}
+      </Animated.View>
 
       <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top + 110 }} />
-      <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.62)"]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 380 }} />
+      {panelQuiz ? null : <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.62)"]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 380 }} />}
 
       {/* Kopf */}
       <View style={{ position: "absolute", top: insets.top + 8, left: 12, right: 12, flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -398,22 +416,24 @@ export default function LiveSenden() {
               steuerung.current?.mikrofon(neu).catch(() => setMikroAn(!neu));
             }}
           />
-          {phase === "live" ? <Werkzeug icon="flash-outline" sf="bolt" label="Quiz" onPress={quizOeffnen} /> : null}
+          {phase === "live" && !panelQuiz ? <Werkzeug icon="flash-outline" sf="bolt" label="Quiz" onPress={quizOeffnen} /> : null}
         </View>
       ) : null}
 
-      {/* Quiz: Frage mit Stimmen live, Auflösung, Rangliste */}
-      {phase === "live" && quiz.quiz ? (
+      {/* Quiz unten über die ganze Breite: Stimmen live, Auflösung, Rangliste */}
+      {panelQuiz ? (
         <QuizGastgeberKarte
-          quiz={quiz.quiz}
+          quiz={panelQuiz}
+          weg={!quizAn}
+          unten={Math.max(insets.bottom, 12) + 8}
           zwischen={quiz.zwischen}
           beschaeftigt={quiz.beschaeftigt}
           onAufloesen={() => quiz.aufloesen().then(zeigeProblem)}
           onRangliste={() => quiz.rangliste().then(zeigeProblem)}
           onNaechste={() => setQuizWahl(true)}
           onSchliessen={quizSchliessen}
-          onLayout={(e) => setQuizHoehe(e.nativeEvent.layout.height)}
-          style={{ position: "absolute", top: insets.top + 52, left: 12, right: 70 }}
+          onLayout={(e) => setPanelHoehe(e.nativeEvent.layout.height)}
+          style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}
         />
       ) : null}
 
@@ -470,11 +490,11 @@ export default function LiveSenden() {
         </View>
       ) : null}
 
-      {/* Live: Chat und eigene Nachrichten */}
-      {phase === "live" ? (
+      {/* Live: Chat und eigene Nachrichten (während eines Quiz ausgeblendet) */}
+      {phase === "live" && !panelQuiz ? (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
           <View style={{ paddingHorizontal: 12, paddingBottom: Math.max(insets.bottom, 12) + 4, gap: 10 }}>
-            {chatHoehe >= 64 ? <LiveChat nachrichten={nachrichten} gastgeberId={ich} onLangDruck={moderieren} style={{ maxHeight: chatHoehe, marginRight: 64 }} /> : null}
+            <LiveChat nachrichten={nachrichten} gastgeberId={ich} onLangDruck={moderieren} style={{ maxHeight: 300, marginRight: 64 }} />
             <LiveEingabe
               angemeldet
               onSenden={schreiben}

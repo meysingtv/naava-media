@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, Text, useWindowDimensions, View } from "react-native";
+import { Animated, Easing, KeyboardAvoidingView, Platform, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
@@ -11,7 +11,7 @@ import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { Icon } from "@/components/icon";
 import { Lader } from "@/components/lader";
 import { LiveBuehne } from "@/components/live-buehne";
-import { QuizZuschauerKarte, quizSchluessel } from "@/components/live-quiz";
+import { QUIZ_UEBERBLEND, QuizZuschauerKarte, quizSchluessel } from "@/components/live-quiz";
 import { LiveChat, LiveEingabe, LiveRing, LiveSchild, LIVE_ROT, useHerzen, ZuschauerZahl } from "@/components/live";
 import { Knopf } from "@/components/ui";
 import { useClipRechte } from "@/lib/clips-server";
@@ -31,16 +31,14 @@ import {
   type LiveZugang,
   type ZugangFehler,
 } from "@/lib/live";
-import { useQuizZuschauer } from "@/lib/live-quiz";
+import { useQuizZuschauer, type QuizLage } from "@/lib/live-quiz";
 import { leuchten, schrift } from "@/lib/theme";
 
 // Das Live zum Zuschauen – als eigene Seite (Mitteilung „… ist jetzt live“)
 // und eingebettet in Clips (Kategorie „Live“). Ohne laufendes Live: Hinweis,
 // Mitteilung an/aus und für den Inhaber „Live gehen“. Stellt der Gastgeber eine
-// Quizfrage, erscheint sie als Karte über dem Video.
-
-/** Höhe der Eingabe unten plus Abstand darüber (für den Platz des Chats). */
-const EINGABE = 46 + 10;
+// Quizfrage, teilt sich der Bildschirm: oben die Kamera, unten das Quiz – Chat
+// und Herzen sind so lange weg.
 
 const LIVE_VERLAUF = ["#FF5A5F", "#FF2D55", "#E0124A"] as const;
 
@@ -103,8 +101,26 @@ export function LiveAnsicht({
   const [quizWeg, setQuizWeg] = useState("");
   // Die Ansicht füllt immer den ganzen Bildschirm (Clips und eigene Seite).
   const { height: hoehe } = useWindowDimensions();
-  const [kartenUnten, setKartenUnten] = useState(0);
   const verbunden = Boolean(live && aktiv && zugang);
+
+  // Quiz: Kamera oben, Quiz unten. `panel` bleibt beim Ende kurz stehen, bis es hinausgeglitten ist.
+  const quizAn = Boolean(quiz.lage.quiz) && quizSchluessel(quiz.lage) !== quizWeg;
+  const [panel, setPanel] = useState<QuizLage | null>(null);
+  const [panelHoehe, setPanelHoehe] = useState(0);
+  useEffect(() => {
+    if (quizAn) {
+      setPanel(quiz.lage);
+      return;
+    }
+    const t = setTimeout(() => setPanel(null), 420);
+    return () => clearTimeout(t);
+  }, [quizAn, quiz.lage]);
+  // Das Video reicht bis in den weichen Übergang hinein; mindestens ein knappes Drittel bleibt.
+  const videoZiel = quizAn && panelHoehe > 0 ? Math.max(hoehe * 0.3, hoehe - panelHoehe + QUIZ_UEBERBLEND) : hoehe;
+  const videoHoehe = useRef(new Animated.Value(hoehe)).current;
+  useEffect(() => {
+    Animated.timing(videoHoehe, { toValue: videoZiel, duration: 450, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+  }, [videoZiel, videoHoehe]);
 
   // Zugang zu LiveKit holen, sobald ein Live läuft und die Ansicht zu sehen ist.
   useEffect(() => {
@@ -279,41 +295,39 @@ export function LiveAnsicht({
   }
 
   // --------------------------------------------------------------- im Live
-  // Mit Quizkarte bekommt der Chat nur den Platz zwischen Karte und Eingabe.
-  const quizSichtbar = Boolean(quiz.lage.quiz) && quizSchluessel(quiz.lage) !== quizWeg;
-  const chatPlatz = quizSichtbar && hoehe > 0 && kartenUnten > 0 ? hoehe - kartenUnten - unten - EINGABE - 14 : 260;
-  const chatHoehe = Math.max(0, Math.min(260, chatPlatz));
-
   return (
     <View style={{ flex: 1, backgroundColor: "#000000" }}>
-      {verbunden && zugang ? (
-        <LiveBuehne
-          url={zugang.url}
-          token={zugang.token}
-          senden={false}
-          stumm={stumm}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-          onZuschauer={setZuschauer}
-          onHerz={ausloesen}
-          onBildWeg={setBildWeg}
-          onQuiz={quiz.neuLaden}
-          onSteuerung={(s) => (steuerung.current = s)}
-          onVerbindung={(s) => {
-            if (s === "fehler") setFehler("verbindung");
-          }}
-        />
-      ) : null}
+      {/* Video – während eines Quiz nur oben (bleibt dabei verbunden) */}
+      <Animated.View style={{ position: "absolute", top: 0, left: 0, right: 0, height: videoHoehe, overflow: "hidden" }}>
+        {verbunden && zugang ? (
+          <LiveBuehne
+            url={zugang.url}
+            token={zugang.token}
+            senden={false}
+            stumm={stumm}
+            style={{ flex: 1 }}
+            onZuschauer={setZuschauer}
+            onHerz={ausloesen}
+            onBildWeg={setBildWeg}
+            onQuiz={quiz.neuLaden}
+            onSteuerung={(s) => (steuerung.current = s)}
+            onVerbindung={(s) => {
+              if (s === "fehler") setFehler("verbindung");
+            }}
+          />
+        ) : null}
 
-      {/* Pause des Gastgebers */}
-      {langeWeg ? (
-        <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center", gap: 14, backgroundColor: "rgba(0,0,0,0.55)" }}>
-          <LiveRing gastgeber={live.gastgeber} groesse={78} />
-          <Text style={{ ...schrift.titelFett, fontSize: 18, color: "#FFFFFF" }}>{name} ist gleich zurück</Text>
-        </View>
-      ) : null}
+        {/* Pause des Gastgebers */}
+        {langeWeg ? (
+          <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center", gap: 14, backgroundColor: "rgba(0,0,0,0.55)" }}>
+            <LiveRing gastgeber={live.gastgeber} groesse={78} />
+            <Text style={{ ...schrift.titelFett, fontSize: 18, color: "#FFFFFF" }}>{name} ist gleich zurück</Text>
+          </View>
+        ) : null}
+      </Animated.View>
 
       <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.55)", "rgba(0,0,0,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: oben + 100 }} />
-      <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.6)"]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: unten + 340 }} />
+      {panel ? null : <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.6)"]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: unten + 340 }} />}
 
       {/* Kopf: Gastgeber, LIVE, Zuschauer, Mitteilung, Schließen */}
       <View style={{ position: "absolute", top: oben, left: 12, right: 12, flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -337,38 +351,38 @@ export function LiveAnsicht({
         {onSchliessen ? <RundTaste icon="close" sf="xmark" label="Schließen" onPress={onSchliessen} /> : null}
       </View>
 
-      {/* Quizfrage des Gastgebers */}
-      {quizSichtbar ? (
+      {panel ? (
+        // Quiz unten über die ganze Breite – Chat und Herzen sind so lange weg.
         <QuizZuschauerKarte
-          lage={quiz.lage}
+          lage={panel}
+          weg={!quizAn}
+          unten={unten}
           ichId={ich}
           onAntworten={quiz.antworten}
           onAnmelden={() => router.push("/anmelden")}
           onAusblenden={() => setQuizWeg(quizSchluessel(quiz.lage))}
           onFehler={(text) => hinweis.zeigen({ icon: "alert-circle", text, farbe: LIVE_ROT })}
-          onLayout={(e) => setKartenUnten(oben + 48 + e.nativeEvent.layout.height)}
-          style={{ position: "absolute", top: oben + 48, left: 12, right: 12 }}
+          onLayout={(e) => setPanelHoehe(e.nativeEvent.layout.height)}
+          style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}
         />
-      ) : null}
-
-      {/* Chat und Eingabe */}
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
-        <View style={{ paddingHorizontal: 12, paddingBottom: unten, gap: 10 }}>
-          {chatHoehe >= 64 ? (
-            <LiveChat nachrichten={nachrichten} gastgeberId={live.gastgeber?.id} onLangDruck={ich ? langDruck : undefined} style={{ maxHeight: chatHoehe, marginRight: 64 }} />
-          ) : null}
-          <LiveEingabe
-            angemeldet={Boolean(ich)}
-            onSenden={schreiben}
-            onHerz={() => {
-              ausloesen();
-              steuerung.current?.herz();
-            }}
-            onAnmelden={() => router.push("/anmelden")}
-            herzen={herzen}
-          />
-        </View>
-      </KeyboardAvoidingView>
+      ) : (
+        // Chat und Eingabe
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
+          <View style={{ paddingHorizontal: 12, paddingBottom: unten, gap: 10 }}>
+            <LiveChat nachrichten={nachrichten} gastgeberId={live.gastgeber?.id} onLangDruck={ich ? langDruck : undefined} style={{ maxHeight: 260, marginRight: 64 }} />
+            <LiveEingabe
+              angemeldet={Boolean(ich)}
+              onSenden={schreiben}
+              onHerz={() => {
+                ausloesen();
+                steuerung.current?.herz();
+              }}
+              onAnmelden={() => router.push("/anmelden")}
+              herzen={herzen}
+            />
+          </View>
+        </KeyboardAvoidingView>
+      )}
 
       <HinweisAnzeige wert={hinweis.wert} inhalt={hinweis.inhalt} oben={oben + 52} />
     </View>
