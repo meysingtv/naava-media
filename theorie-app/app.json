@@ -61,7 +61,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Fahrschul Pro greift nur auf deine Fotos und Videos zu, wenn du ein Profilbild, einen Clip zum Hochladen oder ein Schildfoto für die Schilder-Jagd auswählst.",
+          "photosPermission": "Fahrschul Pro greift nur auf deine Fotos und Videos zu, wenn du ein Profilbild, einen Clip zum Hochladen, ein Schildfoto für die Schilder-Jagd oder ein Bild für deinen Live-Stream auswählst.",
           "cameraPermission": "Fahrschul Pro nutzt die Kamera für die Schilder-Jagd (du scannst echte Verkehrsschilder, die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert) und für Live-Streams in Clips.",
           "microphonePermission": "Fahrschul Pro nutzt das Mikrofon nur, wenn du in Clips einen Live-Stream startest."
         }

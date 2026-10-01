@@ -14,6 +14,8 @@ export type LiveInfo = {
   titel: string;
   gestartet_am: string;
   gastgeber: { id: string; name: string; bild_pfad: string | null; avatar_farbe: string } | null;
+  /** Bild aus der Galerie des Gastgebers (Lage in Anteilen des Videos). */
+  bild?: { pfad: string; seite: number; x: number; y: number; groesse: number } | null;
 };
 
 export type ChatNachricht = {
@@ -31,8 +33,10 @@ export type LiveSteuerung = {
   herz: () => void;
   kameraWechseln: () => Promise<void>;
   mikrofon: (an: boolean) => Promise<void>;
-  /** Gastgeber: allen sagen, dass sich beim Quiz etwas geändert hat. */
+  /** Gastgeber: allen sagen, dass sich beim Quiz oder der Prüfung etwas geändert hat. */
   quiz: () => void;
+  /** Gastgeber: Bild-Lage an alle (`zuverlaessig` für Anfang und Ende einer Bewegung). */
+  bild: (nachricht: string, zuverlaessig: boolean) => void;
 };
 
 export type LiveVerbindung = "verbindet" | "verbunden" | "getrennt" | "fehler";
@@ -50,8 +54,10 @@ export type LiveBuehneProps = {
   onHerz?: () => void;
   /** Zuschauer: Bild des Gastgebers fehlt gerade (Pause oder weg). */
   onBildWeg?: (weg: boolean) => void;
-  /** Zuschauer: Der Gastgeber hat beim Quiz etwas geändert. */
+  /** Zuschauer: Der Gastgeber hat beim Quiz oder der Prüfung etwas geändert. */
   onQuiz?: () => void;
+  /** Zuschauer: neue Lage des Bilds vom Gastgeber (Text aus live-bild). */
+  onBild?: (nachricht: string) => void;
   onSteuerung?: (s: LiveSteuerung | null) => void;
   style?: StyleProp<ViewStyle>;
 };

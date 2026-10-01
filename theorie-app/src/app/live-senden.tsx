@@ -4,6 +4,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useKeepAwake } from "expo-keep-awake";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Reanimated, { Easing as REasing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { auswahlBlatt } from "@/components/auswahl-blatt";
@@ -12,8 +14,10 @@ import { Glas } from "@/components/glas";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { Icon, type IconName } from "@/components/icon";
 import { Lader } from "@/components/lader";
+import { bildBasis, LiveBildEbene } from "@/components/live-bild";
 import { LiveBuehne } from "@/components/live-buehne";
 import { LiveEnde, type TopChatter } from "@/components/live-ende";
+import { PruefungGastgeberBereich } from "@/components/live-pruefung";
 import { QUIZ_UEBERBLEND, QuizAuswahl, QuizGastgeberKarte } from "@/components/live-quiz";
 import { LiveChat, LiveEingabe, LiveSchild, LIVE_ROT, useHerzen, ZuschauerZahl } from "@/components/live";
 import { Knopf } from "@/components/ui";
@@ -33,13 +37,15 @@ import {
   type LiveSteuerung,
   type LiveZugang,
 } from "@/lib/live";
+import { BILD_START, bildNachricht, liveBildDateiLoeschen, liveBildHochladen, liveBildSichern, type BildLage, type LiveBild } from "@/lib/live-bild";
+import { PRUEFUNG_FRAGEN, PRUEFUNG_SEKUNDEN, useLivePruefungGastgeber, type LivePruefung } from "@/lib/live-pruefung";
 import { useQuizGastgeber, type LiveQuiz } from "@/lib/live-quiz";
 import { leuchten, schrift } from "@/lib/theme";
 
 // Live gehen (nur der Inhaber der App): Kamera-Vorschau, Thema, Countdown,
-// dann live mit Chat, Zuschauern, Herzen, Quiz und Moderation. Während einer
-// Quizfrage teilt sich der Bildschirm (Kamera oben, Quiz unten, ohne Chat).
-// Beim Verlassen endet das Live automatisch.
+// dann live mit Chat, Zuschauern, Herzen, Quiz, Prüfung, Bild aus der Galerie
+// und Moderation. Während Quiz oder Prüfung teilt sich der Bildschirm (Kamera
+// oben, Bereich unten, ohne Chat). Beim Verlassen endet das Live automatisch.
 
 type Phase = "start" | "bereit" | "countdown" | "live" | "ende" | "fehler";
 
@@ -53,9 +59,11 @@ function dauerText(ms: number): string {
   return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${sek}` : `${m}:${sek}`;
 }
 
-function Werkzeug({ icon, sf, label, aus, onPress }: { icon: IconName; sf: string; label: string; aus?: boolean; onPress: () => void }) {
+function Werkzeug({ icon, sf, label, aus, laedt, kompakt, onPress }: { icon: IconName; sf: string; label: string; aus?: boolean; laedt?: boolean; kompakt?: boolean; onPress: () => void }) {
+  const groesse = kompakt ? 40 : 46;
   return (
     <Pressable
+      disabled={laedt}
       onPress={() => {
         tippen();
         onPress();
@@ -67,10 +75,10 @@ function Werkzeug({ icon, sf, label, aus, onPress }: { icon: IconName; sf: strin
     >
       {({ pressed }) => (
         <>
-          <Glas interaktiv style={{ width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
-            <Icon name={icon} sf={sf as never} size={20} color={aus ? LIVE_ROT : "#FFFFFF"} weight="semibold" />
+          <Glas interaktiv style={{ width: groesse, height: groesse, borderRadius: groesse / 2, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
+            {laedt ? <Lader color="#FFFFFF" /> : <Icon name={icon} sf={sf as never} size={kompakt ? 18 : 20} color={aus ? LIVE_ROT : "#FFFFFF"} weight="semibold" />}
           </Glas>
-          <Text style={{ ...schrift.textHalb, fontSize: 11, color: "#FFFFFF", textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 4 }}>{label}</Text>
+          {kompakt ? null : <Text style={{ ...schrift.textHalb, fontSize: 11, color: "#FFFFFF", textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 4 }}>{label}</Text>}
         </>
       )}
     </Pressable>
@@ -101,16 +109,15 @@ export default function LiveSenden() {
   const [runde, setRunde] = useState(0);
   const [quizWahl, setQuizWahl] = useState(false);
   const [panelHoehe, setPanelHoehe] = useState(0);
-  const { height: fensterHoehe } = useWindowDimensions();
+  const { height: fensterHoehe, width: fensterBreite } = useWindowDimensions();
 
   const steuerung = useRef<LiveSteuerung | null>(null);
-  const quiz = useQuizGastgeber(
-    phase === "live" ? liveId : null,
-    () => steuerung.current?.quiz(),
-    (text) => hinweis.zeigen({ icon: "alert-circle", text, farbe: LIVE_ROT }),
-  );
+  const meldeFehler = (text: string) => hinweis.zeigen({ icon: "alert-circle", text, farbe: LIVE_ROT });
+  const quiz = useQuizGastgeber(phase === "live" ? liveId : null, () => steuerung.current?.quiz(), meldeFehler);
+  const pruefung = useLivePruefungGastgeber(phase === "live" ? liveId : null, () => steuerung.current?.quiz(), meldeFehler);
 
-  // Quiz: Kamera oben, Quiz unten. `panelQuiz` bleibt beim Ende kurz stehen, bis es hinausgeglitten ist.
+  // Quiz oder Prüfung: Kamera oben, Bereich unten. Der Bereich bleibt beim Ende kurz
+  // stehen, bis er hinausgeglitten ist.
   const quizAn = phase === "live" && Boolean(quiz.quiz);
   const [panelQuiz, setPanelQuiz] = useState<LiveQuiz | null>(null);
   useEffect(() => {
@@ -121,11 +128,33 @@ export default function LiveSenden() {
     const t = setTimeout(() => setPanelQuiz(null), 420);
     return () => clearTimeout(t);
   }, [quizAn, quiz.quiz]);
-  const videoZiel = quizAn && panelHoehe > 0 ? Math.max(fensterHoehe * 0.3, fensterHoehe - panelHoehe + QUIZ_UEBERBLEND) : fensterHoehe;
-  const videoHoehe = useRef(new Animated.Value(fensterHoehe)).current;
+  const pruefungAn = phase === "live" && Boolean(pruefung.pruefung);
+  const [panelPruefung, setPanelPruefung] = useState<LivePruefung | null>(null);
   useEffect(() => {
-    Animated.timing(videoHoehe, { toValue: videoZiel, duration: 450, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+    if (pruefungAn) {
+      setPanelPruefung(pruefung.pruefung);
+      return;
+    }
+    const t = setTimeout(() => setPanelPruefung(null), 420);
+    return () => clearTimeout(t);
+  }, [pruefungAn, pruefung.pruefung]);
+  const geteilt = Boolean(panelQuiz || panelPruefung);
+  // Das Video reicht bis in den weichen Übergang hinein; bei der Prüfung bleibt mindestens ein Viertel.
+  const videoZiel = (quizAn || pruefungAn) && panelHoehe > 0 ? Math.max(fensterHoehe * (pruefungAn ? 0.24 : 0.3), fensterHoehe - panelHoehe + QUIZ_UEBERBLEND) : fensterHoehe;
+  const videoHoehe = useSharedValue(fensterHoehe);
+  useEffect(() => {
+    videoHoehe.value = withTiming(videoZiel, { duration: 450, easing: REasing.out(REasing.cubic) });
   }, [videoZiel, videoHoehe]);
+  const videoStil = useAnimatedStyle(() => ({ height: videoHoehe.value }));
+
+  // Bild aus der Galerie: Lage geht live an alle, gesichert wird sie kurz nach dem Loslassen.
+  const [bild, setBild] = useState<LiveBild | null>(null);
+  const [bildLaedt, setBildLaedt] = useState(false);
+  const bildRef = useRef(bild);
+  bildRef.current = bild;
+  const bildPlan = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Das Bild liegt im Kamerabereich unter der Kopfzeile (bei Zuschauern genauso).
+  const bildOben = insets.top + 56;
   const idRef = useRef<string | null>(null);
   const zuschauerRef = useRef(0);
   zuschauerRef.current = zuschauer;
@@ -190,10 +219,11 @@ export default function LiveSenden() {
     };
   }, [runde]);
 
-  // Beim Verlassen der Seite endet das Live.
+  // Beim Verlassen der Seite endet das Live (und das Bild aus der Galerie verschwindet).
   useEffect(
     () => () => {
       if (idRef.current) liveBeenden(idRef.current);
+      if (bildRef.current) liveBildDateiLoeschen(bildRef.current.pfad);
     },
     [],
   );
@@ -244,6 +274,7 @@ export default function LiveSenden() {
     idRef.current = null;
     setEnde(Date.now());
     setPhase("ende");
+    bildAufraeumen();
     if (id) await liveBeenden(id);
   }
 
@@ -262,6 +293,7 @@ export default function LiveSenden() {
     setEnde(null);
     setTitel("");
     quiz.zuruecksetzen();
+    pruefung.zuruecksetzen();
     setPhase("start");
     setRunde((r) => r + 1);
   }
@@ -290,6 +322,117 @@ export default function LiveSenden() {
     ]);
   }
 
+  // ------------------------------------------------------------------ Prüfung
+  function pruefungOeffnen() {
+    dialog("Live-Prüfung starten?", `${PRUEFUNG_FRAGEN} Fragen, ${PRUEFUNG_SEKUNDEN / 60} Minuten – alle schreiben gleichzeitig, wie in der echten Prüfung. Bestanden bis 10 Fehlerpunkte.`, [
+      { text: "Abbrechen", style: "cancel" },
+      {
+        text: "Starten",
+        onPress: async () => {
+          const problem = await pruefung.starten();
+          zeigeProblem(problem);
+          if (!problem) erfolg();
+        },
+      },
+    ]);
+  }
+
+  function pruefungBeenden() {
+    const schreiben = pruefung.stand?.schreiben ?? 0;
+    dialog("Prüfung jetzt beenden?", schreiben > 0 ? `${schreiben} ${schreiben === 1 ? "schreibt" : "schreiben"} noch – offene Fragen zählen dann als falsch.` : "Alle Abgaben werden jetzt gewertet.", [
+      { text: "Abbrechen", style: "cancel" },
+      { text: "Beenden", style: "destructive", onPress: () => pruefung.beenden().then(zeigeProblem) },
+    ]);
+  }
+
+  async function zeitGeben(sekunden: number) {
+    const problem = await pruefung.verlaengern(sekunden);
+    if (problem) zeigeProblem(problem);
+    else hinweis.zeigen({ icon: "time", text: `+${sekunden / 60} ${sekunden === 60 ? "Minute" : "Minuten"} für alle` });
+  }
+
+  // ------------------------------------------------------------------ Bild
+  function bildSenden(b: LiveBild | null, zuverlaessig: boolean) {
+    steuerung.current?.bild(bildNachricht(b), zuverlaessig);
+  }
+
+  function bildSichernSpaeter(b: LiveBild | null) {
+    const id = idRef.current;
+    if (bildPlan.current) clearTimeout(bildPlan.current);
+    if (!id) return;
+    bildPlan.current = setTimeout(() => {
+      bildPlan.current = null;
+      liveBildSichern(id, b);
+    }, 500);
+  }
+
+  /** Live vorbei: Datei löschen (auf dem Server zählt nur ein laufendes Live). */
+  function bildAufraeumen() {
+    if (bildPlan.current) clearTimeout(bildPlan.current);
+    const b = bildRef.current;
+    if (b) liveBildDateiLoeschen(b.pfad);
+    setBild(null);
+  }
+
+  async function bildHolen() {
+    const id = idRef.current;
+    if (!id || bildLaedt) return;
+    setBildLaedt(true);
+    try {
+      const neu = await liveBildHochladen();
+      if (!neu) return;
+      // Gut ein Drittel so hoch wie der Kamerabereich, aber höchstens 80 % des Bildschirms breit.
+      const g = Math.min(BILD_START.g, (0.8 * fensterBreite) / (bildBasis(videoZiel, fensterHoehe, bildOben) * neu.seite));
+      const b: LiveBild = { ...BILD_START, g, ...neu };
+      const alt = bildRef.current;
+      if (bildPlan.current) clearTimeout(bildPlan.current);
+      setBild(b);
+      bildSenden(b, true);
+      erfolg();
+      const problem = await liveBildSichern(id, b);
+      if (problem) zeigeProblem(problem);
+      if (alt) liveBildDateiLoeschen(alt.pfad);
+    } catch (e) {
+      zeigeProblem((e as Error).message || "Das Bild ließ sich nicht hochladen.");
+    } finally {
+      setBildLaedt(false);
+    }
+  }
+
+  function bildEntfernen() {
+    const alt = bildRef.current;
+    if (!alt) return;
+    stoss();
+    setBild(null);
+    bildSenden(null, true);
+    bildSichernSpaeter(null);
+    liveBildDateiLoeschen(alt.pfad);
+  }
+
+  async function bildMenue() {
+    if (!bildRef.current) {
+      bildHolen();
+      return;
+    }
+    const wahl = await auswahlBlatt("Bild im Live", [{ text: "Anderes Bild wählen" }, { text: "Bild entfernen", gefahr: true }]);
+    if (wahl === 0) bildHolen();
+    if (wahl === 1) bildEntfernen();
+  }
+
+  function bildBewegt(lage: BildLage) {
+    const b = bildRef.current;
+    if (b) bildSenden({ ...b, ...lage }, false);
+  }
+
+  function bildFertig(lage: BildLage) {
+    const b = bildRef.current;
+    if (!b) return;
+    const neu = { ...b, ...lage };
+    setBild(neu);
+    bildSenden(neu, true);
+    bildSichernSpaeter(neu);
+  }
+
   function beenden() {
     dialog("Live beenden?", "Alle Zuschauer sehen dann „Das Live ist vorbei“.", [
       { text: "Weiter live", style: "cancel" },
@@ -304,6 +447,7 @@ export default function LiveSenden() {
     }
     const id = idRef.current;
     idRef.current = null;
+    bildAufraeumen();
     if (id) liveBeenden(id);
     router.back();
   }
@@ -335,11 +479,12 @@ export default function LiveSenden() {
   const zeigtBuehne = zugang && (phase === "bereit" || phase === "countdown" || phase === "live");
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#000000" }}>
+    // Eigene Wurzel für Gesten: Die Seite ist ein Vollbild-Modal.
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#000000" }}>
       <StatusBar style="light" />
 
-      {/* Kamera – während eines Quiz nur oben (bleibt dabei verbunden) */}
-      <Animated.View style={{ position: "absolute", top: 0, left: 0, right: 0, height: videoHoehe, overflow: "hidden" }}>
+      {/* Kamera – während Quiz oder Prüfung nur oben (bleibt dabei verbunden) */}
+      <Reanimated.View style={[{ position: "absolute", top: 0, left: 0, right: 0, overflow: "hidden" }, videoStil]}>
         {zeigtBuehne ? (
           <LiveBuehne
             key={zugang.token}
@@ -361,10 +506,15 @@ export default function LiveSenden() {
             }}
           />
         ) : null}
-      </Animated.View>
+      </Reanimated.View>
 
       <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top + 110 }} />
-      {panelQuiz ? null : <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.62)"]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 380 }} />}
+      {geteilt ? null : <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.62)"]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 380 }} />}
+
+      {/* Bild aus der Galerie – klebt auf dem Video und wandert beim Teilen mit nach oben */}
+      {zeigtBuehne ? (
+        <LiveBildEbene bild={bild} flaeche={videoHoehe} oben={bildOben} bearbeitbar unten={Math.max(insets.bottom, 12)} onBewegt={bildBewegt} onFertig={bildFertig} onLoeschen={bildEntfernen} />
+      ) : null}
 
       {/* Kopf */}
       <View style={{ position: "absolute", top: insets.top + 8, left: 12, right: 12, flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -401,11 +551,12 @@ export default function LiveSenden() {
         ) : null}
       </View>
 
-      {/* Werkzeuge rechts: Kamera drehen, Mikrofon, Quiz */}
+      {/* Werkzeuge rechts: Kamera drehen, Mikrofon, Bild, Quiz, Prüfung (geteilt nur als Symbole) */}
       {zeigtBuehne ? (
-        <View style={{ position: "absolute", right: 12, top: insets.top + 70, gap: 16 }}>
-          <Werkzeug icon="camera-reverse-outline" sf="arrow.triangle.2.circlepath.camera" label="Drehen" onPress={() => steuerung.current?.kameraWechseln().catch(() => {})} />
+        <View style={{ position: "absolute", right: 12, top: insets.top + 70, gap: geteilt ? 10 : 16 }}>
+          <Werkzeug kompakt={geteilt} icon="camera-reverse-outline" sf="arrow.triangle.2.circlepath.camera" label="Drehen" onPress={() => steuerung.current?.kameraWechseln().catch(() => {})} />
           <Werkzeug
+            kompakt={geteilt}
             icon={mikroAn ? "mic-outline" : "mic-off-outline"}
             sf={mikroAn ? "mic" : "mic.slash"}
             label={mikroAn ? "Mikro" : "Stumm"}
@@ -416,7 +567,9 @@ export default function LiveSenden() {
               steuerung.current?.mikrofon(neu).catch(() => setMikroAn(!neu));
             }}
           />
-          {phase === "live" && !panelQuiz ? <Werkzeug icon="flash-outline" sf="bolt" label="Quiz" onPress={quizOeffnen} /> : null}
+          <Werkzeug kompakt={geteilt} icon="image-outline" sf="photo" label="Bild" laedt={bildLaedt} onPress={bildMenue} />
+          {phase === "live" && !geteilt ? <Werkzeug icon="flash-outline" sf="bolt" label="Quiz" onPress={quizOeffnen} /> : null}
+          {phase === "live" && !geteilt ? <Werkzeug icon="document-text-outline" sf="doc.text" label="Prüfung" onPress={pruefungOeffnen} /> : null}
         </View>
       ) : null}
 
@@ -432,6 +585,22 @@ export default function LiveSenden() {
           onRangliste={() => quiz.rangliste().then(zeigeProblem)}
           onNaechste={() => setQuizWahl(true)}
           onSchliessen={quizSchliessen}
+          onLayout={(e) => setPanelHoehe(e.nativeEvent.layout.height)}
+          style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}
+        />
+      ) : null}
+
+      {/* Prüfung unten: Live-Zähler, Zeit geben, vorzeitig beenden, danach Ergebnis */}
+      {panelPruefung ? (
+        <PruefungGastgeberBereich
+          pruefung={pruefungAn && pruefung.pruefung ? pruefung.pruefung : panelPruefung}
+          stand={pruefung.stand}
+          beschaeftigt={pruefung.beschaeftigt}
+          weg={!pruefungAn}
+          unten={Math.max(insets.bottom, 12) + 8}
+          onVerlaengern={zeitGeben}
+          onBeenden={pruefungBeenden}
+          onSchliessen={() => pruefung.schliessen().then(zeigeProblem)}
           onLayout={(e) => setPanelHoehe(e.nativeEvent.layout.height)}
           style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}
         />
@@ -490,10 +659,11 @@ export default function LiveSenden() {
         </View>
       ) : null}
 
-      {/* Live: Chat und eigene Nachrichten (während eines Quiz ausgeblendet) */}
-      {phase === "live" && !panelQuiz ? (
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
-          <View style={{ paddingHorizontal: 12, paddingBottom: Math.max(insets.bottom, 12) + 4, gap: 10 }}>
+      {/* Live: Chat und eigene Nachrichten (während Quiz und Prüfung ausgeblendet) */}
+      {phase === "live" && !geteilt ? (
+        // box-none: Der leere Rand rechts gehört den Werkzeugen, nicht dem Chat.
+        <KeyboardAvoidingView pointerEvents="box-none" behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
+          <View pointerEvents="box-none" style={{ paddingHorizontal: 12, paddingBottom: Math.max(insets.bottom, 12) + 4, gap: 10 }}>
             <LiveChat nachrichten={nachrichten} gastgeberId={ich} onLangDruck={moderieren} style={{ maxHeight: 300, marginRight: 64 }} />
             <LiveEingabe
               angemeldet
@@ -560,6 +730,6 @@ export default function LiveSenden() {
       />
 
       <HinweisAnzeige wert={hinweis.wert} inhalt={hinweis.inhalt} oben={insets.top + 60} />
-    </View>
+    </GestureHandlerRootView>
   );
 }

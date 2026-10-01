@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
-import { Animated, Easing, KeyboardAvoidingView, Platform, Pressable, Text, useWindowDimensions, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { KeyboardAvoidingView, Platform, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
+import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 import { auswahlBlatt } from "@/components/auswahl-blatt";
 import { dialog } from "@/components/dialog";
@@ -10,11 +11,14 @@ import { Glas } from "@/components/glas";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { Icon } from "@/components/icon";
 import { Lader } from "@/components/lader";
+import { LiveBildEbene } from "@/components/live-bild";
 import { LiveBuehne } from "@/components/live-buehne";
+import { PruefungZuschauerBereich } from "@/components/live-pruefung";
 import { QUIZ_UEBERBLEND, QuizZuschauerKarte, quizSchluessel } from "@/components/live-quiz";
 import { LiveChat, LiveEingabe, LiveRing, LiveSchild, LIVE_ROT, useHerzen, ZuschauerZahl } from "@/components/live";
 import { Knopf } from "@/components/ui";
 import { useClipRechte } from "@/lib/clips-server";
+import { useDarstellung } from "@/lib/darstellung";
 import { erfolg, tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import {
@@ -31,14 +35,18 @@ import {
   type LiveZugang,
   type ZugangFehler,
 } from "@/lib/live";
+import { bildAusNachricht, type LiveBild } from "@/lib/live-bild";
+import { useLivePruefungZuschauer, type PruefungLage } from "@/lib/live-pruefung";
 import { useQuizZuschauer, type QuizLage } from "@/lib/live-quiz";
+import { useLiveXp } from "@/lib/live-xp";
 import { leuchten, schrift } from "@/lib/theme";
 
 // Das Live zum Zuschauen – als eigene Seite (Mitteilung „… ist jetzt live“)
 // und eingebettet in Clips (Kategorie „Live“). Ohne laufendes Live: Hinweis,
 // Mitteilung an/aus und für den Inhaber „Live gehen“. Stellt der Gastgeber eine
-// Quizfrage, teilt sich der Bildschirm: oben die Kamera, unten das Quiz – Chat
-// und Herzen sind so lange weg.
+// Quizfrage oder startet eine Prüfung, teilt sich der Bildschirm: oben die
+// Kamera (mit seinem Bild aus der Galerie), unten Quiz oder Prüfung – Chat und
+// Herzen sind so lange weg. Mitspielen bringt XP.
 
 const LIVE_VERLAUF = ["#FF5A5F", "#FF2D55", "#E0124A"] as const;
 
@@ -98,14 +106,22 @@ export function LiveAnsicht({
   // Chat und Quiz nur, solange die Ansicht zu sehen ist (z. B. nicht unter der Sende-Seite).
   const nachrichten = useLiveChat(aktiv ? (live?.id ?? null) : null);
   const quiz = useQuizZuschauer(aktiv ? (live?.id ?? null) : null);
+  const pruefung = useLivePruefungZuschauer(aktiv ? (live?.id ?? null) : null);
   const [quizWeg, setQuizWeg] = useState("");
+  const [pruefungWeg, setPruefungWeg] = useState("");
+  const { belohnungen } = useDarstellung();
+  const { xpVon, quizBuchen, pruefungBuchen } = useLiveXp();
   // Die Ansicht füllt immer den ganzen Bildschirm (Clips und eigene Seite).
   const { height: hoehe } = useWindowDimensions();
   const verbunden = Boolean(live && aktiv && zugang);
 
-  // Quiz: Kamera oben, Quiz unten. `panel` bleibt beim Ende kurz stehen, bis es hinausgeglitten ist.
-  const quizAn = Boolean(quiz.lage.quiz) && quizSchluessel(quiz.lage) !== quizWeg;
+  // Prüfung geht vor Quiz. Unten der Bereich, oben die Kamera; der Bereich bleibt
+  // beim Ende kurz stehen, bis er hinausgeglitten ist.
+  const pruefungSchluessel = pruefung.lage.pruefung ? `${pruefung.lage.pruefung.id}-${pruefung.lage.pruefung.status}` : "";
+  const pruefungAn = Boolean(pruefung.lage.pruefung) && pruefungSchluessel !== pruefungWeg;
+  const quizAn = !pruefungAn && Boolean(quiz.lage.quiz) && quizSchluessel(quiz.lage) !== quizWeg;
   const [panel, setPanel] = useState<QuizLage | null>(null);
+  const [panelPruefung, setPanelPruefung] = useState<PruefungLage | null>(null);
   const [panelHoehe, setPanelHoehe] = useState(0);
   useEffect(() => {
     if (quizAn) {
@@ -115,12 +131,65 @@ export function LiveAnsicht({
     const t = setTimeout(() => setPanel(null), 420);
     return () => clearTimeout(t);
   }, [quizAn, quiz.lage]);
-  // Das Video reicht bis in den weichen Übergang hinein; mindestens ein knappes Drittel bleibt.
-  const videoZiel = quizAn && panelHoehe > 0 ? Math.max(hoehe * 0.3, hoehe - panelHoehe + QUIZ_UEBERBLEND) : hoehe;
-  const videoHoehe = useRef(new Animated.Value(hoehe)).current;
   useEffect(() => {
-    Animated.timing(videoHoehe, { toValue: videoZiel, duration: 450, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+    if (pruefungAn) {
+      setPanelPruefung(pruefung.lage);
+      return;
+    }
+    const t = setTimeout(() => setPanelPruefung(null), 420);
+    return () => clearTimeout(t);
+  }, [pruefungAn, pruefung.lage]);
+  const geteilt = Boolean(panel || panelPruefung);
+  // Das Video reicht bis in den weichen Übergang hinein; mindestens ein knappes Drittel
+  // (bei der Prüfung ein Viertel) bleibt.
+  const videoZiel = (quizAn || pruefungAn) && panelHoehe > 0 ? Math.max(hoehe * (pruefungAn ? 0.24 : 0.3), hoehe - panelHoehe + QUIZ_UEBERBLEND) : hoehe;
+  const videoHoehe = useSharedValue(hoehe);
+  useEffect(() => {
+    videoHoehe.value = withTiming(videoZiel, { duration: 450, easing: Easing.out(Easing.cubic) });
   }, [videoZiel, videoHoehe]);
+  const videoStil = useAnimatedStyle(() => ({ height: videoHoehe.value }));
+
+  // XP fürs Mitspielen: Quizfrage nach der Auflösung, Prüfung nach der Abgabe.
+  const qQuiz = quiz.lage.quiz;
+  const qMein = quiz.lage.mein;
+  useEffect(() => {
+    if (qQuiz && qMein && qQuiz.status !== "offen") quizBuchen(qQuiz, qMein);
+  }, [qQuiz, qMein, quizBuchen]);
+  const pPruefung = pruefung.lage.pruefung;
+  const pMein = pruefung.lage.mein;
+  useEffect(() => {
+    if (pPruefung && pMein?.abgegeben) pruefungBuchen(pPruefung, pMein);
+  }, [pPruefung, pMein, pruefungBuchen]);
+
+  // Bild des Gastgebers: Bewegungen kommen live über LiveKit, die letzte Lage
+  // liegt auf dem Server (für alle, die später dazukommen). Kurz nach einer
+  // Live-Bewegung zählt die – der Server-Stand kann noch der alte sein.
+  const sb = live?.bild ?? null;
+  const serverBild = useMemo<LiveBild | null>(() => (sb ? { pfad: sb.pfad, seite: sb.seite, x: sb.x, y: sb.y, g: sb.groesse } : null), [sb?.pfad, sb?.seite, sb?.x, sb?.y, sb?.groesse]); // eslint-disable-line react-hooks/exhaustive-deps
+  const serverRef = useRef(serverBild);
+  serverRef.current = serverBild;
+  const funkZeit = useRef(0);
+  const [bild, setBild] = useState<LiveBild | null>(serverBild);
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const pruefen = () => {
+      const warten = 2500 - (Date.now() - funkZeit.current);
+      if (warten <= 0) setBild(serverRef.current);
+      else t = setTimeout(pruefen, warten + 50);
+    };
+    pruefen();
+    return () => clearTimeout(t);
+  }, [serverBild]);
+  const bildEmpfangen = useCallback((text: string) => {
+    const b = bildAusNachricht(text);
+    if (b === undefined) return;
+    funkZeit.current = Date.now();
+    setBild(b);
+  }, []);
+  const neuLaden = useCallback(() => {
+    quiz.neuLaden();
+    pruefung.neuLaden();
+  }, [quiz.neuLaden, pruefung.neuLaden]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Zugang zu LiveKit holen, sobald ein Live läuft und die Ansicht zu sehen ist.
   useEffect(() => {
@@ -297,8 +366,8 @@ export function LiveAnsicht({
   // --------------------------------------------------------------- im Live
   return (
     <View style={{ flex: 1, backgroundColor: "#000000" }}>
-      {/* Video – während eines Quiz nur oben (bleibt dabei verbunden) */}
-      <Animated.View style={{ position: "absolute", top: 0, left: 0, right: 0, height: videoHoehe, overflow: "hidden" }}>
+      {/* Video – während Quiz oder Prüfung nur oben (bleibt dabei verbunden) */}
+      <Reanimated.View style={[{ position: "absolute", top: 0, left: 0, right: 0, overflow: "hidden" }, videoStil]}>
         {verbunden && zugang ? (
           <LiveBuehne
             url={zugang.url}
@@ -309,7 +378,8 @@ export function LiveAnsicht({
             onZuschauer={setZuschauer}
             onHerz={ausloesen}
             onBildWeg={setBildWeg}
-            onQuiz={quiz.neuLaden}
+            onQuiz={neuLaden}
+            onBild={bildEmpfangen}
             onSteuerung={(s) => (steuerung.current = s)}
             onVerbindung={(s) => {
               if (s === "fehler") setFehler("verbindung");
@@ -324,10 +394,13 @@ export function LiveAnsicht({
             <Text style={{ ...schrift.titelFett, fontSize: 18, color: "#FFFFFF" }}>{name} ist gleich zurück</Text>
           </View>
         ) : null}
-      </Animated.View>
+      </Reanimated.View>
 
       <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.55)", "rgba(0,0,0,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: oben + 100 }} />
-      {panel ? null : <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.6)"]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: unten + 340 }} />}
+      {geteilt ? null : <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.6)"]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: unten + 340 }} />}
+
+      {/* Bild aus der Galerie des Gastgebers – wandert beim Teilen mit der Kamera nach oben */}
+      {verbunden && !langeWeg ? <LiveBildEbene bild={bild} flaeche={videoHoehe} oben={oben + 48} /> : null}
 
       {/* Kopf: Gastgeber, LIVE, Zuschauer, Mitteilung, Schließen */}
       <View style={{ position: "absolute", top: oben, left: 12, right: 12, flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -351,13 +424,30 @@ export function LiveAnsicht({
         {onSchliessen ? <RundTaste icon="close" sf="xmark" label="Schließen" onPress={onSchliessen} /> : null}
       </View>
 
-      {panel ? (
+      {panelPruefung ? (
+        // Prüfung unten über die ganze Breite – Chat und Herzen sind so lange weg.
+        <PruefungZuschauerBereich
+          lage={pruefungAn ? pruefung.lage : panelPruefung}
+          weg={!pruefungAn}
+          unten={unten}
+          ichId={ich}
+          xp={belohnungen ? xpVon("pruefung", panelPruefung.pruefung?.id) : null}
+          onSpeichern={pruefung.speichern}
+          onAbgeben={pruefung.abgeben}
+          onAnmelden={() => router.push("/anmelden")}
+          onAusblenden={() => setPruefungWeg(pruefungSchluessel)}
+          onFehler={(text) => hinweis.zeigen({ icon: "alert-circle", text, farbe: LIVE_ROT })}
+          onLayout={(e) => setPanelHoehe(e.nativeEvent.layout.height)}
+          style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}
+        />
+      ) : panel ? (
         // Quiz unten über die ganze Breite – Chat und Herzen sind so lange weg.
         <QuizZuschauerKarte
           lage={panel}
           weg={!quizAn}
           unten={unten}
           ichId={ich}
+          xp={belohnungen ? xpVon("quiz", panel.quiz?.id) : null}
           onAntworten={quiz.antworten}
           onAnmelden={() => router.push("/anmelden")}
           onAusblenden={() => setQuizWeg(quizSchluessel(quiz.lage))}

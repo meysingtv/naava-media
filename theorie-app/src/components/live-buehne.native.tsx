@@ -17,10 +17,12 @@ import { mediaDevices } from "@livekit/react-native-webrtc";
 import { Track, VideoPresets, type LocalVideoTrack, type RemoteTrackPublication } from "livekit-client";
 
 import type { LiveBuehneProps } from "@/lib/live";
+import { bytesZuText, textZuBytes } from "@/lib/live-bild";
 
 // Live-Video über LiveKit (iPhone und Android). Der Inhaber sendet Kamera und
 // Mikrofon, alle anderen empfangen nur. Herzen gehen als Datennachricht an alle,
-// ebenso das Quiz-Signal des Gastgebers („neue Frage, bitte neu laden“).
+// ebenso die Signale des Gastgebers: Quiz/Prüfung („bitte neu laden“) und die
+// Lage seines Bilds aus der Galerie.
 
 registerGlobals();
 
@@ -78,7 +80,7 @@ export function LiveBuehne(props: LiveBuehneProps) {
   );
 }
 
-function Innen({ senden, stumm, onZuschauer, onHerz, onBildWeg, onQuiz, onSteuerung }: LiveBuehneProps) {
+function Innen({ senden, stumm, onZuschauer, onHerz, onBildWeg, onQuiz, onBild, onSteuerung }: LiveBuehneProps) {
   const raum = useRoomContext();
   const { localParticipant } = useLocalParticipant();
   const teilnehmer = useParticipants();
@@ -87,8 +89,8 @@ function Innen({ senden, stumm, onZuschauer, onHerz, onBildWeg, onQuiz, onSteuer
   const [gespiegelt, setGespiegelt] = useState(true);
 
   // Rückmeldungen über Refs, damit wechselnde Funktionen nichts neu starten.
-  const rueck = useRef({ onZuschauer, onHerz, onBildWeg, onQuiz, onSteuerung });
-  rueck.current = { onZuschauer, onHerz, onBildWeg, onQuiz, onSteuerung };
+  const rueck = useRef({ onZuschauer, onHerz, onBildWeg, onQuiz, onBild, onSteuerung });
+  rueck.current = { onZuschauer, onHerz, onBildWeg, onQuiz, onBild, onSteuerung };
 
   const bild = kameras.find((k) => (senden ? k.participant.isLocal : k.participant.identity.startsWith(GASTGEBER)));
   const bildDa = Boolean(bild && isTrackReference(bild) && !bild.publication.isMuted);
@@ -117,8 +119,12 @@ function Innen({ senden, stumm, onZuschauer, onHerz, onBildWeg, onQuiz, onSteuer
   const quizEmpfangen = useCallback((n: ReceivedDataMessage) => {
     if (n.from?.identity.startsWith(GASTGEBER)) rueck.current.onQuiz?.();
   }, []);
+  const bildEmpfangen = useCallback((n: ReceivedDataMessage) => {
+    if (n.from?.identity.startsWith(GASTGEBER)) rueck.current.onBild?.(bytesZuText(n.payload));
+  }, []);
   const { send } = useDataChannel("herz", herzEmpfangen);
   const { send: quizSenden } = useDataChannel("quiz", quizEmpfangen);
+  const { send: bildSenden } = useDataChannel("bild", bildEmpfangen);
 
   useEffect(() => {
     rueck.current.onSteuerung?.({
@@ -127,6 +133,9 @@ function Innen({ senden, stumm, onZuschauer, onHerz, onBildWeg, onQuiz, onSteuer
       },
       quiz: () => {
         quizSenden(QUIZ, { reliable: true }).catch(() => {});
+      },
+      bild: (nachricht, zuverlaessig) => {
+        bildSenden(textZuBytes(nachricht), { reliable: zuverlaessig }).catch(() => {});
       },
       kameraWechseln: async () => {
         const ziel = vorne.current ? "environment" : "front";
@@ -146,7 +155,7 @@ function Innen({ senden, stumm, onZuschauer, onHerz, onBildWeg, onQuiz, onSteuer
       },
     });
     return () => rueck.current.onSteuerung?.(null);
-  }, [send, quizSenden, raum, localParticipant]);
+  }, [send, quizSenden, bildSenden, raum, localParticipant]);
 
   if (!bild || !isTrackReference(bild)) return null;
   // Eigenes Bild mit der Frontkamera gespiegelt – wie ein Spiegel.

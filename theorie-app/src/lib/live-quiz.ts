@@ -67,14 +67,20 @@ const LEER: QuizLage = { quiz: null, mein: null, stand: null };
 
 let versatz = 0;
 
-function uhrStellen(jetzt: string | undefined, vorher: number, nachher: number) {
+/** Uhr nach einer Server-Antwort stellen (`jetzt` = Serverzeit, vorher/nachher = Handyzeit). */
+export function uhrStellen(jetzt: string | undefined, vorher: number, nachher: number) {
   const server = jetzt ? Date.parse(jetzt) : NaN;
   if (Number.isFinite(server) && nachher - vorher < 2500) versatz = server - (vorher + nachher) / 2;
 }
 
+/** Aktuelle Serverzeit in Millisekunden (nach der zuletzt gestellten Uhr). */
+export function serverJetzt(): number {
+  return Date.now() + versatz;
+}
+
 /** Restzeit einer offenen Frage in Millisekunden. */
 export function quizRestzeit(quiz: LiveQuiz): number {
-  return Math.max(0, Date.parse(quiz.endet_am) - (Date.now() + versatz));
+  return Math.max(0, Date.parse(quiz.endet_am) - serverJetzt());
 }
 
 /** Die richtigen Antworten aus dem Katalog (Positionen wie in `antworten`). */

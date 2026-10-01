@@ -223,20 +223,48 @@ App. Alle anderen schauen in Clips zu, schreiben im Chat und schicken Herzen.
   500 fürs Richtige plus bis zu 500 fürs Tempo. „Rangliste“ zeigt allen die
   Top 5 im Live, der Abschluss nach dem Live die Quiz-Sieger. Mitspielen geht
   nur mit Konto; stummgeschaltete Leute spielen nicht mit.
+- **Live-Prüfung:** Rechts auf „Prüfung“ tippen → alle schreiben gleichzeitig
+  eine echte Prüfung: 20 Fragen aus allen Themen, 10 Minuten, Fehlerpunkte wie
+  in der App (bestanden bis 10, zwei falsche 5-Punkte-Fragen = durchgefallen).
+  Der Bildschirm teilt sich wie beim Quiz; die Zuschauer springen über den
+  Navigator zwischen den Fragen und geben ab (bei Zeitende automatisch). Der
+  Inhaber sieht einen Live-Zähler: wer schreibt, wer abgegeben hat, wie viele
+  bestehen und wie weit jeder ist. Mit „+1 Min“ / „+3 Min“ gibt er allen mehr
+  Zeit (insgesamt höchstens eine Stunde), „Beenden“ wertet sofort für alle.
+  Danach sehen alle Quote, Ø Fehlerpunkte, das Podest und ihre Fehler mit der
+  richtigen Lösung, der Inhaber zusätzlich die schwersten Fragen. Die Lösungen
+  kennt nur der Server, er wertet beim Abgeben.
+- **XP fürs Mitspielen:** Jede Quizfrage und jede Live-Prüfung zählt wie
+  Lernen (Lernstand, Prüfungs-Liste, Serie). Quiz: 10 XP für richtig (2 für
+  falsch) plus bis zu 10 Tempo-XP. Prüfung: XP je beantworteter Frage plus 60
+  fürs Bestehen (20 sonst), fehlerfrei 40 extra. Jede Runde zählt nur einmal,
+  auch nach einem Neustart. Die XP stehen im Ergebnis, wenn „XP, HP &
+  Abzeichen“ eingeschaltet ist.
+- **Bild aus der Galerie:** Rechts auf „Bild“ → ein Foto wählen; es liegt dann
+  bei allen auf dem Video. Mit einem Finger verschieben, mit zwei größer oder
+  kleiner machen – die Zuschauer sehen jede Bewegung sofort. Festhalten zeigt
+  unten die Löschleiste; hineinziehen und loslassen löscht das Bild. Startet
+  ein Quiz oder eine Prüfung, wandert das Bild mit der Kamera nach oben. Noch
+  einmal auf „Bild“ tippen: anderes Bild oder entfernen. Wer später dazukommt,
+  sieht das Bild an der letzten Stelle; nach dem Live wird es gelöscht
+  (Speicher `lern-live`, nur der Inhaber darf hochladen).
 - **Technik:** Bild und Ton über [LiveKit](https://livekit.io) (WebRTC, kaum
-  Verzögerung), Status, Chat und Quiz über Supabase (`update-live.sql` und
-  `update-live-quiz.sql`, Abschnitt 17 und 18, mit Echtzeit; neue Quizfragen
-  meldet die App des Inhabers zusätzlich über LiveKit). Die Edge Function
+  Verzögerung), Status, Chat, Quiz und Prüfung über Supabase
+  (`update-live.sql`, `update-live-quiz.sql` und `update-live-pruefung.sql`,
+  Abschnitt 17 bis 19, mit Echtzeit; Neues bei Quiz und Prüfung meldet die App
+  des Inhabers zusätzlich über LiveKit, ebenso jede Bewegung des Bilds). Die Edge Function
   `live-token` gibt die Zugänge aus: senden darf nur der Inhaber, alle anderen
   nur empfangen. LiveKit rechnet nach Minuten und Zuschauern ab – den
   Verbrauch zeigt cloud.livekit.io.
 
 Einrichten:
 
-1. `supabase/update-live.sql` und danach `supabase/update-live-quiz.sql` im
-   SQL-Editor ausführen. Sie hängen die Tabellen an die Echtzeit-Publikation
-   `supabase_realtime` (gibt es in jedem Supabase-Projekt) – darüber kommen
-   Chat, Live-Status und Quizfragen sofort an.
+1. `supabase/update-live.sql`, danach `supabase/update-live-quiz.sql` und
+   `supabase/update-live-pruefung.sql` im SQL-Editor ausführen. Sie hängen die
+   Tabellen an die Echtzeit-Publikation `supabase_realtime` (gibt es in jedem
+   Supabase-Projekt) – darüber kommen Chat, Live-Status, Quizfragen und
+   Prüfungen sofort an. Die letzte Datei legt auch den Speicher `lern-live`
+   für das Bild aus der Galerie an.
 2. Auf cloud.livekit.io ein Projekt anlegen und unter Settings → API Keys einen
    Schlüssel erzeugen (URL `wss://…livekit.cloud`, API Key, API Secret).
 3. Supabase → Edge Functions → Secrets: `LIVEKIT_URL`, `LIVEKIT_API_KEY`,

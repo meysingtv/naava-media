@@ -12,7 +12,7 @@ import { NutzerBild } from "@/components/profilbild";
 import { Verkehrszeichen } from "@/components/zeichen";
 import { FRAGEN, THEMEN, themaVon, type Frage, type LageKey, type LeuchteKey, type ThemaId, type ZeichenKey } from "@/lib/fragen";
 import { erfolg, fehler as fehlerRuetteln, stoss, tippen } from "@/lib/haptik";
-import { QUIZ_DAUERN, QUIZ_FRAGEN, quizLoesung, quizRestzeit, type LiveQuiz, type QuizLage, type QuizSpieler, type QuizStand, type QuizZwischenstand } from "@/lib/live-quiz";
+import { QUIZ_DAUERN, QUIZ_FRAGEN, quizLoesung, quizRestzeit, type LiveQuiz, type QuizLage, type QuizStand, type QuizZwischenstand } from "@/lib/live-quiz";
 import { farben, leuchten, mitDeckkraft, schrift, verlauf } from "@/lib/theme";
 
 // Live-Quiz: Läuft eine Frage, teilt sich der Bildschirm – oben die Kamera,
@@ -20,11 +20,11 @@ import { farben, leuchten, mitDeckkraft, schrift, verlauf } from "@/lib/theme";
 // An der Naht sitzt ein rundes Abzeichen: erst der Countdown, dann Ergebnis,
 // Trefferquote oder Pokal. Dazu die Auswahl der Frage aus dem Katalog.
 
-const BUCHSTABEN = ["A", "B", "C", "D", "E", "F"];
-const GRUEN = farben.gruen;
-const ROT = "#FF5A4E";
+export const BUCHSTABEN = ["A", "B", "C", "D", "E", "F"];
+export const GRUEN = farben.gruen;
+export const ROT = "#FF5A4E";
 const LIVE_ROT = "#FF2D55";
-const GOLD = "#F5C451";
+export const GOLD = "#F5C451";
 const MEDAILLE = [GOLD, "#C9D1DB", "#D99A6C"];
 const LIVE_VERLAUF = ["#FF5A5F", "#FF2D55", "#E0124A"] as const;
 const FUELLEN = { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } as const;
@@ -39,7 +39,7 @@ const BEREICH_GRUND = "#0C0D11";
 /** Abstand der ersten Zeile im Bereich; das Abzeichen sitzt auf ihrer Höhe. */
 const INHALT_OBEN = 52;
 
-type Zustand = "offen" | "gewaehlt" | "richtig" | "falsch" | "verpasst";
+export type Zustand = "offen" | "gewaehlt" | "richtig" | "falsch" | "verpasst";
 
 const zahl = (n: number) => n.toLocaleString("de-DE");
 const prozent = (teil: number, ganz: number) => (ganz > 0 ? Math.round((teil / ganz) * 100) : 0);
@@ -109,7 +109,7 @@ function useAuftritt(schluessel: string | null, weg: boolean) {
  * Quiz-Bereich über die ganze Breite: oben ein weicher Übergang ins Video, an
  * der Naht das Abzeichen mit warmem Glühen (grün/rot/gold nach der Auflösung).
  */
-function Bereich({ abzeichen, glut = farben.orange, unten, children }: { abzeichen: ReactNode; glut?: string; unten: number; children: ReactNode }) {
+export function Bereich({ abzeichen, glut = farben.orange, unten, children }: { abzeichen: ReactNode; glut?: string; unten: number; children: ReactNode }) {
   const { width } = useWindowDimensions();
   return (
     <View>
@@ -134,7 +134,7 @@ function Bereich({ abzeichen, glut = farben.orange, unten, children }: { abzeich
 }
 
 /** Abzeichen springt beim Wechsel (Auflösung, Rangliste) kurz auf. */
-function Aufploppen({ schluessel, children }: { schluessel: string; children: ReactNode }) {
+export function Aufploppen({ schluessel, children }: { schluessel: string; children: ReactNode }) {
   const w = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     w.setValue(0);
@@ -144,7 +144,7 @@ function Aufploppen({ schluessel, children }: { schluessel: string; children: Re
 }
 
 /** Ring mit Anteil (0–1) und Inhalt in der Mitte – für Countdown und Trefferquote. */
-function Ring({ anteil, farbe, children }: { anteil: number; farbe: string; children: ReactNode }) {
+export function Ring({ anteil, farbe, children }: { anteil: number; farbe: string; children: ReactNode }) {
   const d = ABZEICHEN;
   const r = d / 2 - 5;
   const umfang = 2 * Math.PI * r;
@@ -208,7 +208,7 @@ function ZeitRing({ quiz }: { quiz: LiveQuiz }) {
 }
 
 /** Rundes Abzeichen mit Symbol: leuchtender Verlauf, helle Kante, kein dunkler Ring. */
-function SymbolAbzeichen({ icon, verlaufFarben, dunkel }: { icon: IconName; verlaufFarben: readonly [string, string]; dunkel?: boolean }) {
+export function SymbolAbzeichen({ icon, verlaufFarben, dunkel }: { icon: IconName; verlaufFarben: readonly [string, string]; dunkel?: boolean }) {
   const d = ABZEICHEN;
   return (
     <View style={[{ width: d, height: d, borderRadius: d / 2 }, leuchten(verlaufFarben[1], 0.7, 16, 0)]}>
@@ -219,15 +219,15 @@ function SymbolAbzeichen({ icon, verlaufFarben, dunkel }: { icon: IconName; verl
   );
 }
 
-const GRUEN_VERLAUF = ["#86EA92", "#2FAE45"] as const;
-const ROT_VERLAUF = ["#FF9488", "#E2382C"] as const;
-const GRAU_VERLAUF = ["#A9AEB6", "#5D626B"] as const;
-const GOLD_VERLAUF = ["#FFE7A0", "#F2A21F"] as const;
+export const GRUEN_VERLAUF = ["#86EA92", "#2FAE45"] as const;
+export const ROT_VERLAUF = ["#FF9488", "#E2382C"] as const;
+export const GRAU_VERLAUF = ["#A9AEB6", "#5D626B"] as const;
+export const GOLD_VERLAUF = ["#FFE7A0", "#F2A21F"] as const;
 
-const Pokal = () => <SymbolAbzeichen icon="trophy" verlaufFarben={GOLD_VERLAUF} dunkel />;
+export const Pokal = () => <SymbolAbzeichen icon="trophy" verlaufFarben={GOLD_VERLAUF} dunkel />;
 
 /** Kopfzeile in der Karte – links und rechts vom Abzeichen. */
-function KopfZeile({ links, rechts }: { links: ReactNode; rechts?: ReactNode }) {
+export function KopfZeile({ links, rechts }: { links: ReactNode; rechts?: ReactNode }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", height: 30 }}>
       <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 5, paddingRight: 6 }}>{links}</View>
@@ -237,10 +237,10 @@ function KopfZeile({ links, rechts }: { links: ReactNode; rechts?: ReactNode }) 
   );
 }
 
-function Etikett({ text, icon, farbe = "rgba(255,255,255,0.75)" }: { text: string; icon?: "flash" | "trophy"; farbe?: string }) {
+export function Etikett({ text, icon, iconFarbe, farbe = "rgba(255,255,255,0.75)" }: { text: string; icon?: IconName; iconFarbe?: string; farbe?: string }) {
   return (
     <>
-      {icon ? <Icon name={icon} size={12} color={icon === "trophy" ? GOLD : farben.orange} /> : null}
+      {icon ? <Icon name={icon} size={12} color={iconFarbe ?? (icon === "trophy" ? GOLD : farben.orange)} /> : null}
       <Text style={{ ...schrift.textFett, fontSize: 11.5, letterSpacing: 1.1, color: farbe, flexShrink: 1 }} numberOfLines={1}>
         {text}
       </Text>
@@ -248,7 +248,7 @@ function Etikett({ text, icon, farbe = "rgba(255,255,255,0.75)" }: { text: strin
   );
 }
 
-function RundKnopf({ onPress, label }: { onPress: () => void; label: string }) {
+export function RundKnopf({ onPress, label }: { onPress: () => void; label: string }) {
   return (
     <Pressable
       onPress={() => {
@@ -270,7 +270,7 @@ function RundKnopf({ onPress, label }: { onPress: () => void; label: string }) {
 // ---------------------------------------------------------------------------
 
 /** Kleines Bild zur Frage (Zeichen, Lageplan, Leuchte) – antippen vergrößert. */
-function QuizBild({ bild }: { bild: string | null }) {
+export function QuizBild({ bild }: { bild: string | null }) {
   const [gross, setGross] = useState(false);
   const { width } = useWindowDimensions();
   if (!bild || !BEKANNTE_BILDER.has(bild)) return null;
@@ -336,7 +336,7 @@ function Marke({ zustand, buchstabe }: { zustand: Zustand; buchstabe: string }) 
 }
 
 /** Eine Antwort als Pille; gewählt leuchtet sie orange. Dahinter auf Wunsch ein Balken (Stimmen). */
-function AntwortZeile({
+export function AntwortZeile({
   buchstabe,
   text,
   zustand,
@@ -410,7 +410,7 @@ function AntwortZeile({
 }
 
 /** Großer Knopf in der Karte: Orange (Haupt) oder Glas (Neben). */
-function KartenKnopf({ titel, icon, haupt, aus, onPress, style }: { titel: string; icon?: IconName; haupt?: boolean; aus?: boolean; onPress: () => void; style?: StyleProp<ViewStyle> }) {
+export function KartenKnopf({ titel, icon, haupt, aus, onPress, style }: { titel: string; icon?: IconName; haupt?: boolean; aus?: boolean; onPress: () => void; style?: StyleProp<ViewStyle> }) {
   return (
     <Pressable
       disabled={aus}
@@ -435,7 +435,7 @@ function KartenKnopf({ titel, icon, haupt, aus, onPress, style }: { titel: strin
 }
 
 /** Ruhiger Hinweis anstelle des Knopfs („Antwort ist drin“, „Zeit ist um“). */
-function Hinweispille({ icon, farbe, text, zusatz }: { icon: IconName; farbe: string; text: string; zusatz?: string }) {
+export function Hinweispille({ icon, farbe, text, zusatz }: { icon: IconName; farbe: string; text: string; zusatz?: string }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 50, borderRadius: 25, backgroundColor: mitDeckkraft(farbe, 0.12), borderWidth: 1, borderColor: mitDeckkraft(farbe, 0.35) }}>
       <Icon name={icon} size={18} color={farbe} />
@@ -446,7 +446,7 @@ function Hinweispille({ icon, farbe, text, zusatz }: { icon: IconName; farbe: st
 }
 
 /** Erklärung nach der Auflösung: „Merke“ mit Akzentlinie, immer ganz zu lesen. */
-function Erklaerung({ text }: { text: string }) {
+export function Erklaerung({ text }: { text: string }) {
   if (!text) return null;
   return (
     <View style={{ flexDirection: "row", gap: 12, paddingVertical: 2 }}>
@@ -482,8 +482,10 @@ function PunkteChip({ punkte }: { punkte: number }) {
 // Rangliste mit Podest
 // ---------------------------------------------------------------------------
 
-/** Die drei Besten auf dem Podest: Platz 2 links, 1 in der Mitte, 3 rechts. */
-function Podest({ spieler, ichId }: { spieler: QuizSpieler[]; ichId?: string | null }) {
+export type PodestPerson = { id: string; name: string; bild_pfad: string | null; avatar_farbe?: string; platz: number };
+
+/** Die drei Besten auf dem Podest: Platz 2 links, 1 in der Mitte, 3 rechts. `wert` steht unter dem Namen. */
+export function Podest<P extends PodestPerson>({ spieler, ichId, wert }: { spieler: P[]; ichId?: string | null; wert: (p: P) => string }) {
   const plaetze = [2, 1, 3].map((p) => spieler.find((s) => s.platz === p));
   const sockel = [36, 52, 26];
   const bild = [44, 54, 44];
@@ -503,7 +505,7 @@ function Podest({ spieler, ichId }: { spieler: QuizSpieler[]; ichId?: string | n
             <Text style={{ ...schrift.textFett, fontSize: 13.5, color: "#FFFFFF", marginTop: 6, maxWidth: "100%" }} numberOfLines={1}>
               {s.id === ichId ? "Du" : s.name}
             </Text>
-            <Text style={{ ...schrift.textHalb, fontSize: 12.5, color: s.platz === 1 ? GOLD : "rgba(255,255,255,0.7)", fontVariant: ["tabular-nums"] }}>{zahl(s.punkte)}</Text>
+            <Text style={{ ...schrift.textHalb, fontSize: 12.5, color: s.platz === 1 ? GOLD : "rgba(255,255,255,0.7)", fontVariant: ["tabular-nums"] }}>{wert(s)}</Text>
             <LinearGradient colors={[mitDeckkraft(m, 0.42), mitDeckkraft(m, 0.06)]} style={{ alignSelf: "stretch", height: sockel[i], marginTop: 6, borderTopLeftRadius: 12, borderTopRightRadius: 12, alignItems: "center", justifyContent: "center" }}>
               <Text style={{ ...schrift.titel, fontSize: 17, color: m }}>{s.platz}</Text>
             </LinearGradient>
@@ -514,7 +516,7 @@ function Podest({ spieler, ichId }: { spieler: QuizSpieler[]; ichId?: string | n
   );
 }
 
-function RanglistenZeile({ platz, name, bildPfad, farbe, punkte, ich }: { platz: number; name: string; bildPfad?: string | null; farbe?: string; punkte: number; ich?: boolean }) {
+export function RanglistenZeile({ platz, name, bildPfad, farbe, punkte, wert, ich }: { platz: number; name: string; bildPfad?: string | null; farbe?: string; punkte: number; wert?: string; ich?: boolean }) {
   return (
     <View
       style={{
@@ -535,7 +537,7 @@ function RanglistenZeile({ platz, name, bildPfad, farbe, punkte, ich }: { platz:
       <Text style={{ ...schrift.textHalb, flex: 1, fontSize: 14.5, color: "#FFFFFF" }} numberOfLines={1}>
         {name}
       </Text>
-      <Text style={{ ...schrift.titel, fontSize: 14.5, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{zahl(punkte)}</Text>
+      <Text style={{ ...schrift.titel, fontSize: 14.5, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{wert ?? zahl(punkte)}</Text>
     </View>
   );
 }
@@ -575,7 +577,7 @@ function RanglisteInhalt({ quiz, ichId, stand }: { quiz: LiveQuiz; ichId?: strin
   const rest = quiz.bestenliste.filter((s) => s.platz > 3).slice(0, 2);
   return (
     <View style={{ gap: 8 }}>
-      <Podest spieler={quiz.bestenliste} ichId={ichId} />
+      <Podest spieler={quiz.bestenliste} ichId={ichId} wert={(p) => zahl(p.punkte)} />
       {rest.map((s) => (
         <RanglistenZeile key={s.id} platz={s.platz} name={s.id === ichId ? `${s.name} (du)` : s.name} bildPfad={s.bild_pfad} farbe={s.avatar_farbe} punkte={s.punkte} ich={s.id === ichId} />
       ))}
@@ -596,6 +598,7 @@ export function QuizZuschauerKarte({
   ichId,
   unten,
   weg = false,
+  xp,
   onAntworten,
   onAnmelden,
   onAusblenden,
@@ -610,6 +613,8 @@ export function QuizZuschauerKarte({
   unten: number;
   /** Quiz ist vorbei: Bereich gleitet hinaus. */
   weg?: boolean;
+  /** XP fürs Mitspielen (nur wenn Belohnungen eingeblendet sind). */
+  xp?: number | null;
   onAntworten: (auswahl: number[]) => Promise<string | null>;
   onAnmelden: () => void;
   /** Nach der Auflösung: Karte wegklicken (bis zur nächsten Änderung). */
@@ -717,7 +722,7 @@ export function QuizZuschauerKarte({
           ) : (
             <>
               <KopfZeile links={<Etikett icon="flash" text={`FRAGE ${quiz.nummer}`} />} rechts={<RundKnopf label="Quiz ausblenden" onPress={onAusblenden} />} />
-              <Ergebnis quiz={quiz} mein={mein} />
+              <Ergebnis quiz={quiz} mein={mein} xp={xp} />
               <View style={{ gap: 7 }}>{zeilen}</View>
               <Erklaerung text={quiz.erklaerung} />
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -742,7 +747,17 @@ export function QuizZuschauerKarte({
 }
 
 /** Ergebnis groß in der Mitte: richtig mit Punkten, falsch oder nicht dabei. */
-function Ergebnis({ quiz, mein }: { quiz: LiveQuiz; mein: QuizLage["mein"] }) {
+/** Kleine Pille „+12 XP“ fürs Mitspielen. */
+export function XpPille({ xp }: { xp: number }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 3, height: 24, paddingHorizontal: 9, borderRadius: 12, backgroundColor: "rgba(252,91,14,0.16)" }}>
+      <Icon name="flash" size={12} color={farben.orange} />
+      <Text style={{ ...schrift.textFett, fontSize: 12.5, color: farben.orange }}>+{xp} XP</Text>
+    </View>
+  );
+}
+
+function Ergebnis({ quiz, mein, xp }: { quiz: LiveQuiz; mein: QuizLage["mein"]; xp?: number | null }) {
   const dabei = Boolean(mein);
   const gut = Boolean(mein?.richtig);
   const c = !dabei ? "#FFFFFF" : gut ? GRUEN : ROT;
@@ -752,6 +767,7 @@ function Ergebnis({ quiz, mein }: { quiz: LiveQuiz; mein: QuizLage["mein"] }) {
       <Text style={{ ...schrift.titel, fontSize: 27, lineHeight: 32, color: c, textShadowColor: mitDeckkraft(c, 0.45), textShadowRadius: 18 }}>{!dabei ? "Nicht mitgespielt" : gut ? "Richtig!" : "Leider falsch"}</Text>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
         {gut && mein && mein.punkte > 0 ? <PunkteChip punkte={mein.punkte} /> : null}
+        {dabei && xp ? <XpPille xp={xp} /> : null}
         {loesung ? <Text style={{ ...schrift.textHalb, fontSize: 13.5, color: "rgba(255,255,255,0.7)" }}>Richtig ist {loesung}</Text> : null}
       </View>
     </View>
