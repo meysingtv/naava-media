@@ -127,9 +127,14 @@ function Innen({ senden, stumm, ohneKamera, onZuschauer, onHerz, onBildWeg, onQu
 
   const bild = kameras.find((k) => (senden ? k.participant.isLocal : k.participant.identity.startsWith(GASTGEBER)));
   const bildDa = Boolean(bild && isTrackReference(bild) && !bild.publication.isMuted);
-  // Zuschauer (nur Entwicklung): Der Gastgeber sendet aus dem Simulator ohne Kamera.
-  const [platzhalter, setPlatzhalter] = useState(false);
+  // Zuschauer (nur Entwicklung): Der Gastgeber sendet aus dem Simulator ohne Kamera –
+  // erkannt am Signal oder daran, dass er da ist, aber gar keine Kamera veröffentlicht.
+  const [platzhalterSignal, setPlatzhalter] = useState(false);
   const platzhalterZeit = useRef(0);
+  const veroeffentlicht = useTracks([Track.Source.Camera], { onlySubscribed: false });
+  const gastgeberDa = teilnehmer.some((t) => t.identity.startsWith(GASTGEBER));
+  const gastgeberOhneKamera = __DEV__ && !senden && gastgeberDa && !veroeffentlicht.some((k) => k.participant.identity.startsWith(GASTGEBER));
+  const platzhalter = platzhalterSignal || gastgeberOhneKamera;
 
   const zuschauer = teilnehmer.filter((t) => !t.identity.startsWith(GASTGEBER)).length;
 
@@ -180,12 +185,12 @@ function Innen({ senden, stumm, ohneKamera, onZuschauer, onHerz, onBildWeg, onQu
   }, [senden, ohneKamera, platzhalterSenden]);
   // Zuschauer: Bleibt die Meldung aus, wieder normal (schwarz bzw. „gleich zurück“).
   useEffect(() => {
-    if (senden || !platzhalter) return;
+    if (senden || !platzhalterSignal) return;
     const t = setInterval(() => {
       if (Date.now() - platzhalterZeit.current > 8000) setPlatzhalter(false);
     }, 2000);
     return () => clearInterval(t);
-  }, [senden, platzhalter]);
+  }, [senden, platzhalterSignal]);
 
   useEffect(() => {
     rueck.current.onSteuerung?.({

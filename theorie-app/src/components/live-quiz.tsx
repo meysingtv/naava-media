@@ -319,8 +319,8 @@ function Marke({ zustand, buchstabe }: { zustand: Zustand; buchstabe: string }) 
   const basis = { width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center" } as const;
   if (zustand === "gewaehlt") {
     return (
-      <View style={[basis, { backgroundColor: "#FFFFFF" }]}>
-        <Icon name="checkmark" size={16} color={farben.orange} weight="bold" />
+      <View style={[basis, { backgroundColor: farben.orange }]}>
+        <Icon name="checkmark" size={16} color="#FFFFFF" weight="bold" />
       </View>
     );
   }
@@ -360,23 +360,18 @@ export function AntwortZeile({
   onPress?: () => void;
 }) {
   const breite = useRef(new Animated.Value(0)).current;
-  const skala = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     Animated.timing(breite, { toValue: anteil ?? 0, duration: 650, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
   }, [anteil, breite]);
-  useEffect(() => {
-    if (zustand !== "gewaehlt") return;
-    skala.setValue(0.96);
-    Animated.spring(skala, { toValue: 1, friction: 5, tension: 220, useNativeDriver: true }).start();
-  }, [zustand, skala]);
 
+  // Gewählt: ruhig – oranger Rand, leicht getönt, kein Leuchten und kein Hüpfen (die Zeile bleibt gleich groß).
   const gewaehlt = zustand === "gewaehlt";
-  const rand = gewaehlt ? "rgba(255,255,255,0.22)" : zustand === "richtig" || zustand === "verpasst" ? GRUEN : zustand === "falsch" ? ROT : "rgba(255,255,255,0.1)";
-  const grund = zustand === "richtig" ? "rgba(78,208,83,0.1)" : zustand === "falsch" ? "rgba(255,90,78,0.1)" : "rgba(255,255,255,0.06)";
+  const rand = gewaehlt ? farben.orange : zustand === "richtig" || zustand === "verpasst" ? GRUEN : zustand === "falsch" ? ROT : "rgba(255,255,255,0.1)";
+  const grund = gewaehlt ? "rgba(252,91,14,0.14)" : zustand === "richtig" ? "rgba(78,208,83,0.1)" : zustand === "falsch" ? "rgba(255,90,78,0.1)" : "rgba(255,255,255,0.06)";
   const balken = balkenFarbe ?? (zustand === "richtig" || zustand === "verpasst" ? "rgba(78,208,83,0.28)" : zustand === "falsch" ? "rgba(255,90,78,0.24)" : "rgba(255,255,255,0.1)");
 
   return (
-    <Animated.View style={[{ borderRadius: 18, transform: [{ scale: skala }] }, gewaehlt ? leuchten(farben.orange, 0.5, 14, 3) : null]}>
+    <View style={{ borderRadius: 18 }}>
       <Pressable
         disabled={!onPress}
         onPress={() => {
@@ -389,15 +384,14 @@ export function AntwortZeile({
         style={({ pressed }) => ({
           minHeight: 52,
           borderRadius: 18,
-          borderWidth: zustand === "offen" ? 1 : 1.5,
+          borderWidth: 1.5,
           borderStyle: zustand === "verpasst" ? "dashed" : "solid",
           borderColor: rand,
-          backgroundColor: gewaehlt ? undefined : grund,
+          backgroundColor: grund,
           overflow: "hidden",
-          opacity: pressed ? 0.88 : 1,
+          opacity: pressed ? 0.85 : 1,
         })}
       >
-        {gewaehlt ? <LinearGradient colors={verlauf.knopf} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={FUELLEN} /> : null}
         {anteil !== undefined ? (
           <Animated.View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: breite.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }), backgroundColor: balken }} />
         ) : null}
@@ -408,7 +402,7 @@ export function AntwortZeile({
           {rechts ? <Text style={{ ...schrift.textFett, fontSize: 14.5, color: "#FFFFFF", fontVariant: ["tabular-nums"], minWidth: 40, textAlign: "right" }}>{rechts}</Text> : null}
         </View>
       </Pressable>
-    </Animated.View>
+    </View>
   );
 }
 
