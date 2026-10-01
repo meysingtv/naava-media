@@ -20,6 +20,14 @@ npm install
 npx expo run:ios      # oder: npx expo run:android
 ```
 
+Auf dem eigenen iPhone mit QR-Code: Expo Go geht nicht (die App hat eigene
+native Teile, und Expo Go aus dem App Store kann nur die neueste Expo-Version).
+Stattdessen kommt die App einmal als „Development Build“ aufs iPhone – per
+Kabel mit `npx expo run:ios --device` (iPhone: Entwicklermodus an; Xcode:
+Apple-ID mit Zertifikat). Danach reicht `npx expo start`: Den QR-Code im
+Terminal mit der iPhone-Kamera scannen, die App lädt den aktuellen Stand vom
+Mac (gleiches WLAN). Neu bauen nur, wenn native Pakete dazukommen.
+
 Android (Unterschiede, Testen, Play Store): `docs/android.md`.
 Sicherheit (was geschützt ist, was in Supabase einzustellen ist): `docs/sicherheit.md`.
 
