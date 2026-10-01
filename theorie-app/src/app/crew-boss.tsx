@@ -10,7 +10,7 @@ import { EreignisZeile } from "@/components/crew";
 import { dialog } from "@/components/dialog";
 import { KopfPille } from "@/components/frage-rahmen";
 import { Glas } from "@/components/glas";
-import { Ring } from "@/components/grafik";
+import { DekoSvg, Ring } from "@/components/grafik";
 import { StartKnopf } from "@/components/home";
 import { Icon } from "@/components/icon";
 import { NutzerBild } from "@/components/profilbild";
@@ -98,7 +98,7 @@ function BossMedaillon({ emoji, hp, max, besiegt }: { emoji: string; hp: number;
 
   return (
     <View style={{ width: groesse, height: groesse, alignItems: "center", justifyContent: "center" }}>
-      <Svg width={schein} height={schein} pointerEvents="none" style={{ position: "absolute", left: (groesse - schein) / 2, top: (groesse - schein) / 2 }}>
+      <DekoSvg width={schein} height={schein} style={{ position: "absolute", left: (groesse - schein) / 2, top: (groesse - schein) / 2 }}>
         <Defs>
           <RadialGradient id="boss-glut" cx="50%" cy="50%" r="50%">
             <Stop offset="0" stopColor={glut} stopOpacity={f.hell ? 0.45 : 0.8} />
@@ -107,7 +107,7 @@ function BossMedaillon({ emoji, hp, max, besiegt }: { emoji: string; hp: number;
           </RadialGradient>
         </Defs>
         <Circle cx={schein / 2} cy={schein / 2} r={schein / 2} fill="url(#boss-glut)" />
-      </Svg>
+      </DekoSvg>
       <Ring
         anteil={besiegt ? 1 : max > 0 ? hp / max : 0}
         groesse={groesse}

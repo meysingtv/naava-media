@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Image, Modal, Pressable, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import Svg, { Circle, Path } from "react-native-svg";
+import { Circle, Path } from "react-native-svg";
 
 import type { BildKey, LageKey, LeuchteKey, ThemaId, ZeichenKey } from "@/lib/fragen";
 import { themaVon } from "@/lib/fragen";
@@ -11,6 +11,7 @@ import { FOTOS, strassenFoto, themaFoto } from "@/lib/fotos";
 import { tippen } from "@/lib/haptik";
 import { farben, schrift } from "@/lib/theme";
 import { Glas } from "./glas";
+import { DekoSvg } from "./grafik";
 import { Icon } from "./icon";
 import { T } from "./ui";
 import { Lageplan } from "./lagen";
@@ -22,7 +23,7 @@ const RUND = 14;
 /** Armaturenbrett und Lenkrad als dunkle Silhouette am unteren Bildrand. */
 function Cockpit({ breite, hoehe }: { breite: number; hoehe: number }) {
   return (
-    <Svg width={breite} height={hoehe} viewBox="0 0 400 250" preserveAspectRatio="none" style={{ position: "absolute", left: 0, top: 0 }} pointerEvents="none">
+    <DekoSvg width={breite} height={hoehe} viewBox="0 0 400 250" preserveAspectRatio="none" style={{ position: "absolute", left: 0, top: 0 }}>
       {/* Armaturenbrett */}
       <Path d="M0,200 C80,184 320,184 400,200 L400,250 L0,250 Z" fill="#0A0B0D" />
       <Path d="M0,200 C80,184 320,184 400,200" stroke="rgba(255,255,255,0.10)" strokeWidth={1.4} fill="none" />
@@ -35,7 +36,7 @@ function Cockpit({ breite, hoehe }: { breite: number; hoehe: number }) {
       <Circle cx={136} cy={300} r={104} stroke="#1A1C20" strokeWidth={17} fill="none" />
       <Circle cx={136} cy={300} r={112.5} stroke="rgba(255,255,255,0.14)" strokeWidth={1.2} fill="none" />
       <Circle cx={136} cy={300} r={95.5} stroke="rgba(0,0,0,0.5)" strokeWidth={1.2} fill="none" />
-    </Svg>
+    </DekoSvg>
   );
 }
 

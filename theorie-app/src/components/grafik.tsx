@@ -1,10 +1,39 @@
-import { useEffect, useRef } from "react";
-import { Animated, Easing, Text, View } from "react-native";
+import { useEffect, useRef, type ReactNode } from "react";
+import { Animated, Easing, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import Svg, { Circle, Defs, LinearGradient, Path, Polygon, Rect, Stop } from "react-native-svg";
 
 import { farben, svgSchrift } from "@/lib/theme";
 
 const AnimPath = Animated.createAnimatedComponent(Path);
+
+/**
+ * SVG nur als Schmuck (Leuchten, Ränder, Überlagerungen). Auf dem iPhone fängt
+ * <Svg> Berührungen ab – auch mit pointerEvents="none" –, dann reagieren Knöpfe
+ * und Eingabefelder darunter nicht. Die Hülle lässt alle Berührungen durch.
+ */
+export function DekoSvg({
+  width,
+  height,
+  viewBox,
+  preserveAspectRatio,
+  style,
+  children,
+}: {
+  width: number;
+  height: number;
+  viewBox?: string;
+  preserveAspectRatio?: string;
+  style?: StyleProp<ViewStyle>;
+  children?: ReactNode;
+}) {
+  return (
+    <View pointerEvents="none" style={[{ width, height }, style]}>
+      <Svg width={width} height={height} viewBox={viewBox} preserveAspectRatio={preserveAspectRatio}>
+        {children}
+      </Svg>
+    </View>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Logo: Straße in Perspektive + Wortmarke
@@ -78,7 +107,7 @@ export function Ring({
 
   return (
     <View style={{ width: groesse, height: groesse, alignItems: "center", justifyContent: "center" }}>
-      <Svg width={flaeche} height={flaeche} style={{ position: "absolute", top: -rand, left: -rand }}>
+      <DekoSvg width={flaeche} height={flaeche} style={{ position: "absolute", top: -rand, left: -rand }}>
         {verlauf ? (
           <Defs>
             <LinearGradient id={`ring-${groesse}`} gradientUnits="userSpaceOnUse" x1={0} y1={rand} x2={0} y2={rand + groesse}>
@@ -115,7 +144,7 @@ export function Ring({
             strokeDashoffset={versatz}
           />
         ) : null}
-      </Svg>
+      </DekoSvg>
       {children}
     </View>
   );

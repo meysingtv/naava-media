@@ -8,6 +8,7 @@ import Svg, { Circle, Defs, LinearGradient as SvgVerlauf, Path, Stop } from "rea
 
 import { HauptKnopf } from "@/components/frage-rahmen";
 import { Glas } from "@/components/glas";
+import { DekoSvg } from "@/components/grafik";
 import { Icon, type IconName } from "@/components/icon";
 import { useFarbwelt } from "@/lib/darstellung";
 import { erfolg, tippen } from "@/lib/haptik";
@@ -87,10 +88,10 @@ function KiKreis({ groesse, aktiv }: { groesse: number; aktiv?: boolean }) {
       ) : (
         <Glas hell={f.hell} style={[FUELLEN, { borderRadius: groesse / 2 }]} />
       )}
-      <Svg width={groesse} height={groesse} style={FUELLEN} pointerEvents="none">
+      <DekoSvg width={groesse} height={groesse} style={FUELLEN}>
         <RandVerlauf id="ki-ring" />
         <Circle cx={groesse / 2} cy={groesse / 2} r={groesse / 2 - 1.5} fill="none" stroke="url(#ki-ring)" strokeWidth={aktiv ? 1.5 : 2.5} />
-      </Svg>
+      </DekoSvg>
       <View style={[FUELLEN, { alignItems: "center", justifyContent: "center" }]}>
         <Icon name="sparkles" size={Math.round(groesse * 0.42)} color={aktiv ? "#FFFFFF" : f.orange} />
       </View>
@@ -622,12 +623,12 @@ export function KiBlase({ kontext, anker, onSchliessen }: { kontext: KiKontext; 
             )}
           </BlasenGlas>
 
-          {/* Rand und Spitze als ein Umriss: hell am Knopf, oben feiner */}
+          {/* Rand und Spitze als ein Umriss: hell am Knopf, oben feiner. Liegt über
+              dem Inhalt und muss deshalb Berührungen durchlassen. */}
           {umriss ? (
-            <Svg
+            <DekoSvg
               width={mass.b}
               height={mass.h + SPITZE + 2}
-              pointerEvents="none"
               style={{ position: "absolute", left: 0, top: drueber ? 0 : -(SPITZE + 2), transform: drueber ? undefined : [{ scaleY: -1 }] }}
             >
               <Defs>
@@ -639,7 +640,7 @@ export function KiBlase({ kontext, anker, onSchliessen }: { kontext: KiKontext; 
               </Defs>
               {umriss.flaeche ? <Path d={umriss.flaeche} fill={f.hell ? "#F8F8F8" : "#181B1F"} /> : null}
               <Path d={umriss.umriss} fill="none" stroke="url(#ki-umriss)" strokeWidth={1.5} strokeLinejoin="round" />
-            </Svg>
+            </DekoSvg>
           ) : null}
         </View>
       </Animated.View>

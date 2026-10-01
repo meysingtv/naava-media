@@ -3,6 +3,7 @@ import { Animated, Easing, Image, Pressable, Text, View, useWindowDimensions, ty
 import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Circle, Defs, Line, Path, Polygon, RadialGradient, Stop, Text as SvgText, LinearGradient as SvgVerlauf } from "react-native-svg";
 
+import { DekoSvg } from "@/components/grafik";
 import { Icon, type IconName } from "@/components/icon";
 import { useFarbwelt } from "@/lib/darstellung";
 import { datumKurz, uhrzeit } from "@/lib/format";
@@ -116,7 +117,7 @@ export function Tacho({ anteil, sicher, gesamt, groesse = 300 }: { anteil: numbe
 
   return (
     <View style={{ width: S, height: S * 0.9 }}>
-      <Svg width={S} height={S} style={{ position: "absolute" }}>
+      <DekoSvg width={S} height={S} style={{ position: "absolute" }}>
         <Defs>
           <SvgVerlauf id="tachoOrange" gradientUnits="userSpaceOnUse" x1={m - R} y1={0} x2={m + R} y2={0}>
             <Stop offset="0" stopColor="#FFB25C" />
@@ -190,7 +191,7 @@ export function Tacho({ anteil, sicher, gesamt, groesse = 300 }: { anteil: numbe
             </SvgText>
           );
         })()}
-      </Svg>
+      </DekoSvg>
 
       {/* Nadel – dreht sich um die Nabe in der Mitte */}
       <Animated.View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, width: S, height: S, transform: [{ rotate: drehung }] }}>
@@ -199,10 +200,10 @@ export function Tacho({ anteil, sicher, gesamt, groesse = 300 }: { anteil: numbe
           <Polygon points={`${m - 16},${m - 2.6} ${m + nadelLaenge - 8},${m - 1.1} ${m + nadelLaenge},${m} ${m + nadelLaenge - 8},${m + 1.1} ${m - 16},${m + 2.6}`} fill={nadelFarbe} />
         </Svg>
       </Animated.View>
-      <Svg width={S} height={S} style={{ position: "absolute" }} pointerEvents="none">
+      <DekoSvg width={S} height={S} style={{ position: "absolute" }}>
         <Circle cx={m} cy={m} r={11} fill={f.hell ? "#FFFFFF" : "#0B1015"} stroke={nadelFarbe} strokeWidth={2.5} />
         <Circle cx={m} cy={m} r={3.2} fill={nadelFarbe} />
-      </Svg>
+      </DekoSvg>
 
       {/* Anzeige unter der Nabe */}
       <View pointerEvents="none" style={{ position: "absolute", left: 0, right: 0, top: m + 26, alignItems: "center" }}>

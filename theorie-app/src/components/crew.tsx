@@ -8,6 +8,7 @@ import QRCode from "qrcode";
 
 import { dialog } from "@/components/dialog";
 import { FotoFlaeche } from "@/components/foto";
+import { DekoSvg } from "@/components/grafik";
 import { Icon } from "@/components/icon";
 import { NutzerBild } from "@/components/profilbild";
 import type { IconName } from "@/components/ui";
@@ -72,7 +73,7 @@ export function HpBalken({ hp, max, hoehe = 10 }: { hp: number; max: number; hoe
 /** Weiches Leuchten hinter Flamme und Boss. */
 function Schein({ groesse, farbe = "#FF7A1A", staerke = 0.55 }: { groesse: number; farbe?: string; staerke?: number }) {
   return (
-    <Svg width={groesse} height={groesse} style={{ position: "absolute" }} pointerEvents="none">
+    <DekoSvg width={groesse} height={groesse} style={{ position: "absolute" }}>
       <Defs>
         <RadialGradient id="schein" cx="50%" cy="50%" r="50%">
           <Stop offset="0" stopColor={farbe} stopOpacity={staerke} />
@@ -81,7 +82,7 @@ function Schein({ groesse, farbe = "#FF7A1A", staerke = 0.55 }: { groesse: numbe
         </RadialGradient>
       </Defs>
       <Circle cx={groesse / 2} cy={groesse / 2} r={groesse / 2} fill="url(#schein)" />
-    </Svg>
+    </DekoSvg>
   );
 }
 
