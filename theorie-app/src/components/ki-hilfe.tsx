@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Animated, Easing, Keyboard, Modal, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
 import { BlurView } from "expo-blur";
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, LinearGradient as SvgVerlauf, Path, Stop } from "react-native-svg";
@@ -56,23 +55,16 @@ function RandVerlauf({ id }: { id: string }) {
 }
 
 /**
- * Körper der Blase: auf dem iPhone mit iOS 26 echtes Liquid Glass, sonst
- * Unschärfe mit heller bzw. dunkler Tönung (wie der Dialog) – so scheint die
- * Frage dahinter nur verschwommen durch.
+ * Körper der Blase: milchiges Glas – starke Unschärfe mit dichter heller bzw.
+ * dunkler Tönung, auf allen Geräten gleich. Bewusst kein Liquid Glass: Das ist
+ * so klar, dass helle Fotos und Fragen dahinter den Text unleserlich machen.
  */
 function BlasenGlas({ style, children }: { style?: StyleProp<ViewStyle>; children: ReactNode }) {
   const f = useFarbwelt();
-  if (Platform.OS === "ios" && isLiquidGlassAvailable()) {
-    return (
-      <Glas hell={f.hell} style={style}>
-        {children}
-      </Glas>
-    );
-  }
   return (
     <View style={[{ overflow: "hidden" }, style]}>
-      <BlurView tint={f.hell ? "light" : "dark"} intensity={85} experimentalBlurMethod="dimezisBlurView" style={FUELLEN} />
-      <View style={[FUELLEN, { backgroundColor: f.hell ? "rgba(255,255,255,0.84)" : "rgba(24,26,31,0.84)" }]} />
+      <BlurView tint={f.hell ? "light" : "dark"} intensity={90} experimentalBlurMethod="dimezisBlurView" style={FUELLEN} />
+      <View style={[FUELLEN, { backgroundColor: f.hell ? "rgba(255,255,255,0.9)" : "rgba(24,26,31,0.9)" }]} />
       {children}
     </View>
   );
