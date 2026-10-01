@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
@@ -11,6 +11,7 @@ import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { Icon } from "@/components/icon";
 import { Lader } from "@/components/lader";
 import { LiveBuehne } from "@/components/live-buehne";
+import { QuizZuschauerKarte, quizSchluessel } from "@/components/live-quiz";
 import { LiveChat, LiveEingabe, LiveRing, LiveSchild, LIVE_ROT, useHerzen, ZuschauerZahl } from "@/components/live";
 import { Knopf } from "@/components/ui";
 import { useClipRechte } from "@/lib/clips-server";
@@ -30,11 +31,16 @@ import {
   type LiveZugang,
   type ZugangFehler,
 } from "@/lib/live";
+import { useQuizZuschauer } from "@/lib/live-quiz";
 import { leuchten, schrift } from "@/lib/theme";
 
 // Das Live zum Zuschauen – als eigene Seite (Mitteilung „… ist jetzt live“)
 // und eingebettet in Clips (Kategorie „Live“). Ohne laufendes Live: Hinweis,
-// Mitteilung an/aus und für den Inhaber „Live gehen“.
+// Mitteilung an/aus und für den Inhaber „Live gehen“. Stellt der Gastgeber eine
+// Quizfrage, erscheint sie als Karte über dem Video.
+
+/** Höhe der Eingabe unten plus Abstand darüber (für den Platz des Chats). */
+const EINGABE = 46 + 10;
 
 const LIVE_VERLAUF = ["#FF5A5F", "#FF2D55", "#E0124A"] as const;
 
@@ -91,8 +97,13 @@ export function LiveAnsicht({
   const [langeWeg, setLangeWeg] = useState(false);
   const [abo, setAbo] = useState<boolean | null>(null);
   const steuerung = useRef<LiveSteuerung | null>(null);
-  // Chat nur, solange die Ansicht zu sehen ist (z. B. nicht unter der Sende-Seite).
+  // Chat und Quiz nur, solange die Ansicht zu sehen ist (z. B. nicht unter der Sende-Seite).
   const nachrichten = useLiveChat(aktiv ? (live?.id ?? null) : null);
+  const quiz = useQuizZuschauer(aktiv ? (live?.id ?? null) : null);
+  const [quizWeg, setQuizWeg] = useState("");
+  // Die Ansicht füllt immer den ganzen Bildschirm (Clips und eigene Seite).
+  const { height: hoehe } = useWindowDimensions();
+  const [kartenUnten, setKartenUnten] = useState(0);
   const verbunden = Boolean(live && aktiv && zugang);
 
   // Zugang zu LiveKit holen, sobald ein Live läuft und die Ansicht zu sehen ist.
@@ -268,6 +279,11 @@ export function LiveAnsicht({
   }
 
   // --------------------------------------------------------------- im Live
+  // Mit Quizkarte bekommt der Chat nur den Platz zwischen Karte und Eingabe.
+  const quizSichtbar = Boolean(quiz.lage.quiz) && quizSchluessel(quiz.lage) !== quizWeg;
+  const chatPlatz = quizSichtbar && hoehe > 0 && kartenUnten > 0 ? hoehe - kartenUnten - unten - EINGABE - 14 : 260;
+  const chatHoehe = Math.max(0, Math.min(260, chatPlatz));
+
   return (
     <View style={{ flex: 1, backgroundColor: "#000000" }}>
       {verbunden && zugang ? (
@@ -280,6 +296,7 @@ export function LiveAnsicht({
           onZuschauer={setZuschauer}
           onHerz={ausloesen}
           onBildWeg={setBildWeg}
+          onQuiz={quiz.neuLaden}
           onSteuerung={(s) => (steuerung.current = s)}
           onVerbindung={(s) => {
             if (s === "fehler") setFehler("verbindung");
@@ -320,10 +337,26 @@ export function LiveAnsicht({
         {onSchliessen ? <RundTaste icon="close" sf="xmark" label="Schließen" onPress={onSchliessen} /> : null}
       </View>
 
+      {/* Quizfrage des Gastgebers */}
+      {quizSichtbar ? (
+        <QuizZuschauerKarte
+          lage={quiz.lage}
+          ichId={ich}
+          onAntworten={quiz.antworten}
+          onAnmelden={() => router.push("/anmelden")}
+          onAusblenden={() => setQuizWeg(quizSchluessel(quiz.lage))}
+          onFehler={(text) => hinweis.zeigen({ icon: "alert-circle", text, farbe: LIVE_ROT })}
+          onLayout={(e) => setKartenUnten(oben + 54 + e.nativeEvent.layout.height)}
+          style={{ position: "absolute", top: oben + 54, left: 12, right: 12 }}
+        />
+      ) : null}
+
       {/* Chat und Eingabe */}
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
         <View style={{ paddingHorizontal: 12, paddingBottom: unten, gap: 10 }}>
-          <LiveChat nachrichten={nachrichten} gastgeberId={live.gastgeber?.id} onLangDruck={ich ? langDruck : undefined} style={{ maxHeight: 260, marginRight: 64 }} />
+          {chatHoehe >= 64 ? (
+            <LiveChat nachrichten={nachrichten} gastgeberId={live.gastgeber?.id} onLangDruck={ich ? langDruck : undefined} style={{ maxHeight: chatHoehe, marginRight: 64 }} />
+          ) : null}
           <LiveEingabe
             angemeldet={Boolean(ich)}
             onSenden={schreiben}

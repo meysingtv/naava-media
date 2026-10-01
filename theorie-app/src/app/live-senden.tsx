@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, Easing, KeyboardAvoidingView, Linking, Platform, Pressable, Text, TextInput, View } from "react-native";
+import { Animated, Easing, KeyboardAvoidingView, Linking, Platform, Pressable, Text, TextInput, useWindowDimensions, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -14,6 +14,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { Lader } from "@/components/lader";
 import { LiveBuehne } from "@/components/live-buehne";
 import { LiveEnde, type TopChatter } from "@/components/live-ende";
+import { QuizAuswahl, QuizGastgeberKarte } from "@/components/live-quiz";
 import { LiveChat, LiveEingabe, LiveSchild, LIVE_ROT, useHerzen, ZuschauerZahl } from "@/components/live";
 import { Knopf } from "@/components/ui";
 import { erfolg, stoss, tippen } from "@/lib/haptik";
@@ -32,11 +33,12 @@ import {
   type LiveSteuerung,
   type LiveZugang,
 } from "@/lib/live";
+import { useQuizGastgeber } from "@/lib/live-quiz";
 import { leuchten, schrift } from "@/lib/theme";
 
 // Live gehen (nur der Inhaber der App): Kamera-Vorschau, Thema, Countdown,
-// dann live mit Chat, Zuschauern, Herzen und Moderation. Beim Verlassen endet
-// das Live automatisch.
+// dann live mit Chat, Zuschauern, Herzen, Quiz und Moderation. Beim Verlassen
+// endet das Live automatisch.
 
 type Phase = "start" | "bereit" | "countdown" | "live" | "ende" | "fehler";
 
@@ -96,8 +98,16 @@ export default function LiveSenden() {
   const [jetzt, setJetzt] = useState(Date.now());
   const [ende, setEnde] = useState<number | null>(null);
   const [runde, setRunde] = useState(0);
+  const [quizWahl, setQuizWahl] = useState(false);
+  const [quizHoehe, setQuizHoehe] = useState(0);
+  const { height: fensterHoehe } = useWindowDimensions();
 
   const steuerung = useRef<LiveSteuerung | null>(null);
+  const quiz = useQuizGastgeber(
+    phase === "live" ? liveId : null,
+    () => steuerung.current?.quiz(),
+    (text) => hinweis.zeigen({ icon: "alert-circle", text, farbe: LIVE_ROT }),
+  );
   const idRef = useRef<string | null>(null);
   const zuschauerRef = useRef(0);
   zuschauerRef.current = zuschauer;
@@ -233,8 +243,33 @@ export default function LiveSenden() {
     setStart(null);
     setEnde(null);
     setTitel("");
+    quiz.zuruecksetzen();
     setPhase("start");
     setRunde((r) => r + 1);
+  }
+
+  // ------------------------------------------------------------------ Quiz
+  function zeigeProblem(problem: string | null) {
+    if (problem) hinweis.zeigen({ icon: "alert-circle", text: problem, farbe: LIVE_ROT });
+  }
+
+  function quizOeffnen() {
+    if (quiz.quiz?.status === "offen") {
+      hinweis.zeigen({ icon: "flash", text: "Erst die laufende Frage auflösen" });
+      return;
+    }
+    setQuizWahl(true);
+  }
+
+  function quizSchliessen() {
+    if (quiz.quiz?.status !== "offen") {
+      quiz.schliessen().then(zeigeProblem);
+      return;
+    }
+    dialog("Frage abbrechen?", "Die Antworten zählen dann nicht.", [
+      { text: "Weiter", style: "cancel" },
+      { text: "Abbrechen", style: "destructive", onPress: () => quiz.schliessen().then(zeigeProblem) },
+    ]);
   }
 
   function beenden() {
@@ -280,6 +315,9 @@ export default function LiveSenden() {
 
   // ------------------------------------------------------------------ Anzeige
   const zeigtBuehne = zugang && (phase === "bereit" || phase === "countdown" || phase === "live");
+  // Mit Quizkarte bekommt der Chat nur den Platz zwischen Karte und Eingabe.
+  const chatPlatz = quiz.quiz && quizHoehe > 0 ? fensterHoehe - (insets.top + 58 + quizHoehe) - (Math.max(insets.bottom, 12) + 4) - 46 - 10 - 14 : 300;
+  const chatHoehe = Math.max(0, Math.min(300, chatPlatz));
 
   return (
     <View style={{ flex: 1, backgroundColor: "#000000" }}>
@@ -345,7 +383,7 @@ export default function LiveSenden() {
         ) : null}
       </View>
 
-      {/* Werkzeuge rechts: Kamera drehen, Mikrofon */}
+      {/* Werkzeuge rechts: Kamera drehen, Mikrofon, Quiz */}
       {zeigtBuehne ? (
         <View style={{ position: "absolute", right: 12, top: insets.top + 70, gap: 16 }}>
           <Werkzeug icon="camera-reverse-outline" sf="arrow.triangle.2.circlepath.camera" label="Drehen" onPress={() => steuerung.current?.kameraWechseln().catch(() => {})} />
@@ -360,7 +398,23 @@ export default function LiveSenden() {
               steuerung.current?.mikrofon(neu).catch(() => setMikroAn(!neu));
             }}
           />
+          {phase === "live" ? <Werkzeug icon="flash-outline" sf="bolt" label="Quiz" onPress={quizOeffnen} /> : null}
         </View>
+      ) : null}
+
+      {/* Quiz: Frage mit Stimmen live, Auflösung, Rangliste */}
+      {phase === "live" && quiz.quiz ? (
+        <QuizGastgeberKarte
+          quiz={quiz.quiz}
+          zwischen={quiz.zwischen}
+          beschaeftigt={quiz.beschaeftigt}
+          onAufloesen={() => quiz.aufloesen().then(zeigeProblem)}
+          onRangliste={() => quiz.rangliste().then(zeigeProblem)}
+          onNaechste={() => setQuizWahl(true)}
+          onSchliessen={quizSchliessen}
+          onLayout={(e) => setQuizHoehe(e.nativeEvent.layout.height)}
+          style={{ position: "absolute", top: insets.top + 58, left: 12, right: 70 }}
+        />
       ) : null}
 
       {/* Start: Kamera startet */}
@@ -420,7 +474,7 @@ export default function LiveSenden() {
       {phase === "live" ? (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
           <View style={{ paddingHorizontal: 12, paddingBottom: Math.max(insets.bottom, 12) + 4, gap: 10 }}>
-            <LiveChat nachrichten={nachrichten} gastgeberId={ich} onLangDruck={moderieren} style={{ maxHeight: 300, marginRight: 64 }} />
+            {chatHoehe >= 64 ? <LiveChat nachrichten={nachrichten} gastgeberId={ich} onLangDruck={moderieren} style={{ maxHeight: chatHoehe, marginRight: 64 }} /> : null}
             <LiveEingabe
               angemeldet
               onSenden={schreiben}
@@ -448,6 +502,8 @@ export default function LiveSenden() {
             herzen={herzZahl}
             nachrichten={chatZahl}
             topChatter={Object.values(proPerson).sort((a, b) => b.anzahl - a.anzahl)}
+            quizSieger={quiz.bestenliste}
+            quizFragen={quiz.gefragt.length}
             oben={insets.top + 14}
             unten={Math.max(insets.bottom, 16) + 8}
             onFertig={() => router.back()}
@@ -470,6 +526,18 @@ export default function LiveSenden() {
           </View>
         </View>
       ) : null}
+
+      <QuizAuswahl
+        sichtbar={quizWahl && phase === "live"}
+        gefragt={quiz.gefragt}
+        onStarten={async (frage, dauer) => {
+          const problem = await quiz.starten(frage, dauer);
+          zeigeProblem(problem);
+          if (!problem) erfolg();
+          return !problem;
+        }}
+        onSchliessen={() => setQuizWahl(false)}
+      />
 
       <HinweisAnzeige wert={hinweis.wert} inhalt={hinweis.inhalt} oben={insets.top + 60} />
     </View>

@@ -31,6 +31,8 @@ export type LiveSteuerung = {
   herz: () => void;
   kameraWechseln: () => Promise<void>;
   mikrofon: (an: boolean) => Promise<void>;
+  /** Gastgeber: allen sagen, dass sich beim Quiz etwas geändert hat. */
+  quiz: () => void;
 };
 
 export type LiveVerbindung = "verbindet" | "verbunden" | "getrennt" | "fehler";
@@ -48,11 +50,13 @@ export type LiveBuehneProps = {
   onHerz?: () => void;
   /** Zuschauer: Bild des Gastgebers fehlt gerade (Pause oder weg). */
   onBildWeg?: (weg: boolean) => void;
+  /** Zuschauer: Der Gastgeber hat beim Quiz etwas geändert. */
+  onQuiz?: () => void;
   onSteuerung?: (s: LiveSteuerung | null) => void;
   style?: StyleProp<ViewStyle>;
 };
 
-function meldung(fehler: unknown): string {
+export function meldung(fehler: unknown): string {
   const text = fehler instanceof Error ? fehler.message : typeof fehler === "object" && fehler && "message" in fehler ? String((fehler as { message: unknown }).message) : String(fehler);
   if (/network|fetch|internet/i.test(text)) return "Keine Verbindung. Bitte prüfe dein Internet.";
   if (/nicht angemeldet|jwt|not authenticated/i.test(text)) return "Bitte melde dich an.";
@@ -65,7 +69,7 @@ function meldung(fehler: unknown): string {
 
 /** Eindeutiger Kanalname: Supabase gibt bei gleichem Namen den schon laufenden Kanal
  *  zurück – ein zweites Abo darauf (z. B. Clips im Hintergrund + Sende-Seite) stürzt ab. */
-const kanalName = (basis: string) => `${basis}-${Math.random().toString(36).slice(2, 10)}`;
+export const kanalName = (basis: string) => `${basis}-${Math.random().toString(36).slice(2, 10)}`;
 
 let aktuell: LiveInfo | null = null;
 let geladen = false;

@@ -9,11 +9,12 @@ import { DekoSvg } from "@/components/grafik";
 import { Icon, type IconName } from "@/components/icon";
 import { NutzerBild } from "@/components/profilbild";
 import { tippen } from "@/lib/haptik";
+import type { QuizSpieler } from "@/lib/live-quiz";
 import { leuchten, schrift } from "@/lib/theme";
 
 // Abschluss nach dem Live: Glühen hinter dem Profilbild, die Sendezeit groß,
-// Zahlen, die hochzählen, die aktivsten Leute aus dem Chat und ein Herzregen
-// mit so vielen Herzen, wie geschickt wurden.
+// Zahlen, die hochzählen, die Quiz-Sieger, die aktivsten Leute aus dem Chat und
+// ein Herzregen mit so vielen Herzen, wie geschickt wurden.
 
 const ROT = "#FF2D55";
 const RING = ["#FFB25C", "#FF6A2A", "#FF2D55"] as const;
@@ -96,6 +97,24 @@ function Kachel({ icon, sf, wert, text, verzoegerung }: { icon: IconName; sf: st
 
 const MEDAILLE = ["#F5C451", "#C9D1DB", "#D99A6C"];
 
+/** Überschrift über einer Liste („QUIZ-SIEGER“, „AM AKTIVSTEN IM CHAT“). */
+function Ueberschrift({ text, zusatz }: { text: string; zusatz?: string }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
+      <Text style={{ ...schrift.textFett, fontSize: 12, letterSpacing: 1.2, color: "rgba(255,255,255,0.5)" }}>{text}</Text>
+      {zusatz ? <Text style={{ ...schrift.textMittel, fontSize: 12, color: "rgba(255,255,255,0.38)" }}>{zusatz}</Text> : null}
+    </View>
+  );
+}
+
+function Medaille({ platz }: { platz: number }) {
+  return (
+    <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: MEDAILLE[platz - 1] ?? "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}>
+      <Text style={{ ...schrift.textFett, fontSize: 12, color: "#1A1208" }}>{platz}</Text>
+    </View>
+  );
+}
+
 export function LiveEnde({
   name,
   bildPfad,
@@ -106,6 +125,8 @@ export function LiveEnde({
   herzen,
   nachrichten,
   topChatter,
+  quizSieger = [],
+  quizFragen = 0,
   oben,
   unten,
   onFertig,
@@ -120,6 +141,10 @@ export function LiveEnde({
   herzen: number;
   nachrichten: number;
   topChatter: TopChatter[];
+  /** Die Besten aus dem Live-Quiz (nach der letzten Auflösung). */
+  quizSieger?: QuizSpieler[];
+  /** Wie viele Quizfragen gestellt wurden. */
+  quizFragen?: number;
   oben: number;
   unten: number;
   onFertig: () => void;
@@ -193,16 +218,33 @@ export function LiveEnde({
             <Kachel icon="chatbubble" sf="bubble.left.fill" wert={nachrichten} text="Nachrichten" verzoegerung={550} />
           </Animated.View>
 
+          {/* Die Besten aus dem Quiz */}
+          {quizSieger.length ? (
+            <Animated.View style={[{ marginTop: 22 }, auf(0.3)]}>
+              <Ueberschrift text="QUIZ-SIEGER" zusatz={quizFragen ? `${quizFragen} ${quizFragen === 1 ? "Frage" : "Fragen"}` : undefined} />
+              <View style={{ gap: 8 }}>
+                {quizSieger.slice(0, 3).map((s) => (
+                  <View key={s.id} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                    <Medaille platz={s.platz} />
+                    <NutzerBild pfad={s.bild_pfad} name={s.name} farbe={s.avatar_farbe} groesse={32} rand={0} />
+                    <Text style={{ ...schrift.textHalb, fontSize: 15, color: "#FFFFFF", flex: 1 }} numberOfLines={1}>
+                      {s.name}
+                    </Text>
+                    <Text style={{ ...schrift.textFett, fontSize: 14, color: s.platz === 1 ? MEDAILLE[0] : "rgba(255,255,255,0.85)", fontVariant: ["tabular-nums"] }}>{s.punkte.toLocaleString("de-DE")} P.</Text>
+                  </View>
+                ))}
+              </View>
+            </Animated.View>
+          ) : null}
+
           {/* Die aktivsten Leute im Chat */}
           {topChatter.length ? (
             <Animated.View style={[{ marginTop: 22 }, auf(0.35)]}>
-              <Text style={{ ...schrift.textFett, fontSize: 12, letterSpacing: 1.2, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>AM AKTIVSTEN IM CHAT</Text>
+              <Ueberschrift text="AM AKTIVSTEN IM CHAT" />
               <View style={{ gap: 8 }}>
                 {topChatter.slice(0, 3).map((c, i) => (
                   <View key={c.id} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                    <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: MEDAILLE[i], alignItems: "center", justifyContent: "center" }}>
-                      <Text style={{ ...schrift.textFett, fontSize: 12, color: "#1A1208" }}>{i + 1}</Text>
-                    </View>
+                    <Medaille platz={i + 1} />
                     <NutzerBild pfad={c.bild_pfad} name={c.name} groesse={32} rand={0} />
                     <Text style={{ ...schrift.textHalb, fontSize: 15, color: "#FFFFFF", flex: 1 }} numberOfLines={1}>
                       {c.name}

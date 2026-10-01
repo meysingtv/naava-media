@@ -212,17 +212,30 @@ App. Alle anderen schauen in Clips zu, schreiben im Chat und schicken Herzen.
   Glocke im Live, auf der Live-Seite oder unter Einstellungen → Mitteilungen →
   „Live-Streams“. Das verlangt Apple bei solchen Mitteilungen. Pushes kommen
   nur auf echten Geräten an und brauchen `eas init` (wie die Crew).
+- **Live-Quiz:** Im Live rechts auf „Quiz“ tippen, eine Frage aus dem Katalog
+  wählen (Zufallsfrage, Suche oder nach Thema; schon gestellte sind markiert),
+  Zeit einstellen (15/20/30 s) und starten. Alle Zuschauer sehen die Frage als
+  Karte über dem Video und kreuzen an wie in der Prüfung (eine oder mehrere
+  richtige Antworten). Der Inhaber sieht die Stimmen live und die Lösung
+  vorab, nach Ablauf der Zeit löst die App von selbst auf (oder früher mit
+  „Jetzt auflösen“). Dann sieht jeder Verteilung, Erklärung und seine Punkte:
+  500 fürs Richtige plus bis zu 500 fürs Tempo. „Rangliste“ zeigt allen die
+  Top 5 im Live, der Abschluss nach dem Live die Quiz-Sieger. Mitspielen geht
+  nur mit Konto; stummgeschaltete Leute spielen nicht mit.
 - **Technik:** Bild und Ton über [LiveKit](https://livekit.io) (WebRTC, kaum
-  Verzögerung), Status und Chat über Supabase (`update-live.sql`, Abschnitt 17,
-  mit Echtzeit). Die Edge Function `live-token` gibt die Zugänge aus: senden
-  darf nur der Inhaber, alle anderen nur empfangen. LiveKit rechnet nach
-  Minuten und Zuschauern ab – den Verbrauch zeigt cloud.livekit.io.
+  Verzögerung), Status, Chat und Quiz über Supabase (`update-live.sql` und
+  `update-live-quiz.sql`, Abschnitt 17 und 18, mit Echtzeit; neue Quizfragen
+  meldet die App des Inhabers zusätzlich über LiveKit). Die Edge Function
+  `live-token` gibt die Zugänge aus: senden darf nur der Inhaber, alle anderen
+  nur empfangen. LiveKit rechnet nach Minuten und Zuschauern ab – den
+  Verbrauch zeigt cloud.livekit.io.
 
 Einrichten:
 
-1. `supabase/update-live.sql` im SQL-Editor ausführen. Es hängt die Tabellen
-   an die Echtzeit-Publikation `supabase_realtime` (gibt es in jedem
-   Supabase-Projekt) – darüber kommen Chat und Live-Status sofort an.
+1. `supabase/update-live.sql` und danach `supabase/update-live-quiz.sql` im
+   SQL-Editor ausführen. Sie hängen die Tabellen an die Echtzeit-Publikation
+   `supabase_realtime` (gibt es in jedem Supabase-Projekt) – darüber kommen
+   Chat, Live-Status und Quizfragen sofort an.
 2. Auf cloud.livekit.io ein Projekt anlegen und unter Settings → API Keys einen
    Schlüssel erzeugen (URL `wss://…livekit.cloud`, API Key, API Secret).
 3. Supabase → Edge Functions → Secrets: `LIVEKIT_URL`, `LIVEKIT_API_KEY`,
