@@ -113,7 +113,7 @@ export function LiveBuehne(props: LiveBuehneProps) {
   );
 }
 
-function Innen({ senden, stumm, ohneKamera, onZuschauer, onHerz, onBildWeg, onQuiz, onBild, onSteuerung }: LiveBuehneProps & { ohneKamera: boolean }) {
+function Innen({ senden, stumm, ohneKamera, onZuschauer, onHerz, onBildWeg, onQuiz, onBild, onTafel, onSteuerung }: LiveBuehneProps & { ohneKamera: boolean }) {
   const raum = useRoomContext();
   const { localParticipant } = useLocalParticipant();
   const teilnehmer = useParticipants();
@@ -122,8 +122,8 @@ function Innen({ senden, stumm, ohneKamera, onZuschauer, onHerz, onBildWeg, onQu
   const [gespiegelt, setGespiegelt] = useState(true);
 
   // Rückmeldungen über Refs, damit wechselnde Funktionen nichts neu starten.
-  const rueck = useRef({ onZuschauer, onHerz, onBildWeg, onQuiz, onBild, onSteuerung });
-  rueck.current = { onZuschauer, onHerz, onBildWeg, onQuiz, onBild, onSteuerung };
+  const rueck = useRef({ onZuschauer, onHerz, onBildWeg, onQuiz, onBild, onTafel, onSteuerung });
+  rueck.current = { onZuschauer, onHerz, onBildWeg, onQuiz, onBild, onTafel, onSteuerung };
 
   const bild = kameras.find((k) => (senden ? k.participant.isLocal : k.participant.identity.startsWith(GASTGEBER)));
   const bildDa = Boolean(bild && isTrackReference(bild) && !bild.publication.isMuted);
@@ -163,6 +163,9 @@ function Innen({ senden, stumm, ohneKamera, onZuschauer, onHerz, onBildWeg, onQu
   const bildEmpfangen = useCallback((n: ReceivedDataMessage) => {
     if (n.from?.identity.startsWith(GASTGEBER)) rueck.current.onBild?.(bytesZuText(n.payload));
   }, []);
+  const tafelEmpfangen = useCallback((n: ReceivedDataMessage) => {
+    if (n.from?.identity.startsWith(GASTGEBER)) rueck.current.onTafel?.(bytesZuText(n.payload));
+  }, []);
   const platzhalterEmpfangen = useCallback((n: ReceivedDataMessage) => {
     if (!__DEV__ || !n.from?.identity.startsWith(GASTGEBER)) return;
     platzhalterZeit.current = Date.now();
@@ -171,6 +174,7 @@ function Innen({ senden, stumm, ohneKamera, onZuschauer, onHerz, onBildWeg, onQu
   const { send } = useDataChannel("herz", herzEmpfangen);
   const { send: quizSenden } = useDataChannel("quiz", quizEmpfangen);
   const { send: bildSenden } = useDataChannel("bild", bildEmpfangen);
+  const { send: tafelSenden } = useDataChannel("tafel", tafelEmpfangen);
   const { send: platzhalterSenden } = useDataChannel("platzhalter", platzhalterEmpfangen);
 
   // Gastgeber ohne Kamera: alle paar Sekunden Bescheid geben (auch für alle, die später kommen).
@@ -203,6 +207,9 @@ function Innen({ senden, stumm, ohneKamera, onZuschauer, onHerz, onBildWeg, onQu
       bild: (nachricht, zuverlaessig) => {
         bildSenden(textZuBytes(nachricht), { reliable: zuverlaessig }).catch(() => {});
       },
+      tafel: (nachricht) => {
+        tafelSenden(textZuBytes(nachricht), { reliable: true }).catch(() => {});
+      },
       kameraWechseln: async () => {
         const ziel = vorne.current ? "environment" : "front";
         const geraete = ((await mediaDevices.enumerateDevices()) ?? []) as Geraet[];
@@ -221,7 +228,7 @@ function Innen({ senden, stumm, ohneKamera, onZuschauer, onHerz, onBildWeg, onQu
       },
     });
     return () => rueck.current.onSteuerung?.(null);
-  }, [send, quizSenden, bildSenden, raum, localParticipant]);
+  }, [send, quizSenden, bildSenden, tafelSenden, raum, localParticipant]);
 
   if (!bild || !isTrackReference(bild)) return (senden ? ohneKamera : platzhalter) ? <LivePlatzhalter /> : null;
   // Eigenes Bild mit der Frontkamera gespiegelt – wie ein Spiegel.

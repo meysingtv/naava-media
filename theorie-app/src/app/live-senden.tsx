@@ -19,6 +19,8 @@ import { LiveBuehne } from "@/components/live-buehne";
 import { LiveEnde, type TopChatter } from "@/components/live-ende";
 import { PruefungGastgeberBereich } from "@/components/live-pruefung";
 import { QUIZ_UEBERBLEND, QuizAuswahl, QuizGastgeberKarte } from "@/components/live-quiz";
+import { ThemenRad } from "@/components/live-rad";
+import { TafelBuehne } from "@/components/live-tafel";
 import { LiveChat, LiveEingabe, LiveSchild, LIVE_ROT, useHerzen, ZuschauerZahl } from "@/components/live";
 import { Knopf } from "@/components/ui";
 import { erfolg, stoss, tippen } from "@/lib/haptik";
@@ -40,12 +42,15 @@ import {
 import { BILD_START, bildNachricht, liveBildDateiLoeschen, liveBildHochladen, liveBildSichern, type BildLage, type LiveBild } from "@/lib/live-bild";
 import { PRUEFUNG_FRAGEN, PRUEFUNG_SEKUNDEN, useLivePruefungGastgeber, type LivePruefung } from "@/lib/live-pruefung";
 import { useQuizGastgeber, type LiveQuiz } from "@/lib/live-quiz";
+import { frageAusThema, radDrehen, radSchliessen, type LiveRad } from "@/lib/live-rad";
+import { tafelAnwenden, tafelNachricht, tafelSichern, vereinfachen, type LiveTafel, type Strich, type TafelGrund, type TafelNachricht } from "@/lib/live-tafel";
 import { leuchten, schrift } from "@/lib/theme";
 
 // Live gehen (nur der Inhaber der App): Kamera-Vorschau, Thema, Countdown,
-// dann live mit Chat, Zuschauern, Herzen, Quiz, Prüfung, Bild aus der Galerie
-// und Moderation. Während Quiz oder Prüfung teilt sich der Bildschirm (Kamera
-// oben, Bereich unten, ohne Chat). Beim Verlassen endet das Live automatisch.
+// dann live mit Chat, Zuschauern, Herzen, Quiz, Prüfung, Themenrad, Tafel, Bild
+// aus der Galerie und Moderation. Während Quiz oder Prüfung teilt sich der
+// Bildschirm (Kamera oben, Bereich unten, ohne Chat). Beim Verlassen endet das
+// Live automatisch.
 
 type Phase = "start" | "bereit" | "countdown" | "live" | "ende" | "fehler";
 
@@ -159,6 +164,16 @@ export default function LiveSenden() {
   const zuschauerRef = useRef(0);
   zuschauerRef.current = zuschauer;
   const countdownWert = useRef(new Animated.Value(0)).current;
+
+  // Themenrad und Tafel (beide über der Kamera, solange offen ohne Chat)
+  const [rad, setRad] = useState<LiveRad | null>(null);
+  const [radLaedt, setRadLaedt] = useState(false);
+  const [tafel, setTafel] = useState<LiveTafel | null>(null);
+  const tafelRef = useRef(tafel);
+  tafelRef.current = tafel;
+  const tafelPlan = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tafelOffen = phase === "live" && Boolean(tafel?.an);
+  const radOffen = phase === "live" && Boolean(rad);
   const nachrichten = useLiveChat(phase === "live" || phase === "ende" ? liveId : null);
 
   // Für den Abschluss: alle Nachrichten des Lives zählen, je Person (ohne den Gastgeber).
@@ -224,6 +239,7 @@ export default function LiveSenden() {
     () => () => {
       if (idRef.current) liveBeenden(idRef.current);
       if (bildRef.current) liveBildDateiLoeschen(bildRef.current.pfad);
+      if (tafelPlan.current) clearTimeout(tafelPlan.current);
     },
     [],
   );
@@ -275,6 +291,7 @@ export default function LiveSenden() {
     setEnde(Date.now());
     setPhase("ende");
     bildAufraeumen();
+    radUndTafelWeg();
     if (id) await liveBeenden(id);
   }
 
@@ -294,6 +311,7 @@ export default function LiveSenden() {
     setTitel("");
     quiz.zuruecksetzen();
     pruefung.zuruecksetzen();
+    radUndTafelWeg();
     setPhase("start");
     setRunde((r) => r + 1);
   }
@@ -351,6 +369,107 @@ export default function LiveSenden() {
     else hinweis.zeigen({ icon: "time", text: `+${sekunden / 60} ${sekunden === 60 ? "Minute" : "Minuten"} für alle` });
   }
 
+  // ------------------------------------------------------------------ Themenrad
+  async function radStarten() {
+    const id = idRef.current;
+    if (!id || radLaedt) return;
+    if (quiz.quiz?.status === "offen") {
+      hinweis.zeigen({ icon: "flash", text: "Erst die laufende Frage auflösen" });
+      return;
+    }
+    setRadLaedt(true);
+    const r = await radDrehen(id);
+    setRadLaedt(false);
+    if ("fehler" in r) {
+      zeigeProblem(r.fehler);
+      return;
+    }
+    stoss();
+    setRad(r.rad);
+  }
+
+  /** Frage aus dem Thema starten – das Rad geht zu, das Quiz kommt unten rein. */
+  async function radFrage(thema: string) {
+    const id = idRef.current;
+    const frage = frageAusThema(thema, quiz.gefragt);
+    if (!id || !frage) return;
+    setRadLaedt(true);
+    const problem = await quiz.starten(frage, 20);
+    setRadLaedt(false);
+    zeigeProblem(problem);
+    if (problem) return;
+    erfolg();
+    setRad(null);
+    radSchliessen(id);
+  }
+
+  function radZu() {
+    const id = idRef.current;
+    setRad(null);
+    if (id) radSchliessen(id).then(zeigeProblem);
+  }
+
+  // ------------------------------------------------------------------ Tafel
+  /** Änderung anwenden, sofort an alle schicken, kurz danach für Spätkommer sichern. */
+  function tafelAendern(n: TafelNachricht) {
+    const neu = tafelAnwenden(tafelRef.current, n);
+    tafelRef.current = neu;
+    setTafel(neu);
+    steuerung.current?.tafel(tafelNachricht(n));
+    const id = idRef.current;
+    if (tafelPlan.current) clearTimeout(tafelPlan.current);
+    if (!id) return;
+    tafelPlan.current = setTimeout(() => {
+      tafelPlan.current = null;
+      tafelSichern(id, tafelRef.current).then(zeigeProblem);
+    }, 400);
+  }
+
+  function tafelOeffnen() {
+    const t = tafelRef.current;
+    // Striche auf dem Bild bleiben beim erneuten Öffnen erhalten.
+    if (t?.grund === "bild" && bildRef.current) {
+      tafelAendern({ k: "t", an: true, g: "bild", s: t.striche });
+      return;
+    }
+    tafelAendern({ k: "t", an: true, g: bildRef.current ? "bild" : "kreuzung", s: [] });
+  }
+
+  function tafelGrund(g: TafelGrund) {
+    const t = tafelRef.current;
+    if (!t?.striche.length) {
+      tafelAendern({ k: "t", an: true, g, s: [] });
+      return;
+    }
+    dialog("Zeichnung verwerfen?", "Beim Wechsel des Hintergrunds fängst du neu an.", [
+      { text: "Abbrechen", style: "cancel" },
+      { text: "Wechseln", style: "destructive", onPress: () => tafelAendern({ k: "t", an: true, g, s: [] }) },
+    ]);
+  }
+
+  /** Fertig: Auf dem Bild bleiben die Striche liegen, Vorlagen verschwinden. */
+  function tafelFertig() {
+    const t = tafelRef.current;
+    if (!t) return;
+    tafelAendern({ k: "t", an: false, g: t.grund, s: t.grund === "bild" ? t.striche : [] });
+  }
+
+  /** Neues oder kein Bild: Striche auf dem alten Bild verschwinden (der Server macht es genauso). */
+  function tafelBildWeg() {
+    if (tafelRef.current?.grund !== "bild") return;
+    tafelRef.current = null;
+    setTafel(null);
+    steuerung.current?.tafel(tafelNachricht({ k: "t", an: false, g: "leer" }));
+  }
+
+  function radUndTafelWeg() {
+    if (tafelPlan.current) clearTimeout(tafelPlan.current);
+    tafelPlan.current = null;
+    tafelRef.current = null;
+    setTafel(null);
+    setRad(null);
+  }
+
   // ------------------------------------------------------------------ Bild
   function bildSenden(b: LiveBild | null, zuverlaessig: boolean) {
     steuerung.current?.bild(bildNachricht(b), zuverlaessig);
@@ -388,6 +507,7 @@ export default function LiveSenden() {
       if (bildPlan.current) clearTimeout(bildPlan.current);
       setBild(b);
       bildSenden(b, true);
+      tafelBildWeg();
       erfolg();
       const problem = await liveBildSichern(id, b);
       if (problem) zeigeProblem(problem);
@@ -405,6 +525,7 @@ export default function LiveSenden() {
     stoss();
     setBild(null);
     bildSenden(null, true);
+    tafelBildWeg();
     bildSichernSpaeter(null);
     liveBildDateiLoeschen(alt.pfad);
   }
@@ -477,6 +598,8 @@ export default function LiveSenden() {
 
   // ------------------------------------------------------------------ Anzeige
   const zeigtBuehne = zugang && (phase === "bereit" || phase === "countdown" || phase === "live");
+  // Sieben Werkzeuge passen auf kleinen Handys nur ohne Beschriftung.
+  const eng = geteilt || fensterHoehe < 740;
 
   return (
     // Eigene Wurzel für Gesten: Die Seite ist ein Vollbild-Modal.
@@ -513,7 +636,53 @@ export default function LiveSenden() {
 
       {/* Bild aus der Galerie – klebt auf dem Video und wandert beim Teilen mit nach oben */}
       {zeigtBuehne ? (
-        <LiveBildEbene bild={bild} flaeche={videoHoehe} oben={bildOben} bearbeitbar unten={Math.max(insets.bottom, 12)} onBewegt={bildBewegt} onFertig={bildFertig} onLoeschen={bildEntfernen} />
+        <LiveBildEbene
+          bild={tafelOffen ? null : bild}
+          striche={tafel?.grund === "bild" ? tafel.striche : null}
+          flaeche={videoHoehe}
+          oben={bildOben}
+          bearbeitbar
+          unten={Math.max(insets.bottom, 12)}
+          onBewegt={bildBewegt}
+          onFertig={bildFertig}
+          onLoeschen={bildEntfernen}
+        />
+      ) : null}
+
+      {/* Themenrad – alle sehen es gleichzeitig drehen */}
+      {radOffen && rad ? (
+        <ThemenRad
+          rad={rad}
+          gastgeber
+          oben={insets.top + 56}
+          unten={Math.max(insets.bottom, 12) + 8}
+          beschaeftigt={radLaedt || quiz.beschaeftigt}
+          onFrage={radFrage}
+          onNochmal={radStarten}
+          onSchliessen={radZu}
+        />
+      ) : null}
+
+      {/* Tafel – malen auf das Bild oder eine Vorlage */}
+      {tafelOffen && tafel ? (
+        <TafelBuehne
+          tafel={tafel}
+          bild={bild}
+          bearbeitbar
+          oben={insets.top + 56}
+          unten={Math.max(insets.bottom, 12) + 8}
+          onZug={(z: Strich | null) => steuerung.current?.tafel(tafelNachricht({ k: "z", s: z ? { ...z, p: vereinfachen(z.p) } : { f: "#FFFFFF", p: [] } }))}
+          onStrich={(z) => tafelAendern({ k: "f", s: z })}
+          onRueckgaengig={() => tafelAendern({ k: "u" })}
+          onLeeren={() =>
+            dialog("Alles löschen?", "Alle Striche verschwinden – auch bei den Zuschauern.", [
+              { text: "Abbrechen", style: "cancel" },
+              { text: "Löschen", style: "destructive", onPress: () => tafelAendern({ k: "c" }) },
+            ])
+          }
+          onGrund={tafelGrund}
+          onFertig={tafelFertig}
+        />
       ) : null}
 
       {/* Kopf */}
@@ -551,12 +720,12 @@ export default function LiveSenden() {
         ) : null}
       </View>
 
-      {/* Werkzeuge rechts: Kamera drehen, Mikrofon, Bild, Quiz, Prüfung (geteilt nur als Symbole) */}
-      {zeigtBuehne ? (
-        <View style={{ position: "absolute", right: 12, top: insets.top + 70, gap: geteilt ? 10 : 16 }}>
-          <Werkzeug kompakt={geteilt} icon="camera-reverse-outline" sf="arrow.triangle.2.circlepath.camera" label="Drehen" onPress={() => steuerung.current?.kameraWechseln().catch(() => {})} />
+      {/* Werkzeuge rechts: Kamera drehen, Mikrofon, Bild, Quiz, Prüfung, Rad, Tafel (geteilt nur als Symbole) */}
+      {zeigtBuehne && !radOffen && !tafelOffen ? (
+        <View style={{ position: "absolute", right: 12, top: insets.top + 70, gap: eng ? 10 : 14 }}>
+          <Werkzeug kompakt={eng} icon="camera-reverse-outline" sf="arrow.triangle.2.circlepath.camera" label="Drehen" onPress={() => steuerung.current?.kameraWechseln().catch(() => {})} />
           <Werkzeug
-            kompakt={geteilt}
+            kompakt={eng}
             icon={mikroAn ? "mic-outline" : "mic-off-outline"}
             sf={mikroAn ? "mic" : "mic.slash"}
             label={mikroAn ? "Mikro" : "Stumm"}
@@ -567,9 +736,11 @@ export default function LiveSenden() {
               steuerung.current?.mikrofon(neu).catch(() => setMikroAn(!neu));
             }}
           />
-          <Werkzeug kompakt={geteilt} icon="image-outline" sf="photo" label="Bild" laedt={bildLaedt} onPress={bildMenue} />
-          {phase === "live" && !geteilt ? <Werkzeug icon="flash-outline" sf="bolt" label="Quiz" onPress={quizOeffnen} /> : null}
-          {phase === "live" && !geteilt ? <Werkzeug icon="document-text-outline" sf="doc.text" label="Prüfung" onPress={pruefungOeffnen} /> : null}
+          <Werkzeug kompakt={eng} icon="image-outline" sf="photo" label="Bild" laedt={bildLaedt} onPress={bildMenue} />
+          {phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="flash-outline" sf="bolt" label="Quiz" onPress={quizOeffnen} /> : null}
+          {phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="document-text-outline" sf="doc.text" label="Prüfung" onPress={pruefungOeffnen} /> : null}
+          {phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="aperture-outline" sf="chart.pie" label="Rad" laedt={radLaedt} onPress={radStarten} /> : null}
+          {phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="brush-outline" sf="pencil.tip.crop.circle" label="Tafel" onPress={tafelOeffnen} /> : null}
         </View>
       ) : null}
 
@@ -660,7 +831,7 @@ export default function LiveSenden() {
       ) : null}
 
       {/* Live: Chat und eigene Nachrichten (während Quiz und Prüfung ausgeblendet) */}
-      {phase === "live" && !geteilt ? (
+      {phase === "live" && !geteilt && !radOffen && !tafelOffen ? (
         // box-none: Der leere Rand rechts gehört den Werkzeugen, nicht dem Chat.
         <KeyboardAvoidingView pointerEvents="box-none" behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
           <View pointerEvents="box-none" style={{ paddingHorizontal: 12, paddingBottom: Math.max(insets.bottom, 12) + 4, gap: 10 }}>

@@ -3,7 +3,7 @@ import { AppState } from "react-native";
 
 import { FRAGEN, THEMEN, type Frage } from "@/lib/fragen";
 import { kanalName, meldung } from "@/lib/live";
-import { serverJetzt, uhrStellen } from "@/lib/live-quiz";
+import { serverJetzt, uhrStellen } from "@/lib/server-uhr";
 import { gemischt } from "@/lib/stand";
 import { serverVerbunden, supabase } from "@/lib/supabase";
 

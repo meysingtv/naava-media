@@ -6,8 +6,10 @@ import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withT
 import { scheduleOnRN } from "react-native-worklets";
 
 import { Icon } from "@/components/icon";
+import { StricheSvg } from "@/components/live-tafel";
 import { stoss, tippen } from "@/lib/haptik";
 import { liveBildUrl, type BildLage, type LiveBild } from "@/lib/live-bild";
+import type { Strich } from "@/lib/live-tafel";
 import { schrift } from "@/lib/theme";
 
 // Bild aus der Galerie im Live. Es klebt auf dem Video: Lage und Größe zählen in
@@ -77,6 +79,7 @@ export function LiveBildEbene({
   oben = 0,
   bearbeitbar = false,
   unten = 0,
+  striche,
   onBewegt,
   onFertig,
   onLoeschen,
@@ -88,6 +91,8 @@ export function LiveBildEbene({
   bearbeitbar?: boolean;
   /** Sicherer Abstand unten (für die Löschleiste). */
   unten?: number;
+  /** Striche von der Tafel, die auf dem Bild liegen bleiben. */
+  striche?: Strich[] | null;
   /** Während der Geste, gedrosselt – für die Zuschauer. */
   onBewegt?: (lage: BildLage) => void;
   /** Geste vorbei: neue Lage. */
@@ -286,6 +291,11 @@ export function LiveBildEbene({
         }}
         style={{ width: "100%", height: "100%", borderRadius: 16, borderWidth: 1, borderColor: "rgba(255,255,255,0.18)" }}
       />
+      {striche?.length ? (
+        <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 16, overflow: "hidden" }}>
+          <StricheSvg striche={striche} seite={bild.seite} />
+        </View>
+      ) : null}
     </Reanimated.View>
   );
 

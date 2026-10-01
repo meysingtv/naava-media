@@ -3,6 +3,9 @@ import { AppState, Platform } from "react-native";
 import type { StyleProp, ViewStyle } from "react-native";
 
 import { pushEinrichten } from "@/lib/crew";
+import type { LiveRad } from "@/lib/live-rad";
+import type { LiveTafel } from "@/lib/live-tafel";
+import { uhrStellen } from "@/lib/server-uhr";
 import { serverVerbunden, supabase } from "@/lib/supabase";
 
 // Live-Stream in Clips: Nur der Inhaber der App geht live, alle anderen schauen
@@ -16,6 +19,10 @@ export type LiveInfo = {
   gastgeber: { id: string; name: string; bild_pfad: string | null; avatar_farbe: string } | null;
   /** Bild aus der Galerie des Gastgebers (Lage in Anteilen des Videos). */
   bild?: { pfad: string; seite: number; x: number; y: number; groesse: number } | null;
+  /** Themenrad, das gerade dreht oder steht. */
+  rad?: LiveRad | null;
+  /** Tafel des Gastgebers (Hintergrund und Striche). */
+  tafel?: LiveTafel | null;
 };
 
 export type ChatNachricht = {
@@ -37,6 +44,8 @@ export type LiveSteuerung = {
   quiz: () => void;
   /** Gastgeber: Bild-Lage an alle (`zuverlaessig` für Anfang und Ende einer Bewegung). */
   bild: (nachricht: string, zuverlaessig: boolean) => void;
+  /** Gastgeber: Tafel-Nachricht an alle (Strich, Rückgängig, …). */
+  tafel: (nachricht: string) => void;
 };
 
 export type LiveVerbindung = "verbindet" | "verbunden" | "getrennt" | "fehler";
@@ -58,6 +67,8 @@ export type LiveBuehneProps = {
   onQuiz?: () => void;
   /** Zuschauer: neue Lage des Bilds vom Gastgeber (Text aus live-bild). */
   onBild?: (nachricht: string) => void;
+  /** Zuschauer: Tafel-Nachricht vom Gastgeber (Text aus live-tafel). */
+  onTafel?: (nachricht: string) => void;
   onSteuerung?: (s: LiveSteuerung | null) => void;
   style?: StyleProp<ViewStyle>;
 };
@@ -85,10 +96,12 @@ let aufraeumen: (() => void) | null = null;
 
 async function aktuellLaden() {
   if (serverVerbunden) {
+    const vorher = Date.now();
     const { data, error } = await supabase.rpc("lern_live_aktuell");
     // Bei Fehlern (kein Netz, SQL noch nicht eingespielt) bleibt der letzte Stand.
     if (!error) {
-      const neu = (data ?? null) as LiveInfo | null;
+      const neu = (data ?? null) as (LiveInfo & { jetzt?: string }) | null;
+      uhrStellen(neu?.jetzt, vorher, Date.now());
       aktuell = neu?.id ? neu : null;
     }
   }

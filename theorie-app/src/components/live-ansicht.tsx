@@ -15,6 +15,8 @@ import { LiveBildEbene } from "@/components/live-bild";
 import { LiveBuehne } from "@/components/live-buehne";
 import { PruefungZuschauerBereich } from "@/components/live-pruefung";
 import { QUIZ_UEBERBLEND, QuizZuschauerKarte, quizSchluessel } from "@/components/live-quiz";
+import { ThemenRad } from "@/components/live-rad";
+import { TafelBuehne } from "@/components/live-tafel";
 import { LiveChat, LiveEingabe, LiveRing, LiveSchild, LIVE_ROT, useHerzen, ZuschauerZahl } from "@/components/live";
 import { Knopf } from "@/components/ui";
 import { useClipRechte } from "@/lib/clips-server";
@@ -38,6 +40,9 @@ import {
 import { bildAusNachricht, type LiveBild } from "@/lib/live-bild";
 import { useLivePruefungZuschauer, type PruefungLage } from "@/lib/live-pruefung";
 import { useQuizZuschauer, type QuizLage } from "@/lib/live-quiz";
+import { radAktuell } from "@/lib/live-rad";
+import { serverJetzt } from "@/lib/server-uhr";
+import { tafelAnwenden, tafelAusNachricht, type LiveTafel, type Strich } from "@/lib/live-tafel";
 import { useLiveXp } from "@/lib/live-xp";
 import { leuchten, schrift } from "@/lib/theme";
 
@@ -46,7 +51,8 @@ import { leuchten, schrift } from "@/lib/theme";
 // Mitteilung an/aus und für den Inhaber „Live gehen“. Stellt der Gastgeber eine
 // Quizfrage oder startet eine Prüfung, teilt sich der Bildschirm: oben die
 // Kamera (mit seinem Bild aus der Galerie), unten Quiz oder Prüfung – Chat und
-// Herzen sind so lange weg. Mitspielen bringt XP.
+// Herzen sind so lange weg. Mitspielen bringt XP. Dreht er das Themenrad, dreht
+// es bei allen gleichzeitig; malt er an der Tafel, sieht man jeden Strich live.
 
 const LIVE_VERLAUF = ["#FF5A5F", "#FF2D55", "#E0124A"] as const;
 
@@ -186,6 +192,53 @@ export function LiveAnsicht({
     funkZeit.current = Date.now();
     setBild(b);
   }, []);
+  // Themenrad: Stand vom Server (die Drehung selbst hängt nur an der Serverzeit).
+  // Nach dem Stehen bleibt es höchstens 90 s – dafür einmal neu rechnen.
+  const serverRad = live?.rad ?? null;
+  const [radWeg, setRadWeg] = useState("");
+  const [, setRadTakt] = useState(0);
+  useEffect(() => {
+    if (!radAktuell(serverRad)) return;
+    const rest = Date.parse(serverRad.start) + serverRad.dauer * 1000 + 90_000 - serverJetzt();
+    const t = setTimeout(() => setRadTakt((x) => x + 1), Math.max(1000, rest + 500));
+    return () => clearTimeout(t);
+  }, [serverRad?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const radZeigen = radAktuell(serverRad) && serverRad.id !== radWeg && !geteilt ? serverRad : null;
+
+  // Tafel: Striche kommen live über LiveKit, der Stand liegt auf dem Server (für
+  // alle, die später kommen). Wie beim Bild zählt kurz nach Funk der Funk.
+  const tafelText = live?.tafel ? JSON.stringify(live.tafel) : "";
+  const serverTafel = useMemo<LiveTafel | null>(() => (tafelText ? (JSON.parse(tafelText) as LiveTafel) : null), [tafelText]);
+  const serverTafelRef = useRef(serverTafel);
+  serverTafelRef.current = serverTafel;
+  const tafelFunk = useRef(0);
+  const [tafel, setTafel] = useState<LiveTafel | null>(serverTafel);
+  const [tafelZug, setTafelZug] = useState<Strich | null>(null);
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const pruefen = () => {
+      const warten = 3500 - (Date.now() - tafelFunk.current);
+      if (warten <= 0) {
+        setTafel(serverTafelRef.current);
+        setTafelZug(null);
+      } else t = setTimeout(pruefen, warten + 50);
+    };
+    pruefen();
+    return () => clearTimeout(t);
+  }, [serverTafel]);
+  const tafelEmpfangen = useCallback((text: string) => {
+    const n = tafelAusNachricht(text);
+    if (!n) return;
+    tafelFunk.current = Date.now();
+    if (n.k === "z") {
+      setTafelZug(n.s.p.length >= 2 ? n.s : null);
+      return;
+    }
+    setTafelZug(null);
+    setTafel((t) => tafelAnwenden(t, n));
+  }, []);
+  const tafelOffen = Boolean(tafel?.an) && !geteilt;
+
   const neuLaden = useCallback(() => {
     quiz.neuLaden();
     pruefung.neuLaden();
@@ -380,6 +433,7 @@ export function LiveAnsicht({
             onBildWeg={setBildWeg}
             onQuiz={neuLaden}
             onBild={bildEmpfangen}
+            onTafel={tafelEmpfangen}
             onSteuerung={(s) => (steuerung.current = s)}
             onVerbindung={(s) => {
               if (s === "fehler") setFehler("verbindung");
@@ -400,7 +454,15 @@ export function LiveAnsicht({
       {geteilt ? null : <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.6)"]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: unten + 340 }} />}
 
       {/* Bild aus der Galerie des Gastgebers – wandert beim Teilen mit der Kamera nach oben */}
-      {verbunden && !langeWeg ? <LiveBildEbene bild={bild} flaeche={videoHoehe} oben={oben + 48} /> : null}
+      {verbunden && !langeWeg ? (
+        <LiveBildEbene bild={tafelOffen ? null : bild} striche={tafel?.grund === "bild" ? tafel.striche : null} flaeche={videoHoehe} oben={oben + 48} />
+      ) : null}
+
+      {/* Tafel des Gastgebers – darunter bleibt der Chat */}
+      {verbunden && tafelOffen && tafel && !radZeigen ? <TafelBuehne tafel={tafel} bild={bild} zug={tafelZug} bearbeitbar={false} oben={oben + 48} unten={unten + 196} name={name} /> : null}
+
+      {/* Themenrad – dreht bei allen gleichzeitig */}
+      {verbunden && radZeigen ? <ThemenRad rad={radZeigen} gastgeber={false} oben={oben + 48} unten={unten + 8} onSchliessen={() => setRadWeg(radZeigen.id)} /> : null}
 
       {/* Kopf: Gastgeber, LIVE, Zuschauer, Mitteilung, Schließen */}
       <View style={{ position: "absolute", top: oben, left: 12, right: 12, flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -455,11 +517,11 @@ export function LiveAnsicht({
           onLayout={(e) => setPanelHoehe(e.nativeEvent.layout.height)}
           style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}
         />
-      ) : (
-        // Chat und Eingabe
+      ) : radZeigen ? null : (
+        // Chat und Eingabe (unter der Tafel niedriger)
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
           <View style={{ paddingHorizontal: 12, paddingBottom: unten, gap: 10 }}>
-            <LiveChat nachrichten={nachrichten} gastgeberId={live.gastgeber?.id} onLangDruck={ich ? langDruck : undefined} style={{ maxHeight: 260, marginRight: 64 }} />
+            <LiveChat nachrichten={nachrichten} gastgeberId={live.gastgeber?.id} onLangDruck={ich ? langDruck : undefined} style={{ maxHeight: tafelOffen ? 130 : 260, marginRight: 64 }} />
             <LiveEingabe
               angemeldet={Boolean(ich)}
               onSenden={schreiben}

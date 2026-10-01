@@ -114,7 +114,8 @@ function LinksAbbiegen() {
   );
 }
 
-function Kreisverkehr() {
+/** Kreisverkehr mit vier Zufahrten ohne Fahrzeuge, Mitte bei (150, 112). */
+export function KreisverkehrLeer() {
   const cx = 150;
   const cy = 112;
   return (
@@ -134,6 +135,14 @@ function Kreisverkehr() {
         <Line x1={0} y1={112} x2={78} y2={112} />
         <Line x1={222} y1={112} x2={300} y2={112} />
       </G>
+    </G>
+  );
+}
+
+function Kreisverkehr() {
+  return (
+    <G>
+      <KreisverkehrLeer />
       <Weg d="M162,166 L162,156" farbe={DU} spitze={{ x: 162, y: 150, winkel: 0 }} />
       <Weg d="M99,128 Q108,160 136,168" farbe={ANDERE} spitze={{ x: 141, y: 169, winkel: 100 }} />
       <Auto x={162} y={192} farbe={DU} />

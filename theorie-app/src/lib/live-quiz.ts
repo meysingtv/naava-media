@@ -3,6 +3,7 @@ import { AppState } from "react-native";
 
 import { antwortReihenfolge, FRAGEN, frageVon, type Frage } from "@/lib/fragen";
 import { kanalName, meldung } from "@/lib/live";
+import { serverJetzt, uhrStellen } from "@/lib/server-uhr";
 import { serverVerbunden, supabase } from "@/lib/supabase";
 
 // Live-Quiz: Der Inhaber blendet im Live eine Frage aus dem Katalog ein, alle
@@ -61,22 +62,8 @@ export const QUIZ_FRAGEN: Frage[] = FRAGEN.filter((f) => f.art === "auswahl");
 
 const LEER: QuizLage = { quiz: null, mein: null, stand: null };
 
-// ---------------------------------------------------------------------------
-// Uhr: Countdown nach der Serverzeit, damit er auf jedem Handy gleich läuft
-// ---------------------------------------------------------------------------
-
-let versatz = 0;
-
-/** Uhr nach einer Server-Antwort stellen (`jetzt` = Serverzeit, vorher/nachher = Handyzeit). */
-export function uhrStellen(jetzt: string | undefined, vorher: number, nachher: number) {
-  const server = jetzt ? Date.parse(jetzt) : NaN;
-  if (Number.isFinite(server) && nachher - vorher < 2500) versatz = server - (vorher + nachher) / 2;
-}
-
-/** Aktuelle Serverzeit in Millisekunden (nach der zuletzt gestellten Uhr). */
-export function serverJetzt(): number {
-  return Date.now() + versatz;
-}
+// Uhr nach der Serverzeit (eigene Datei, hier weitergereicht)
+export { serverJetzt, uhrStellen } from "@/lib/server-uhr";
 
 /** Restzeit einer offenen Frage in Millisekunden. */
 export function quizRestzeit(quiz: LiveQuiz): number {
