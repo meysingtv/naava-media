@@ -207,20 +207,24 @@ function ZeitRing({ quiz }: { quiz: LiveQuiz }) {
   );
 }
 
-/** Rundes Abzeichen mit Symbol: Haken, Kreuz, Uhr oder Pokal. */
-function SymbolAbzeichen({ icon, farbe, verlaufFarben, dunkel }: { icon: IconName; farbe: string; verlaufFarben?: readonly [string, string]; dunkel?: boolean }) {
+/** Rundes Abzeichen mit Symbol: leuchtender Verlauf, helle Kante, kein dunkler Ring. */
+function SymbolAbzeichen({ icon, verlaufFarben, dunkel }: { icon: IconName; verlaufFarben: readonly [string, string]; dunkel?: boolean }) {
   const d = ABZEICHEN;
   return (
-    <View style={[{ width: d, height: d, borderRadius: d / 2 }, leuchten(farbe, 0.6, 14, 0)]}>
-      <View style={{ width: d, height: d, borderRadius: d / 2, borderWidth: 3, borderColor: ABZEICHEN_GRUND, overflow: "hidden", alignItems: "center", justifyContent: "center", backgroundColor: farbe }}>
-        {verlaufFarben ? <LinearGradient colors={verlaufFarben} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={FUELLEN} /> : null}
-        <Icon name={icon} size={24} color={dunkel ? "#3A2600" : "#FFFFFF"} weight="bold" />
-      </View>
+    <View style={[{ width: d, height: d, borderRadius: d / 2 }, leuchten(verlaufFarben[1], 0.7, 16, 0)]}>
+      <LinearGradient colors={verlaufFarben} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={{ width: d, height: d, borderRadius: d / 2, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.45)" }}>
+        <Icon name={icon} size={25} color={dunkel ? "#3A2600" : "#FFFFFF"} weight="bold" />
+      </LinearGradient>
     </View>
   );
 }
 
-const Pokal = () => <SymbolAbzeichen icon="trophy" farbe={GOLD} verlaufFarben={["#FFE08A", "#F5A524"]} dunkel />;
+const GRUEN_VERLAUF = ["#86EA92", "#2FAE45"] as const;
+const ROT_VERLAUF = ["#FF9488", "#E2382C"] as const;
+const GRAU_VERLAUF = ["#A9AEB6", "#5D626B"] as const;
+const GOLD_VERLAUF = ["#FFE7A0", "#F2A21F"] as const;
+
+const Pokal = () => <SymbolAbzeichen icon="trophy" verlaufFarben={GOLD_VERLAUF} dunkel />;
 
 /** Kopfzeile in der Karte – links und rechts vom Abzeichen. */
 function KopfZeile({ links, rechts }: { links: ReactNode; rechts?: ReactNode }) {
@@ -441,17 +445,20 @@ function Hinweispille({ icon, farbe, text, zusatz }: { icon: IconName; farbe: st
   );
 }
 
-/** Erklärung nach der Auflösung – kurz, antippen zeigt alles. */
+/** Erklärung nach der Auflösung: „Merke“ mit Akzentlinie, immer ganz zu lesen. */
 function Erklaerung({ text }: { text: string }) {
-  const [ganz, setGanz] = useState(false);
   if (!text) return null;
   return (
-    <Pressable onPress={() => setGanz((g) => !g)} accessibilityRole="button" accessibilityLabel="Erklärung" style={{ flexDirection: "row", gap: 9, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16, backgroundColor: "rgba(255,178,122,0.08)", borderWidth: 1, borderColor: "rgba(255,178,122,0.16)" }}>
-      <Icon name="bulb" size={15} color="#FFB27A" style={{ marginTop: 1 }} />
-      <Text style={{ ...schrift.text, flex: 1, fontSize: 13.5, lineHeight: 19, color: "rgba(255,255,255,0.88)" }} numberOfLines={ganz ? undefined : 2}>
-        {text}
-      </Text>
-    </Pressable>
+    <View style={{ flexDirection: "row", gap: 12, paddingVertical: 2 }}>
+      <LinearGradient colors={["#FFB25C", "#FC5B0E"]} style={{ width: 3, borderRadius: 2 }} />
+      <View style={{ flex: 1, gap: 4 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+          <Icon name="bulb" size={13} color="#FFB27A" />
+          <Text style={{ ...schrift.textFett, fontSize: 11.5, letterSpacing: 1.2, color: "#FFB27A" }}>MERKE</Text>
+        </View>
+        <Text style={{ ...schrift.textMittel, fontSize: 14.5, lineHeight: 21, color: "rgba(255,255,255,0.9)" }}>{text}</Text>
+      </View>
+    </View>
   );
 }
 
@@ -533,6 +540,34 @@ function RanglistenZeile({ platz, name, bildPfad, farbe, punkte, ich }: { platz:
   );
 }
 
+/** Eigener Platz außerhalb der Top 5 – abgesetzt mit drei Punkten, als eigene Karte. */
+function DeinPlatz({ stand }: { stand: QuizStand }) {
+  return (
+    <>
+      <View style={{ flexDirection: "row", justifyContent: "center", gap: 5, marginVertical: -1 }}>
+        {[0, 1, 2].map((i) => (
+          <View key={i} style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.28)" }} />
+        ))}
+      </View>
+      <View style={[{ borderRadius: 18 }, leuchten(farben.orange, 0.3, 14, 2)]}>
+        <LinearGradient colors={["rgba(252,91,14,0.24)", "rgba(252,91,14,0.08)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingLeft: 10, paddingRight: 16, borderRadius: 18, borderWidth: 1, borderColor: "rgba(252,91,14,0.5)" }}>
+          <LinearGradient colors={verlauf.knopf} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ ...schrift.titel, fontSize: stand.platz > 99 ? 13 : 16, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{stand.platz}</Text>
+          </LinearGradient>
+          <View style={{ flex: 1 }}>
+            <Text style={{ ...schrift.textFett, fontSize: 15.5, color: "#FFFFFF" }}>Dein Platz</Text>
+            <Text style={{ ...schrift.textMittel, fontSize: 12.5, color: "rgba(255,255,255,0.65)" }}>von {stand.spieler} Mitspielern</Text>
+          </View>
+          <View style={{ alignItems: "flex-end" }}>
+            <Text style={{ ...schrift.titel, fontSize: 17, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{zahl(stand.punkte)}</Text>
+            <Text style={{ ...schrift.textMittel, fontSize: 11.5, color: "rgba(255,255,255,0.6)" }}>Punkte</Text>
+          </View>
+        </LinearGradient>
+      </View>
+    </>
+  );
+}
+
 function RanglisteInhalt({ quiz, ichId, stand }: { quiz: LiveQuiz; ichId?: string | null; stand?: QuizStand | null }) {
   if (!quiz.bestenliste.length) {
     return <Text style={{ ...schrift.textMittel, fontSize: 14.5, lineHeight: 20, color: "rgba(255,255,255,0.7)", textAlign: "center", paddingVertical: 10 }}>Noch hat niemand Punkte – bei der nächsten Frage!</Text>;
@@ -544,7 +579,7 @@ function RanglisteInhalt({ quiz, ichId, stand }: { quiz: LiveQuiz; ichId?: strin
       {rest.map((s) => (
         <RanglistenZeile key={s.id} platz={s.platz} name={s.id === ichId ? `${s.name} (du)` : s.name} bildPfad={s.bild_pfad} farbe={s.avatar_farbe} punkte={s.punkte} ich={s.id === ichId} />
       ))}
-      {stand && stand.platz > 5 ? <RanglistenZeile platz={stand.platz} name={`Du · von ${stand.spieler}`} punkte={stand.punkte} ich /> : null}
+      {stand && stand.platz > 5 ? <DeinPlatz stand={stand} /> : null}
     </View>
   );
 }
@@ -629,7 +664,7 @@ export function QuizZuschauerKarte({
     </Aufploppen>
   ) : (
     <Aufploppen schluessel={`${quiz.id}-ergebnis`}>
-      {mein ? <SymbolAbzeichen icon={mein.richtig ? "checkmark" : "close"} farbe={mein.richtig ? GRUEN : ROT} /> : <SymbolAbzeichen icon="time-outline" farbe="#3A3D44" />}
+      {mein ? <SymbolAbzeichen icon={mein.richtig ? "checkmark" : "close"} verlaufFarben={mein.richtig ? GRUEN_VERLAUF : ROT_VERLAUF} /> : <SymbolAbzeichen icon="time-outline" verlaufFarben={GRAU_VERLAUF} />}
     </Aufploppen>
   );
 

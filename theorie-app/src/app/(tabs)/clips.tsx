@@ -150,8 +150,11 @@ export default function Clips() {
   const aktivId = aktivProFeed[art] ?? feed.eintraege[0]?.id ?? null;
   const spielen = fokus && vordergrund && !liveAn;
 
-  // Kommt man (z. B. wegen des roten Punkts unten) nach Clips, während ein Live
-  // läuft, öffnet sich einmal pro Live die Kategorie „Live“.
+  // Ein laufendes Live öffnet sich im Vollbild (ohne Tab-Leiste, Kopfzeile ganz
+  // oben). Kommt man – z. B. wegen des roten Punkts unten – nach Clips, während
+  // ein Live läuft, passiert das einmal pro Live von selbst.
+  const liveRef = useRef(live);
+  liveRef.current = live;
   const warFokus = useRef(false);
   const liveGezeigt = useRef<string | null>(null);
   useEffect(() => {
@@ -159,9 +162,17 @@ export default function Clips() {
     warFokus.current = fokus;
     if (neuImFokus && live && liveGezeigt.current !== live.id) {
       liveGezeigt.current = live.id;
-      setLiveAn(true);
+      router.push("/live");
     }
   }, [fokus, live]);
+
+  // Startet ein Live, während man im leeren „Live“-Bereich wartet: direkt ins Vollbild.
+  useEffect(() => {
+    if (!liveAn || !live || !fokus) return;
+    liveGezeigt.current = live.id;
+    setLiveAn(false);
+    router.push("/live");
+  }, [liveAn, live, fokus]);
 
   // ------------------------------------------------------------------ Laden
   const laden = useCallback(async (welche: FeedArt, neu: boolean) => {
@@ -269,7 +280,9 @@ export default function Clips() {
     tippen();
     setKommentarId(null);
     if (neu === "live") {
-      setLiveAn(true);
+      // Läuft ein Live: Vollbild. Sonst der Hinweis (Mitteilung an, für den Inhaber „Live gehen“).
+      if (liveRef.current) router.push("/live");
+      else setLiveAn(true);
       return;
     }
     setLiveAn(false);

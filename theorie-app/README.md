@@ -203,9 +203,9 @@ App. Alle anderen schauen in Clips zu, schreiben im Chat und schicken Herzen.
   „Beenden“ oder die Seite verlassen beendet das Live. Ohne Lebenszeichen der
   App (z. B. leerer Akku) verschwindet es nach 2 Minuten von selbst.
 - **Zuschauen:** Läuft ein Live, hat der Clips-Reiter unten einen roten Punkt
-  und die Kategorie „Live“ oben in Clips einen pulsierenden Punkt. Wer Clips
-  dann öffnet, landet einmal direkt im Live; den Ton schaltet der Ton-Knopf
-  oben rechts. Gäste schauen zu; schreiben kann nur, wer angemeldet ist (ohne
+  und die Kategorie „Live“ oben in Clips einen pulsierenden Punkt. Das Live
+  öffnet sich im Vollbild ohne Tab-Leiste (einmal von selbst, wenn man Clips
+  öffnet, sonst über „Live“); das ✕ oben rechts führt zurück zu Clips. Gäste schauen zu; schreiben kann nur, wer angemeldet ist (ohne
   Links, mit Tempolimit und Schimpfwort-Sperre). Nachrichten lassen sich
   melden (Tabelle `lern_live_meldung`).
 - **Mitteilung beim Start:** Nur für alle, die zugestimmt haben – über die
