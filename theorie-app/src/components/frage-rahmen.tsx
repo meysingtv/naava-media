@@ -293,8 +293,11 @@ export function HauptKnopf({ titel, icon, onPress, deaktiviert, style }: { titel
             ) : null}
           </>
         )}
-        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 }}>
-          <Text style={{ ...schrift.textFett, fontSize: 17, color: deaktiviert ? f.text3 : "#FFFFFF" }}>{titel}</Text>
+        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9, paddingHorizontal: 12 }}>
+          {/* Neben mehreren runden Knöpfen wird es eng – dann lieber etwas kleiner als abgeschnitten */}
+          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ ...schrift.textFett, fontSize: 17, color: deaktiviert ? f.text3 : "#FFFFFF", flexShrink: 1 }}>
+            {titel}
+          </Text>
           {icon ? <Icon name={icon} size={19} color={deaktiviert ? f.text3 : "#FFFFFF"} weight="semibold" /> : null}
         </View>
       </View>

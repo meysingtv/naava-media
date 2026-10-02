@@ -92,7 +92,7 @@ function KiKreis({ groesse, aktiv }: { groesse: number; aktiv?: boolean }) {
 }
 
 /** KI-Knopf für die untere Leiste – öffnet die Blase genau darüber. */
-export function KiKnopf({ aktiv, onOeffnen }: { aktiv?: boolean; onOeffnen: (anker: KiAnker) => void }) {
+export function KiKnopf({ aktiv, onOeffnen, groesse = 56 }: { aktiv?: boolean; onOeffnen: (anker: KiAnker) => void; groesse?: number }) {
   const f = useFarbwelt();
   const ref = useRef<View>(null);
   return (
@@ -104,9 +104,9 @@ export function KiKnopf({ aktiv, onOeffnen }: { aktiv?: boolean; onOeffnen: (ank
       }}
       accessibilityRole="button"
       accessibilityLabel="KI-Hilfe"
-      style={({ pressed }) => [{ width: 56, height: 56, borderRadius: 28, transform: [{ scale: pressed ? 0.93 : 1 }] }, leuchten(f.orange, f.hell ? 0.28 : 0.42, 12, 3)]}
+      style={({ pressed }) => [{ width: groesse, height: groesse, borderRadius: groesse / 2, transform: [{ scale: pressed ? 0.93 : 1 }] }, leuchten(f.orange, f.hell ? 0.28 : 0.42, 12, 3)]}
     >
-      <KiKreis groesse={56} aktiv={aktiv} />
+      <KiKreis groesse={groesse} aktiv={aktiv} />
     </Pressable>
   );
 }

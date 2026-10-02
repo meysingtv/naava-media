@@ -23,6 +23,7 @@ import { ThemenRad } from "@/components/live-rad";
 import { TafelBuehne } from "@/components/live-tafel";
 import { LiveChat, LiveEingabe, LiveSchild, LIVE_ROT, useHerzen, ZuschauerZahl } from "@/components/live";
 import { Knopf } from "@/components/ui";
+import { greenscreenEntfernen, greenscreenMoeglich, greenscreenSetzen, greenscreenWaehlen, type Greenscreen } from "@/lib/greenscreen";
 import { erfolg, stoss, tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import {
@@ -48,7 +49,7 @@ import { leuchten, schrift } from "@/lib/theme";
 
 // Live gehen (nur der Inhaber der App): Kamera-Vorschau, Thema, Countdown,
 // dann live mit Chat, Zuschauern, Herzen, Quiz, Prüfung, Themenrad, Tafel, Bild
-// aus der Galerie und Moderation. Während Quiz oder Prüfung teilt sich der
+// aus der Galerie, Greenscreen (iPhone) und Moderation. Während Quiz oder Prüfung teilt sich der
 // Bildschirm (Kamera oben, Bereich unten, ohne Chat). Beim Verlassen endet das
 // Live automatisch.
 
@@ -64,7 +65,7 @@ function dauerText(ms: number): string {
   return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${sek}` : `${m}:${sek}`;
 }
 
-function Werkzeug({ icon, sf, label, aus, laedt, kompakt, onPress }: { icon: IconName; sf: string; label: string; aus?: boolean; laedt?: boolean; kompakt?: boolean; onPress: () => void }) {
+function Werkzeug({ icon, sf, label, aus, aktiv, laedt, kompakt, onPress }: { icon: IconName; sf: string; label: string; aus?: boolean; aktiv?: boolean; laedt?: boolean; kompakt?: boolean; onPress: () => void }) {
   const groesse = kompakt ? 40 : 46;
   return (
     <Pressable
@@ -81,7 +82,7 @@ function Werkzeug({ icon, sf, label, aus, laedt, kompakt, onPress }: { icon: Ico
       {({ pressed }) => (
         <>
           <Glas interaktiv style={{ width: groesse, height: groesse, borderRadius: groesse / 2, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
-            {laedt ? <Lader color="#FFFFFF" /> : <Icon name={icon} sf={sf as never} size={kompakt ? 18 : 20} color={aus ? LIVE_ROT : "#FFFFFF"} weight="semibold" />}
+            {laedt ? <Lader color="#FFFFFF" /> : <Icon name={icon} sf={sf as never} size={kompakt ? 18 : 20} color={aus ? LIVE_ROT : aktiv ? "#FFB27A" : "#FFFFFF"} weight="semibold" />}
           </Glas>
           {kompakt ? null : <Text style={{ ...schrift.textHalb, fontSize: 11, color: "#FFFFFF", textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 4 }}>{label}</Text>}
         </>
@@ -151,6 +152,11 @@ export default function LiveSenden() {
     videoHoehe.value = withTiming(videoZiel, { duration: 450, easing: REasing.out(REasing.cubic) });
   }, [videoZiel, videoHoehe]);
   const videoStil = useAnimatedStyle(() => ({ height: videoHoehe.value }));
+
+  // Greenscreen (iPhone): Hintergrund hinter der Person – gerechnet vor dem Senden.
+  const [greenscreen, setGreenscreen] = useState<Greenscreen | null>(null);
+  const [greenscreenLaedt, setGreenscreenLaedt] = useState(false);
+  const [kameraDa, setKameraDa] = useState(true);
 
   // Bild aus der Galerie: Lage geht live an alle, gesichert wird sie kurz nach dem Loslassen.
   const [bild, setBild] = useState<LiveBild | null>(null);
@@ -240,6 +246,7 @@ export default function LiveSenden() {
       if (idRef.current) liveBeenden(idRef.current);
       if (bildRef.current) liveBildDateiLoeschen(bildRef.current.pfad);
       if (tafelPlan.current) clearTimeout(tafelPlan.current);
+      greenscreenEntfernen();
     },
     [],
   );
@@ -292,6 +299,7 @@ export default function LiveSenden() {
     setPhase("ende");
     bildAufraeumen();
     radUndTafelWeg();
+    greenscreenAus(false);
     if (id) await liveBeenden(id);
   }
 
@@ -312,6 +320,7 @@ export default function LiveSenden() {
     quiz.zuruecksetzen();
     pruefung.zuruecksetzen();
     radUndTafelWeg();
+    greenscreenAus(false);
     setPhase("start");
     setRunde((r) => r + 1);
   }
@@ -470,6 +479,43 @@ export default function LiveSenden() {
     setRad(null);
   }
 
+  // ------------------------------------------------------------------ Greenscreen
+  async function greenscreenHolen() {
+    if (greenscreenLaedt) return;
+    setGreenscreenLaedt(true);
+    try {
+      const neu = await greenscreenWaehlen();
+      if (!neu) return;
+      if (!(await greenscreenSetzen(neu))) {
+        zeigeProblem("Diese Datei lässt sich nicht als Hintergrund nutzen.");
+        return;
+      }
+      setGreenscreen(neu);
+      erfolg();
+      if (!kameraDa) hinweis.zeigen({ icon: "information-circle", text: "Greenscreen braucht die echte Kamera – im Simulator siehst du ihn nicht." });
+    } catch (e) {
+      zeigeProblem((e as Error).message || "Der Hintergrund ließ sich nicht laden.");
+    } finally {
+      setGreenscreenLaedt(false);
+    }
+  }
+
+  function greenscreenAus(spuerbar = true) {
+    greenscreenEntfernen();
+    setGreenscreen(null);
+    if (spuerbar) stoss();
+  }
+
+  async function greenscreenMenue() {
+    if (!greenscreen) {
+      greenscreenHolen();
+      return;
+    }
+    const wahl = await auswahlBlatt("Greenscreen", [{ text: "Anderen Hintergrund wählen" }, { text: "Greenscreen aus", gefahr: true }]);
+    if (wahl === 0) greenscreenHolen();
+    if (wahl === 1) greenscreenAus();
+  }
+
   // ------------------------------------------------------------------ Bild
   function bildSenden(b: LiveBild | null, zuverlaessig: boolean) {
     steuerung.current?.bild(bildNachricht(b), zuverlaessig);
@@ -569,6 +615,7 @@ export default function LiveSenden() {
     const id = idRef.current;
     idRef.current = null;
     bildAufraeumen();
+    greenscreenAus(false);
     if (id) liveBeenden(id);
     router.back();
   }
@@ -598,8 +645,9 @@ export default function LiveSenden() {
 
   // ------------------------------------------------------------------ Anzeige
   const zeigtBuehne = zugang && (phase === "bereit" || phase === "countdown" || phase === "live");
-  // Sieben Werkzeuge passen auf kleinen Handys nur ohne Beschriftung.
-  const eng = geteilt || fensterHoehe < 740;
+  // Werkzeuge rechts: Mit Beschriftung nur, solange sie über die Eingabe unten passen.
+  const werkzeugZahl = 3 + (greenscreenMoeglich ? 1 : 0) + (phase === "live" && !geteilt ? 4 : 0);
+  const eng = geteilt || insets.top + 70 + werkzeugZahl * 64 + (werkzeugZahl - 1) * 14 > fensterHoehe - Math.max(insets.bottom, 12) - 62;
 
   return (
     // Eigene Wurzel für Gesten: Die Seite ist ein Vollbild-Modal.
@@ -621,6 +669,8 @@ export default function LiveSenden() {
               setHerzZahl((h) => h + 1);
             }}
             onSteuerung={(s) => (steuerung.current = s)}
+            greenscreen={Boolean(greenscreen)}
+            onKamera={setKameraDa}
             onVerbindung={(s, meldung) => {
               if (s === "fehler") {
                 setFehlerText(meldung ?? "Die Verbindung ist abgebrochen.");
@@ -720,7 +770,7 @@ export default function LiveSenden() {
         ) : null}
       </View>
 
-      {/* Werkzeuge rechts: Kamera drehen, Mikrofon, Bild, Quiz, Prüfung, Rad, Tafel (geteilt nur als Symbole) */}
+      {/* Werkzeuge rechts: Kamera drehen, Mikrofon, Bild, Greenscreen, Quiz, Prüfung, Rad, Tafel (geteilt nur als Symbole) */}
       {zeigtBuehne && !radOffen && !tafelOffen ? (
         <View style={{ position: "absolute", right: 12, top: insets.top + 70, gap: eng ? 10 : 14 }}>
           <Werkzeug kompakt={eng} icon="camera-reverse-outline" sf="arrow.triangle.2.circlepath.camera" label="Drehen" onPress={() => steuerung.current?.kameraWechseln().catch(() => {})} />
@@ -737,6 +787,7 @@ export default function LiveSenden() {
             }}
           />
           <Werkzeug kompakt={eng} icon="image-outline" sf="photo" label="Bild" laedt={bildLaedt} onPress={bildMenue} />
+          {greenscreenMoeglich ? <Werkzeug kompakt={eng} icon="person-outline" sf="person.crop.rectangle" label="Greenscreen" aktiv={Boolean(greenscreen)} laedt={greenscreenLaedt} onPress={greenscreenMenue} /> : null}
           {phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="flash-outline" sf="bolt" label="Quiz" onPress={quizOeffnen} /> : null}
           {phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="document-text-outline" sf="doc.text" label="Prüfung" onPress={pruefungOeffnen} /> : null}
           {phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="aperture-outline" sf="chart.pie" label="Rad" laedt={radLaedt} onPress={radStarten} /> : null}

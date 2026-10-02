@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Keyboard, KeyboardAvoidingView, ScrollView, View } from "react-native";
+import { Keyboard, KeyboardAvoidingView, ScrollView, useWindowDimensions, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,7 +13,10 @@ import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { KiBlase, KiKnopf, type KiAnker } from "@/components/ki-hilfe";
 import { Kopfzeile } from "@/components/home";
 import { dialog } from "@/components/dialog";
+import { ErklaerKnopf } from "@/components/erklaerung";
 import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
+import { animationFuer } from "@/lib/erklaer-animationen";
+import { useErklaervideos } from "@/lib/erklaervideos";
 import { dauer } from "@/lib/format";
 import { FOTOS, themaFoto } from "@/lib/fotos";
 import { antwortRichtig, frageVon, FRAGEN, fragenZuThema, istBildfrage, istZeichen, themaVon, zahlLesen, type ThemaId } from "@/lib/fragen";
@@ -56,8 +59,10 @@ function fragenFuer(p: Params, s: Stand): string[] {
 export default function Training() {
   const params = useLocalSearchParams<Params>();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const { farbwelt: f, belohnungen } = useDarstellung();
   const { stand, antwort, merken, trainingFertig } = useStand();
+  const { videos } = useErklaervideos();
 
   const [ids] = useState(() => fragenFuer(params, stand));
   const [zielOffenAmStart] = useState(() => heuteBeantwortet(stand) < stand.tagesziel);
@@ -213,6 +218,10 @@ export default function Training() {
   const letzte = index + 1 === ids.length;
   const thema = themaVon(frage.thema);
   const segmente: Segment[] = ids.map((_, i) => (i < ergebnisse.length ? (ergebnisse[i].richtig ? "richtig" : "falsch") : i === index ? "aktiv" : "offen"));
+  // Erklärvideo des Inhabers oder eingebaute Animation – dann ein Knopf mehr unten
+  const erklaerVideo = Boolean(videos[frage.id]);
+  const erklaerbar = erklaerVideo || animationFuer(frage) != null;
+  const rund = erklaerbar && width < 390 ? 50 : 56;
 
   // ------------------------------------------------------------------ Frage
   return (
@@ -252,8 +261,9 @@ export default function Training() {
             ) : null}
           </ScrollView>
           <AktionsLeiste unten={insets.bottom}>
-            <KiKnopf aktiv={kiAnker != null} onOeffnen={setKiAnker} />
-            <NebenKnopf icon="flag-outline" onPress={() => frageMelden(frage.id)} style={{ width: 56 }} />
+            <KiKnopf aktiv={kiAnker != null} onOeffnen={setKiAnker} groesse={rund} />
+            {erklaerbar ? <ErklaerKnopf groesse={rund} video={erklaerVideo} onPress={() => router.push({ pathname: "/erklaerung", params: { frage: frage.id } })} /> : null}
+            <NebenKnopf icon="flag-outline" onPress={() => frageMelden(frage.id)} style={{ width: rund, height: rund }} />
             {aufgedeckt ? (
               <HauptKnopf titel={letzte ? "Auswertung" : "Nächste Frage"} icon="arrow-forward" onPress={weiter} style={{ flex: 1 }} />
             ) : (

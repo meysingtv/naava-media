@@ -161,6 +161,8 @@ function Navigation() {
           <Stack.Screen name="karte-bearbeiten" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="premium" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="einstellungen" />
+          <Stack.Screen name="erklaerung" options={{ animation: "slide_from_bottom" }} />
+          <Stack.Screen name="erklaervideos" />
           <Stack.Screen name="bildnachweise" />
         </Stack.Protected>
       </Stack>

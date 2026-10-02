@@ -70,6 +70,10 @@ export type LiveBuehneProps = {
   /** Zuschauer: Tafel-Nachricht vom Gastgeber (Text aus live-tafel). */
   onTafel?: (nachricht: string) => void;
   onSteuerung?: (s: LiveSteuerung | null) => void;
+  /** Gastgeber (iPhone): Greenscreen-Effekt an der Kamera – Hintergrund setzt src/lib/greenscreen. */
+  greenscreen?: boolean;
+  /** Gastgeber: Kamerabild da oder nicht (z. B. im Simulator ohne Kamera). */
+  onKamera?: (da: boolean) => void;
   style?: StyleProp<ViewStyle>;
 };
 

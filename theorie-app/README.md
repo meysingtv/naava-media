@@ -107,6 +107,24 @@ zum Haken werden. Nach dem Prüfen zeigt ein Banner das Ergebnis mit XP, darunte
 Ring und bei der Simulation einen Stempel „Bestanden“ / „Nicht bestanden“
 (`src/components/frage-ansicht.tsx`, `frage-rahmen.tsx`, `auswertung.tsx`).
 
+**Erklärung zur Frage:** Gibt es zu einer Frage ein Erklärvideo oder eine
+Animation, steht im Training unten neben der KI-Hilfe ein Play-Knopf. Er öffnet
+die Erklärung; gibt es beides, schaltet oben „Video | Animation“ um.
+
+- **Animationen** sind eingebaut für alle Fragen mit Lageplan (rechts vor links,
+  Linksabbiegen, Kreisverkehr, Rechtsabbiegen mit Radfahrer, Rettungsgasse,
+  Schulbus): Die Fahrzeuge fahren Schritt für Schritt in der richtigen
+  Reihenfolge, mit Nummern, Blinker, Schulterblick und Text zu jedem Schritt.
+  Antippen hält an, die Leiste darunter springt zu einem Schritt, am Ende kommt
+  „Merke“. Daten in `src/lib/erklaer-animationen.ts`, gezeichnet in
+  `src/components/erklaer-animation.tsx`.
+- **Erklärvideos** lädt nur der Inhaber hoch: Einstellungen → Lernen →
+  „Erklärvideos“ → Frage suchen → „Video hochladen“ (bis 5 Minuten, 50 MB; das
+  iPhone rechnet auf 720p herunter). Dort auch ansehen, ersetzen und löschen.
+  Einrichten: `supabase/update-erklaervideos.sql` im SQL-Editor ausführen
+  (Abschnitt 21 in `schema.sql`, wiederholbar) – legt die Tabelle
+  `lern_erklaervideo` und den Speicher `lern-erklaervideos` an.
+
 ## Clips (kurze Videos)
 
 Der Reiter „Clips“ zeigt kurze Videos: oben „Entdecken“ und „Folge ich“,
@@ -248,10 +266,25 @@ App. Alle anderen schauen in Clips zu, schreiben im Chat und schicken Herzen.
   einmal auf „Bild“ tippen: anderes Bild oder entfernen. Wer später dazukommt,
   sieht das Bild an der letzten Stelle; nach dem Live wird es gelöscht
   (Speicher `lern-live`, nur der Inhaber darf hochladen).
+- **Greenscreen (nur iPhone):** Rechts auf „Greenscreen“ → ein Bild oder Video
+  aus der Galerie wählen. Die App stellt dich im Kamerabild frei und legt den
+  Hintergrund dahinter – immer über den ganzen Ausschnitt, nicht verschieb- oder
+  skalierbar; ein Video läuft stumm in Schleife. Startet ein Quiz oder eine
+  Prüfung, füllt der Hintergrund weiter den (kleineren) Kamerabereich. Noch
+  einmal tippen: anderer Hintergrund oder „Greenscreen aus“. Gerechnet wird auf
+  dem iPhone direkt vor dem Senden (`modules/live-greenscreen`, Apple Vision),
+  die Zuschauer brauchen nichts. Braucht einen neuen App-Build und eine echte
+  Kamera – im Simulator und auf Android fehlt der Knopf.
+- **Themenrad:** Rechts auf „Rad“ → bei allen dreht gleichzeitig ein Glücksrad
+  mit den Lernthemen. Danach startet der Inhaber eine Frage aus dem Thema als
+  Quiz.
+- **Tafel:** Rechts auf „Tafel“ → eine große Zeichenfläche auf dem Bild aus der
+  Galerie oder einer Vorlage (Kreuzung, Kreisverkehr, leer). Der Inhaber malt
+  Striche und Pfeile, alle sehen jeden Strich live.
 - **Technik:** Bild und Ton über [LiveKit](https://livekit.io) (WebRTC, kaum
   Verzögerung), Status, Chat, Quiz und Prüfung über Supabase
-  (`update-live.sql`, `update-live-quiz.sql` und `update-live-pruefung.sql`,
-  Abschnitt 17 bis 19, mit Echtzeit; Neues bei Quiz und Prüfung meldet die App
+  (`update-live.sql`, `update-live-quiz.sql`, `update-live-pruefung.sql` und
+  `update-live-tafel.sql`, Abschnitt 17 bis 20, mit Echtzeit; Neues bei Quiz und Prüfung meldet die App
   des Inhabers zusätzlich über LiveKit, ebenso jede Bewegung des Bilds). Die Edge Function
   `live-token` gibt die Zugänge aus: senden darf nur der Inhaber, alle anderen
   nur empfangen. LiveKit rechnet nach Minuten und Zuschauern ab – den
@@ -259,8 +292,9 @@ App. Alle anderen schauen in Clips zu, schreiben im Chat und schicken Herzen.
 
 Einrichten:
 
-1. `supabase/update-live.sql`, danach `supabase/update-live-quiz.sql` und
-   `supabase/update-live-pruefung.sql` im SQL-Editor ausführen. Sie hängen die
+1. `supabase/update-live.sql`, danach `supabase/update-live-quiz.sql`,
+   `supabase/update-live-pruefung.sql` und `supabase/update-live-tafel.sql`
+   (Themenrad und Tafel) im SQL-Editor ausführen. Sie hängen die
    Tabellen an die Echtzeit-Publikation `supabase_realtime` (gibt es in jedem
    Supabase-Projekt) – darüber kommen Chat, Live-Status, Quizfragen und
    Prüfungen sofort an. Die letzte Datei legt auch den Speicher `lern-live`
@@ -273,8 +307,8 @@ Einrichten:
    (Gäste schauen ohne Konto zu; wer senden will, prüft die Funktion selbst).
    Im Dashboard: „Deploy a new function“ → Name `live-token` → Inhalt von
    `supabase/functions/live-token/index.ts` → „Enforce JWT verification“ aus.
-4. Neuer App-Build (neue native Teile: LiveKit, WebRTC, Mikrofon):
-   `npm install`, `npx expo prebuild --clean -p ios`, `npx expo run:ios`.
+4. Neuer App-Build (neue native Teile: LiveKit, WebRTC, Mikrofon, Greenscreen):
+   `npm install`, `npx expo prebuild --clean -p ios`, `npx expo run:ios --device`.
    Senden geht nur auf einem echten iPhone (der Simulator hat keine Kamera),
    zuschauen auch im Simulator. Android kann nur zuschauen (das Mikrofon ist
    dort bewusst gesperrt).

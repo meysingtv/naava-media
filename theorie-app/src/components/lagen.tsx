@@ -44,7 +44,7 @@ export function Weg({ d, farbe, spitze }: { d: string; farbe: string; spitze: { 
   );
 }
 
-function Schild({ zeichen, x, y, groesse = 26 }: { zeichen: "z205" | "z215" | "z306"; x: number; y: number; groesse?: number }) {
+export function Schild({ zeichen, x, y, groesse = 26 }: { zeichen: "z205" | "z215" | "z306"; x: number; y: number; groesse?: number }) {
   return (
     <G>
       <Line x1={x + groesse / 2} y1={y + groesse} x2={x + groesse / 2} y2={y + groesse + 10} stroke="#AEB6C8" strokeWidth={2} />

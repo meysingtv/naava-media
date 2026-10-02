@@ -358,6 +358,15 @@ export default function Einstellungen() {
           </View>
         ) : null}
 
+        {rechte.inhaber ? (
+          <View>
+            <Abschnitt titel="Lernen" klein />
+            <Gruppe>
+              <Zeile icon="play-circle-outline" iconFarbe={farben.orange} titel="Erklärvideos" unter="Videos zu einzelnen Fragen – erscheinen beim Lernen" onPress={() => router.push("/erklaervideos")} />
+            </Gruppe>
+          </View>
+        ) : null}
+
         <View>
           <Abschnitt titel="Hilfe & Rechtliches" klein />
           <Gruppe>
