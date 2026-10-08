@@ -141,7 +141,10 @@ export default function CrewSeite() {
   }
 
   async function menue() {
-    const wahl = await auswahlBlatt(crew.name, [{ text: "Einladung teilen" }, { text: "Crew verlassen", gefahr: true }]);
+    const wahl = await auswahlBlatt(crew.name, [
+      { text: "Einladung teilen", icon: "share-outline", sf: "square.and.arrow.up" },
+      { text: "Crew verlassen", icon: "exit-outline", sf: "rectangle.portrait.and.arrow.right", gefahr: true },
+    ]);
     if (wahl === 0) Share.share({ message: einladungsText(crew.name, crew.code) });
     if (wahl === 1) {
       dialog("Crew verlassen?", mitglieder.length > 1 ? "Die Flamme brennt für die anderen weiter. Du kannst später per Code zurückkommen." : "Du bist allein in der Crew – sie wird dann gelöscht.", [

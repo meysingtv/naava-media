@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
+import { type MenueEintrag } from "@/components/aufklapp-menue";
 import { auswahlBlatt } from "@/components/auswahl-blatt";
 import { dialog } from "@/components/dialog";
 import { Glas } from "@/components/glas";
@@ -333,8 +334,11 @@ export function LiveAnsicht({
     // Inhaber in einem fremden Live (z. B. eines Creators): anpinnen, löschen, stummschalten
     if (rechte.inhaber && live) {
       const istAngepinnt = live.angepinnt?.id === n.id;
-      const optionen = [{ text: istAngepinnt ? "Nicht mehr anpinnen" : "Oben anpinnen" }, { text: "Nachricht löschen", gefahr: true }];
-      if (n.user_id !== ich) optionen.push({ text: `${n.name} stummschalten`, gefahr: true });
+      const optionen: MenueEintrag[] = [
+        istAngepinnt ? { text: "Nicht mehr anpinnen", icon: "pin-outline", sf: "pin.slash" } : { text: "Oben anpinnen", icon: "pin-outline", sf: "pin" },
+        { text: "Nachricht löschen", icon: "trash-outline", sf: "trash", gefahr: true },
+      ];
+      if (n.user_id !== ich) optionen.push({ text: `${n.name} stummschalten`, icon: "volume-mute", sf: "speaker.slash", gefahr: true });
       const wahl = await auswahlBlatt(n.user_id === ich ? "Deine Nachricht" : `Nachricht von ${n.name}`, optionen);
       let problem: string | null = null;
       if (wahl === 0) problem = await liveAnpinnen(live.id, istAngepinnt ? null : n.id);
@@ -344,14 +348,14 @@ export function LiveAnsicht({
       return;
     }
     if (n.user_id === ich) {
-      const wahl = await auswahlBlatt("Deine Nachricht", [{ text: "Löschen", gefahr: true }]);
+      const wahl = await auswahlBlatt("Deine Nachricht", [{ text: "Löschen", icon: "trash-outline", sf: "trash", gefahr: true }]);
       if (wahl === 0) {
         const problem = await liveNachrichtLoeschen(n.id);
         if (problem) hinweis.zeigen({ icon: "alert-circle", text: problem, farbe: LIVE_ROT });
       }
       return;
     }
-    const wahl = await auswahlBlatt(`Nachricht von ${n.name}`, [{ text: "Melden", gefahr: true }]);
+    const wahl = await auswahlBlatt(`Nachricht von ${n.name}`, [{ text: "Melden", icon: "flag-outline", sf: "flag", gefahr: true }]);
     if (wahl === 0) {
       const problem = await liveMelden(n.id, "Live-Chat");
       hinweis.zeigen(problem ? { icon: "alert-circle", text: problem, farbe: LIVE_ROT } : { icon: "flag", text: "Danke, wir schauen uns das an" });
