@@ -255,7 +255,10 @@ laufen zwei Lives (siehe „Zwei Lives“).
   und die Kategorie „Live“ oben in Clips einen pulsierenden Punkt. Das Live
   öffnet sich im Vollbild ohne Tab-Leiste (einmal von selbst, wenn man Clips
   öffnet, sonst über „Live“); das ✕ oben rechts führt zurück zu Clips. Gäste schauen zu; schreiben kann nur, wer angemeldet ist (ohne
-  Links, mit Tempolimit und Schimpfwort-Sperre). Nachrichten lassen sich
+  Links, mit Tempolimit). Nachrichten mit starken Beleidigungen werden still
+  ausgeblendet: Gastgeber, Inhaber und der Schreiber selbst sehen sie normal,
+  alle anderen gar nicht – ohne Hinweis (auch mit Tricks wie „f0tze“ oder
+  „h.u.r.e.n.s.o.h.n“). Anpinnen geht bei solchen Nachrichten nicht. Nachrichten lassen sich
   melden (Tabelle `lern_live_meldung`).
 - **Mitteilung beim Start:** Nur für alle, die zugestimmt haben – über die
   Glocke im Live, auf der Live-Seite oder unter Einstellungen → Mitteilungen →
@@ -324,7 +327,8 @@ laufen zwei Lives (siehe „Zwei Lives“).
   Verzögerung), Status, Chat, Quiz und Prüfung über Supabase
   (`update-live.sql`, `update-live-quiz.sql`, `update-live-pruefung.sql`,
   `update-live-tafel.sql`, `update-creator.sql`, `update-creator-clips.sql` und
-  `update-live-mehrere.sql`, Abschnitt 17 bis 20 und 22 bis 24, mit Echtzeit; Neues bei Quiz und Prüfung meldet die App
+  `update-live-mehrere.sql` und `update-live-ausblenden.sql`, Abschnitt 17 bis 20
+  und 22 bis 25, mit Echtzeit; Neues bei Quiz und Prüfung meldet die App
   des Inhabers zusätzlich über LiveKit, ebenso jede Bewegung des Bilds). Die Edge Function
   `live-token` gibt die Zugänge aus: senden dürfen nur der Inhaber und
   freigeschaltete Creator (jeweils in ihr eigenes Live), alle anderen nur
@@ -337,7 +341,8 @@ Einrichten:
    `supabase/update-live-pruefung.sql`, `supabase/update-live-tafel.sql`
    (Themenrad und Tafel), `supabase/update-creator.sql` (Creator,
    Anpinnen), `supabase/update-creator-clips.sql` (Creator laden Clips hoch) und
-   `supabase/update-live-mehrere.sql` (Inhaber live neben einem Creator) im
+   `supabase/update-live-mehrere.sql` (Inhaber live neben einem Creator) und
+   `supabase/update-live-ausblenden.sql` (Beleidigungen ausblenden) im
    SQL-Editor ausführen. Sie hängen die
    Tabellen an die Echtzeit-Publikation `supabase_realtime` (gibt es in jedem
    Supabase-Projekt) – darüber kommen Chat, Live-Status, Quizfragen und
