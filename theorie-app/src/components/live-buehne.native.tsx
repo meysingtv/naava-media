@@ -17,16 +17,18 @@ import { mediaDevices } from "@livekit/react-native-webrtc";
 import { Track, VideoPresets, type LocalVideoTrack, type RemoteTrackPublication } from "livekit-client";
 
 import { LivePlatzhalter } from "@/components/live-platzhalter";
-import { greenscreenAnSpur } from "@/lib/greenscreen";
+import { effekteAnSpur, GREENSCREEN_EFFEKT } from "@/lib/greenscreen";
 import type { LiveBuehneProps } from "@/lib/live";
 import { bytesZuText, textZuBytes } from "@/lib/live-bild";
+import { ZWEITKAMERA_EFFEKT } from "@/lib/zweitkamera";
 
 // Live-Video über LiveKit (iPhone und Android). Der Inhaber sendet Kamera und
 // Mikrofon, alle anderen empfangen nur. Herzen gehen als Datennachricht an alle,
 // ebenso die Signale des Gastgebers: Quiz/Prüfung („bitte neu laden“) und die
 // Lage seines Bilds aus der Galerie. Im Simulator (nur Entwicklung) gibt es keine
 // Kamera: Dann zeigen Gastgeber und Zuschauer ein Platzhalter-Selfie. Mit
-// Greenscreen tauscht der Gastgeber (iPhone) den Hintergrund schon vor dem Senden.
+// Greenscreen tauscht der Gastgeber (iPhone) den Hintergrund schon vor dem Senden,
+// ebenso rechnet er dort die zweite Kamera als Kreis ins Bild.
 
 registerGlobals();
 
@@ -115,7 +117,7 @@ export function LiveBuehne(props: LiveBuehneProps) {
   );
 }
 
-function Innen({ senden, stumm, ohneKamera, greenscreen, onZuschauer, onHerz, onBildWeg, onQuiz, onBild, onTafel, onSteuerung, onKamera }: LiveBuehneProps & { ohneKamera: boolean }) {
+function Innen({ senden, stumm, ohneKamera, greenscreen, zweitkamera, onZuschauer, onHerz, onBildWeg, onQuiz, onBild, onTafel, onSteuerung, onKamera }: LiveBuehneProps & { ohneKamera: boolean }) {
   const raum = useRoomContext();
   const { localParticipant } = useLocalParticipant();
   const teilnehmer = useParticipants();
@@ -157,28 +159,30 @@ function Innen({ senden, stumm, ohneKamera, greenscreen, onZuschauer, onHerz, on
     else rueck.current.onKamera?.(bildDa);
   }, [bildDa, senden, platzhalter]);
 
-  // Greenscreen: Effekt an der eigenen Kameraspur. Nach einem Kamerawechsel gibt es
-  // eine neue Spur – dann wird er neu gesetzt (hier und in kameraWechseln).
+  // Effekte an der eigenen Kameraspur (Greenscreen, zweite Kamera). Nach einem
+  // Kamerawechsel gibt es eine neue Spur – dann werden sie neu gesetzt (hier und in kameraWechseln).
   const eigeneSpur = senden && bild && isTrackReference(bild) ? (bild.publication.track as LocalVideoTrack | undefined) : undefined;
   const spurId = eigeneSpur?.mediaStreamTrack?.id;
-  const greenscreenRef = useRef(Boolean(greenscreen));
-  greenscreenRef.current = Boolean(greenscreen);
+  const effekte = [greenscreen ? GREENSCREEN_EFFEKT : null, zweitkamera ? ZWEITKAMERA_EFFEKT : null].filter((n): n is string => Boolean(n));
+  const effekteRef = useRef(effekte);
+  effekteRef.current = effekte;
+  const effektSchluessel = effekte.join(",");
+  /** Welche Spur mit welchen Effekten zuletzt gesetzt wurde. */
   const effektAuf = useRef<string | null>(null);
   const effektSetzen = useCallback(() => {
     const spur = localParticipant.getTrackPublication(Track.Source.Camera)?.track as LocalVideoTrack | undefined;
     const id = spur?.mediaStreamTrack?.id;
     if (!spur || !id) return;
-    if (greenscreenRef.current) {
-      greenscreenAnSpur(spur, true);
-      effektAuf.current = id;
-    } else if (effektAuf.current === id) {
-      greenscreenAnSpur(spur, false);
-      effektAuf.current = null;
-    }
+    const namen = effekteRef.current;
+    const stand = `${id}|${namen.join(",")}`;
+    // Ohne Effekte nur zurücksetzen, wenn vorher welche an dieser Spur waren.
+    if (stand === effektAuf.current || (!namen.length && !effektAuf.current?.startsWith(`${id}|`))) return;
+    effekteAnSpur(spur, namen);
+    effektAuf.current = namen.length ? stand : null;
   }, [localParticipant]);
   useEffect(() => {
     if (senden && spurId) effektSetzen();
-  }, [senden, spurId, greenscreen, effektSetzen]);
+  }, [senden, spurId, effektSchluessel, effektSetzen]);
 
   // Feste Empfänger – sonst meldet sich der Datenkanal bei jedem Neuzeichnen neu an.
   const herzEmpfangen = useCallback(() => rueck.current.onHerz?.(), []);
@@ -236,6 +240,7 @@ function Innen({ senden, stumm, ohneKamera, greenscreen, onZuschauer, onHerz, on
       tafel: (nachricht) => {
         tafelSenden(textZuBytes(nachricht), { reliable: true }).catch(() => {});
       },
+      vorne: () => vorne.current,
       kameraWechseln: async () => {
         const ziel = vorne.current ? "environment" : "front";
         const geraete = ((await mediaDevices.enumerateDevices()) ?? []) as Geraet[];
@@ -262,6 +267,7 @@ function Innen({ senden, stumm, ohneKamera, greenscreen, onZuschauer, onHerz, on
 
   if (!bild || !isTrackReference(bild)) return (senden ? ohneKamera : platzhalter) ? <LivePlatzhalter /> : null;
   // Eigenes Bild mit der Frontkamera gespiegelt – wie ein Spiegel. Mit Greenscreen
-  // nicht: Sonst stünde der Hintergrund (z. B. Text) für den Gastgeber spiegelverkehrt da.
-  return <VideoTrack trackRef={bild} style={VOLL} objectFit="cover" mirror={senden && gespiegelt && !greenscreen} />;
+  // oder zweiter Kamera nicht: Der Gastgeber sieht dann genau das gesendete Bild
+  // (sonst stünden Hintergrund oder Kreis spiegelverkehrt da).
+  return <VideoTrack trackRef={bild} style={VOLL} objectFit="cover" mirror={senden && gespiegelt && !greenscreen && !zweitkamera} />;
 }

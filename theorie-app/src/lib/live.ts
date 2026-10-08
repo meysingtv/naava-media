@@ -46,6 +46,8 @@ export type LiveSteuerung = {
   bild: (nachricht: string, zuverlaessig: boolean) => void;
   /** Gastgeber: Tafel-Nachricht an alle (Strich, Rückgängig, …). */
   tafel: (nachricht: string) => void;
+  /** Gastgeber: Ist gerade die Frontkamera an? */
+  vorne: () => boolean;
 };
 
 export type LiveVerbindung = "verbindet" | "verbunden" | "getrennt" | "fehler";
@@ -72,6 +74,8 @@ export type LiveBuehneProps = {
   onSteuerung?: (s: LiveSteuerung | null) => void;
   /** Gastgeber (iPhone): Greenscreen-Effekt an der Kamera – Hintergrund setzt src/lib/greenscreen. */
   greenscreen?: boolean;
+  /** Gastgeber (iPhone): zweite Kamera als Kreis im Bild – Lage setzt src/lib/zweitkamera. */
+  zweitkamera?: boolean;
   /** Gastgeber: Kamerabild da oder nicht (z. B. im Simulator ohne Kamera). */
   onKamera?: (da: boolean) => void;
   style?: StyleProp<ViewStyle>;

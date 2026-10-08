@@ -275,6 +275,14 @@ App. Alle anderen schauen in Clips zu, schreiben im Chat und schicken Herzen.
   dem iPhone direkt vor dem Senden (`modules/live-greenscreen`, Apple Vision),
   die Zuschauer brauchen nichts. Braucht einen neuen App-Build und eine echte
   Kamera – im Simulator und auf Android fehlt der Knopf.
+- **Zwei Kameras (nur iPhone ab XS/XR):** Rechts auf „2 Kameras“ → groß die
+  Rückkamera, die Frontkamera als runder Kreis darüber. Kreis mit einem Finger
+  verschieben, mit zwei größer oder kleiner machen, antippen (oder „Tauschen“
+  oben rechts) tauscht die Kameras. Beim Quiz und bei der Prüfung wandert der
+  Kreis mit dem Kamerabereich nach oben. Gerechnet wird auf dem iPhone direkt vor
+  dem Senden (`modules/live-greenscreen`, ZweitkameraProzessor) – alle Zuschauer,
+  auch auf Android, sehen dasselbe Bild. Greenscreen und zweite Kamera gehen nicht
+  gleichzeitig. Braucht einen neuen App-Build; auf älteren iPhones fehlt der Knopf.
 - **Themenrad:** Rechts auf „Rad“ → bei allen dreht gleichzeitig ein Glücksrad
   mit den Lernthemen. Danach startet der Inhaber eine Frage aus dem Thema als
   Quiz.
@@ -307,7 +315,7 @@ Einrichten:
    (Gäste schauen ohne Konto zu; wer senden will, prüft die Funktion selbst).
    Im Dashboard: „Deploy a new function“ → Name `live-token` → Inhalt von
    `supabase/functions/live-token/index.ts` → „Enforce JWT verification“ aus.
-4. Neuer App-Build (neue native Teile: LiveKit, WebRTC, Mikrofon, Greenscreen):
+4. Neuer App-Build (neue native Teile: LiveKit, WebRTC, Mikrofon, Greenscreen, zweite Kamera):
    `npm install`, `npx expo prebuild --clean -p ios`, `npx expo run:ios --device`.
    Senden geht nur auf einem echten iPhone (der Simulator hat keine Kamera),
    zuschauen auch im Simulator. Android kann nur zuschauen (das Mikrofon ist

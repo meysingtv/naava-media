@@ -17,6 +17,7 @@ import { Lader } from "@/components/lader";
 import { bildBasis, LiveBildEbene } from "@/components/live-bild";
 import { LiveBuehne } from "@/components/live-buehne";
 import { LiveEnde, type TopChatter } from "@/components/live-ende";
+import { KameraKreisGriff } from "@/components/live-kreis";
 import { PruefungGastgeberBereich } from "@/components/live-pruefung";
 import { QUIZ_UEBERBLEND, QuizAuswahl, QuizGastgeberKarte } from "@/components/live-quiz";
 import { ThemenRad } from "@/components/live-rad";
@@ -46,6 +47,7 @@ import { useQuizGastgeber, type LiveQuiz } from "@/lib/live-quiz";
 import { frageAusThema, radDrehen, radSchliessen, type LiveRad } from "@/lib/live-rad";
 import { tafelAnwenden, tafelNachricht, tafelSichern, vereinfachen, type LiveTafel, type Strich, type TafelGrund, type TafelNachricht } from "@/lib/live-tafel";
 import { leuchten, schrift } from "@/lib/theme";
+import { kreisBegrenzen, KREIS_START, zweiKamerasMoeglich, zweitkameraAus, zweitkameraSetzen, type KreisLage } from "@/lib/zweitkamera";
 
 // Live gehen (nur der Inhaber der App): Kamera-Vorschau, Thema, Countdown,
 // dann live mit Chat, Zuschauern, Herzen, Quiz, Prüfung, Themenrad, Tafel, Bild
@@ -158,6 +160,12 @@ export default function LiveSenden() {
   const [greenscreenLaedt, setGreenscreenLaedt] = useState(false);
   const [kameraDa, setKameraDa] = useState(true);
 
+  // Zweite Kamera (iPhone): die andere Kamera als runder Kreis im Bild. `tausch`:
+  // Die zweite Kamera ist groß, die Live-Kamera im Kreis.
+  const [zweit, setZweit] = useState<{ tausch: boolean; lage: KreisLage } | null>(null);
+  const zweitRef = useRef(zweit);
+  zweitRef.current = zweit;
+
   // Bild aus der Galerie: Lage geht live an alle, gesichert wird sie kurz nach dem Loslassen.
   const [bild, setBild] = useState<LiveBild | null>(null);
   const [bildLaedt, setBildLaedt] = useState(false);
@@ -247,6 +255,7 @@ export default function LiveSenden() {
       if (bildRef.current) liveBildDateiLoeschen(bildRef.current.pfad);
       if (tafelPlan.current) clearTimeout(tafelPlan.current);
       greenscreenEntfernen();
+      zweitkameraAus();
     },
     [],
   );
@@ -300,6 +309,7 @@ export default function LiveSenden() {
     bildAufraeumen();
     radUndTafelWeg();
     greenscreenAus(false);
+    setZweit(null);
     if (id) await liveBeenden(id);
   }
 
@@ -321,6 +331,7 @@ export default function LiveSenden() {
     pruefung.zuruecksetzen();
     radUndTafelWeg();
     greenscreenAus(false);
+    setZweit(null);
     setPhase("start");
     setRunde((r) => r + 1);
   }
@@ -492,6 +503,10 @@ export default function LiveSenden() {
       }
       setGreenscreen(neu);
       erfolg();
+      if (zweitRef.current) {
+        setZweit(null);
+        hinweis.zeigen({ icon: "information-circle", text: "Zweite Kamera aus – Greenscreen und zweite Kamera gehen nicht gleichzeitig." });
+      }
       if (!kameraDa) hinweis.zeigen({ icon: "information-circle", text: "Greenscreen braucht die echte Kamera – im Simulator siehst du ihn nicht." });
     } catch (e) {
       zeigeProblem((e as Error).message || "Der Hintergrund ließ sich nicht laden.");
@@ -514,6 +529,72 @@ export default function LiveSenden() {
     const wahl = await auswahlBlatt("Greenscreen", [{ text: "Anderen Hintergrund wählen" }, { text: "Greenscreen aus", gefahr: true }]);
     if (wahl === 0) greenscreenHolen();
     if (wahl === 1) greenscreenAus();
+  }
+
+  // ------------------------------------------------------------------ Zweite Kamera
+  /** Kreis in Punkten der Bühne – so liegt das Video beim Gastgeber (Höhe = Kamerabereich). */
+  function kreisPunkte(l: KreisLage, hoehe: number) {
+    const frei = Math.max(1, hoehe - bildOben);
+    const d = Math.min(l.d * bildBasis(hoehe, fensterHoehe, bildOben), fensterBreite * 0.96);
+    return { x: l.x * fensterBreite, y: bildOben + l.y * frei, d, breite: fensterBreite, hoehe };
+  }
+
+  // An das native Modul: bei jeder Änderung, auch wenn der Kamerabereich beim Quiz kleiner wird.
+  useEffect(() => {
+    if (!zweit) {
+      zweitkameraAus();
+      return;
+    }
+    zweitkameraSetzen({ an: true, tausch: zweit.tausch, weich: true, ...kreisPunkte(zweit.lage, videoZiel) });
+    // kreisPunkte hängt nur an Maßen, die hier mit drinstecken
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zweit, videoZiel, fensterBreite, fensterHoehe]);
+
+  function zweitAn() {
+    if (!kameraDa) {
+      hinweis.zeigen({ icon: "information-circle", text: "Die zweite Kamera braucht ein echtes iPhone – im Simulator gibt es keine Kamera." });
+      return;
+    }
+    if (greenscreen) {
+      greenscreenAus(false);
+      hinweis.zeigen({ icon: "information-circle", text: "Greenscreen aus – Greenscreen und zweite Kamera gehen nicht gleichzeitig." });
+    } else {
+      hinweis.zeigen({ icon: "information-circle", text: "Kreis ziehen zum Verschieben, mit zwei Fingern größer oder kleiner, antippen tauscht die Kameras." });
+    }
+    // Groß die Rückkamera, im Kreis die Frontkamera – egal, welche gerade läuft.
+    const vorne = steuerung.current?.vorne() ?? true;
+    setZweit({ tausch: vorne, lage: KREIS_START });
+    erfolg();
+  }
+
+  function zweitTauschen() {
+    const z = zweitRef.current;
+    if (!z) return;
+    tippen();
+    setZweit({ ...z, tausch: !z.tausch });
+  }
+
+  async function zweitMenue() {
+    if (!zweitRef.current) {
+      zweitAn();
+      return;
+    }
+    const wahl = await auswahlBlatt("Zweite Kamera", [{ text: "Kameras tauschen" }, { text: "Zweite Kamera aus", gefahr: true }]);
+    if (wahl === 0) zweitTauschen();
+    if (wahl === 1) {
+      stoss();
+      setZweit(null);
+    }
+  }
+
+  function kreisBewegt(l: KreisLage) {
+    const z = zweitRef.current;
+    if (z) zweitkameraSetzen({ an: true, tausch: z.tausch, weich: false, ...kreisPunkte(kreisBegrenzen(l), videoZiel) });
+  }
+
+  function kreisFertig(l: KreisLage) {
+    const z = zweitRef.current;
+    if (z) setZweit({ ...z, lage: kreisBegrenzen(l) });
   }
 
   // ------------------------------------------------------------------ Bild
@@ -616,6 +697,7 @@ export default function LiveSenden() {
     idRef.current = null;
     bildAufraeumen();
     greenscreenAus(false);
+    zweitkameraAus();
     if (id) liveBeenden(id);
     router.back();
   }
@@ -646,7 +728,7 @@ export default function LiveSenden() {
   // ------------------------------------------------------------------ Anzeige
   const zeigtBuehne = zugang && (phase === "bereit" || phase === "countdown" || phase === "live");
   // Werkzeuge rechts: Mit Beschriftung nur, solange sie über die Eingabe unten passen.
-  const werkzeugZahl = 3 + (greenscreenMoeglich ? 1 : 0) + (phase === "live" && !geteilt ? 4 : 0);
+  const werkzeugZahl = 3 + (greenscreenMoeglich ? 1 : 0) + (zweiKamerasMoeglich ? 1 : 0) + (phase === "live" && !geteilt ? 4 : 0);
   const eng = geteilt || insets.top + 70 + werkzeugZahl * 64 + (werkzeugZahl - 1) * 14 > fensterHoehe - Math.max(insets.bottom, 12) - 62;
 
   return (
@@ -670,6 +752,7 @@ export default function LiveSenden() {
             }}
             onSteuerung={(s) => (steuerung.current = s)}
             greenscreen={Boolean(greenscreen)}
+            zweitkamera={Boolean(zweit)}
             onKamera={setKameraDa}
             onVerbindung={(s, meldung) => {
               if (s === "fehler") {
@@ -697,6 +780,11 @@ export default function LiveSenden() {
           onFertig={bildFertig}
           onLoeschen={bildEntfernen}
         />
+      ) : null}
+
+      {/* Zweite Kamera: Griff für den Kreis (das Bild darin rechnet das iPhone ins Video) */}
+      {zeigtBuehne && zweit && !radOffen && !tafelOffen ? (
+        <KameraKreisGriff lage={zweit.lage} flaeche={videoHoehe} oben={bildOben} onBewegt={kreisBewegt} onFertig={kreisFertig} onTippen={zweitTauschen} />
       ) : null}
 
       {/* Themenrad – alle sehen es gleichzeitig drehen */}
@@ -770,10 +858,16 @@ export default function LiveSenden() {
         ) : null}
       </View>
 
-      {/* Werkzeuge rechts: Kamera drehen, Mikrofon, Bild, Greenscreen, Quiz, Prüfung, Rad, Tafel (geteilt nur als Symbole) */}
+      {/* Werkzeuge rechts: Kamera drehen, Mikrofon, Bild, Greenscreen, zweite Kamera, Quiz, Prüfung, Rad, Tafel (geteilt nur als Symbole) */}
       {zeigtBuehne && !radOffen && !tafelOffen ? (
         <View style={{ position: "absolute", right: 12, top: insets.top + 70, gap: eng ? 10 : 14 }}>
-          <Werkzeug kompakt={eng} icon="camera-reverse-outline" sf="arrow.triangle.2.circlepath.camera" label="Drehen" onPress={() => steuerung.current?.kameraWechseln().catch(() => {})} />
+          <Werkzeug
+            kompakt={eng}
+            icon="camera-reverse-outline"
+            sf="arrow.triangle.2.circlepath.camera"
+            label={zweit ? "Tauschen" : "Drehen"}
+            onPress={() => (zweit ? zweitTauschen() : steuerung.current?.kameraWechseln().catch(() => {}))}
+          />
           <Werkzeug
             kompakt={eng}
             icon={mikroAn ? "mic-outline" : "mic-off-outline"}
@@ -788,6 +882,7 @@ export default function LiveSenden() {
           />
           <Werkzeug kompakt={eng} icon="image-outline" sf="photo" label="Bild" laedt={bildLaedt} onPress={bildMenue} />
           {greenscreenMoeglich ? <Werkzeug kompakt={eng} icon="person-outline" sf="person.crop.rectangle" label="Greenscreen" aktiv={Boolean(greenscreen)} laedt={greenscreenLaedt} onPress={greenscreenMenue} /> : null}
+          {zweiKamerasMoeglich ? <Werkzeug kompakt={eng} icon="copy-outline" sf="pip" label="2 Kameras" aktiv={Boolean(zweit)} onPress={zweitMenue} /> : null}
           {phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="flash-outline" sf="bolt" label="Quiz" onPress={quizOeffnen} /> : null}
           {phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="document-text-outline" sf="doc.text" label="Prüfung" onPress={pruefungOeffnen} /> : null}
           {phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="aperture-outline" sf="chart.pie" label="Rad" laedt={radLaedt} onPress={radStarten} /> : null}

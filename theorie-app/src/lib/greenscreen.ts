@@ -51,11 +51,14 @@ export function greenscreenEntfernen() {
   }
 }
 
-/** Effekt an der eigenen Kameraspur an- oder ausschalten (react-native-webrtc). */
-export function greenscreenAnSpur(spur: unknown, an: boolean) {
+/**
+ * Video-Effekte der eigenen Kameraspur setzen (react-native-webrtc). Die Liste
+ * ersetzt die alte – darum Greenscreen und zweite Kamera immer zusammen setzen.
+ */
+export function effekteAnSpur(spur: unknown, namen: string[]) {
   const mst = (spur as { mediaStreamTrack?: { _setVideoEffects?: (namen: string[]) => void } } | undefined)?.mediaStreamTrack;
   try {
-    mst?._setVideoEffects?.(an && nativ ? [GREENSCREEN_EFFEKT] : []);
+    mst?._setVideoEffects?.(nativ ? namen : []);
   } catch {
     // Spur schon beendet
   }
