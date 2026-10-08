@@ -7,7 +7,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { SFSymbol } from "expo-symbols";
 
-import { auswahlBlatt } from "@/components/auswahl-blatt";
+import { AufklappMenue } from "@/components/aufklapp-menue";
 import { ClipSeite } from "@/components/clip-seite";
 import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
@@ -138,6 +138,7 @@ export default function Clips() {
   const [kommentarId, setKommentarId] = useState<string | null>(null);
   const [masse, setMasse] = useState<{ breite: number; hoehe: number } | null>(null);
   const [aktualisiert, setAktualisiert] = useState(false);
+  const [menueOffen, setMenueOffen] = useState(false);
 
   const feedsRef = useRef(feeds);
   feedsRef.current = feeds;
@@ -287,18 +288,10 @@ export default function Clips() {
   // Inhaber darf das immer (auch neben einem Creator-Live), Creator nur, wenn
   // gerade niemand live ist.
   const darfLiveJetzt = liveRechte.inhaber || (liveRechte.creator && alle.length === 0);
-  async function erstellen() {
-    if (!darfLiveJetzt) {
-      router.push("/clip-hochladen");
-      return;
-    }
-    if (!rechte.ersteller) {
-      router.push("/live-senden");
-      return;
-    }
-    const wahl = await auswahlBlatt("Erstellen", [{ text: "Live gehen" }, { text: "Clip hochladen" }]);
-    if (wahl === 0) router.push("/live-senden");
-    if (wahl === 1) router.push("/clip-hochladen");
+  function erstellen() {
+    if (!darfLiveJetzt) router.push("/clip-hochladen");
+    else if (!rechte.ersteller) router.push("/live-senden");
+    else setMenueOffen(true);
   }
 
   const wechseln = useCallback((neu: Kategorie) => {
@@ -461,6 +454,17 @@ export default function Clips() {
         </View>
       </View>
 
+
+      <AufklappMenue
+        offen={menueOffen}
+        oben={insets.top + 54}
+        links={12}
+        onSchliessen={() => setMenueOffen(false)}
+        punkte={[
+          { text: "Live gehen", icon: "radio-outline", sf: "dot.radiowaves.left.and.right", onPress: () => router.push("/live-senden") },
+          { text: "Clip hochladen", icon: "film-outline", sf: "film", onPress: () => router.push("/clip-hochladen") },
+        ]}
+      />
 
       <KommentarBlatt
         clip={kommentarClip}
