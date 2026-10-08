@@ -8,9 +8,11 @@ import type { LiveTafel } from "@/lib/live-tafel";
 import { uhrStellen } from "@/lib/server-uhr";
 import { serverVerbunden, supabase } from "@/lib/supabase";
 
-// Live-Stream in Clips: Nur der Inhaber der App geht live, alle anderen schauen
-// zu und schreiben im Chat. Bild und Ton laufen über LiveKit (Zugang von der
-// Edge Function live-token), Status und Chat über Supabase (SQL Abschnitt 17).
+// Live-Stream in Clips: Der Inhaber der App und angenommene Creator gehen live,
+// alle anderen schauen zu und schreiben im Chat. Es läuft höchstens ein
+// Creator-Live; der Inhaber kann zusätzlich live gehen (dann zwei Lives).
+// Bild und Ton laufen über LiveKit (Zugang von der Edge Function live-token),
+// Status und Chat über Supabase (SQL Abschnitt 17, 22 und 24).
 
 export type LiveInfo = {
   id: string;
@@ -93,14 +95,14 @@ export function meldung(fehler: unknown): string {
 }
 
 // ---------------------------------------------------------------------------
-// Läuft gerade ein Live? – ein gemeinsamer Stand für die ganze App
+// Welche Lives laufen gerade? – ein gemeinsamer Stand für die ganze App
 // ---------------------------------------------------------------------------
 
 /** Eindeutiger Kanalname: Supabase gibt bei gleichem Namen den schon laufenden Kanal
  *  zurück – ein zweites Abo darauf (z. B. Clips im Hintergrund + Sende-Seite) stürzt ab. */
 export const kanalName = (basis: string) => `${basis}-${Math.random().toString(36).slice(2, 10)}`;
 
-let aktuell: LiveInfo | null = null;
+let alleLives: LiveInfo[] = [];
 let geladen = false;
 const hoerer = new Set<() => void>();
 let nutzer = 0;
@@ -109,12 +111,20 @@ let aufraeumen: (() => void) | null = null;
 async function aktuellLaden() {
   if (serverVerbunden) {
     const vorher = Date.now();
-    const { data, error } = await supabase.rpc("lern_live_aktuell");
-    // Bei Fehlern (kein Netz, SQL noch nicht eingespielt) bleibt der letzte Stand.
-    if (!error) {
-      const neu = (data ?? null) as (LiveInfo & { jetzt?: string }) | null;
+    const liste = await supabase.rpc("lern_live_liste");
+    if (!liste.error) {
+      const neu = (liste.data ?? null) as { jetzt?: string; lives?: LiveInfo[] } | null;
       uhrStellen(neu?.jetzt, vorher, Date.now());
-      aktuell = neu?.id ? neu : null;
+      alleLives = (neu?.lives ?? []).filter((l) => l?.id);
+    } else {
+      // Ohne SQL-Abschnitt 24 gibt es nur das eine aktuelle Live.
+      const { data, error } = await supabase.rpc("lern_live_aktuell");
+      // Bei Fehlern (kein Netz, SQL noch nicht eingespielt) bleibt der letzte Stand.
+      if (!error) {
+        const neu = (data ?? null) as (LiveInfo & { jetzt?: string }) | null;
+        uhrStellen(neu?.jetzt, vorher, Date.now());
+        alleLives = neu?.id ? [neu] : [];
+      }
     }
   }
   geladen = true;
@@ -150,8 +160,11 @@ function nichtMehrBeobachten() {
   }
 }
 
-/** Das gerade laufende Live (oder null) – aktualisiert sich von selbst. */
-export function useLive(): { live: LiveInfo | null; geladen: boolean; neuLaden: () => Promise<void> } {
+/**
+ * Die laufenden Lives – aktualisiert sich von selbst. `live` ist das erste
+ * (das des Inhabers, falls er live ist), `alle` alle (höchstens zwei).
+ */
+export function useLive(): { live: LiveInfo | null; alle: LiveInfo[]; geladen: boolean; neuLaden: () => Promise<void> } {
   const [, setZaehler] = useState(0);
   useEffect(() => {
     const h = () => setZaehler((z) => z + 1);
@@ -162,7 +175,7 @@ export function useLive(): { live: LiveInfo | null; geladen: boolean; neuLaden: 
       nichtMehrBeobachten();
     };
   }, []);
-  return { live: aktuell, geladen, neuLaden: aktuellLaden };
+  return { live: alleLives[0] ?? null, alle: alleLives, geladen, neuLaden: aktuellLaden };
 }
 
 // ---------------------------------------------------------------------------
@@ -172,10 +185,11 @@ export function useLive(): { live: LiveInfo | null; geladen: boolean; neuLaden: 
 export type LiveZugang = { url: string; token: string; live: string };
 export type ZugangFehler = "nicht_eingerichtet" | "kein_live" | "anmelden" | "kein_inhaber" | "verbindung";
 
-export async function liveZugang(rolle: "zuschauen" | "senden"): Promise<LiveZugang | { fehler: ZugangFehler }> {
+/** Zugang holen – beim Zuschauen für ein bestimmtes Live (`liveId`), sonst das neueste. */
+export async function liveZugang(rolle: "zuschauen" | "senden", liveId?: string): Promise<LiveZugang | { fehler: ZugangFehler }> {
   if (!serverVerbunden) return { fehler: "nicht_eingerichtet" };
   try {
-    const { data, error } = await supabase.functions.invoke<LiveZugang>("live-token", { body: { rolle } });
+    const { data, error } = await supabase.functions.invoke<LiveZugang>("live-token", { body: liveId ? { rolle, live: liveId } : { rolle } });
     if (error) {
       const antwort = (error as { context?: Response }).context;
       const status = antwort?.status;

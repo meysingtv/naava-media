@@ -1,6 +1,6 @@
 // Live-Stream in Clips: gibt Zugänge für LiveKit aus. Senden dürfen der Inhaber
 // der App und freigeschaltete Creator (jeweils nur in ihr eigenes Live), alle
-// anderen (auch Gäste) nur zuschauen. Der Inhaber kann ein Live außerdem sofort
+// anderen (auch Gäste) nur zuschauen – bei zwei Lives in das gewählte. Der Inhaber kann ein Live außerdem sofort
 // schließen: Dann wird der LiveKit-Raum gelöscht und alle fliegen raus. Die
 // LiveKit-Schlüssel bleiben auf dem Server und kommen nie in die App.
 //
@@ -105,12 +105,29 @@ Deno.serve(async (req) => {
     return antwort({ ok: true });
   }
 
-  // Zuschauen: nur, wenn gerade ein Live läuft.
-  const { data: aktuell } = await admin.rpc("lern_live_aktuell");
-  const liveId = (aktuell as { id?: string } | null)?.id;
-  if (!liveId) return antwort({ fehler: "kein_live" }, 404);
-  const { data: live } = await admin.from("lern_live").select("raum").eq("id", liveId).maybeSingle();
-  if (!live) return antwort({ fehler: "kein_live" }, 404);
+  // Zuschauen: nur, wenn das Live gerade läuft. Laufen zwei (Inhaber und ein
+  // Creator), sagt die App, welches – sonst das neueste.
+  let liveId: string | null = null;
+  let live: { raum: string } | null = null;
+  const gewuenscht = typeof eingang?.live === "string" ? eingang.live : null;
+  if (gewuenscht) {
+    const { data } = await admin
+      .from("lern_live")
+      .select("id, raum")
+      .eq("id", gewuenscht)
+      .eq("status", "live")
+      .gt("puls_am", new Date(Date.now() - 120_000).toISOString())
+      .maybeSingle();
+    if (data) {
+      liveId = data.id;
+      live = { raum: data.raum };
+    }
+  } else {
+    const { data: aktuell } = await admin.rpc("lern_live_aktuell");
+    liveId = (aktuell as { id?: string } | null)?.id ?? null;
+    if (liveId) live = (await admin.from("lern_live").select("raum").eq("id", liveId).maybeSingle()).data;
+  }
+  if (!liveId || !live) return antwort({ fehler: "kein_live" }, 404);
 
   const zugang = new AccessToken(schluessel, geheim, { identity: uid ? `z-${uid}` : `g-${crypto.randomUUID()}`, ttl: "6h" });
   // Zuschauer senden kein Bild und keinen Ton – nur Herzen (Datennachrichten).

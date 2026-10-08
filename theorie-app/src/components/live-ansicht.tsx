@@ -85,6 +85,7 @@ export function LiveAnsicht({
   aktiv,
   stumm,
   onSchliessen,
+  liveId,
 }: {
   /** Abstand oben für die Kopfzeile (Gastgeber, LIVE, Zuschauer). */
   oben: number;
@@ -95,8 +96,11 @@ export function LiveAnsicht({
   stumm?: boolean;
   /** Als eigene Seite: Schließen-Knopf oben rechts. */
   onSchliessen?: () => void;
+  /** Genau dieses Live zeigen (bei zwei Lives); sonst das erste. */
+  liveId?: string;
 }) {
-  const { live, geladen } = useLive();
+  const { live: erstes, alle, geladen } = useLive();
+  const live = liveId ? (alle.find((l) => l.id === liveId) ?? null) : erstes;
   const { session } = useKonto();
   const rechte = useDarfLive();
   const ich = session?.user.id ?? null;
@@ -255,7 +259,7 @@ export function LiveAnsicht({
     }
     let laeuft = true;
     setFehler(null);
-    liveZugang("zuschauen").then((z) => {
+    liveZugang("zuschauen", live.id).then((z) => {
       if (!laeuft) return;
       if ("fehler" in z) setFehler(z.fehler);
       else {

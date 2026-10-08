@@ -7,6 +7,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { SFSymbol } from "expo-symbols";
 
+import { auswahlBlatt } from "@/components/auswahl-blatt";
 import { ClipSeite } from "@/components/clip-seite";
 import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
@@ -14,10 +15,12 @@ import { KommentarBlatt } from "@/components/kommentar-blatt";
 import { Lader } from "@/components/lader";
 import { LIVE_ROT } from "@/components/live";
 import { LiveAnsicht } from "@/components/live-ansicht";
+import { LiveFeed } from "@/components/live-feed";
 import { useLeistenHoehe } from "@/components/tab-leiste";
 import { Knopf } from "@/components/ui";
 import { useClipAktionen } from "@/lib/clip-aktionen";
 import { beiNeuenClips, feedLaden, useClipRechte, type ClipEintrag, type FeedArt } from "@/lib/clips-server";
+import { useDarfLive } from "@/lib/creator";
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { useLive } from "@/lib/live";
@@ -122,7 +125,8 @@ export default function Clips() {
   const navigation = useNavigation<BottomTabNavigationProp<Record<string, undefined>>>();
   const { session } = useKonto();
   const rechte = useClipRechte();
-  const { live } = useLive();
+  const liveRechte = useDarfLive();
+  const { alle } = useLive();
   const ich = session?.user.id ?? null;
 
   const [art, setArt] = useState<FeedArt>("entdecken");
@@ -152,27 +156,30 @@ export default function Clips() {
 
   // Ein laufendes Live öffnet sich im Vollbild (ohne Tab-Leiste, Kopfzeile ganz
   // oben). Kommt man – z. B. wegen des roten Punkts unten – nach Clips, während
-  // ein Live läuft, passiert das einmal pro Live von selbst.
-  const liveRef = useRef(live);
-  liveRef.current = live;
+  // ein Live läuft, passiert das einmal pro Live von selbst. Laufen zwei Lives,
+  // kommt stattdessen der Bereich „Live“ zum Durchscrollen.
+  const alleRef = useRef(alle);
+  alleRef.current = alle;
+  const liveKennung = alle.map((l) => l.id).join(",");
   const warFokus = useRef(false);
   const liveGezeigt = useRef<string | null>(null);
   useEffect(() => {
     const neuImFokus = fokus && !warFokus.current;
     warFokus.current = fokus;
-    if (neuImFokus && live && liveGezeigt.current !== live.id) {
-      liveGezeigt.current = live.id;
-      router.push("/live");
-    }
-  }, [fokus, live]);
+    if (!neuImFokus || !liveKennung || liveGezeigt.current === liveKennung) return;
+    liveGezeigt.current = liveKennung;
+    const lives = alleRef.current;
+    if (lives.length === 1) router.push({ pathname: "/live", params: { id: lives[0].id } });
+    else setLiveAn(true);
+  }, [fokus, liveKennung]);
 
   // Startet ein Live, während man im leeren „Live“-Bereich wartet: direkt ins Vollbild.
   useEffect(() => {
-    if (!liveAn || !live || !fokus) return;
-    liveGezeigt.current = live.id;
+    if (!liveAn || alle.length !== 1 || !fokus || liveGezeigt.current === liveKennung) return;
+    liveGezeigt.current = liveKennung;
     setLiveAn(false);
-    router.push("/live");
-  }, [liveAn, live, fokus]);
+    router.push({ pathname: "/live", params: { id: alle[0].id } });
+  }, [liveAn, alle, liveKennung, fokus]);
 
   // ------------------------------------------------------------------ Laden
   const laden = useCallback(async (welche: FeedArt, neu: boolean) => {
@@ -276,12 +283,31 @@ export default function Clips() {
 
   const onKommentare = useCallback((clip: ClipEintrag) => setKommentarId(clip.id), []);
 
+  // „+“: Clip hochladen – wer live gehen darf, wählt zwischen Live und Clip. Der
+  // Inhaber darf das immer (auch neben einem Creator-Live), Creator nur, wenn
+  // gerade niemand live ist.
+  const darfLiveJetzt = liveRechte.inhaber || (liveRechte.creator && alle.length === 0);
+  async function erstellen() {
+    if (!darfLiveJetzt) {
+      router.push("/clip-hochladen");
+      return;
+    }
+    if (!rechte.ersteller) {
+      router.push("/live-senden");
+      return;
+    }
+    const wahl = await auswahlBlatt("Erstellen", [{ text: "Live gehen" }, { text: "Clip hochladen" }]);
+    if (wahl === 0) router.push("/live-senden");
+    if (wahl === 1) router.push("/clip-hochladen");
+  }
+
   const wechseln = useCallback((neu: Kategorie) => {
     tippen();
     setKommentarId(null);
     if (neu === "live") {
-      // Läuft ein Live: Vollbild. Sonst der Hinweis (Mitteilung an, für den Inhaber „Live gehen“).
-      if (liveRef.current) router.push("/live");
+      // Ein Live: Vollbild. Zwei: zum Durchscrollen. Keins: der Hinweis (Mitteilung an, „Live gehen“).
+      const lives = alleRef.current;
+      if (lives.length === 1) router.push({ pathname: "/live", params: { id: lives[0].id } });
       else setLiveAn(true);
       return;
     }
@@ -328,7 +354,18 @@ export default function Clips() {
   const kommentarClip = kommentarId ? (feed.eintraege.find((c) => c.id === kommentarId) ?? null) : null;
 
   let inhalt: ReactNode;
-  if (liveAn) {
+  if (liveAn && alle.length > 1 && masse) {
+    inhalt = (
+      <LiveFeed
+        lives={alle}
+        hoehe={masse.hoehe}
+        breite={masse.breite}
+        unten={leiste + 10}
+        aktiv={fokus && vordergrund}
+        onOeffnen={(id) => router.push({ pathname: "/live", params: { id } })}
+      />
+    );
+  } else if (liveAn) {
     inhalt = <LiveAnsicht oben={insets.top + 58} unten={leiste + 10} aktiv={fokus && vordergrund} stumm={stumm} />;
   } else if (!serverVerbunden) {
     inhalt = (
@@ -411,9 +448,9 @@ export default function Clips() {
         style={{ position: "absolute", top: insets.top + 4, left: 0, right: 0, height: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12 }}
       >
         <View style={{ flex: 1, flexDirection: "row", gap: 8 }}>
-          {rechte.ersteller && !liveAn ? <RundTaste icon="add" sf="plus" label="Clip hochladen" onPress={() => router.push("/clip-hochladen")} /> : null}
+          {rechte.ersteller || darfLiveJetzt ? <RundTaste icon="add" sf="plus" label={darfLiveJetzt ? "Erstellen" : "Clip hochladen"} onPress={erstellen} /> : null}
         </View>
-        <Umschalter wert={liveAn ? "live" : art} live={Boolean(live)} onWechsel={wechseln} />
+        <Umschalter wert={liveAn ? "live" : art} live={alle.length > 0} onWechsel={wechseln} />
         <View style={{ flex: 1, alignItems: "flex-end" }}>
           <RundTaste
             icon={stumm ? "volume-mute" : "volume-high"}
