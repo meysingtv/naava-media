@@ -343,7 +343,8 @@ Einrichten:
    Anpinnen), `supabase/update-creator-clips.sql` (Creator laden Clips hoch) und
    `supabase/update-live-mehrere.sql` (Inhaber live neben einem Creator) und
    `supabase/update-live-ausblenden.sql` (Beleidigungen ausblenden) im
-   SQL-Editor ausführen. Sie hängen die
+   SQL-Editor ausführen. Abschnitt 22 bis 25 gibt es auch in einer Datei:
+   `supabase/update-22-bis-25.sql` (mehrfach ausführbar). Sie hängen die
    Tabellen an die Echtzeit-Publikation `supabase_realtime` (gibt es in jedem
    Supabase-Projekt) – darüber kommen Chat, Live-Status, Quizfragen und
    Prüfungen sofort an. Die letzte Datei legt auch den Speicher `lern-live`

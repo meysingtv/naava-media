@@ -6,6 +6,16 @@
 -- → „Run“. Vorher muss Abschnitt 22 (update-creator.sql) gelaufen sein.
 -- Mehrfaches Ausführen ist unschädlich. Steht auch in schema.sql (Abschnitt 23).
 
+-- Ohne Abschnitt 22 geht es nicht – dann gleich mit einer klaren Meldung abbrechen.
+do $$
+begin
+  if not exists (select 1 from information_schema.columns
+                  where table_schema = 'public' and table_name = 'lern_live' and column_name = 'gastgeber_id')
+     or to_regclass('public.lern_creator_bewerbung') is null then
+    raise exception 'Zuerst update-creator.sql (Abschnitt 22) ausführen – oder gleich update-22-bis-25.sql.';
+  end if;
+end $$;
+
 -- Hochladen dürfen: Inhaber, freigeschaltete Ersteller, alle Fahrlehrer und
 -- angenommene Live-Creator.
 create or replace function public.lern_darf_hochladen()

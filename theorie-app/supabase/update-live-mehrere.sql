@@ -8,6 +8,16 @@
 -- → „Run“. Vorher muss Abschnitt 22 (update-creator.sql) gelaufen sein.
 -- Mehrfaches Ausführen ist unschädlich. Steht auch in schema.sql (Abschnitt 24).
 
+-- Ohne Abschnitt 22 geht es nicht – dann gleich mit einer klaren Meldung abbrechen.
+do $$
+begin
+  if not exists (select 1 from information_schema.columns
+                  where table_schema = 'public' and table_name = 'lern_live' and column_name = 'gastgeber_id')
+     or to_regclass('public.lern_creator_bewerbung') is null then
+    raise exception 'Zuerst update-creator.sql (Abschnitt 22) ausführen – oder gleich update-22-bis-25.sql.';
+  end if;
+end $$;
+
 -- a) Live vorbereiten: Der Inhaber beendet nur noch sein eigenes altes Live.
 create or replace function public.lern_live_vorbereiten(p_titel text)
 returns jsonb
