@@ -210,16 +210,38 @@ Einrichten:
 
 ## Live-Stream in Clips
 
-Nur der Inhaber der App (E-Mail in `lern_inhaber`) geht live, direkt aus der
-App. Alle anderen schauen in Clips zu, schreiben im Chat und schicken Herzen.
+Live gehen der Inhaber der App (E-Mail in `lern_inhaber`) und angenommene
+Live-Creator, direkt aus der App. Alle anderen schauen in Clips zu, schreiben
+im Chat und schicken Herzen. Es läuft immer nur ein Live gleichzeitig.
 
 - **Live gehen:** In Clips oben die Kategorie „Live“ → „Live gehen“ (den
-  Knopf sieht nur der Inhaber). Erst kommt eine Kamera-Vorschau mit Thema, dann „Live gehen“,
+  Knopf sehen nur der Inhaber und freigeschaltete Creator). Erst kommt eine Kamera-Vorschau mit Thema, dann „Live gehen“,
   ein Countdown und das Live. Oben stehen Laufzeit und Zuschauer. Rechts
   dreht man die Kamera und schaltet das Mikrofon. Lange auf eine
   Chat-Nachricht drücken: löschen oder die Person stummschalten.
+  „Oben anpinnen“ gibt es dort auch (siehe unten).
   „Beenden“ oder die Seite verlassen beendet das Live. Ohne Lebenszeichen der
   App (z. B. leerer Akku) verschwindet es nach 2 Minuten von selbst.
+- **Live-Creator:** Wer selbst live gehen will, bewirbt sich unter
+  Einstellungen → Live → „Live-Creator werden“ (oder über den Hinweis im Live):
+  Name, Telefonnummer, Alter (ab 18), Beruf, Wohnort, Themen, Erfahrung,
+  Instagram/TikTok und die Live-Regeln. Der Inhaber bekommt eine Mitteilung und
+  sieht alle Bewerbungen in Echtzeit unter Einstellungen → Live →
+  „Creator-Bewerbungen“ (Offen / Creator / Archiv, Telefon und E-Mail antippbar).
+  Annehmen schaltet sofort frei, Ablehnen nicht – beides optional mit einer
+  Nachricht, die Person bekommt eine Mitteilung. Läuft ein Creator gerade live,
+  steht oben ein roter Hinweis und an der Karte „LIVE“: „Live sofort beenden“
+  schließt das Live für alle (auch den LiveKit-Raum), „Zugang entziehen“
+  beendet zusätzlich das Live und sperrt die Person, bis der Inhaber sie wieder
+  freischaltet. Schaut der Inhaber ein fremdes Live an, hat er oben rechts
+  „Beenden“. Creator können alles, was der Inhaber im Live kann (Quiz, Prüfung,
+  Bild, Rad, Tafel, Greenscreen, zwei Kameras), Leute stummschalten aber nur in
+  ihrem eigenen Live. Läuft schon ein Live, warten Creator; geht der Inhaber
+  live, endet ein laufendes Creator-Live.
+- **Kommentare anpinnen:** Der Gastgeber (und der Inhaber in jedem Live) drückt
+  lange auf eine Nachricht → „Oben anpinnen“. Sie steht dann bei allen als
+  Karte über dem Chat, bis sie gelöst, ersetzt oder gelöscht wird (✕ an der
+  Karte oder „Nicht mehr anpinnen“).
 - **Zuschauen:** Läuft ein Live, hat der Clips-Reiter unten einen roten Punkt
   und die Kategorie „Live“ oben in Clips einen pulsierenden Punkt. Das Live
   öffnet sich im Vollbild ohne Tab-Leiste (einmal von selbst, wenn man Clips
@@ -291,18 +313,20 @@ App. Alle anderen schauen in Clips zu, schreiben im Chat und schicken Herzen.
   Striche und Pfeile, alle sehen jeden Strich live.
 - **Technik:** Bild und Ton über [LiveKit](https://livekit.io) (WebRTC, kaum
   Verzögerung), Status, Chat, Quiz und Prüfung über Supabase
-  (`update-live.sql`, `update-live-quiz.sql`, `update-live-pruefung.sql` und
-  `update-live-tafel.sql`, Abschnitt 17 bis 20, mit Echtzeit; Neues bei Quiz und Prüfung meldet die App
+  (`update-live.sql`, `update-live-quiz.sql`, `update-live-pruefung.sql`,
+  `update-live-tafel.sql` und `update-creator.sql`, Abschnitt 17 bis 20 und 22, mit Echtzeit; Neues bei Quiz und Prüfung meldet die App
   des Inhabers zusätzlich über LiveKit, ebenso jede Bewegung des Bilds). Die Edge Function
-  `live-token` gibt die Zugänge aus: senden darf nur der Inhaber, alle anderen
-  nur empfangen. LiveKit rechnet nach Minuten und Zuschauern ab – den
+  `live-token` gibt die Zugänge aus: senden dürfen nur der Inhaber und
+  freigeschaltete Creator (jeweils in ihr eigenes Live), alle anderen nur
+  empfangen; außerdem schließt sie für den Inhaber Live-Räume sofort. LiveKit rechnet nach Minuten und Zuschauern ab – den
   Verbrauch zeigt cloud.livekit.io.
 
 Einrichten:
 
 1. `supabase/update-live.sql`, danach `supabase/update-live-quiz.sql`,
-   `supabase/update-live-pruefung.sql` und `supabase/update-live-tafel.sql`
-   (Themenrad und Tafel) im SQL-Editor ausführen. Sie hängen die
+   `supabase/update-live-pruefung.sql`, `supabase/update-live-tafel.sql`
+   (Themenrad und Tafel) und `supabase/update-creator.sql` (Live-Creator,
+   Anpinnen) im SQL-Editor ausführen. Sie hängen die
    Tabellen an die Echtzeit-Publikation `supabase_realtime` (gibt es in jedem
    Supabase-Projekt) – darüber kommen Chat, Live-Status, Quizfragen und
    Prüfungen sofort an. Die letzte Datei legt auch den Speicher `lern-live`

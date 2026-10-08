@@ -23,7 +23,11 @@ export type LiveInfo = {
   rad?: LiveRad | null;
   /** Tafel des Gastgebers (Hintergrund und Striche). */
   tafel?: LiveTafel | null;
+  /** Vom Gastgeber oben angepinnte Chat-Nachricht. */
+  angepinnt?: Angepinnt | null;
 };
+
+export type Angepinnt = { id: number; user_id: string; name: string; bild_pfad: string | null; text: string };
 
 export type ChatNachricht = {
   id: number;
@@ -253,6 +257,12 @@ export async function liveStummschalten(nutzerId: string, stumm: boolean): Promi
   return error ? meldung(error) : null;
 }
 
+/** Gastgeber: Nachricht oben anpinnen (`null` = lösen). */
+export async function liveAnpinnen(liveId: string, nachricht: number | null): Promise<string | null> {
+  const { error } = await supabase.rpc("lern_live_anpinnen", { p_live: liveId, p_nachricht: nachricht });
+  return error ? meldung(error) : null;
+}
+
 export async function liveMelden(id: number, grund: string): Promise<string | null> {
   const { error } = await supabase.rpc("lern_live_melden", { p_nachricht: id, p_grund: grund });
   return error ? meldung(error) : null;
@@ -296,6 +306,21 @@ export async function liveFreigeben(id: string, titel: string): Promise<void> {
   const { error } = await supabase.rpc("lern_live_freigeben", { p_live: id, p_titel: titel });
   if (error) throw new Error(meldung(error));
   await aktuellLaden();
+}
+
+/**
+ * Inhaber: ein Live sofort beenden – Status auf dem Server und den LiveKit-Raum
+ * schließen (alle fliegen raus, auch wenn die App des Gastgebers nicht reagiert).
+ */
+export async function liveSofortBeenden(d: { live?: string; raeume?: string[] }): Promise<string | null> {
+  if (d.live) {
+    const { error } = await supabase.rpc("lern_live_beenden", { p_live: d.live });
+    if (error) return meldung(error);
+  }
+  // Raum schließen geht über die Edge Function – fehlt sie, endet das Live trotzdem über den Status.
+  await supabase.functions.invoke("live-token", { body: { rolle: "beenden", live: d.live, raeume: d.raeume ?? [] } }).catch(() => {});
+  await aktuellLaden();
+  return null;
 }
 
 export async function livePuls(id: string, zuschauer: number): Promise<void> {

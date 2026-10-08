@@ -19,16 +19,19 @@ import { ThemenRad } from "@/components/live-rad";
 import { TafelBuehne } from "@/components/live-tafel";
 import { LiveChat, LiveEingabe, LiveRing, LiveSchild, LIVE_ROT, useHerzen, ZuschauerZahl } from "@/components/live";
 import { Knopf } from "@/components/ui";
-import { useClipRechte } from "@/lib/clips-server";
+import { useDarfLive } from "@/lib/creator";
 import { useDarstellung } from "@/lib/darstellung";
 import { erfolg, tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import {
   liveAboSetzen,
   liveAboStatus,
+  liveAnpinnen,
   liveMelden,
   liveNachrichtLoeschen,
   liveSchreiben,
+  liveSofortBeenden,
+  liveStummschalten,
   liveZugang,
   useLive,
   useLiveChat,
@@ -95,7 +98,7 @@ export function LiveAnsicht({
 }) {
   const { live, geladen } = useLive();
   const { session } = useKonto();
-  const rechte = useClipRechte();
+  const rechte = useDarfLive();
   const ich = session?.user.id ?? null;
   const hinweis = useHinweis();
   const { ausloesen, herzen } = useHerzen();
@@ -323,6 +326,19 @@ export function LiveAnsicht({
 
   async function langDruck(n: ChatNachricht) {
     if (!ich) return;
+    // Inhaber in einem fremden Live (z. B. eines Creators): anpinnen, löschen, stummschalten
+    if (rechte.inhaber && live) {
+      const istAngepinnt = live.angepinnt?.id === n.id;
+      const optionen = [{ text: istAngepinnt ? "Nicht mehr anpinnen" : "Oben anpinnen" }, { text: "Nachricht löschen", gefahr: true }];
+      if (n.user_id !== ich) optionen.push({ text: `${n.name} stummschalten`, gefahr: true });
+      const wahl = await auswahlBlatt(n.user_id === ich ? "Deine Nachricht" : `Nachricht von ${n.name}`, optionen);
+      let problem: string | null = null;
+      if (wahl === 0) problem = await liveAnpinnen(live.id, istAngepinnt ? null : n.id);
+      if (wahl === 1) problem = await liveNachrichtLoeschen(n.id);
+      if (wahl === 2) problem = await liveStummschalten(n.user_id, true);
+      if (problem) hinweis.zeigen({ icon: "alert-circle", text: problem, farbe: LIVE_ROT });
+      return;
+    }
     if (n.user_id === ich) {
       const wahl = await auswahlBlatt("Deine Nachricht", [{ text: "Löschen", gefahr: true }]);
       if (wahl === 0) {
@@ -336,6 +352,23 @@ export function LiveAnsicht({
       const problem = await liveMelden(n.id, "Live-Chat");
       hinweis.zeigen(problem ? { icon: "alert-circle", text: problem, farbe: LIVE_ROT } : { icon: "flag", text: "Danke, wir schauen uns das an" });
     }
+  }
+
+  /** Inhaber: Live eines Creators sofort beenden (Status und LiveKit-Raum). */
+  function fremdesLiveBeenden() {
+    if (!live) return;
+    const id = live.id;
+    dialog(`Live von ${name} beenden?`, "Das Live endet sofort – für den Creator und alle Zuschauer.", [
+      { text: "Abbrechen", style: "cancel" },
+      {
+        text: "Live beenden",
+        style: "destructive",
+        onPress: async () => {
+          const problem = await liveSofortBeenden({ live: id });
+          hinweis.zeigen(problem ? { icon: "alert-circle", text: problem, farbe: LIVE_ROT } : { icon: "checkmark-circle", text: "Live beendet" });
+        },
+      },
+    ]);
   }
 
   const schliessen = onSchliessen ? (
@@ -359,7 +392,7 @@ export function LiveAnsicht({
     let titel = warDabei ? "Das Live ist vorbei" : "Gerade ist niemand live";
     let text = warDabei
       ? `Danke fürs Zuschauen! ${name} ist bald wieder da.`
-      : rechte.inhaber
+      : rechte.darf
         ? "Starte ein Live – alle mit eingeschalteter Mitteilung bekommen Bescheid."
         : "Schalte die Mitteilung ein – dann bekommst du Bescheid, sobald es losgeht.";
     if (fehler === "nicht_eingerichtet") {
@@ -381,7 +414,7 @@ export function LiveAnsicht({
           <Text style={{ ...schrift.text, fontSize: 15, lineHeight: 21, color: "#AEB3BA", textAlign: "center" }}>{text}</Text>
           <View style={{ alignSelf: "stretch", gap: 10, marginTop: 18 }}>
             {fehler === "verbindung" ? <Knopf titel="Nochmal versuchen" onPress={() => setVersuch((v) => v + 1)} /> : null}
-            {rechte.inhaber && fehler !== "nicht_eingerichtet" ? (
+            {rechte.darf && fehler !== "nicht_eingerichtet" ? (
               <Pressable
                 onPress={() => {
                   tippen();
@@ -408,6 +441,20 @@ export function LiveAnsicht({
               ) : (
                 <Knopf titel="Anmelden für Live-Mitteilungen" art="sekundaer" onPress={() => router.push("/anmelden")} />
               )
+            ) : null}
+            {/* Selbst live gehen: als Creator bewerben (Inhaber und Creator brauchen das nicht) */}
+            {!rechte.darf && fehler !== "nicht_eingerichtet" ? (
+              <Pressable
+                onPress={() => {
+                  tippen();
+                  router.push(ich ? "/creator-bewerbung" : "/anmelden");
+                }}
+                accessibilityRole="button"
+                hitSlop={8}
+                style={{ alignSelf: "center", paddingVertical: 8 }}
+              >
+                <Text style={{ ...schrift.textHalb, fontSize: 14, color: "#FFB27A" }}>Selbst live gehen? Als Creator bewerben</Text>
+              </Pressable>
             ) : null}
           </View>
         </View>
@@ -482,6 +529,23 @@ export function LiveAnsicht({
         <LiveSchild />
         <ZuschauerZahl anzahl={zuschauer} />
         <View style={{ flex: 1 }} />
+        {rechte.inhaber && live.gastgeber?.id && live.gastgeber.id !== ich ? (
+          <Pressable
+            onPress={() => {
+              tippen();
+              fremdesLiveBeenden();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Live beenden"
+            hitSlop={6}
+          >
+            {({ pressed }) => (
+              <Glas interaktiv style={{ height: 40, paddingHorizontal: 14, borderRadius: 20, justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
+                <Text style={{ ...schrift.textFett, fontSize: 13.5, color: "#FF6B85" }}>Beenden</Text>
+              </Glas>
+            )}
+          </Pressable>
+        ) : null}
         {ich ? <RundTaste icon={abo ? "notifications" : "notifications-outline"} sf={abo ? "bell.fill" : "bell"} label={abo ? "Live-Mitteilungen aus" : "Bei Lives Bescheid geben"} aktiv={Boolean(abo)} onPress={aboUmschalten} /> : null}
         {onSchliessen ? <RundTaste icon="close" sf="xmark" label="Schließen" onPress={onSchliessen} /> : null}
       </View>
@@ -521,7 +585,21 @@ export function LiveAnsicht({
         // Chat und Eingabe (unter der Tafel niedriger)
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
           <View style={{ paddingHorizontal: 12, paddingBottom: unten, gap: 10 }}>
-            <LiveChat nachrichten={nachrichten} gastgeberId={live.gastgeber?.id} onLangDruck={ich ? langDruck : undefined} style={{ maxHeight: tafelOffen ? 130 : 260, marginRight: 64 }} />
+            <LiveChat
+              nachrichten={nachrichten}
+              gastgeberId={live.gastgeber?.id}
+              onLangDruck={ich ? langDruck : undefined}
+              angepinnt={live.angepinnt ?? null}
+              onLoesen={
+                rechte.inhaber
+                  ? () =>
+                      liveAnpinnen(live.id, null).then((problem) => {
+                        if (problem) hinweis.zeigen({ icon: "alert-circle", text: problem, farbe: LIVE_ROT });
+                      })
+                  : undefined
+              }
+              style={{ maxHeight: tafelOffen ? 130 : 260, marginRight: 64 }}
+            />
             <LiveEingabe
               angemeldet={Boolean(ich)}
               onSenden={schreiben}

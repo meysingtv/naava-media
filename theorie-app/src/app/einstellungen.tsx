@@ -11,6 +11,7 @@ import { Schalter } from "@/components/schalter";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
 import { useDarstellung } from "@/lib/darstellung";
 import { useClipRechte } from "@/lib/clips-server";
+import { STATUS_TEXT, useBewerbungen, useMeineBewerbung } from "@/lib/creator";
 import { erinnerungPlanen } from "@/lib/erinnerung";
 import { uhrzeit } from "@/lib/format";
 import { useKonto } from "@/lib/konto";
@@ -38,6 +39,9 @@ export default function Einstellungen() {
   const { stand, setzen, zuruecksetzen } = useStand();
   const { session, profil, gast, anzeigeName, profilSpeichern, passwortAendern, benutzernameFrei, benutzernameAendern, rolleSetzen } = useKonto();
   const rechte = useClipRechte();
+  const { liste: bewerbungen } = useBewerbungen(rechte.inhaber);
+  const offeneBewerbungen = (bewerbungen ?? []).filter((b) => b.status === "offen").length;
+  const { bewerbung: meineBewerbung } = useMeineBewerbung();
   const { darstellung, setzen: darstellungSetzen, belohnungen, belohnungenSetzen } = useDarstellung();
   const [name, setName] = useState(anzeigeName);
   const [nameAngefasst, setNameAngefasst] = useState(false);
@@ -354,6 +358,31 @@ export default function Einstellungen() {
               {rechte.inhaber ? (
                 <Zeile icon="people-outline" titel="Clip-Ersteller verwalten" unter="Wer außer dir Videos hochladen darf" onPress={() => router.push("/clip-ersteller")} />
               ) : null}
+            </Gruppe>
+          </View>
+        ) : null}
+
+        {session ? (
+          <View>
+            <Abschnitt titel="Live" klein />
+            <Gruppe>
+              {rechte.inhaber ? (
+                <Zeile
+                  icon="radio-outline"
+                  iconFarbe={farben.rot}
+                  titel="Creator-Bewerbungen"
+                  unter={offeneBewerbungen ? `${offeneBewerbungen} offen – annehmen oder ablehnen` : "Wer außer dir live gehen darf"}
+                  onPress={() => router.push("/creator-verwaltung")}
+                />
+              ) : (
+                <Zeile
+                  icon="radio-outline"
+                  iconFarbe={farben.rot}
+                  titel="Live-Creator werden"
+                  unter={meineBewerbung && meineBewerbung.status !== "zurueckgezogen" ? STATUS_TEXT[meineBewerbung.status] : "Selbst live gehen – jetzt bewerben"}
+                  onPress={() => router.push("/creator-bewerbung")}
+                />
+              )}
             </Gruppe>
           </View>
         ) : null}

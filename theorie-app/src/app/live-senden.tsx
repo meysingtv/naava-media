@@ -28,6 +28,8 @@ import { greenscreenEntfernen, greenscreenMoeglich, greenscreenSetzen, greenscre
 import { erfolg, stoss, tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import {
+  kanalName,
+  liveAnpinnen,
   liveBeenden,
   liveFreigeben,
   liveNachrichtLoeschen,
@@ -37,10 +39,12 @@ import {
   liveVorbereiten,
   liveZugang,
   useLiveChat,
+  type Angepinnt,
   type ChatNachricht,
   type LiveSteuerung,
   type LiveZugang,
 } from "@/lib/live";
+import { supabase } from "@/lib/supabase";
 import { BILD_START, bildNachricht, liveBildDateiLoeschen, liveBildHochladen, liveBildSichern, type BildLage, type LiveBild } from "@/lib/live-bild";
 import { PRUEFUNG_FRAGEN, PRUEFUNG_SEKUNDEN, useLivePruefungGastgeber, type LivePruefung } from "@/lib/live-pruefung";
 import { useQuizGastgeber, type LiveQuiz } from "@/lib/live-quiz";
@@ -105,6 +109,9 @@ export default function LiveSenden() {
   const [liveId, setLiveId] = useState<string | null>(null);
   const [zugang, setZugang] = useState<LiveZugang | null>(null);
   const [fehlerText, setFehlerText] = useState("");
+  const [fehlerTitel, setFehlerTitel] = useState("Live geht gerade nicht");
+  // Oben angepinnte Chat-Nachricht (sehen alle)
+  const [angepinnt, setAngepinnt] = useState<Angepinnt | null>(null);
   const [titel, setTitel] = useState("");
   const [zahl, setZahl] = useState(3);
   const [zuschauer, setZuschauer] = useState(0);
@@ -229,7 +236,7 @@ export default function LiveSenden() {
             z.fehler === "nicht_eingerichtet"
               ? "Der Live-Stream ist auf dem Server noch nicht eingerichtet: Es fehlen die LiveKit-Schlüssel oder die Funktion live-token. Die Schritte stehen im README unter „Live-Stream“."
               : z.fehler === "kein_inhaber"
-                ? "Live gehen kann nur der Inhaber der App."
+                ? "Live gehen kannst du erst, wenn deine Creator-Bewerbung angenommen ist."
                 : "Die Verbindung zum Live-Server klappt gerade nicht. Prüfe dein Internet.",
           );
           setPhase("fehler");
@@ -239,7 +246,7 @@ export default function LiveSenden() {
         setPhase("bereit");
       } catch (e) {
         if (!aktiv) return;
-        setFehlerText((e as Error).message.includes("Inhaber") ? "Live gehen kann nur der Inhaber der App." : (e as Error).message);
+        setFehlerText((e as Error).message);
         setPhase("fehler");
       }
     })();
@@ -259,6 +266,29 @@ export default function LiveSenden() {
     },
     [],
   );
+
+  // Beendet der Inhaber dieses Live (oder entzieht er den Creator-Zugang), sofort aufhören.
+  useEffect(() => {
+    if (!liveId) return;
+    const kanal = supabase
+      .channel(kanalName(`live-eigen-${liveId}`))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "lern_live", filter: `id=eq.${liveId}` }, (p) => {
+        const neu = p.new as { status?: string; beendet_von?: string | null };
+        if (neu.status !== "beendet" || neu.beendet_von !== "inhaber" || !idRef.current) return;
+        idRef.current = null;
+        bildAufraeumen();
+        radUndTafelWeg();
+        greenscreenAus(false);
+        setZweit(null);
+        setFehlerTitel("Dein Live wurde beendet");
+        setFehlerText("Der Inhaber der App hat dein Live beendet.");
+        setPhase("fehler");
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(kanal);
+    };
+  }, [liveId]);
 
   // Lebenszeichen alle 30 Sekunden (sonst gilt das Live nach 2 Minuten als beendet).
   useEffect(() => {
@@ -327,6 +357,8 @@ export default function LiveSenden() {
     setStart(null);
     setEnde(null);
     setTitel("");
+    setAngepinnt(null);
+    setFehlerTitel("Live geht gerade nicht");
     quiz.zuruecksetzen();
     pruefung.zuruecksetzen();
     radUndTafelWeg();
@@ -712,15 +744,39 @@ export default function LiveSenden() {
     return true;
   }
 
+  async function anpinnen(n: ChatNachricht | null) {
+    const id = idRef.current;
+    if (!id) return;
+    const vorher = angepinnt;
+    setAngepinnt(n ? { id: n.id, user_id: n.user_id, name: n.name, bild_pfad: n.bild_pfad, text: n.text } : null);
+    const problem = await liveAnpinnen(id, n?.id ?? null);
+    if (problem) {
+      setAngepinnt(vorher);
+      hinweis.zeigen({ icon: "alert-circle", text: problem, farbe: LIVE_ROT });
+    } else if (n) hinweis.zeigen({ icon: "pin", text: "Angepinnt – alle sehen die Nachricht oben" });
+  }
+
   async function moderieren(n: ChatNachricht) {
     const eigen = n.user_id === ich;
-    const optionen = eigen ? [{ text: "Nachricht löschen", gefahr: true }] : [{ text: "Nachricht löschen", gefahr: true }, { text: `${n.name} stummschalten`, gefahr: true }];
+    const istAngepinnt = angepinnt?.id === n.id;
+    const optionen = [{ text: istAngepinnt ? "Nicht mehr anpinnen" : "Oben anpinnen" }, { text: "Nachricht löschen", gefahr: true }];
+    if (!eigen) optionen.push({ text: `${n.name} stummschalten`, gefahr: true });
     const wahl = await auswahlBlatt(eigen ? "Deine Nachricht" : `Nachricht von ${n.name}`, optionen);
     let problem: string | null = null;
-    if (wahl === 0) problem = await liveNachrichtLoeschen(n.id);
+    if (wahl === 0) {
+      await anpinnen(istAngepinnt ? null : n);
+      return;
+    }
     if (wahl === 1) {
+      problem = await liveNachrichtLoeschen(n.id);
+      if (!problem && istAngepinnt) setAngepinnt(null);
+    }
+    if (wahl === 2) {
       problem = await liveStummschalten(n.user_id, true);
-      if (!problem) hinweis.zeigen({ icon: "volume-mute", text: `${n.name} kann nicht mehr schreiben` });
+      if (!problem) {
+        if (angepinnt?.user_id === n.user_id) setAngepinnt(null);
+        hinweis.zeigen({ icon: "volume-mute", text: `${n.name} kann nicht mehr schreiben` });
+      }
     }
     if (problem) hinweis.zeigen({ icon: "alert-circle", text: problem, farbe: LIVE_ROT });
   }
@@ -981,7 +1037,7 @@ export default function LiveSenden() {
         // box-none: Der leere Rand rechts gehört den Werkzeugen, nicht dem Chat.
         <KeyboardAvoidingView pointerEvents="box-none" behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
           <View pointerEvents="box-none" style={{ paddingHorizontal: 12, paddingBottom: Math.max(insets.bottom, 12) + 4, gap: 10 }}>
-            <LiveChat nachrichten={nachrichten} gastgeberId={ich} onLangDruck={moderieren} style={{ maxHeight: 300, marginRight: 64 }} />
+            <LiveChat nachrichten={nachrichten} gastgeberId={ich} onLangDruck={moderieren} angepinnt={angepinnt} onLoesen={() => anpinnen(null)} style={{ maxHeight: 300, marginRight: 64 }} />
             <LiveEingabe
               angemeldet
               onSenden={schreiben}
@@ -1025,7 +1081,7 @@ export default function LiveSenden() {
           <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: "rgba(255,45,85,0.12)", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
             <Icon name="videocam-off-outline" sf="video.slash" size={34} color={LIVE_ROT} />
           </View>
-          <Text style={{ ...schrift.titelFett, fontSize: 21, color: "#FFFFFF", textAlign: "center" }}>Live geht gerade nicht</Text>
+          <Text style={{ ...schrift.titelFett, fontSize: 21, color: "#FFFFFF", textAlign: "center" }}>{fehlerTitel}</Text>
           <Text style={{ ...schrift.text, fontSize: 15, lineHeight: 21, color: "#AEB3BA", textAlign: "center" }}>{fehlerText}</Text>
           <View style={{ alignSelf: "stretch", gap: 10, marginTop: 18 }}>
             {/Kamera|Mikrofon/.test(fehlerText) ? <Knopf titel="Einstellungen öffnen" onPress={() => Linking.openSettings()} /> : null}

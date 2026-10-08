@@ -6,7 +6,7 @@ import { Glas } from "@/components/glas";
 import { Icon } from "@/components/icon";
 import { NutzerBild } from "@/components/profilbild";
 import { tippen } from "@/lib/haptik";
-import type { ChatNachricht, LiveInfo } from "@/lib/live";
+import type { Angepinnt, ChatNachricht, LiveInfo } from "@/lib/live";
 import { leuchten, schrift } from "@/lib/theme";
 
 // Bausteine für den Live-Stream: rotes LIVE-Schild, Profilbild mit
@@ -143,6 +143,38 @@ function ChatZeile({
   );
 }
 
+/** Vom Gastgeber angepinnte Nachricht oben über dem Chat – er kann sie lösen. */
+export function AngepinntKarte({ n, onLoesen }: { n: Angepinnt; onLoesen?: () => void }) {
+  return (
+    <Glas klar style={{ flexDirection: "row", alignItems: "center", gap: 9, paddingVertical: 8, paddingLeft: 10, paddingRight: onLoesen ? 4 : 12, borderRadius: 16, alignSelf: "flex-start", maxWidth: "100%" }}>
+      <Icon name="pin" sf="pin.fill" size={13} color="#FFB27A" />
+      <NutzerBild pfad={n.bild_pfad} name={n.name} groesse={24} rand={0} />
+      <View style={{ flexShrink: 1 }}>
+        <Text style={{ ...schrift.textFett, fontSize: 12, color: "#FFB27A" }} numberOfLines={1}>
+          {n.name} · angepinnt
+        </Text>
+        <Text style={{ ...schrift.textHalb, fontSize: 14, lineHeight: 19, color: "#FFFFFF" }} numberOfLines={3}>
+          {n.text}
+        </Text>
+      </View>
+      {onLoesen ? (
+        <Pressable
+          onPress={() => {
+            tippen();
+            onLoesen();
+          }}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Nicht mehr anpinnen"
+          style={{ width: 30, height: 30, alignItems: "center", justifyContent: "center" }}
+        >
+          <Icon name="close" sf="xmark" size={14} color="rgba(255,255,255,0.8)" weight="semibold" />
+        </Pressable>
+      ) : null}
+    </Glas>
+  );
+}
+
 /** Ist die Liste (fast) ganz unten? */
 function ganzUnten({ contentOffset, contentSize, layoutMeasurement }: NativeScrollEvent): boolean {
   return contentOffset.y + layoutMeasurement.height >= contentSize.height - 40;
@@ -153,11 +185,17 @@ export function LiveChat({
   nachrichten,
   gastgeberId,
   onLangDruck,
+  angepinnt,
+  onLoesen,
   style,
 }: {
   nachrichten: ChatNachricht[];
   gastgeberId: string | null | undefined;
   onLangDruck?: (n: ChatNachricht) => void;
+  /** Angepinnte Nachricht oben (bleibt stehen, auch wenn der Chat weiterläuft). */
+  angepinnt?: Angepinnt | null;
+  /** Gastgeber: Anpinnen lösen. */
+  onLoesen?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -183,6 +221,11 @@ export function LiveChat({
 
   return (
     <View style={style}>
+      {angepinnt ? (
+        <View style={{ marginBottom: 8 }}>
+          <AngepinntKarte n={angepinnt} onLoesen={onLoesen} />
+        </View>
+      ) : null}
       <Animated.ScrollView
         ref={liste}
         style={{ flexGrow: 0 }}

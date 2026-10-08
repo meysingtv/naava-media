@@ -142,6 +142,8 @@ function Navigation() {
           <Stack.Screen name="clip-ansicht" options={{ animation: "fade" }} />
           <Stack.Screen name="live" options={{ animation: "slide_from_bottom", presentation: "fullScreenModal", gestureEnabled: false }} />
           <Stack.Screen name="live-senden" options={{ animation: "slide_from_bottom", presentation: "fullScreenModal", gestureEnabled: false }} />
+          <Stack.Screen name="creator-bewerbung" options={{ animation: "slide_from_bottom" }} />
+          <Stack.Screen name="creator-verwaltung" />
           <Stack.Screen name="liga" />
           <Stack.Screen name="favoriten" />
           <Stack.Screen name="kalender" options={{ animation: "slide_from_bottom" }} />
