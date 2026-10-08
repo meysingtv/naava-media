@@ -140,9 +140,10 @@ export default function ClipHochladen() {
           </T>
           <T v="text" zentriert>
             {session
-              ? "Clips hochladen können der Inhaber der App und alle, die er in seinen Einstellungen freischaltet."
+              ? "Clips hochladen können der Inhaber der App und angenommene Creator."
               : "Melde dich an – Hochladen geht nur mit einem freigeschalteten Konto."}
           </T>
+          {session ? <Knopf titel="Als Creator bewerben" art="sekundaer" onPress={() => router.replace("/creator-bewerbung")} /> : null}
         </View>
       </View>
     );

@@ -364,22 +364,22 @@ export default function Einstellungen() {
 
         {session ? (
           <View>
-            <Abschnitt titel="Live" klein />
+            <Abschnitt titel="Creator" klein />
             <Gruppe>
               {rechte.inhaber ? (
                 <Zeile
                   icon="radio-outline"
                   iconFarbe={farben.rot}
                   titel="Creator-Bewerbungen"
-                  unter={offeneBewerbungen ? `${offeneBewerbungen} offen – annehmen oder ablehnen` : "Wer außer dir live gehen darf"}
+                  unter={offeneBewerbungen ? `${offeneBewerbungen} offen` : "Wer live gehen und Clips hochladen darf"}
                   onPress={() => router.push("/creator-verwaltung")}
                 />
               ) : (
                 <Zeile
                   icon="radio-outline"
                   iconFarbe={farben.rot}
-                  titel="Live-Creator werden"
-                  unter={meineBewerbung && meineBewerbung.status !== "zurueckgezogen" ? STATUS_TEXT[meineBewerbung.status] : "Selbst live gehen – jetzt bewerben"}
+                  titel={meineBewerbung?.status === "angenommen" ? "Creator" : "Creator werden"}
+                  unter={meineBewerbung && meineBewerbung.status !== "zurueckgezogen" ? STATUS_TEXT[meineBewerbung.status] : "Live gehen und Clips hochladen"}
                   onPress={() => router.push("/creator-bewerbung")}
                 />
               )}

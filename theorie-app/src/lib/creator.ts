@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useClipRechte } from "@/lib/clips-server";
+import { clipRechteNeuLaden, useClipRechte } from "@/lib/clips-server";
 import { useKonto } from "@/lib/konto";
 import { kanalName, liveSofortBeenden, meldung } from "@/lib/live";
 import { serverVerbunden, supabase } from "@/lib/supabase";
@@ -46,6 +46,7 @@ export function useMeineBewerbung(): { bewerbung: MeineBewerbung | null; geladen
   const ich = session?.user.id ?? null;
   const [bewerbung, setBewerbung] = useState<MeineBewerbung | null>(null);
   const [geladen, setGeladen] = useState(false);
+  const vorher = useRef<CreatorStatus | null | undefined>(undefined);
 
   const neuLaden = useCallback(async () => {
     if (!ich || !serverVerbunden) {
@@ -54,7 +55,14 @@ export function useMeineBewerbung(): { bewerbung: MeineBewerbung | null; geladen
       return;
     }
     const { data, error } = await supabase.rpc("lern_creator_status");
-    if (!error) setBewerbung((data ?? null) as MeineBewerbung | null);
+    if (!error) {
+      const neu = (data ?? null) as MeineBewerbung | null;
+      // Angenommen oder entzogen: Creator dürfen auch Clips hochladen – die Rechte neu holen.
+      const status = neu?.status ?? null;
+      if (vorher.current !== undefined && vorher.current !== status) clipRechteNeuLaden();
+      vorher.current = status;
+      setBewerbung(neu);
+    }
     setGeladen(true);
   }, [ich]);
 

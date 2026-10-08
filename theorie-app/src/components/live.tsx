@@ -143,35 +143,43 @@ function ChatZeile({
   );
 }
 
-/** Vom Gastgeber angepinnte Nachricht oben über dem Chat – er kann sie lösen. */
+/** Vom Gastgeber angepinnte Nachricht oben über dem Chat – schlicht wie eine Chatzeile, mit Nadel davor. */
 export function AngepinntKarte({ n, onLoesen }: { n: Angepinnt; onLoesen?: () => void }) {
   return (
-    <Glas klar style={{ flexDirection: "row", alignItems: "center", gap: 9, paddingVertical: 8, paddingLeft: 10, paddingRight: onLoesen ? 4 : 12, borderRadius: 16, alignSelf: "flex-start", maxWidth: "100%" }}>
-      <Icon name="pin" sf="pin.fill" size={13} color="#FFB27A" />
-      <NutzerBild pfad={n.bild_pfad} name={n.name} groesse={24} rand={0} />
-      <View style={{ flexShrink: 1 }}>
-        <Text style={{ ...schrift.textFett, fontSize: 12, color: "#FFB27A" }} numberOfLines={1}>
-          {n.name} · angepinnt
-        </Text>
-        <Text style={{ ...schrift.textHalb, fontSize: 14, lineHeight: 19, color: "#FFFFFF" }} numberOfLines={3}>
-          {n.text}
-        </Text>
-      </View>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: 7,
+        alignSelf: "flex-start",
+        maxWidth: "88%",
+        paddingVertical: 7,
+        paddingLeft: 9,
+        paddingRight: onLoesen ? 2 : 11,
+        borderRadius: 10,
+        backgroundColor: "rgba(0,0,0,0.38)",
+      }}
+    >
+      <Icon name="pin" sf="pin.fill" size={12} color="rgba(255,255,255,0.75)" style={{ marginTop: 3 }} />
+      <Text style={{ ...schrift.textHalb, fontSize: 14, lineHeight: 19, color: "#FFFFFF", flexShrink: 1 }} numberOfLines={2}>
+        <Text style={{ ...schrift.textFett, color: "rgba(255,255,255,0.7)" }}>{n.name}  </Text>
+        {n.text}
+      </Text>
       {onLoesen ? (
         <Pressable
           onPress={() => {
             tippen();
             onLoesen();
           }}
-          hitSlop={8}
+          hitSlop={10}
           accessibilityRole="button"
           accessibilityLabel="Nicht mehr anpinnen"
-          style={{ width: 30, height: 30, alignItems: "center", justifyContent: "center" }}
+          style={{ width: 24, height: 19, alignItems: "center", justifyContent: "center" }}
         >
-          <Icon name="close" sf="xmark" size={14} color="rgba(255,255,255,0.8)" weight="semibold" />
+          <Icon name="close" sf="xmark" size={11} color="rgba(255,255,255,0.6)" weight="semibold" />
         </Pressable>
       ) : null}
-    </Glas>
+    </View>
   );
 }
 

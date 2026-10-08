@@ -1,75 +1,55 @@
 import { useEffect, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View, type TextInputProps } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Absatz, Eintrag } from "@/components/creator-teile";
 import { dialog } from "@/components/dialog";
-import { Icon, type IconName } from "@/components/icon";
 import { Lader } from "@/components/lader";
+import { Schalter } from "@/components/schalter";
 import { GrossKopf, Seite } from "@/components/seite";
-import { Eingabe, kartenFlaeche, Knopf, T } from "@/components/ui";
-import { useClipRechte } from "@/lib/clips-server";
-import { creatorBewerben, creatorZurueckziehen, useMeineBewerbung, type BewerbungDaten } from "@/lib/creator";
+import { Abschnitt, Gruppe, Knopf, T, Zeile } from "@/components/ui";
+import { useClipRechte, vorZeit } from "@/lib/clips-server";
+import { creatorBewerben, creatorZurueckziehen, STATUS_TEXT, useMeineBewerbung, type BewerbungDaten } from "@/lib/creator";
 import { useFarbwelt } from "@/lib/darstellung";
-import { erfolg, tippen } from "@/lib/haptik";
+import { erfolg } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
-import { abstand, farben, mitDeckkraft, RAND, schrift } from "@/lib/theme";
+import { abstand, farben, RAND, schrift } from "@/lib/theme";
 
-// Live-Creator werden: Formular (Name, Telefon, Alter, Beruf …) und danach der
-// Stand der Bewerbung. Die Entscheidung des Inhabers erscheint hier sofort.
+// Creator werden: Formular (Name, Telefon, Alter, Beruf …) und danach der Stand
+// der Bewerbung. Angenommene Creator gehen live und laden Clips hoch.
 
-const REGELN = [
-  "Freundlich bleiben – keine Beleidigungen, keine Werbung, keine Links zu anderen Seiten.",
-  "Nur Themen rund um Führerschein, Verkehr und Lernen.",
-  "Keine privaten Daten von dir oder anderen zeigen.",
-  "Der Inhaber der App kann jedes Live jederzeit beenden und den Zugang entziehen.",
-];
-
-function Feld({ label, pflicht, children }: { label: string; pflicht?: boolean; children: React.ReactNode }) {
+/** Eingabezeile in einer Gruppe: Bezeichnung links, Feld rechts. */
+function FeldZeile({ label, ...props }: TextInputProps & { label: string }) {
   const f = useFarbwelt();
   return (
-    <View style={{ gap: 7 }}>
-      <Text style={{ ...schrift.textHalb, fontSize: 14, color: f.text2 }}>
-        {label}
-        {pflicht ? <Text style={{ color: f.orange }}> *</Text> : null}
-      </Text>
-      {children}
-    </View>
-  );
-}
-
-/** Mehrzeiliges Eingabefeld im Stil der anderen Felder. */
-function Textfeld({ value, onChangeText, placeholder, maxLength }: { value: string; onChangeText: (t: string) => void; placeholder: string; maxLength: number }) {
-  const f = useFarbwelt();
-  return (
-    <View style={[{ borderRadius: 18, paddingHorizontal: abstand(4), paddingVertical: abstand(3), minHeight: 104 }, kartenFlaeche(f)]}>
+    <View style={{ flexDirection: "row", alignItems: "center", minHeight: 50, paddingHorizontal: 16 }}>
+      <Text style={{ ...schrift.textMittel, fontSize: 15.5, color: f.text, width: 118 }}>{label}</Text>
       <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
         placeholderTextColor={f.hell ? "#A3A8AF" : farben.text4}
         selectionColor={f.orange}
         cursorColor={f.orange}
         keyboardAppearance={f.hell ? "light" : "dark"}
-        multiline
-        maxLength={maxLength}
-        style={{ ...schrift.textMittel, fontSize: 16, lineHeight: 21, color: f.text, minHeight: 78, textAlignVertical: "top" }}
+        {...props}
+        style={{ flex: 1, minWidth: 0, ...schrift.text, fontSize: 15.5, color: f.text, paddingVertical: 14 }}
       />
     </View>
   );
 }
 
-function StatusKarte({ icon, farbe, titel, text, children }: { icon: IconName; farbe: string; titel: string; text: string; children?: React.ReactNode }) {
+/** Mehrzeiliges Feld, füllt die ganze Gruppe. */
+function TextZeile(props: TextInputProps) {
   const f = useFarbwelt();
   return (
-    <View style={[{ borderRadius: 24, padding: 20, gap: 12, alignItems: "center" }, kartenFlaeche(f)]}>
-      <View style={{ width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center", backgroundColor: mitDeckkraft(farbe, 0.14) }}>
-        <Icon name={icon} size={34} color={farbe} />
-      </View>
-      <Text style={{ ...schrift.titelFett, fontSize: 20, color: f.text, textAlign: "center" }}>{titel}</Text>
-      <Text style={{ ...schrift.text, fontSize: 15, lineHeight: 21, color: f.text2, textAlign: "center" }}>{text}</Text>
-      {children ? <View style={{ alignSelf: "stretch", gap: 10, marginTop: 6 }}>{children}</View> : null}
-    </View>
+    <TextInput
+      placeholderTextColor={f.hell ? "#A3A8AF" : farben.text4}
+      selectionColor={f.orange}
+      cursorColor={f.orange}
+      keyboardAppearance={f.hell ? "light" : "dark"}
+      multiline
+      {...props}
+      style={{ ...schrift.text, fontSize: 15.5, lineHeight: 21, color: f.text, minHeight: 92, paddingHorizontal: 16, paddingTop: 13, paddingBottom: 13, textAlignVertical: "top" }}
+    />
   );
 }
 
@@ -78,14 +58,12 @@ function Inhalt() {
   const insets = useSafeAreaInsets();
   const { session, anzeigeName } = useKonto();
   const rechte = useClipRechte();
-  const { bewerbung, geladen } = useMeineBewerbung();
+  const { bewerbung, geladen, neuLaden } = useMeineBewerbung();
   const [formular, setFormular] = useState(false);
   const [daten, setDaten] = useState<BewerbungDaten>({ name: anzeigeName ?? "", telefon: "", alter: 0, beruf: "", ort: "", themen: "", erfahrung: "", social: "" });
   const [alterText, setAlterText] = useState("");
   const [regelnOk, setRegelnOk] = useState(false);
   const [sendet, setSendet] = useState(false);
-  const gruen = f.hell ? "#23A548" : "#4ED053";
-  const rot = f.hell ? "#E5392C" : farben.rot;
 
   useEffect(() => {
     if (!daten.name && anzeigeName) setDaten((d) => ({ ...d, name: anzeigeName }));
@@ -99,17 +77,17 @@ function Inhalt() {
   async function absenden() {
     if (!vollstaendig || sendet) return;
     if (alter < 18) {
-      dialog("Erst ab 18", "Live gehen kannst du ab 18 Jahren.");
+      dialog("Erst ab 18", "Creator kannst du ab 18 Jahren werden.");
       return;
     }
     setSendet(true);
     try {
       await creatorBewerben({ ...daten, alter });
       erfolg();
+      await neuLaden();
       setFormular(false);
-      dialog("Bewerbung ist raus", "Wir schauen sie uns an. Sobald entschieden ist, siehst du es hier und bekommst eine Mitteilung.");
     } catch (e) {
-      dialog("Nicht abgeschickt", (e as Error).message);
+      dialog("Nicht gesendet", (e as Error).message);
     } finally {
       setSendet(false);
     }
@@ -124,6 +102,7 @@ function Inhalt() {
         onPress: async () => {
           try {
             await creatorZurueckziehen();
+            await neuLaden();
           } catch (e) {
             dialog("Nicht zurückgezogen", (e as Error).message);
           }
@@ -132,146 +111,146 @@ function Inhalt() {
     ]);
   }
 
-  const unten = { paddingHorizontal: RAND, paddingBottom: insets.bottom + abstand(10), gap: abstand(5) };
+  const liste = { paddingHorizontal: RAND, paddingTop: abstand(4), paddingBottom: insets.bottom + abstand(10), gap: abstand(7) };
 
   if (!session) {
     return (
-      <ScrollView contentContainerStyle={unten}>
-        <GrossKopf titel="Live-Creator werden" schliessen />
-        <StatusKarte icon="person-circle-outline" farbe={f.orange} titel="Bitte melde dich an" text="Bewerben kannst du dich mit deinem Konto.">
+      <>
+        <GrossKopf titel="Creator werden" schliessen />
+        <ScrollView contentContainerStyle={liste}>
+          <T v="text">Melde dich an, um dich als Creator zu bewerben.</T>
           <Knopf titel="Anmelden" onPress={() => router.push("/anmelden")} />
-        </StatusKarte>
-      </ScrollView>
+        </ScrollView>
+      </>
     );
   }
 
   if (rechte.inhaber) {
     return (
-      <ScrollView contentContainerStyle={unten}>
-        <GrossKopf titel="Live-Creator" schliessen />
-        <StatusKarte icon="shield-checkmark" farbe={gruen} titel="Du bist der Inhaber" text="Du kannst immer live gehen. Bewerbungen anderer siehst du in den Einstellungen.">
-          <Knopf titel="Bewerbungen ansehen" onPress={() => router.replace("/creator-verwaltung")} />
-        </StatusKarte>
-      </ScrollView>
+      <>
+        <GrossKopf titel="Creator" schliessen />
+        <ScrollView contentContainerStyle={liste}>
+          <View>
+            <Gruppe>
+              <Zeile titel="Bewerbungen ansehen" onPress={() => router.replace("/creator-verwaltung")} />
+            </Gruppe>
+            <T v="klein" style={{ marginTop: abstand(2) }}>
+              Du bist der Inhaber und kannst immer live gehen und Clips hochladen.
+            </T>
+          </View>
+        </ScrollView>
+      </>
     );
   }
 
   if (!geladen) {
     return (
-      <View style={{ flex: 1 }}>
-        <GrossKopf titel="Live-Creator werden" schliessen />
+      <>
+        <GrossKopf titel="Creator werden" schliessen />
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <Lader color={f.text3} />
         </View>
-      </View>
+      </>
     );
   }
 
   const status = bewerbung?.status;
-  if (!formular && status === "offen") {
+  if (!formular && bewerbung && status && status !== "zurueckgezogen") {
+    const angenommen = status === "angenommen";
     return (
-      <ScrollView contentContainerStyle={unten}>
-        <GrossKopf titel="Deine Bewerbung" schliessen />
-        <StatusKarte icon="hourglass-outline" farbe={f.orange} titel="Wird geprüft" text="Deine Bewerbung ist angekommen. Sobald entschieden ist, siehst du es hier und bekommst eine Mitteilung.">
-          <Knopf titel="Bewerbung zurückziehen" art="geist" onPress={zurueckziehen} />
-        </StatusKarte>
-      </ScrollView>
-    );
-  }
-  if (!formular && status === "angenommen") {
-    return (
-      <ScrollView contentContainerStyle={unten}>
-        <GrossKopf titel="Live-Creator" schliessen />
-        <StatusKarte icon="checkmark-circle" farbe={gruen} titel="Du bist freigeschaltet 🎉" text={bewerbung?.notiz ? `„${bewerbung.notiz}“` : "Du kannst jetzt live gehen – mit Quiz, Prüfung, Rad, Tafel und allem anderen."}>
-          <Knopf titel="Jetzt live gehen" icon="radio" onPress={() => router.replace("/live-senden")} />
-        </StatusKarte>
-        <T v="klein" zentriert>
-          Halte dich an die Live-Regeln – der Inhaber kann jedes Live beenden und den Zugang jederzeit entziehen.
-        </T>
-      </ScrollView>
-    );
-  }
-  if (!formular && (status === "abgelehnt" || status === "entzogen")) {
-    return (
-      <ScrollView contentContainerStyle={unten}>
-        <GrossKopf titel="Deine Bewerbung" schliessen />
-        <StatusKarte
-          icon={status === "abgelehnt" ? "close-circle" : "lock-closed"}
-          farbe={rot}
-          titel={status === "abgelehnt" ? "Leider nicht geklappt" : "Zugang beendet"}
-          text={bewerbung?.notiz ? `„${bewerbung.notiz}“` : status === "abgelehnt" ? "Deine Bewerbung wurde diesmal abgelehnt." : "Dein Zugang zum Live-Streaming wurde beendet."}
-        >
-          <Knopf titel="Neu bewerben" art="sekundaer" onPress={() => setFormular(true)} />
-        </StatusKarte>
-      </ScrollView>
+      <>
+        <GrossKopf titel={angenommen ? "Creator" : "Deine Bewerbung"} schliessen />
+        <ScrollView contentContainerStyle={liste}>
+          <View>
+            <Gruppe>
+              <Eintrag titel="Status" wert={STATUS_TEXT[status]} />
+              <Eintrag titel="Gesendet" wert={vorZeit(bewerbung.erstellt_am)} />
+              {bewerbung.entschieden_am ? <Eintrag titel="Entschieden" wert={vorZeit(bewerbung.entschieden_am)} /> : null}
+            </Gruppe>
+            <T v="klein" style={{ marginTop: abstand(2) }}>
+              {status === "offen"
+                ? "Wir sehen uns deine Bewerbung an. Sobald entschieden ist, bekommst du eine Mitteilung."
+                : angenommen
+                  ? "Du kannst live gehen und Clips hochladen. Der Inhaber kann Lives beenden und den Zugang jederzeit entziehen."
+                  : status === "abgelehnt"
+                    ? "Deine Bewerbung wurde diesmal abgelehnt."
+                    : "Dein Creator-Zugang wurde beendet."}
+            </T>
+          </View>
+
+          {bewerbung.notiz ? (
+            <View>
+              <Abschnitt titel="Nachricht" klein />
+              <Gruppe>
+                <Absatz text={bewerbung.notiz} />
+              </Gruppe>
+            </View>
+          ) : null}
+
+          {angenommen ? (
+            <Gruppe>
+              <Zeile titel="Live gehen" onPress={() => router.replace("/live-senden")} />
+              <Zeile titel="Clip hochladen" onPress={() => router.replace("/clip-hochladen")} />
+            </Gruppe>
+          ) : status === "offen" ? (
+            <Gruppe>
+              <Zeile titel="Bewerbung zurückziehen" gefahr ohnePfeil onPress={zurueckziehen} />
+            </Gruppe>
+          ) : (
+            <Gruppe>
+              <Zeile titel="Neu bewerben" onPress={() => setFormular(true)} />
+            </Gruppe>
+          )}
+        </ScrollView>
+      </>
     );
   }
 
   // ------------------------------------------------------------------ Formular
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={unten} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
-        <GrossKopf titel="Live-Creator werden" unter="Geh selbst live in Fahrschul Pro – erzähl uns kurz von dir." schliessen />
+      <GrossKopf titel="Creator werden" schliessen />
+      <ScrollView contentContainerStyle={liste} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
+        <T v="text">Als Creator gehst du in Fahrschul Pro live und lädst Clips hoch. Erzähl uns kurz von dir.</T>
 
-        <Feld label="Name" pflicht>
-          <Eingabe icon="person-outline" value={daten.name} onChangeText={setze("name")} placeholder="Vor- und Nachname" maxLength={80} autoComplete="name" textContentType="name" />
-        </Feld>
-        <Feld label="Telefonnummer" pflicht>
-          <Eingabe icon="call-outline" value={daten.telefon} onChangeText={setze("telefon")} placeholder="z. B. 0151 2345678" keyboardType="phone-pad" maxLength={30} autoComplete="tel" textContentType="telephoneNumber" />
-        </Feld>
-        <View style={{ flexDirection: "row", gap: 12 }}>
-          <View style={{ width: 110 }}>
-            <Feld label="Alter" pflicht>
-              <Eingabe value={alterText} onChangeText={(t) => setAlterText(t.replace(/\D/g, "").slice(0, 2))} placeholder="z. B. 24" keyboardType="number-pad" maxLength={2} />
-            </Feld>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Feld label="Beruf" pflicht>
-              <Eingabe value={daten.beruf} onChangeText={setze("beruf")} placeholder="z. B. Fahrlehrer" maxLength={80} />
-            </Feld>
-          </View>
-        </View>
-        <Feld label="Wohnort">
-          <Eingabe icon="location-outline" value={daten.ort} onChangeText={setze("ort")} placeholder="Stadt (optional)" maxLength={80} />
-        </Feld>
-        <Feld label="Worüber möchtest du live gehen?" pflicht>
-          <Textfeld value={daten.themen} onChangeText={setze("themen")} placeholder="z. B. Vorfahrtsregeln erklären, Prüfungsfragen gemeinsam lösen …" maxLength={1000} />
-        </Feld>
-        <Feld label="Erfahrung">
-          <Textfeld value={daten.erfahrung} onChangeText={setze("erfahrung")} placeholder="Fahrlehrer, Streaming, Erklärvideos … (optional)" maxLength={1000} />
-        </Feld>
-        <Feld label="Instagram oder TikTok">
-          <Eingabe icon="at" value={daten.social} onChangeText={setze("social")} placeholder="@name (optional)" autoCapitalize="none" autoCorrect={false} maxLength={200} />
-        </Feld>
-
-        <View style={[{ borderRadius: 20, padding: 16, gap: 10 }, kartenFlaeche(f)]}>
-          <Text style={{ ...schrift.textFett, fontSize: 15, color: f.text }}>Live-Regeln</Text>
-          {REGELN.map((r) => (
-            <View key={r} style={{ flexDirection: "row", gap: 8 }}>
-              <Text style={{ ...schrift.textFett, color: f.orange }}>•</Text>
-              <Text style={{ ...schrift.text, fontSize: 14, lineHeight: 20, color: f.text2, flex: 1 }}>{r}</Text>
-            </View>
-          ))}
-          <Pressable
-            onPress={() => {
-              tippen();
-              setRegelnOk((v) => !v);
-            }}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: regelnOk }}
-            style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 6 }}
-          >
-            <View style={{ width: 24, height: 24, borderRadius: 7, borderWidth: 2, borderColor: regelnOk ? f.orange : f.text3, backgroundColor: regelnOk ? f.orange : "transparent", alignItems: "center", justifyContent: "center" }}>
-              {regelnOk ? <Icon name="checkmark" size={15} color="#FFFFFF" weight="bold" /> : null}
-            </View>
-            <Text style={{ ...schrift.textHalb, fontSize: 14, lineHeight: 19, color: f.text, flex: 1 }}>Ich bin mindestens 18 Jahre alt und halte mich an die Live-Regeln.</Text>
-          </Pressable>
+        <View>
+          <Abschnitt titel="Über dich" klein />
+          <Gruppe>
+            <FeldZeile label="Name" value={daten.name} onChangeText={setze("name")} placeholder="Vor- und Nachname" maxLength={80} autoComplete="name" textContentType="name" />
+            <FeldZeile label="Telefon" value={daten.telefon} onChangeText={setze("telefon")} placeholder="0151 2345678" keyboardType="phone-pad" maxLength={30} autoComplete="tel" textContentType="telephoneNumber" />
+            <FeldZeile label="Alter" value={alterText} onChangeText={(t) => setAlterText(t.replace(/\D/g, "").slice(0, 2))} placeholder="Jahre" keyboardType="number-pad" maxLength={2} />
+            <FeldZeile label="Beruf" value={daten.beruf} onChangeText={setze("beruf")} placeholder="z. B. Fahrlehrer" maxLength={80} />
+            <FeldZeile label="Wohnort" value={daten.ort} onChangeText={setze("ort")} placeholder="optional" maxLength={80} />
+            <FeldZeile label="Kanal" value={daten.social} onChangeText={setze("social")} placeholder="Instagram/TikTok (optional)" autoCapitalize="none" autoCorrect={false} maxLength={200} />
+          </Gruppe>
         </View>
 
-        <Knopf titel="Bewerbung abschicken" icon="paper-plane" laedt={sendet} deaktiviert={!vollstaendig} onPress={absenden} />
-        <T v="klein" zentriert>
-          Deine Angaben sieht nur der Inhaber der App. Telefonnummer und Alter erscheinen nirgends öffentlich.
-        </T>
+        <View>
+          <Abschnitt titel="Was möchtest du machen?" klein />
+          <Gruppe>
+            <TextZeile value={daten.themen} onChangeText={setze("themen")} placeholder="z. B. Vorfahrtsregeln erklären, Prüfungsfragen live lösen" maxLength={1000} />
+          </Gruppe>
+        </View>
+
+        <View>
+          <Abschnitt titel="Erfahrung" klein />
+          <Gruppe>
+            <TextZeile value={daten.erfahrung} onChangeText={setze("erfahrung")} placeholder="optional" maxLength={1000} />
+          </Gruppe>
+        </View>
+
+        <View>
+          <Abschnitt titel="Regeln" klein />
+          <Gruppe>
+            <Absatz text="Keine Beleidigungen, keine Werbung, keine Links. Nur Themen rund um Führerschein und Verkehr. Keine privaten Daten zeigen. Lives können jederzeit beendet und Zugänge entzogen werden." />
+            <Zeile titel="Ich bin mindestens 18 und halte mich an die Regeln" titelZeilen={2} rechts={<Schalter wert={regelnOk} onWechsel={setRegelnOk} />} />
+          </Gruppe>
+          <T v="klein" style={{ marginTop: abstand(2) }}>
+            Deine Angaben sieht nur der Inhaber der App.
+          </T>
+        </View>
+
+        <Knopf titel="Bewerbung senden" laedt={sendet} deaktiviert={!vollstaendig} onPress={absenden} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
