@@ -4,7 +4,6 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { type MenueEintrag } from "@/components/aufklapp-menue";
 import { auswahlBlatt } from "@/components/auswahl-blatt";
 import { dialog } from "@/components/dialog";
 import { Icon } from "@/components/icon";
@@ -136,12 +135,12 @@ function Inhalt() {
     const v = videos[fr.id];
     const anim = animationFuer(fr);
     const ansehen = (art: "video" | "animation") => router.push({ pathname: "/erklaerung", params: { frage: fr.id, art } });
-    const optionen: (MenueEintrag & { tun: () => void })[] = [];
-    if (v) optionen.push({ text: "Video ansehen", icon: "play-circle-outline", sf: "play.circle", tun: () => ansehen("video") });
-    optionen.push({ text: v ? "Anderes Video hochladen" : "Video hochladen", icon: "cloud-upload-outline", sf: "square.and.arrow.up", tun: () => hochladen(fr) });
-    if (anim) optionen.push({ text: "Animation ansehen", icon: "sparkles-outline", sf: "sparkles", tun: () => ansehen("animation") });
-    if (v) optionen.push({ text: "Video löschen", icon: "trash-outline", sf: "trash", gefahr: true, tun: () => loeschen(fr) });
-    const i = await auswahlBlatt(`Frage ${fr.id.toUpperCase()}`, optionen.map(({ text, icon, sf, gefahr }) => ({ text, icon, sf, gefahr })));
+    const optionen: { text: string; gefahr?: boolean; tun: () => void }[] = [];
+    if (v) optionen.push({ text: "Video ansehen", tun: () => ansehen("video") });
+    optionen.push({ text: v ? "Anderes Video hochladen" : "Video hochladen", tun: () => hochladen(fr) });
+    if (anim) optionen.push({ text: "Animation ansehen", tun: () => ansehen("animation") });
+    if (v) optionen.push({ text: "Video löschen", gefahr: true, tun: () => loeschen(fr) });
+    const i = await auswahlBlatt(`Frage ${fr.id.toUpperCase()}`, optionen.map(({ text, gefahr }) => ({ text, gefahr })));
     if (i != null) optionen[i].tun();
   }
 

@@ -1,35 +1,27 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, useWindowDimensions, type GestureResponderEvent } from "react-native";
+import { Alert, Animated, Easing, Modal, PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { MENUE_BREITE, MENUE_TITEL, MENUE_ZEILE, MenueFenster, type MenueEintrag } from "@/components/aufklapp-menue";
 import { useHelleSeite } from "@/lib/darstellung";
+import { schrift } from "@/lib/theme";
 
-type Anfrage = { titel: string; optionen: MenueEintrag[]; ort: { x: number; y: number } | null; fertig: (i: number | null) => void };
+type Option = { text: string; gefahr?: boolean };
+type Anfrage = { titel: string; optionen: Option[]; fertig: (i: number | null) => void };
 
 let zeigen: ((a: Anfrage) => void) | null = null;
 
-// Wo der Finger zuletzt aufgesetzt hat – dort klappt das Menü auf (wie das
-// iPhone-Kontextmenü beim langen Drücken auf eine Nachricht).
-let letzteBeruehrung: { x: number; y: number; zeit: number } | null = null;
-
-/** In der Wurzel der App eingehängt (onTouchStart/onPointerDown): merkt sich die Stelle. */
-export function beruehrungMerken(e: GestureResponderEvent | { nativeEvent: { pageX: number; pageY: number } }) {
-  letzteBeruehrung = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY, zeit: Date.now() };
-}
-
 /**
- * Auswahlmenü als kleines Glas-Menü an der Stelle, an der man getippt oder
- * lange gedrückt hat. Liefert den gewählten Eintrag oder null (daneben getippt).
+ * Auswahlmenü als Blatt von unten (auch für Android, wo ein Dialog höchstens
+ * drei Knöpfe zeigt). Liefert den gewählten Eintrag oder null, wenn man
+ * daneben tippt oder das Blatt nach unten wischt.
  */
-export function auswahlBlatt(titel: string, optionen: MenueEintrag[]): Promise<number | null> {
-  const b = letzteBeruehrung && Date.now() - letzteBeruehrung.zeit < 3000 ? letzteBeruehrung : null;
+export function auswahlBlatt(titel: string, optionen: Option[]): Promise<number | null> {
   return new Promise((fertig) => {
     if (zeigen) {
-      zeigen({ titel, optionen, ort: b ? { x: b.x, y: b.y } : null, fertig });
+      zeigen({ titel, optionen, fertig });
       return;
     }
-    // Ohne Menü (sollte nicht vorkommen): einfacher Dialog.
+    // Ohne Blatt (sollte nicht vorkommen): einfacher Dialog.
     Alert.alert(titel, undefined, [
       ...optionen.map((o, i) => ({ text: o.text, style: o.gefahr ? ("destructive" as const) : ("default" as const), onPress: () => fertig(i) })),
       { text: "Abbrechen", style: "cancel" as const, onPress: () => fertig(null) },
@@ -40,61 +32,95 @@ export function auswahlBlatt(titel: string, optionen: MenueEintrag[]): Promise<n
 /** Einmal in der App eingebunden; zeigt die Menüs aus auswahlBlatt(). */
 export function AuswahlBlattHost() {
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
-  const hell = useHelleSeite();
   const [anfrage, setAnfrage] = useState<Anfrage | null>(null);
-  const [offen, setOffen] = useState(false);
-  const ergebnis = useRef<number | null>(null);
+  const anfrageRef = useRef<Anfrage | null>(null);
+  const zu = useRef(false);
+  // 0 = offen, 1 = unten raus
+  const lage = useRef(new Animated.Value(1)).current;
+  const zug = useRef(new Animated.Value(0)).current;
+  // Auf hellen Seiten weiß, sonst dunkel (neutral, ohne Blaustich)
+  const hell = useHelleSeite();
+  const flaeche = hell ? "#FFFFFF" : "#1C1D21";
+  const gedrueckt = hell ? "rgba(20,23,27,0.05)" : "rgba(255,255,255,0.06)";
+  const text = hell ? "#14171B" : "#F2F3F5";
+  const rot = hell ? "#E5392C" : "#FF5A4F";
 
   useEffect(() => {
     zeigen = (a) => {
-      ergebnis.current = null;
+      anfrageRef.current = a;
+      zu.current = false;
+      zug.setValue(0);
       setAnfrage(a);
-      setOffen(true);
+      Animated.timing(lage, { toValue: 0, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
     };
     return () => {
       zeigen = null;
     };
-  }, []);
+  }, [lage, zug]);
 
-  if (!anfrage) return null;
-
-  // Lage: neben dem Finger, nie über den Rand; unten wenig Platz → darüber.
-  const hoehe = (anfrage.titel ? MENUE_TITEL : 0) + anfrage.optionen.length * MENUE_ZEILE;
-  const rand = 14;
-  const oben = insets.top + rand;
-  const unten = height - insets.bottom - rand;
-  let lage: { top: number; left: number };
-  let ursprung: "top left" | "bottom left" = "top left";
-  if (anfrage.ort) {
-    const left = Math.min(Math.max(anfrage.ort.x - 40, rand), width - MENUE_BREITE - rand);
-    if (anfrage.ort.y + 16 + hoehe <= unten) lage = { top: anfrage.ort.y + 16, left };
-    else {
-      lage = { top: Math.max(oben, anfrage.ort.y - 16 - hoehe), left };
-      ursprung = "bottom left";
-    }
-  } else {
-    lage = { top: Math.max(oben, (height - hoehe) / 2), left: (width - MENUE_BREITE) / 2 };
+  function fertig(i: number | null) {
+    if (zu.current) return;
+    zu.current = true;
+    Animated.timing(lage, { toValue: 1, duration: 200, easing: Easing.in(Easing.quad), useNativeDriver: true }).start(() => {
+      const a = anfrageRef.current;
+      anfrageRef.current = null;
+      setAnfrage(null);
+      a?.fertig(i);
+    });
   }
 
+  const fertigRef = useRef(fertig);
+  fertigRef.current = fertig;
+  // Nach unten wischen schließt das Blatt.
+  const wischen = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) => g.dy > 6 && Math.abs(g.dy) > Math.abs(g.dx),
+      onPanResponderMove: (_, g) => zug.setValue(Math.max(0, g.dy)),
+      onPanResponderRelease: (_, g) => {
+        if (g.dy > 90 || g.vy > 0.9) fertigRef.current(null);
+        else Animated.spring(zug, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start();
+      },
+    }),
+  ).current;
+
   return (
-    <MenueFenster
-      offen={offen}
-      lage={lage}
-      ursprung={ursprung}
-      hell={hell}
-      titel={anfrage.titel}
-      eintraege={anfrage.optionen}
-      onWahl={(i) => {
-        ergebnis.current = i;
-        setOffen(false);
-      }}
-      onSchliessen={() => setOffen(false)}
-      onZu={() => {
-        const a = anfrage;
-        setAnfrage(null);
-        a.fertig(ergebnis.current);
-      }}
-    />
+    <Modal visible={anfrage != null} transparent animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={() => fertig(null)}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={() => fertig(null)} accessibilityLabel="Schließen">
+        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: hell ? "rgba(20,16,10,0.32)" : "rgba(0,0,0,0.5)", opacity: lage.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]} />
+      </Pressable>
+      {anfrage ? (
+        <Animated.View
+          {...wischen.panHandlers}
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            transform: [{ translateY: Animated.add(lage.interpolate({ inputRange: [0, 1], outputRange: [0, 520] }), zug) }],
+          }}
+        >
+          <View style={{ backgroundColor: flaeche, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 8, paddingBottom: insets.bottom + 10 }}>
+            <View style={{ alignSelf: "center", width: 36, height: 5, borderRadius: 3, backgroundColor: hell ? "rgba(20,23,27,0.16)" : "rgba(255,255,255,0.2)" }} />
+            {anfrage.titel ? (
+              <Text numberOfLines={2} style={{ ...schrift.textHalb, fontSize: 13.5, lineHeight: 18, color: hell ? "#878C94" : "#8E939B", paddingHorizontal: 20, paddingTop: 14, paddingBottom: 6 }}>
+                {anfrage.titel}
+              </Text>
+            ) : (
+              <View style={{ height: 10 }} />
+            )}
+            {anfrage.optionen.map((o, i) => (
+              <Pressable
+                key={`${i}-${o.text}`}
+                onPress={() => fertig(i)}
+                accessibilityRole="button"
+                style={({ pressed }) => ({ minHeight: 52, justifyContent: "center", paddingHorizontal: 20, backgroundColor: pressed ? gedrueckt : "transparent" })}
+              >
+                <Text style={{ ...schrift.textMittel, fontSize: 17, color: o.gefahr ? rot : text }}>{o.text}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </Animated.View>
+      ) : null}
+    </Modal>
   );
 }

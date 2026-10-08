@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, Platform, Text, View } from "react-native";
+import { Animated, Text, View } from "react-native";
 import { router, Stack, usePathname } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as SplashScreen from "expo-splash-screen";
@@ -11,7 +11,7 @@ import { Archivo_800ExtraBold, useFonts } from "@expo-google-fonts/archivo";
 import { MarckScript_400Regular } from "@expo-google-fonts/marck-script";
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 
-import { AuswahlBlattHost, beruehrungMerken } from "@/components/auswahl-blatt";
+import { AuswahlBlattHost } from "@/components/auswahl-blatt";
 import { BossTrefferAnzeige } from "@/components/crew";
 import { DialogHost } from "@/components/dialog";
 import { Icon } from "@/components/icon";
@@ -117,8 +117,7 @@ function Navigation() {
   if (!fertig) return <View style={{ flex: 1, backgroundColor: farben.grund }} />;
 
   return (
-    // Merkt sich, wo der Finger aufsetzt – dort klappen Auswahlmenüs auf.
-    <View style={{ flex: 1, backgroundColor: farben.grund }} {...(Platform.OS === "web" ? { onPointerDown: beruehrungMerken } : { onTouchStart: beruehrungMerken })}>
+    <View style={{ flex: 1, backgroundColor: farben.grund }}>
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: farben.grund }, animation: "slide_from_right" }}>
         <Stack.Screen name="index" options={{ animation: "none" }} />
         {/* Registrieren und Anmelden gehen auch aus dem Gastmodus heraus */}

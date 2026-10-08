@@ -8,7 +8,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Reanimated, { Easing as REasing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { type MenueEintrag } from "@/components/aufklapp-menue";
 import { auswahlBlatt } from "@/components/auswahl-blatt";
 import { dialog } from "@/components/dialog";
 import { Glas } from "@/components/glas";
@@ -559,10 +558,7 @@ export default function LiveSenden() {
       greenscreenHolen();
       return;
     }
-    const wahl = await auswahlBlatt("Greenscreen", [
-      { text: "Anderer Hintergrund", icon: "image-outline", sf: "photo" },
-      { text: "Greenscreen aus", icon: "close-circle-outline", sf: "xmark.circle", gefahr: true },
-    ]);
+    const wahl = await auswahlBlatt("Greenscreen", [{ text: "Anderen Hintergrund wählen" }, { text: "Greenscreen aus", gefahr: true }]);
     if (wahl === 0) greenscreenHolen();
     if (wahl === 1) greenscreenAus();
   }
@@ -615,10 +611,7 @@ export default function LiveSenden() {
       zweitAn();
       return;
     }
-    const wahl = await auswahlBlatt("Zweite Kamera", [
-      { text: "Kameras tauschen", icon: "swap-horizontal", sf: "arrow.left.arrow.right" },
-      { text: "Zweite Kamera aus", icon: "close-circle-outline", sf: "xmark.circle", gefahr: true },
-    ]);
+    const wahl = await auswahlBlatt("Zweite Kamera", [{ text: "Kameras tauschen" }, { text: "Zweite Kamera aus", gefahr: true }]);
     if (wahl === 0) zweitTauschen();
     if (wahl === 1) {
       stoss();
@@ -701,10 +694,7 @@ export default function LiveSenden() {
       bildHolen();
       return;
     }
-    const wahl = await auswahlBlatt("Bild im Live", [
-      { text: "Anderes Bild", icon: "image-outline", sf: "photo" },
-      { text: "Bild entfernen", icon: "trash-outline", sf: "trash", gefahr: true },
-    ]);
+    const wahl = await auswahlBlatt("Bild im Live", [{ text: "Anderes Bild wählen" }, { text: "Bild entfernen", gefahr: true }]);
     if (wahl === 0) bildHolen();
     if (wahl === 1) bildEntfernen();
   }
@@ -769,11 +759,8 @@ export default function LiveSenden() {
   async function moderieren(n: ChatNachricht) {
     const eigen = n.user_id === ich;
     const istAngepinnt = angepinnt?.id === n.id;
-    const optionen: MenueEintrag[] = [
-      istAngepinnt ? { text: "Nicht mehr anpinnen", icon: "pin-outline", sf: "pin.slash" } : { text: "Oben anpinnen", icon: "pin-outline", sf: "pin" },
-      { text: "Nachricht löschen", icon: "trash-outline", sf: "trash", gefahr: true },
-    ];
-    if (!eigen) optionen.push({ text: `${n.name} stummschalten`, icon: "volume-mute", sf: "speaker.slash", gefahr: true });
+    const optionen = [{ text: istAngepinnt ? "Nicht mehr anpinnen" : "Oben anpinnen" }, { text: "Nachricht löschen", gefahr: true }];
+    if (!eigen) optionen.push({ text: `${n.name} stummschalten`, gefahr: true });
     const wahl = await auswahlBlatt(eigen ? "Deine Nachricht" : `Nachricht von ${n.name}`, optionen);
     let problem: string | null = null;
     if (wahl === 0) {
