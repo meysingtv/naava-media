@@ -1,0 +1,111 @@
+{
+  "expo": {
+    "name": "Fahrschul Pro",
+    "slug": "spur-theorie",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "spur",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#030507",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "ios": {
+      "icon": "./assets/images/icon.png",
+      "supportsTablet": true,
+      "bundleIdentifier": "de.spur.theorie",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSSupportsLiveActivities": true,
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
+      },
+      "usesAppleSignIn": true
+    },
+    "android": {
+      "package": "de.spur.theorie",
+      "allowBackup": false,
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#030507",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 140
+        }
+      ],
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/benachrichtigung.png",
+          "color": "#FC5B0E"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Fahrschul Pro greift nur auf deine Fotos und Videos zu, wenn du ein Profilbild, einen Clip zum Hochladen, ein Schildfoto für die Schilder-Jagd oder ein Bild für deinen Live-Stream auswählst.",
+          "cameraPermission": "Fahrschul Pro nutzt die Kamera für die Schilder-Jagd (du scannst echte Verkehrsschilder, die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert) und für Live-Streams in Clips.",
+          "microphonePermission": "Fahrschul Pro nutzt das Mikrofon nur, wenn du in Clips einen Live-Stream startest."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Fahrschul Pro nutzt die Kamera für die Schilder-Jagd (du scannst echte Verkehrsschilder, die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert) und für Live-Streams in Clips.",
+          "microphonePermission": "Fahrschul Pro nutzt das Mikrofon nur, wenn du in Clips einen Live-Stream startest.",
+          "recordAudioAndroid": false
+        }
+      ],
+      "expo-video",
+      "expo-web-browser",
+      "expo-apple-authentication",
+      "./plugins/android-sicherheit",
+      "expo-secure-store",
+      "react-native-compressor",
+      "@bacons/apple-targets",
+      "@react-native-community/datetimepicker",
+      [
+        "@livekit/react-native-expo-plugin",
+        {
+          "android": {
+            "audioType": "media"
+          }
+        }
+      ],
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Fahrschul Pro nutzt die Kamera für die Schilder-Jagd (du scannst echte Verkehrsschilder, die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert) und für Live-Streams in Clips.",
+          "microphonePermission": "Fahrschul Pro nutzt das Mikrofon nur, wenn du in Clips einen Live-Stream startest."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

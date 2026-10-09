@@ -1,0 +1,204 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getKontext } from "@/lib/supabase/queries";
+import type { FahrlehrerRolle } from "@/lib/types";
+
+function basisUrl(): string {
+  const konfiguriert = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (konfiguriert) return konfiguriert.replace(/\/+$/, "");
+  return headers().get("origin") ?? "http://localhost:3000";
+}
+
+export interface BenutzerState {
+  error?: string;
+  ok?: boolean;
+}
+
+function leerZuNull(v: FormDataEntryValue | null): string | null {
+  const s = String(v ?? "").trim();
+  return s === "" ? null : s;
+}
+
+const BUILTIN_ROLLEN: FahrlehrerRolle[] = ["chef", "fahrlehrer", "buero"];
+
+/**
+ * Wandelt die einheitliche Rollen-Auswahl (entweder ein Standard-Enum
+ * chef/fahrlehrer/buero oder die UUID einer eigenen Rolle) in die zu
+ * speichernden Felder `rolle` (für RLS/Navigation) und `benutzerrolle_id`.
+ */
+function rolleAufloesen(
+  wahl: string,
+  bestehendeRolle: FahrlehrerRolle | null,
+): { rolle: FahrlehrerRolle; benutzerrolle_id: string | null } {
+  if ((BUILTIN_ROLLEN as string[]).includes(wahl)) {
+    return { rolle: wahl as FahrlehrerRolle, benutzerrolle_id: null };
+  }
+  // Eigene Rolle: UUID merken, Basis-Zugriff vom bestehenden Wert übernehmen (sonst Büro).
+  return { rolle: bestehendeRolle ?? "buero", benutzerrolle_id: wahl };
+}
+
+/** Legt einen Benutzer an oder aktualisiert ihn (abhängig vom Feld `id`). */
+export async function benutzerSpeichern(
+  _prev: BenutzerState,
+  formData: FormData,
+): Promise<BenutzerState> {
+  const kontext = await getKontext();
+  if (!kontext?.fahrschule) return { error: "Keine Fahrschule gefunden." };
+  if (kontext.fahrlehrer?.rolle !== "chef") {
+    return { error: "Nur der Geschäftsführer darf Benutzer verwalten." };
+  }
+
+  const id = leerZuNull(formData.get("id"));
+  const vorname = String(formData.get("vorname") ?? "").trim();
+  const nachname = String(formData.get("nachname") ?? "").trim();
+  if (!vorname || !nachname) return { error: "Bitte Vor- und Nachname angeben." };
+
+  const klassen = formData.getAll("klassen").map(String);
+  const email = leerZuNull(formData.get("email"));
+  const passwort = String(formData.get("passwort") ?? "");
+  if (passwort && passwort.length < 6) {
+    return { error: "Das Passwort muss mindestens 6 Zeichen lang sein." };
+  }
+
+  const rolleWahl = String(formData.get("rolle_wahl") ?? "fahrlehrer");
+
+  const supabase = createClient();
+  let benutzerId = id;
+
+  if (id) {
+    // Bestehenden Datensatz laden, um eigenes Konto / Rolle abzusichern.
+    const { data: vorhanden } = await supabase
+      .from("fahrlehrer")
+      .select("user_id, rolle, benutzerrolle_id")
+      .eq("id", id)
+      .maybeSingle<{ user_id: string | null; rolle: FahrlehrerRolle; benutzerrolle_id: string | null }>();
+
+    // Eigene Rolle darf man nicht ändern – bestehende Werte bleiben erhalten.
+    const selbst = Boolean(vorhanden?.user_id && vorhanden.user_id === kontext.userId);
+    const { rolle, benutzerrolle_id } = selbst
+      ? { rolle: vorhanden?.rolle ?? "chef", benutzerrolle_id: vorhanden?.benutzerrolle_id ?? null }
+      : rolleAufloesen(rolleWahl, vorhanden?.rolle ?? null);
+
+    const { error } = await supabase
+      .from("fahrlehrer")
+      .update({ ...stammdaten(formData), rolle, benutzerrolle_id, email, fuehrerscheinklassen: klassen })
+      .eq("id", id);
+    if (error) return { error: error.message };
+
+    // Optional: Passwort setzen (benötigt Service-Role-Key + verknüpftes Login).
+    if (passwort) {
+      if (!vorhanden?.user_id) {
+        return {
+          error:
+            "Für dieses Konto gibt es noch keinen Login. Lege den Benutzer mit E-Mail + Passwort neu an oder lade ihn ein.",
+        };
+      }
+      const admin = createAdminClient();
+      if (!admin) return { error: PW_HINWEIS };
+      const { error: pwError } = await admin.auth.admin.updateUserById(vorhanden.user_id, {
+        password: passwort,
+      });
+      if (pwError) return { error: `Passwort konnte nicht gesetzt werden: ${pwError.message}` };
+    }
+  } else {
+    const { rolle, benutzerrolle_id } = rolleAufloesen(rolleWahl, null);
+    let userId: string | null = null;
+
+    // Login anlegen: entweder direkt mit Passwort oder per E-Mail-Einladung.
+    if (passwort || formData.get("einladen") === "on") {
+      if (!email) return { error: "Für einen Login wird eine E-Mail-Adresse benötigt." };
+      const admin = createAdminClient();
+      if (!admin) return { error: PW_HINWEIS };
+
+      if (passwort) {
+        const { data, error: createError } = await admin.auth.admin.createUser({
+          email,
+          password: passwort,
+          email_confirm: true,
+        });
+        if (createError) return { error: `Login konnte nicht angelegt werden: ${createError.message}` };
+        userId = data.user?.id ?? null;
+      } else {
+        const { data, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
+          redirectTo: `${basisUrl()}/auth/callback?weiter=/auth/passwort-zuruecksetzen`,
+        });
+        if (inviteError) return { error: `Einladung fehlgeschlagen: ${inviteError.message}` };
+        userId = data.user?.id ?? null;
+      }
+    }
+
+    const { data, error } = await supabase
+      .from("fahrlehrer")
+      .insert({
+        ...stammdaten(formData),
+        rolle,
+        benutzerrolle_id,
+        email,
+        fuehrerscheinklassen: klassen,
+        fahrschule_id: kontext.fahrschule.id,
+        user_id: userId,
+        aktiv: true,
+      })
+      .select("id")
+      .single();
+    if (error || !data) {
+      return { error: error?.message ?? "Der Benutzer konnte nicht angelegt werden." };
+    }
+    benutzerId = data.id;
+  }
+
+  revalidatePath("/fahrlehrer", "layout");
+  redirect(`/fahrlehrer/${benutzerId}`);
+}
+
+const PW_HINWEIS =
+  "Login-Verwaltung ist nicht eingerichtet (SUPABASE_SERVICE_ROLE_KEY fehlt, siehe README).";
+
+/** Gemeinsame Stammdaten-Felder für Insert/Update (ohne Rolle/E-Mail/Klassen). */
+function stammdaten(formData: FormData) {
+  return {
+    vorname: String(formData.get("vorname") ?? "").trim(),
+    nachname: String(formData.get("nachname") ?? "").trim(),
+    kuerzel: leerZuNull(formData.get("kuerzel")),
+    telefon: leerZuNull(formData.get("telefon")),
+    telefon_privat: leerZuNull(formData.get("telefon_privat")),
+    strasse: leerZuNull(formData.get("strasse")),
+    plz: leerZuNull(formData.get("plz")),
+    ort: leerZuNull(formData.get("ort")),
+    geburtsdatum: leerZuNull(formData.get("geburtsdatum")),
+    geburtsort: leerZuNull(formData.get("geburtsort")),
+    notiz: leerZuNull(formData.get("notiz")),
+  };
+}
+
+export async function fahrlehrerAktivSetzen(formData: FormData): Promise<void> {
+  const kontext = await getKontext();
+  if (kontext?.fahrlehrer?.rolle !== "chef") return;
+
+  const id = String(formData.get("id") ?? "");
+  const aktiv = formData.get("aktiv") === "true";
+  if (!id) return;
+
+  const supabase = createClient();
+  await supabase.from("fahrlehrer").update({ aktiv }).eq("id", id);
+  revalidatePath("/fahrlehrer", "layout");
+}
+
+export async function fahrlehrerLoeschen(formData: FormData): Promise<void> {
+  const kontext = await getKontext();
+  if (kontext?.fahrlehrer?.rolle !== "chef") return;
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const supabase = createClient();
+  await supabase.from("fahrlehrer").delete().eq("id", id);
+  revalidatePath("/fahrlehrer", "layout");
+  redirect("/fahrlehrer");
+}

@@ -1,0 +1,9 @@
+# Erzeugte Daten und Modelle (groß, jederzeit neu erzeugbar)
+negativ/
+*.npz
+*.keras
+schild-test.json
+.venv/
+__pycache__/
+tempo.jpg
+kreuz.jpg

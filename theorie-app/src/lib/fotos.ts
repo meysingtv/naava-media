@@ -1,0 +1,115 @@
+import type { ImageSourcePropType } from "react-native";
+
+import type { ThemaId } from "./fragen";
+
+/**
+ * Fotos der App. Alle Bilder stehen unter freien Lizenzen (CC0, Public Domain,
+ * CC BY 2.0, CC BY-SA 2.0) und wurden für die App verkleinert. Die Nachweise
+ * stehen unten und in der App unter Einstellungen → Bildnachweise.
+ */
+export const FOTOS = {
+  tagesziel: require("../../assets/images/fotos/tagesziel.jpg"),
+  lernen: require("../../assets/images/fotos/lernen.jpg"),
+  simulation: require("../../assets/images/fotos/simulation.jpg"),
+  pruefung: require("../../assets/images/fotos/pruefung.jpg"),
+  grundstoff: require("../../assets/images/fotos/grundstoff.jpg"),
+  gefahren: require("../../assets/images/fotos/gefahren.jpg"),
+  vorfahrt: require("../../assets/images/fotos/vorfahrt.jpg"),
+  zeichen: require("../../assets/images/fotos/zeichen.jpg"),
+  umwelt: require("../../assets/images/fotos/umwelt.jpg"),
+  technik: require("../../assets/images/fotos/technik.jpg"),
+  verhalten: require("../../assets/images/fotos/verhalten.jpg"),
+  tempo: require("../../assets/images/fotos/tempo.jpg"),
+  parken: require("../../assets/images/fotos/parken.jpg"),
+  autobahn: require("../../assets/images/fotos/autobahn.jpg"),
+  mensch: require("../../assets/images/fotos/mensch.jpg"),
+  zahlen: require("../../assets/images/fotos/zahlen.jpg"),
+  strasse1: require("../../assets/images/fotos/strasse1.jpg"),
+  strasse2: require("../../assets/images/fotos/strasse2.jpg"),
+  strasse3: require("../../assets/images/fotos/strasse3.jpg"),
+  baeume: require("../../assets/images/fotos/baeume.jpg"),
+  zitat: require("../../assets/images/fotos/zitat.jpg"),
+  // Titelbild der Startseite – wechselt mit der Tageszeit
+  heldMorgen: require("../../assets/images/home/held-morgen.jpg"),
+  heldTag: require("../../assets/images/home/held-tag.jpg"),
+  heldAbend: require("../../assets/images/home/held-abend.jpg"),
+  heldNacht: require("../../assets/images/home/held-nacht.jpg"),
+  // Hintergrund oben im Profil (eigene Grafik, dunkel und hell)
+  heldProfilDunkel: require("../../assets/images/home/held-profil-dunkel.jpg"),
+  heldProfilHell: require("../../assets/images/home/held-profil-hell.jpg"),
+} satisfies Record<string, ImageSourcePropType>;
+
+export type FotoKey = keyof typeof FOTOS;
+
+const THEMA_FOTO: Record<ThemaId, FotoKey> = {
+  gefahren: "gefahren",
+  vorfahrt: "vorfahrt",
+  zeichen: "zeichen",
+  umwelt: "umwelt",
+  technik: "technik",
+  manoever: "verhalten",
+  tempo: "tempo",
+  parken: "parken",
+  autobahn: "autobahn",
+  mensch: "mensch",
+  zahlen: "zahlen",
+};
+
+export function themaFoto(thema: ThemaId): ImageSourcePropType {
+  return FOTOS[THEMA_FOTO[thema]];
+}
+
+/** Straßenfotos für die Fahrersicht bei Zeichenfragen – je Frage fest gewählt. */
+const STRASSEN: FotoKey[] = ["strasse1", "strasse2", "strasse3"];
+
+export function strassenFoto(schluessel: string): ImageSourcePropType {
+  let h = 0;
+  for (let i = 0; i < schluessel.length; i++) h = (h * 31 + schluessel.charCodeAt(i)) >>> 0;
+  return FOTOS[STRASSEN[h % STRASSEN.length]];
+}
+
+export type Nachweis = { foto: FotoKey; titel: string; urheber: string; lizenz: string; seite: string };
+
+const LIZENZ_NAME: Record<string, string> = {
+  "by 2.0": "CC BY 2.0",
+  "by-sa 2.0": "CC BY-SA 2.0",
+  "cc0 1.0": "CC0 1.0 (gemeinfrei)",
+  "pdm 1.0": "Public Domain Mark 1.0",
+};
+
+export const LIZENZ_LINK: Record<string, string> = {
+  "CC BY 2.0": "https://creativecommons.org/licenses/by/2.0/",
+  "CC BY-SA 2.0": "https://creativecommons.org/licenses/by-sa/2.0/",
+  "CC0 1.0 (gemeinfrei)": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "Public Domain Mark 1.0": "https://creativecommons.org/publicdomain/mark/1.0/",
+};
+
+const roh: [FotoKey, string, string, string, string][] = [
+  ["tagesziel", "Smile", "Zach Dischner", "by 2.0", "https://www.flickr.com/photos/35557234@N07/15541431101"],
+  ["lernen", "Winding Road @ Sunset", "tan ah beng", "by 2.0", "https://www.flickr.com/photos/38243549@N02/4272752951"],
+  ["simulation", "Examiner filling in driver's license road test form", "f0976531950157", "pdm 1.0", "https://www.flickr.com/photos/203928447@N02/54999169448"],
+  ["pruefung", "View windscreen Audi interior two-lane", "rawpixel", "cc0 1.0", "https://www.rawpixel.com/image/3300549/free-photo-image-automobile-car-images-pictures"],
+  ["grundstoff", "Gray SUV driving along bended road", "rawpixel", "cc0 1.0", "https://www.rawpixel.com/image/3300684/free-photo-image-car-outdoors-nature-abies-asphalt"],
+  ["gefahren", "Winding Road", "Ashley Knedler", "cc0 1.0", "https://stocksnap.io/photo/winding-road-NLG3251QQZ"],
+  ["vorfahrt", "MS19 MS35 North Signs - Yield Intersection MS14", "formulanone", "by-sa 2.0", "https://www.flickr.com/photos/30552029@N00/27027102147"],
+  ["zeichen", "Rural Winding", "Jordan Whitt", "cc0 1.0", "https://stocksnap.io/photo/rural-winding-CRR8H6RSRI"],
+  ["umwelt", "Winding Road", "Burst", "cc0 1.0", "https://stocksnap.io/photo/winding-road-CKBWHDZT4F"],
+  ["technik", "Vintage US car engine", "Markus Spiske", "cc0 1.0", "https://www.rawpixel.com/image/560250/vintage-car-engine"],
+  ["verhalten", "Cycling City", "Burst", "cc0 1.0", "https://stocksnap.io/photo/cycling-city-E5BW2K6ZYK"],
+  ["tempo", "speedometer", "Sean MacEntee", "by 2.0", "https://www.flickr.com/photos/18090920@N07/5546966357"],
+  ["parken", "Electric Car License Plates", "jurvetson", "by 2.0", "https://www.flickr.com/photos/44124348109@N01/3391637194"],
+  ["autobahn", "Curve 80", "96dpi", "by 2.0", "https://www.flickr.com/photos/67499195@N00/2778343149"],
+  ["mensch", "View windshield road dusk", "rawpixel", "cc0 1.0", "https://www.rawpixel.com/image/3282756/free-photo-image-driving-car-asphalt"],
+  ["zahlen", "Dashboard", "Photo Monkey", "by 2.0", "https://www.flickr.com/photos/87374213@N00/12746989"],
+  ["strasse1", "Country road", "prague.czech.photo", "by 2.0", "https://www.flickr.com/photos/99424477@N04/15214051925"],
+  ["strasse2", "Euro Road Trip 2012 - 090", "Kyle Taylor, Dream It. Do It.", "by 2.0", "https://www.flickr.com/photos/95672737@N00/7345496698"],
+  ["strasse3", "Landstrasse", "ThomasKohler", "by 2.0", "https://www.flickr.com/photos/28077296@N02/8586132860"],
+  ["baeume", "The drive from Arbury Hall - North Lodge", "ell brown", "by-sa 2.0", "https://www.flickr.com/photos/39415781@N06/33556283563"],
+  ["zitat", "Nature Landscape", "Hoach Le Dinh", "cc0 1.0", "https://stocksnap.io/photo/nature-landscape-O4DWC2WG2U"],
+  ["heldMorgen", "Car driving along a winding mountain highway in fog", "Sakin Shrestha", "cc0 1.0", "https://wordpress.org/photos/photo/2226a15dce/"],
+  ["heldTag", "A car driving on a road going through the mountain valleys", "Nithin John", "cc0 1.0", "https://wordpress.org/photos/photo/57365be3ed/"],
+  ["heldAbend", "Sunset view over a rural road", "Angel Zinsel", "cc0 1.0", "https://wordpress.org/photos/photo/34768b4c09/"],
+  ["heldNacht", "Driving at Night, Rest Stop Ahead", "Marcus Kazmierczak", "cc0 1.0", "https://wordpress.org/photos/photo/73161c9d1f/"],
+];
+
+export const NACHWEISE: Nachweis[] = roh.map(([foto, titel, urheber, lizenz, seite]) => ({ foto, titel, urheber, lizenz: LIZENZ_NAME[lizenz] ?? lizenz, seite }));

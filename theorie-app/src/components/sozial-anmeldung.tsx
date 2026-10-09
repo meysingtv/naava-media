@@ -1,0 +1,147 @@
+import { useEffect, useState } from "react";
+import { Platform, Pressable, Text, View } from "react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { Ionicons } from "@expo/vector-icons";
+import Svg, { Path } from "react-native-svg";
+
+import { Lader } from "@/components/lader";
+import { T } from "@/components/ui";
+import { tippen } from "@/lib/haptik";
+import { useKonto, type Rolle } from "@/lib/konto";
+import { serverVerbunden } from "@/lib/supabase";
+import { abstand, farben, schrift } from "@/lib/theme";
+
+/** Rand der dunklen Anmelde-Knöpfe (Googles Vorgabe für die dunkle Variante). */
+const RAHMEN = "#8E918F";
+
+/** Das bunte „G“ von Google. */
+function GoogleLogo({ groesse = 20 }: { groesse?: number }) {
+  return (
+    <Svg width={groesse} height={groesse} viewBox="0 0 48 48">
+      <Path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <Path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <Path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <Path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </Svg>
+  );
+}
+
+/** Trennlinie mit „ODER“ in der Mitte. */
+export function Oder() {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(3), marginVertical: abstand(1) }}>
+      <View style={{ flex: 1, height: 1, backgroundColor: farben.linieStark }} />
+      <T v="mini" style={{ letterSpacing: 1.2 }}>
+        Oder
+      </T>
+      <View style={{ flex: 1, height: 1, backgroundColor: farben.linieStark }} />
+    </View>
+  );
+}
+
+/**
+ * „Mit Google anmelden“ und „Mit Apple anmelden“ – Apple auf dem iPhone mit
+ * Apples eigenem Knopf, sonst über die Apple-Seite im Browser. Neue Konten
+ * bekommen die gewählte Rolle.
+ */
+export function SozialAnmeldung({ rolle, onAngemeldet, onFehler }: { rolle?: Rolle; onAngemeldet: () => void; onFehler: (f: string | null) => void }) {
+  const { mitGoogle, mitApple } = useKonto();
+  const [appleNativ, setAppleNativ] = useState(false);
+  const [laeuft, setLaeuft] = useState<"google" | "apple" | null>(null);
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+    AppleAuthentication.isAvailableAsync()
+      .then(setAppleNativ)
+      .catch(() => setAppleNativ(false));
+  }, []);
+
+  async function los(art: "google" | "apple") {
+    if (laeuft) return;
+    onFehler(null);
+    setLaeuft(art);
+    const r = art === "google" ? await mitGoogle(rolle) : await mitApple(rolle);
+    setLaeuft(null);
+    if (r.abgebrochen) return;
+    if (r.fehler) {
+      onFehler(r.fehler);
+      return;
+    }
+    onAngemeldet();
+  }
+
+  return (
+    <View style={{ gap: abstand(3), opacity: serverVerbunden ? 1 : 0.5 }} pointerEvents={serverVerbunden ? "auto" : "none"}>
+      <Pressable
+        onPress={() => {
+          tippen();
+          los("google");
+        }}
+        accessibilityRole="button"
+        accessibilityLabel="Mit Google anmelden"
+        style={({ pressed }) => ({
+          height: 54,
+          borderRadius: 16,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          backgroundColor: "#131314",
+          borderWidth: 1,
+          borderColor: RAHMEN,
+          opacity: pressed ? 0.8 : 1,
+        })}
+      >
+        {laeuft === "google" ? (
+          <Lader color="#E3E3E3" />
+        ) : (
+          <>
+            <GoogleLogo />
+            <Text style={{ ...schrift.textHalb, fontSize: 16.5, color: "#E3E3E3" }}>Mit Google anmelden</Text>
+          </>
+        )}
+      </Pressable>
+      {appleNativ ? (
+        <View style={{ height: 54, borderRadius: 16, borderWidth: 1, borderColor: RAHMEN, overflow: "hidden", opacity: laeuft === "apple" ? 0.6 : 1 }}>
+          <AppleAuthentication.AppleAuthenticationButton
+            buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+            cornerRadius={15}
+            style={{ flex: 1, width: "100%" }}
+            onPress={() => los("apple")}
+          />
+        </View>
+      ) : (
+        <Pressable
+          onPress={() => {
+            tippen();
+            los("apple");
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Mit Apple anmelden"
+          style={({ pressed }) => ({
+            height: 54,
+            borderRadius: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            backgroundColor: "#000000",
+            borderWidth: 1,
+            borderColor: RAHMEN,
+            opacity: pressed ? 0.8 : 1,
+          })}
+        >
+          {laeuft === "apple" ? (
+            <Lader color="#FFFFFF" />
+          ) : (
+            <>
+              <Ionicons name="logo-apple" size={21} color="#FFFFFF" style={{ marginTop: -2 }} />
+              <Text style={{ ...schrift.textHalb, fontSize: 16.5, color: "#FFFFFF" }}>Mit Apple anmelden</Text>
+            </>
+          )}
+        </Pressable>
+      )}
+    </View>
+  );
+}
