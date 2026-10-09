@@ -23,6 +23,7 @@ import { beiNeuenClips, feedLaden, useClipRechte, type ClipEintrag, type FeedArt
 import { useDarfLive } from "@/lib/creator";
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
+import { istTablet } from "@/lib/fenster";
 import { useLive } from "@/lib/live";
 import { serverVerbunden } from "@/lib/supabase";
 import { farben, schrift } from "@/lib/theme";
@@ -119,7 +120,9 @@ function Hinweis({ icon, sf, titel, text, children }: { icon: IconName; sf: SFSy
 }
 
 export default function Clips() {
-  const insets = useSafeAreaInsets();
+  const sicher = useSafeAreaInsets();
+  // iPad: dort sitzt die Tab-Leiste von iOS oben – die Kopfzeile rückt darunter.
+  const insets = istTablet ? { ...sicher, top: sicher.top + 62 } : sicher;
   const leiste = useLeistenHoehe();
   const fokus = useIsFocused();
   const navigation = useNavigation<BottomTabNavigationProp<Record<string, undefined>>>();

@@ -1,9 +1,10 @@
 import { memo, useEffect, useRef, useState } from "react";
-import { Animated, Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Animated, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Svg, { Circle, G, Path, Polygon } from "react-native-svg";
 
+import { useFenster } from "@/lib/fenster";
 import { Icon, type IconName } from "@/components/icon";
 import { Kreuzung, KreisverkehrLeer } from "@/components/lagen";
 import { tippen } from "@/lib/haptik";
@@ -163,7 +164,7 @@ export function TafelBuehne({
   onGrund?: (g: TafelGrund) => void;
   onFertig?: () => void;
 }) {
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useFenster();
   const [farbe, setFarbe] = useState<string>(TAFEL_FARBEN[0]);
   const [pfeil, setPfeil] = useState(false);
   const [eigen, setEigen] = useState<Strich | null>(null);

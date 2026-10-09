@@ -306,7 +306,7 @@ export function KartenVorschau({ id, onSchliessen, children }: { id: string | nu
   }, [id]);
 
   return (
-    <Modal visible={Boolean(id && inhalt)} animationType="fade" transparent onRequestClose={onSchliessen}>
+    <Modal supportedOrientations={["portrait", "landscape"]} visible={Boolean(id && inhalt)} animationType="fade" transparent onRequestClose={onSchliessen}>
       <View style={{ flex: 1, backgroundColor: f.grund, paddingTop: insets.top + 8, paddingBottom: insets.bottom + 16, paddingHorizontal: 16 }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 44 }}>
           <T v="h3" style={{ fontSize: 19 }}>Karteikarte</T>

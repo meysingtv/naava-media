@@ -1,10 +1,11 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { Animated, Easing, Text, View, useWindowDimensions, type ImageSourcePropType, type StyleProp, type ViewStyle } from "react-native";
+import { Animated, Easing, Text, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useFenster } from "@/lib/fenster";
 import { Ring } from "@/components/grafik";
 import { kartenFlaeche, kopfOben, KopfTaste, zurueck } from "@/components/ui";
 import { FarbweltBereich, NACHT, useDarstellung, useFarbwelt } from "@/lib/darstellung";
@@ -61,7 +62,7 @@ export function FotoKopf({
 }) {
   const f = useFarbwelt();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const h = insets.top + hoehe;
   const fahrt = useRef(new Animated.Value(0)).current;
 

@@ -1,12 +1,14 @@
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useFenster } from "@/lib/fenster";
 import { dialog } from "@/components/dialog";
 import { Glas } from "@/components/glas";
+import { GlasGrund } from "@/components/glas-flaeche";
 import { GlasLeiste, KinoHeld, Kopfzeile } from "@/components/home";
 import { Icon } from "@/components/icon";
 import { Fuehrerscheinweg, LigaKarte, Medaillen, MenueGruppe, MenueZeile, ProfilRing, ZahlenRaster, type Meilenstein } from "@/components/profil";
@@ -26,14 +28,14 @@ import { profilbildEntfernen, profilbildHochladen, profilbildServerEntfernen, pr
 import { tageBis, terminDatum } from "@/lib/pruefungstag";
 import { ligaVon } from "@/lib/rangliste";
 import { ALBUM } from "@/lib/schilder-jagd";
-import { auswertung, fortschritt, lernzeitText, serieAktuell, useStand } from "@/lib/stand";
+import { auswertung, fortschritt, lernzeitText, serieAktuell, tagVerschoben, useStand } from "@/lib/stand";
 import { leuchten, RAND, schrift, verlauf } from "@/lib/theme";
 
 const MONATE_KURZ = ["Jan.", "Feb.", "März", "Apr.", "Mai", "Juni", "Juli", "Aug.", "Sep.", "Okt.", "Nov.", "Dez."];
 
 export default function Profil() {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const inhaltUnten = useInhaltUnten();
   const leistenScroll = useLeistenScroll();
   const fokus = useIsFocused();
@@ -55,6 +57,8 @@ export default function Profil() {
   const ligaStart = liga.bis === 6000 ? 2000 : 0;
   const gesamtZahlen = auswertung(stand, "gesamt");
   const bestanden = stand.pruefungen.filter((p) => p.bestanden).length;
+  // Die letzten sieben Tage, der heutige zuletzt – für die Mini-Diagramme bei „Deine Zahlen“.
+  const letzteTage = Array.from({ length: 7 }, (_, i) => tagVerschoben(i - 6));
   const termin = terminDatum(stand.pruefungstermin);
   const tage = termin ? tageBis(termin) : null;
 
@@ -120,7 +124,8 @@ export default function Profil() {
     dialog(e.titel, wann ? `${e.text}\nFreigeschaltet am ${wann.split("-").reverse().join(".")}.` : e.text);
   }
 
-  const heldHoehe = Math.round(width * 1.22);
+  // Auf dem iPad nicht höher als auf einem großen iPhone
+  const heldHoehe = Math.round(Math.min(width, 440) * 1.22);
 
   // Auf dem hellen Hintergrund dunkle Schrift, auf dem dunklen helle.
   const kopfText = f.hell ? "#14171B" : "#FFFFFF";
@@ -134,6 +139,8 @@ export default function Profil() {
       {fokus ? <StatusBar style={f.hell ? "dark" : "light"} /> : null}
       <View style={{ flex: 1, backgroundColor: f.grund }}>
         <ScrollView {...leistenScroll} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
+          {/* Lichtgrund scrollt mit und beginnt erst unter dem Titelfoto */}
+          <GlasGrund ab={heldHoehe} />
           <KinoHeld bild={f.hell ? FOTOS.heldProfilHell : FOTOS.heldProfilDunkel} hoehe={heldHoehe} ausblendenAb={f.hell ? 0.8 : 0.66} abdunkeln={false}>
             {/* Oben rechts: Einstellungen */}
             <View style={{ position: "absolute", top: insets.top + 4, left: RAND, right: RAND, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
@@ -245,46 +252,78 @@ export default function Profil() {
           <ZahlenRaster
             onPress={() => router.push("/statistik")}
             zahlen={[
-              { icon: "time-outline", sf: "clock.fill", farbe: "#4DA3FF", wert: lernzeitText(gesamtZahlen.sekunden), label: "Lernzeit" },
-              { icon: "checkmark-done", farbe: "#4ED053", wert: tausender(gesamtZahlen.antworten), label: "Antworten" },
-              { icon: "flame", farbe: "#FC6F14", wert: `${stand.besteSerie}`, label: stand.besteSerie === 1 ? "Tag beste Serie" : "Tage beste Serie" },
-              { icon: "school", sf: "graduationcap.fill", farbe: "#FFB400", wert: `${bestanden}/${stand.pruefungen.length}`, label: "Testbögen bestanden" },
+              { icon: "time", sf: "clock.fill", farbe: "#4DA3FF", label: "Lernzeit", wert: lernzeitText(gesamtZahlen.sekunden), mini: { art: "balken", werte: letzteTage.map((t) => stand.zeitTage[t] ?? 0) }, unter: "Letzte 7 Tage" },
+              { icon: "checkmark-circle", sf: "checkmark.circle.fill", farbe: "#4ED053", label: "Antworten", wert: tausender(gesamtZahlen.antworten), mini: { art: "balken", werte: letzteTage.map((t) => stand.antwortenTage[t] ?? 0) }, unter: "Letzte 7 Tage" },
+              {
+                icon: "flame",
+                farbe: "#FC6F14",
+                label: "Beste Serie",
+                wert: `${stand.besteSerie}`,
+                einheit: stand.besteSerie === 1 ? "Tag" : "Tage",
+                mini: { art: "punkte", werte: letzteTage.map((t) => ((stand.antwortenTage[t] ?? 0) > 0 ? true : null)) },
+                unter: "Gelernt diese Woche",
+              },
+              {
+                icon: "school",
+                sf: "graduationcap.fill",
+                farbe: "#FFB400",
+                label: "Testbögen",
+                wert: `${bestanden}/${stand.pruefungen.length}`,
+                einheit: "bestanden",
+                mini: { art: "punkte", werte: Array.from({ length: 7 }, (_, i) => stand.pruefungen.slice(-7)[i]?.bestanden ?? null) },
+                unter: "Letzte Testbögen",
+              },
             ]}
           />
 
           <Kopfzeile titel="Mehr" style={{ marginTop: 30 }} />
-          <MenueGruppe>
-            <MenueZeile icon="stats-chart" farbe="#FC5B0E" titel="Mein Fortschritt" unter="Statistiken, Stärken & Schwächen" onPress={() => router.push("/statistik")} />
-            <MenueZeile
-              icon="camera"
-              farbe="#4DA3FF"
-              titel="Schilder-Jagd"
-              unter={schilderGefunden > 0 ? `${schilderGefunden} von ${ALBUM.length} Schildern gefunden` : "Echte Schilder mit der Kamera sammeln"}
-              onPress={() => router.push("/schilder-jagd")}
-            />
-            <MenueZeile
-              icon="albums"
-              farbe="#4ED053"
-              titel="Karteikarten"
-              unter={kartenDran > 0 ? `${kartenDran} ${kartenDran === 1 ? "Karte" : "Karten"} heute dran` : eigeneKarten > 0 ? `${eigeneKarten} eigene ${eigeneKarten === 1 ? "Karte" : "Karten"}` : "Fragen als Karten lernen"}
-              onPress={() => router.push("/karteikarten")}
-            />
-            <MenueZeile
-              icon="people"
-              farbe="#FC6F14"
-              titel="Meine Crew"
-              unter={crewDaten?.crew ? `${crewDaten.crew.name} · Flamme Tag ${crewDaten.crew.flamme}` : "Gemeinsam lernen, Boss besiegen"}
-              onPress={() => router.push("/crew")}
-            />
-            <MenueZeile icon="bulb" farbe="#FF4D6D" titel="Kurz erklärt" unter={gemerkteClips > 0 ? `${gemerkteClips} gemerkt` : "Regeln in 30 Sekunden"} onPress={() => router.push("/kurz-erklaert")} />
-            <MenueZeile icon="heart" farbe="#FF8A1E" titel="Favoriten" unter="Gemerkte und schwierige Fragen" onPress={() => router.push("/favoriten")} />
-            <MenueZeile icon="calculator" farbe="#E0A100" titel="Formeln" unter="Anhalteweg & Co." onPress={() => router.push("/formeln")} />
-          </MenueGruppe>
+          {(() => {
+            const zeilen = [
+              <MenueZeile key="fortschritt" icon="stats-chart" farbe="#FC5B0E" titel="Mein Fortschritt" unter="Statistiken, Stärken & Schwächen" onPress={() => router.push("/statistik")} />,
+              <MenueZeile
+                key="schilder"
+                icon="camera"
+                farbe="#4DA3FF"
+                titel="Schilder-Jagd"
+                unter={schilderGefunden > 0 ? `${schilderGefunden} von ${ALBUM.length} Schildern gefunden` : "Echte Schilder mit der Kamera sammeln"}
+                onPress={() => router.push("/schilder-jagd")}
+              />,
+              <MenueZeile
+                key="karten"
+                icon="albums"
+                farbe="#4ED053"
+                titel="Karteikarten"
+                unter={kartenDran > 0 ? `${kartenDran} ${kartenDran === 1 ? "Karte" : "Karten"} heute dran` : eigeneKarten > 0 ? `${eigeneKarten} eigene ${eigeneKarten === 1 ? "Karte" : "Karten"}` : "Fragen als Karten lernen"}
+                onPress={() => router.push("/karteikarten")}
+              />,
+              <MenueZeile
+                key="crew"
+                icon="people"
+                farbe="#A66BFF"
+                titel="Meine Crew"
+                unter={crewDaten?.crew ? `${crewDaten.crew.name} · Flamme Tag ${crewDaten.crew.flamme}` : "Gemeinsam lernen, Boss besiegen"}
+                onPress={() => router.push("/crew")}
+              />,
+              <MenueZeile key="kurz" icon="bulb" farbe="#FF4D6D" titel="Kurz erklärt" unter={gemerkteClips > 0 ? `${gemerkteClips} gemerkt` : "Regeln in 30 Sekunden"} onPress={() => router.push("/kurz-erklaert")} />,
+              <MenueZeile key="favoriten" icon="heart" farbe="#FF8A1E" titel="Favoriten" unter="Gemerkte und schwierige Fragen" onPress={() => router.push("/favoriten")} />,
+              <MenueZeile key="formeln" icon="calculator" farbe="#E0A100" titel="Formeln" unter="Anhalteweg & Co." onPress={() => router.push("/formeln")} />,
+            ];
+            // iPad: zwei Spalten nebeneinander statt einer langen, gestreckten Liste
+            if (width < 700) return <MenueGruppe>{zeilen}</MenueGruppe>;
+            const haelfte = Math.ceil(zeilen.length / 2);
+            return (
+              <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12, paddingHorizontal: RAND }}>
+                <MenueGruppe style={{ flex: 1, marginHorizontal: 0 }}>{zeilen.slice(0, haelfte)}</MenueGruppe>
+                <MenueGruppe style={{ flex: 1, marginHorizontal: 0 }}>{zeilen.slice(haelfte)}</MenueGruppe>
+              </View>
+            );
+          })()}
 
-          <MenueGruppe style={{ marginTop: 16 }}>
-            <MenueZeile icon="settings-outline" farbe="#7C838C" titel="Einstellungen & Konto" onPress={() => router.push("/einstellungen")} />
+          <Kopfzeile titel="Konto" style={{ marginTop: 30 }} />
+          <MenueGruppe>
+            <MenueZeile icon="settings-outline" farbe="#7C838C" titel="Einstellungen & Konto" unter={gast ? "Gastmodus" : undefined} onPress={() => router.push("/einstellungen")} />
             <MenueZeile icon="diamond-outline" farbe="#FC5B0E" titel="Premium" unter="Bald verfügbar" onPress={() => router.push("/premium")} />
-            <MenueZeile icon="images-outline" farbe="#7C838C" titel="Bildnachweise" onPress={() => router.push("/bildnachweise")} />
+            <MenueZeile icon="images-outline" farbe="#E0A100" titel="Bildnachweise" onPress={() => router.push("/bildnachweise")} />
             <MenueZeile icon="log-out-outline" farbe="#FF4A3D" titel={gast ? "Gastmodus beenden" : "Abmelden"} gefahr onPress={abmeldenFragen} />
           </MenueGruppe>
         </ScrollView>

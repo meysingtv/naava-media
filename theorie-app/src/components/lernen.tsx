@@ -1,14 +1,16 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { Animated, Easing, Image, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
+import { Animated, Easing, Image, Pressable, ScrollView, Text, TextInput, View, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import type { SFSymbol } from "expo-symbols";
 
 import { Glas } from "@/components/glas";
+import { GlasKarte } from "@/components/glas-flaeche";
 import { Icon, type IconName } from "@/components/icon";
 import { KartenStapelBild } from "@/components/karteikarten-karte";
 import { Kontrollleuchte } from "@/components/leuchten";
 import { Verkehrszeichen } from "@/components/zeichen";
 import { useFarbwelt } from "@/lib/darstellung";
+import { useFenster } from "@/lib/fenster";
 import { FOTOS, themaFoto } from "@/lib/fotos";
 import { istZeichen, themaVon, THEMEN, type Frage, type LeuchteKey, type ThemaId, type ZeichenKey } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
@@ -19,6 +21,8 @@ import { leuchten, mitDeckkraft, RAND, schrift, verlauf } from "@/lib/theme";
 // alle Themen als Poster.
 
 const FUELLEN = { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } as const;
+/** Fotos füllen die Karte: ohne width/height brächten lokale Bilder ihre eigene Pixelbreite mit und endeten auf breiten Karten (iPad quer) zu früh. */
+const FOTO = { ...FUELLEN, width: "100%", height: "100%" } as const;
 
 // ---------------------------------------------------------------------------
 // Themenwand
@@ -43,7 +47,7 @@ function reihenFotos(i: number): ThemaId[] {
  */
 export function Themenwand({ children }: { children?: ReactNode }) {
   const f = useFarbwelt();
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const fahrt = useRef(new Animated.Value(0)).current;
   const strecke = THEMEN.length * (KACHEL_B + LUECKE);
   const wandBreite = width * 1.9;
@@ -198,10 +202,11 @@ export function ModusKarte({
       }}
       accessibilityRole="button"
       accessibilityLabel={`${titel}, ${unter}`}
-      style={({ pressed }) => [{ flex: 1, height: 168, borderRadius: 26, transform: [{ scale: pressed ? 0.975 : 1 }] }, kartenStil(f.hell, f.flaeche, f.linie), style]}
+      style={({ pressed }) => [{ flex: 1, height: 168, borderRadius: 26, transform: [{ scale: pressed ? 0.975 : 1 }] }, style]}
     >
-      <View style={{ flex: 1, borderRadius: 26, overflow: "hidden", padding: 16, justifyContent: "space-between" }}>
-        <LinearGradient colors={[mitDeckkraft(akzent, f.hell ? 0.14 : 0.2), mitDeckkraft(akzent, 0)]} start={{ x: 0, y: 0 }} end={{ x: 0.9, y: 0.9 }} style={FUELLEN} />
+      <GlasKarte style={{ flex: 1, borderRadius: 26, padding: 16, justifyContent: "space-between" }}>
+        <LinearGradient colors={[mitDeckkraft(akzent, f.hell ? 0.22 : 0.34), mitDeckkraft(akzent, f.hell ? 0.06 : 0.1), mitDeckkraft(akzent, 0)]} locations={[0, 0.55, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={FUELLEN} />
+        <View style={{ position: "absolute", top: -60, right: -50, width: 170, height: 170, borderRadius: 85, backgroundColor: mitDeckkraft(akzent, f.hell ? 0.12 : 0.16) }} />
         <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
           <View style={{ width: 62, height: 62, borderRadius: 31, backgroundColor: f.hell ? mitDeckkraft(akzent, 0.12) : "rgba(255,255,255,0.06)", alignItems: "center", justifyContent: "center" }}>{bild}</View>
           {zahl ? (
@@ -221,7 +226,7 @@ export function ModusKarte({
             <View style={{ width: `${Math.max(anteil > 0 ? 4 : 0, anteil * 100)}%`, height: "100%", borderRadius: 3, backgroundColor: akzent }} />
           </View>
         </View>
-      </View>
+      </GlasKarte>
     </Pressable>
   );
 }
@@ -264,9 +269,13 @@ export function StapelBild() {
 
 export type Modus = { titel: string; unter: string; akzent: string; icon?: IconName; sf?: SFSymbol; bild?: ReactNode; onPress: () => void };
 
-/** Kleine Kachel für einen Lernmodus – Symbol oben, Text unten, zwei nebeneinander. */
+/**
+ * Kachel für einen Lernmodus: Verlauf in der Akzentfarbe, oben rechts ein
+ * weiches Leuchten, unten rechts das Symbol groß als Wasserzeichen.
+ */
 function ModusKachel({ modus }: { modus: Modus }) {
   const f = useFarbwelt();
+  const a = modus.akzent;
   return (
     <Pressable
       onPress={() => {
@@ -275,38 +284,60 @@ function ModusKachel({ modus }: { modus: Modus }) {
       }}
       accessibilityRole="button"
       accessibilityLabel={`${modus.titel}, ${modus.unter}`}
-      style={({ pressed }) => [{ flex: 1, height: 112, borderRadius: 22, padding: 14, justifyContent: "space-between", transform: [{ scale: pressed ? 0.97 : 1 }] }, kartenStil(f.hell, f.flaeche, f.linie)]}
+      style={({ pressed }) => ({ flex: 1, height: 128, borderRadius: 24, transform: [{ scale: pressed ? 0.97 : 1 }] })}
     >
-      <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
-        <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: mitDeckkraft(modus.akzent, f.hell ? 0.13 : 0.17), alignItems: "center", justifyContent: "center" }}>
-          {modus.bild ?? (modus.icon ? <Icon name={modus.icon} sf={modus.sf} size={20} color={modus.akzent} /> : null)}
+      <GlasKarte style={{ flex: 1, borderRadius: 24 }}>
+        <LinearGradient colors={[mitDeckkraft(a, f.hell ? 0.2 : 0.3), mitDeckkraft(a, f.hell ? 0.06 : 0.08), mitDeckkraft(a, 0)]} locations={[0, 0.55, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={FUELLEN} />
+        <View style={{ position: "absolute", top: -46, right: -36, width: 120, height: 120, borderRadius: 60, backgroundColor: mitDeckkraft(a, f.hell ? 0.12 : 0.16) }} />
+        {modus.icon ? (
+          <View style={{ position: "absolute", right: -12, bottom: -18, transform: [{ rotate: "-14deg" }] }}>
+            <Icon name={modus.icon} sf={modus.sf} size={92} color={mitDeckkraft(a, f.hell ? 0.14 : 0.16)} />
+          </View>
+        ) : null}
+        <View style={{ flex: 1, padding: 14, justifyContent: "space-between" }}>
+          <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
+            <LinearGradient
+              colors={modus.bild ? (f.hell ? ["#FFFFFF", "#F4F1EC"] : ["rgba(255,255,255,0.14)", "rgba(255,255,255,0.06)"]) : [a, mitDeckkraft(a, 0.72)]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[{ width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" }, leuchten(a, f.hell ? 0.25 : 0.45, 10, 3)]}
+            >
+              {modus.bild ?? (modus.icon ? <Icon name={modus.icon} sf={modus.sf} size={21} color="#FFFFFF" /> : null)}
+            </LinearGradient>
+            <View style={{ width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: f.hell ? "rgba(20,23,27,0.06)" : "rgba(255,255,255,0.08)" }}>
+              <Icon name="chevron-forward" size={14} color={f.text2} />
+            </View>
+          </View>
+          <View style={{ gap: 2 }}>
+            <Text style={{ ...schrift.titelFett, fontSize: 16, lineHeight: 20, color: f.text }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+              {modus.titel}
+            </Text>
+            <Text style={{ ...schrift.textMittel, fontSize: 12.5, lineHeight: 16, color: f.hell ? f.text2 : "rgba(255,255,255,0.62)" }} numberOfLines={1}>
+              {modus.unter}
+            </Text>
+          </View>
         </View>
-        <Icon name="chevron-forward" size={15} color={f.text3} />
-      </View>
-      <View style={{ gap: 2 }}>
-        <Text style={{ ...schrift.textHalb, fontSize: 15, lineHeight: 19, color: f.text }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
-          {modus.titel}
-        </Text>
-        <Text style={{ ...schrift.text, fontSize: 12.5, lineHeight: 16, color: f.text3 }} numberOfLines={1}>
-          {modus.unter}
-        </Text>
-      </View>
+      </GlasKarte>
     </Pressable>
   );
 }
 
-/** Lernmodi im Raster, immer zwei nebeneinander. */
+/** Lernmodi im Raster: zwei nebeneinander, auf dem iPad drei. */
 export function ModusRaster({ modi, style }: { modi: Modus[]; style?: StyleProp<ViewStyle> }) {
-  const paare: Modus[][] = [];
-  for (let i = 0; i < modi.length; i += 2) paare.push(modi.slice(i, i + 2));
+  const { width } = useFenster();
+  const spalten = width >= 700 ? 3 : 2;
+  const reihen: Modus[][] = [];
+  for (let i = 0; i < modi.length; i += spalten) reihen.push(modi.slice(i, i + spalten));
   return (
     <View style={[{ paddingHorizontal: RAND, gap: 10 }, style]}>
-      {paare.map((paar) => (
-        <View key={paar[0].titel} style={{ flexDirection: "row", gap: 10 }}>
-          {paar.map((m) => (
+      {reihen.map((reihe) => (
+        <View key={reihe[0].titel} style={{ flexDirection: "row", gap: 10 }}>
+          {reihe.map((m) => (
             <ModusKachel key={m.titel} modus={m} />
           ))}
-          {paar.length === 1 ? <View style={{ flex: 1 }} /> : null}
+          {Array.from({ length: spalten - reihe.length }, (_, i) => (
+            <View key={i} style={{ flex: 1 }} />
+          ))}
         </View>
       ))}
     </View>
@@ -386,7 +417,7 @@ export function GrundstoffKarte({ anzahl, anteil, onPress, style }: { anzahl: nu
       style={({ pressed }) => [{ height: 156, borderRadius: 28, transform: [{ scale: pressed ? 0.985 : 1 }] }, f.hell ? leuchten("#3C2C18", 0.12, 14, 5) : null, style]}
     >
       <View style={{ flex: 1, borderRadius: 28, overflow: "hidden" }}>
-        <Image source={FOTOS.grundstoff} style={FUELLEN} resizeMode="cover" fadeDuration={0} />
+        <Image source={FOTOS.grundstoff} style={FOTO} resizeMode="cover" fadeDuration={0} />
         <LinearGradient colors={["rgba(3,5,7,0.88)", "rgba(3,5,7,0.55)", "rgba(3,5,7,0.08)"]} locations={[0, 0.55, 1]} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={FUELLEN} />
         <View style={{ flex: 1, padding: 18, justifyContent: "space-between" }}>
           <View style={{ gap: 4, maxWidth: "70%" }}>
@@ -396,7 +427,8 @@ export function GrundstoffKarte({ anzahl, anteil, onPress, style }: { anzahl: nu
               {anzahl} Fragen · {Math.round(anteil * 100)} % sicher
             </Text>
           </View>
-          <View style={{ width: "58%" }}>
+          {/* Balken bis kurz vor den Start-Knopf unten rechts */}
+          <View style={{ marginRight: 60 }}>
             <Balken anteil={anteil} hoehe={6} />
           </View>
         </View>
@@ -430,7 +462,7 @@ function ThemaPoster({ thema, breite, onPress }: { thema: ThemaPosterDaten; brei
       style={({ pressed }) => [{ width: breite, height: Math.round(breite * 1.22), borderRadius: 24, transform: [{ scale: pressed ? 0.97 : 1 }] }, f.hell ? leuchten("#3C2C18", 0.12, 12, 5) : null]}
     >
       <View style={{ flex: 1, borderRadius: 24, overflow: "hidden" }}>
-        <Image source={themaFoto(thema.id)} style={FUELLEN} resizeMode="cover" fadeDuration={0} />
+        <Image source={themaFoto(thema.id)} style={FOTO} resizeMode="cover" fadeDuration={0} />
         <LinearGradient colors={["rgba(3,5,7,0.22)", "rgba(3,5,7,0)", "rgba(3,5,7,0.92)"]} locations={[0, 0.3, 1]} style={FUELLEN} />
         <View style={{ position: "absolute", top: 11, left: 11, right: 11, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <Glas klar style={{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" }}>
@@ -459,7 +491,7 @@ function ThemaPoster({ thema, breite, onPress }: { thema: ThemaPosterDaten; brei
 
 /** Themen als Poster in zwei Spalten. */
 export function ThemenRaster({ themen, onThema, style }: { themen: ThemaPosterDaten[]; onThema: (id: ThemaId) => void; style?: StyleProp<ViewStyle> }) {
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const breite = Math.floor((width - 2 * RAND - 12) / 2);
   return (
     <View style={[{ paddingHorizontal: RAND, flexDirection: "row", flexWrap: "wrap", gap: 12 }, style]}>

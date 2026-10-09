@@ -6,6 +6,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Glas } from "@/components/glas";
+import { GlasGrund } from "@/components/glas-flaeche";
 import { Kopfzeile, StartKnopf } from "@/components/home";
 import { Icon } from "@/components/icon";
 import {
@@ -58,6 +59,7 @@ export default function Lernen() {
   const { stand } = useStand();
   const [stufe, setStufe] = useState<Stufe>("alle");
   const [suche, setSuche] = useState<string | null>(null);
+  const [kopfHoehe, setKopfHoehe] = useState(0);
 
   const treffer = useMemo(() => {
     const q = (suche ?? "").trim().toLowerCase();
@@ -100,7 +102,7 @@ export default function Lernen() {
       sf: "flame.fill",
       onPress: () => router.push({ pathname: "/training", params: { modus: "schwierig" } }),
     },
-    { titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", akzent: "#4DA3FF", bild: <Verkehrszeichen zeichen="z205" groesse={27} />, onPress: () => router.push("/zeichen") },
+    { titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", akzent: "#4DA3FF", icon: "warning", bild: <Verkehrszeichen zeichen="z205" groesse={27} />, onPress: () => router.push("/zeichen") },
     { titel: "Formeln", unter: "Anhalteweg & Co.", akzent: "#E0A100", icon: "calculator", sf: "function", onPress: () => router.push("/formeln") },
     { titel: "Kurz erklärt", unter: "Regeln in 30 Sekunden", akzent: "#FF4D6D", icon: "bulb", sf: "lightbulb.fill", onPress: () => router.push("/kurz-erklaert") },
   ];
@@ -152,7 +154,10 @@ export default function Lernen() {
       {statusLeiste}
       <View style={{ flex: 1, backgroundColor: f.grund }}>
         <ScrollView {...leistenScroll} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
+          {/* Lichtgrund scrollt mit und beginnt erst unter der Themenwand – sonst Kante am Foto */}
+          {kopfHoehe > 0 ? <GlasGrund ab={kopfHoehe} dezent /> : null}
           {/* Kopf als ein Block: Titel, Suche, Stand und Startknopf dicht beieinander */}
+          <View onLayout={(e) => setKopfHoehe(Math.round(e.nativeEvent.layout.height))}>
           <Themenwand>
             <View style={{ paddingTop: insets.top + 4, paddingHorizontal: RAND, paddingBottom: 24 }}>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
@@ -170,14 +175,16 @@ export default function Lernen() {
               <View style={{ marginTop: 10 }}>
                 <LernStand sicher={gesamt.richtig} fehler={fehler} neu={neu} onPress={() => router.push("/statistik")} />
               </View>
-              <StartKnopf
-                titel="Smart lernen"
-                unter="Die Fragen, die dich jetzt weiterbringen"
-                onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
-                style={{ marginTop: 14 }}
-              />
             </View>
           </Themenwand>
+          </View>
+          {/* Außerhalb der Fotowand, sonst schneidet sie das Leuchten des Knopfs ab */}
+          <StartKnopf
+            titel="Smart lernen"
+            unter="Die Fragen, die dich jetzt weiterbringen"
+            onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
+            style={{ marginHorizontal: RAND, marginTop: -10 }}
+          />
 
           <Kopfzeile titel="Lernmodi" style={{ marginTop: 20 }} />
           <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: RAND }}>

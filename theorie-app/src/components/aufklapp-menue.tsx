@@ -37,7 +37,7 @@ export function AufklappMenue({ offen, oben, links, punkte, onSchliessen }: { of
   }
 
   return (
-    <Modal visible transparent animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={onSchliessen}>
+    <Modal supportedOrientations={["portrait", "landscape"]} visible transparent animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={onSchliessen}>
       <Pressable style={StyleSheet.absoluteFill} onPress={onSchliessen} accessibilityLabel="Menü schließen">
         <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0.32)", opacity: wert }]} />
       </Pressable>

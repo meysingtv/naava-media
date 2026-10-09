@@ -3,6 +3,7 @@ import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SPALTE_MAX } from "@/lib/fenster";
 import { AuswahlFeld, AuthRahmen, Feld, FeldHinweis, PasswortFeld, Wechsel, type Auswahl } from "@/components/auth-rahmen";
 import { Icon } from "@/components/icon";
 import { Oder, SozialAnmeldung } from "@/components/sozial-anmeldung";
@@ -65,9 +66,9 @@ function datumLesen(t: string): string | null {
 function VorwahlWahl({ offen, land, onWahl, onSchliessen }: { offen: boolean; land: Land; onWahl: (l: Land) => void; onSchliessen: () => void }) {
   const insets = useSafeAreaInsets();
   return (
-    <Modal visible={offen} transparent animationType="slide" onRequestClose={onSchliessen}>
+    <Modal supportedOrientations={["portrait", "landscape"]} visible={offen} transparent animationType="slide" onRequestClose={onSchliessen}>
       <Pressable onPress={onSchliessen} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" }}>
-        <Pressable style={{ backgroundColor: farben.flaeche2, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: abstand(3), paddingBottom: insets.bottom + abstand(3) }}>
+        <Pressable style={{ width: "100%", maxWidth: SPALTE_MAX, alignSelf: "center", backgroundColor: farben.flaeche2, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: abstand(3), paddingBottom: insets.bottom + abstand(3) }}>
           <View style={{ alignSelf: "center", width: 40, height: 5, borderRadius: 3, backgroundColor: farben.flaeche3, marginBottom: abstand(3) }} />
           <T v="h3" style={{ paddingHorizontal: RAND, marginBottom: abstand(2) }}>
             Ländervorwahl

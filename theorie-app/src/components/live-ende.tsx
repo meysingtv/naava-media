@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Animated, Easing, Pressable, ScrollView, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 
+import { useFenster } from "@/lib/fenster";
 import { HauptKnopf } from "@/components/frage-rahmen";
 import { Glas } from "@/components/glas";
 import { DekoSvg } from "@/components/grafik";
@@ -43,7 +44,7 @@ function Hochzaehlen({ wert, verzoegerung = 0, style }: { wert: number; verzoege
 
 /** Herzen, die quer über den Bildschirm nach oben schweben – eins je geschicktem Herz (höchstens 30). */
 function HerzRegen({ anzahl }: { anzahl: number }) {
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useFenster();
   const herzen = useRef(
     Array.from({ length: Math.min(anzahl, 30) }, (_, i) => ({
       id: i,
@@ -150,7 +151,7 @@ export function LiveEnde({
   onFertig: () => void;
   onNochmal: () => void;
 }) {
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const rein = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.timing(rein, { toValue: 1, duration: 700, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();

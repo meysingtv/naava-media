@@ -84,7 +84,7 @@ export function AuswahlBlattHost() {
   ).current;
 
   return (
-    <Modal visible={anfrage != null} transparent animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={() => fertig(null)}>
+    <Modal supportedOrientations={["portrait", "landscape"]} visible={anfrage != null} transparent animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={() => fertig(null)}>
       <Pressable style={StyleSheet.absoluteFill} onPress={() => fertig(null)} accessibilityLabel="Schließen">
         <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: hell ? "rgba(20,16,10,0.32)" : "rgba(0,0,0,0.5)", opacity: lage.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]} />
       </Pressable>
@@ -99,7 +99,7 @@ export function AuswahlBlattHost() {
             transform: [{ translateY: Animated.add(lage.interpolate({ inputRange: [0, 1], outputRange: [0, 520] }), zug) }],
           }}
         >
-          <View style={{ backgroundColor: flaeche, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 8, paddingBottom: insets.bottom + 10 }}>
+          <View style={{ width: "100%", maxWidth: 540, alignSelf: "center", backgroundColor: flaeche, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 8, paddingBottom: insets.bottom + 10 }}>
             <View style={{ alignSelf: "center", width: 36, height: 5, borderRadius: 3, backgroundColor: hell ? "rgba(20,23,27,0.16)" : "rgba(255,255,255,0.2)" }} />
             {anfrage.titel ? (
               <Text numberOfLines={2} style={{ ...schrift.textHalb, fontSize: 13.5, lineHeight: 18, color: hell ? "#878C94" : "#8E939B", paddingHorizontal: 20, paddingTop: 14, paddingBottom: 6 }}>

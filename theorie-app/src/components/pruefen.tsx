@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Animated, Easing, Image, Pressable, Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from "react-native";
+import { Animated, Easing, Image, Pressable, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Circle, Defs, Line, Path, Polygon, RadialGradient, Stop, Text as SvgText, LinearGradient as SvgVerlauf } from "react-native-svg";
 
+import { useFenster } from "@/lib/fenster";
 import { DekoSvg } from "@/components/grafik";
 import { Icon, type IconName } from "@/components/icon";
 import { useFarbwelt } from "@/lib/darstellung";
@@ -34,7 +35,7 @@ const BOGEN = 240;
 /** Hintergrund des Kopfs: dunkles bzw. helles Armaturenbrett mit weichem Licht hinter dem Tacho. */
 export function Instrumententafel({ hoehe, lichtY, children }: { hoehe: number; lichtY: number; children?: ReactNode }) {
   const f = useFarbwelt();
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   return (
     <View style={{ width, height: hoehe, overflow: "hidden", backgroundColor: f.hell ? "#F1EDE6" : "#040608" }}>
       <Svg width={width} height={hoehe} style={{ position: "absolute" }}>
@@ -331,7 +332,7 @@ const GRENZE = 10;
 /** Fehlerpunkte der letzten zehn Simulationen als Säulen, mit der Grenze bei 10 Punkten. */
 export function FehlerpunkteVerlauf({ pruefungen, style }: { pruefungen: Pruefung[]; style?: StyleProp<ViewStyle> }) {
   const f = useFarbwelt();
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const liste = pruefungen.slice(0, PLAETZE).reverse();
   const innen = width - 2 * RAND - 36;
   // Rechts ein schmaler Rand für die Beschriftung der Grenze

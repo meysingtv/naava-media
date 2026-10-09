@@ -18,5 +18,5 @@ export function LivePlatzhalter() {
   const translateY = w.interpolate({ inputRange: [0, 0.15, 0.4, 0.65, 0.85, 1], outputRange: [0, -5, 3, -2, 4, 0] });
   const scale = w.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1.07, 1.1, 1.07] });
   const rotate = w.interpolate({ inputRange: [0, 0.3, 0.6, 1], outputRange: ["0deg", "0.5deg", "-0.45deg", "0deg"] });
-  return <Animated.Image source={BILD} resizeMode="cover" style={[StyleSheet.absoluteFill, { transform: [{ translateX }, { translateY }, { scale }, { rotate }] }]} />;
+  return <Animated.Image source={BILD} resizeMode="cover" style={[StyleSheet.absoluteFill, { width: "100%", height: "100%", transform: [{ translateX }, { translateY }, { scale }, { rotate }] }]} />;
 }

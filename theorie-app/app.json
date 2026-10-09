@@ -14,11 +14,17 @@
     ],
     "ios": {
       "icon": "./assets/images/icon.png",
-      "supportsTablet": false,
+      "supportsTablet": true,
       "bundleIdentifier": "de.spur.theorie",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSSupportsLiveActivities": true
+        "NSSupportsLiveActivities": true,
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
       },
       "usesAppleSignIn": true
     },

@@ -1,9 +1,10 @@
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useFenster } from "@/lib/fenster";
 import { Glas } from "@/components/glas";
 import { Kopfzeile, StartKnopf } from "@/components/home";
 import { Icon } from "@/components/icon";
@@ -26,7 +27,7 @@ const REGELN: Regel[] = [
 
 export default function Pruefen() {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const inhaltUnten = useInhaltUnten();
   const leistenScroll = useLeistenScroll();
   const fokus = useIsFocused();

@@ -37,3 +37,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Abhängigkeiten und Builds in allen Unterordnern
+node_modules/
+.next/
+
+# Eigenes Repo, nicht Teil dieses Projekts
+/mobile/naava-media/

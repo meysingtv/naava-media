@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Animated, Easing, Image, Pressable, ScrollView, Text, View, useWindowDimensions, type ImageSourcePropType, type StyleProp, type ViewStyle } from "react-native";
+import { Animated, Easing, Image, Pressable, ScrollView, Text, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Path } from "react-native-svg";
 
+import { useFenster } from "@/lib/fenster";
 import { Glas } from "@/components/glas";
 import { Ring } from "@/components/grafik";
 import { Icon } from "@/components/icon";
@@ -18,6 +19,8 @@ import { handschrift, leuchten, RAND, schrift, verlauf } from "@/lib/theme";
 // Glas. Darunter Fotokarten statt Kästen.
 
 const FUELLEN = { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } as const;
+/** Fotos füllen die Karte: ohne width/height brächten lokale Bilder ihre eigene Pixelbreite mit und endeten auf breiten Karten (iPad quer) zu früh. */
+const FOTO = { ...FUELLEN, width: "100%", height: "100%" } as const;
 
 /** „#RRGGBB“ mit Deckkraft als rgba(). */
 function mitAlpha(hex: string, a: number): string {
@@ -54,9 +57,12 @@ const HELD_FOTO: Record<Tageszeit, ImageSourcePropType> = {
 
 /** Seitenverhältnis der Titelfotos (1179 × 1680). */
 const HELD_VERHAELTNIS = 1680 / 1179;
+/** Breiteste Fläche, nach der sich die Höhe richtet (großes iPhone). */
+const HELD_BREITE_MAX = 440;
 
+/** Höhe des Titelfotos – auf dem iPad wie auf einem großen iPhone, sonst füllt es die ganze Seite. */
 export function heldHoehe(breite: number): number {
-  return Math.round(breite * HELD_VERHAELTNIS);
+  return Math.round(Math.min(breite, HELD_BREITE_MAX) * HELD_VERHAELTNIS);
 }
 
 /**
@@ -81,7 +87,7 @@ export function KinoHeld({
   children?: ReactNode;
 }) {
   const f = useFarbwelt();
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const hoehe = vorgabe ?? heldHoehe(width);
   const fahrt = useRef(new Animated.Value(0)).current;
 
@@ -426,7 +432,7 @@ export function FokusKarte({ thema, anteil, offen, style, onPress }: { thema: Th
       accessibilityLabel={`${t.titel} üben`}
       style={({ pressed }) => [{ height: 220, borderRadius: 28, overflow: "hidden", transform: [{ scale: pressed ? 0.985 : 1 }] }, style]}
     >
-      <Image source={themaFoto(thema)} style={FUELLEN} resizeMode="cover" fadeDuration={0} />
+      <Image source={themaFoto(thema)} style={FOTO} resizeMode="cover" fadeDuration={0} />
       <LinearGradient colors={["rgba(3,5,7,0.05)", "rgba(3,5,7,0.3)", "rgba(3,5,7,0.9)"]} locations={[0, 0.42, 1]} style={FUELLEN} />
       <LinearGradient colors={["rgba(3,5,7,0.45)", "rgba(3,5,7,0)"]} start={{ x: 0, y: 0.5 }} end={{ x: 0.8, y: 0.5 }} style={FUELLEN} />
       <Glas klar style={{ position: "absolute", top: 14, left: 14, flexDirection: "row", alignItems: "center", gap: 6, height: 30, paddingHorizontal: 12, borderRadius: 15 }}>
@@ -473,7 +479,7 @@ export function ThemenKarussell({ themen, onThema }: { themen: { id: ThemaId; an
             accessibilityLabel={`${t.titel}, ${Math.round(anteil * 100)} Prozent`}
             style={({ pressed }) => ({ width: 148, height: 204, borderRadius: 24, overflow: "hidden", transform: [{ scale: pressed ? 0.97 : 1 }] })}
           >
-            <Image source={themaFoto(id)} style={FUELLEN} resizeMode="cover" fadeDuration={0} />
+            <Image source={themaFoto(id)} style={FOTO} resizeMode="cover" fadeDuration={0} />
             <LinearGradient colors={["rgba(3,5,7,0.15)", "rgba(3,5,7,0.2)", "rgba(3,5,7,0.92)"]} locations={[0, 0.4, 1]} style={FUELLEN} />
             <Glas klar style={{ position: "absolute", top: 12, left: 12, width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" }}>
               <Icon name={t.icon as IconName} size={18} color="#FFFFFF" />
@@ -509,7 +515,7 @@ export function PruefungKarte({ tage, letzte, style, onPress, onTermin }: { tage
       accessibilityLabel="Prüfungssimulation"
       style={({ pressed }) => [{ height: 184, borderRadius: 28, overflow: "hidden", transform: [{ scale: pressed ? 0.985 : 1 }] }, style]}
     >
-      <Image source={FOTOS.pruefung} style={FUELLEN} resizeMode="cover" fadeDuration={0} />
+      <Image source={FOTOS.pruefung} style={FOTO} resizeMode="cover" fadeDuration={0} />
       <LinearGradient colors={["rgba(3,5,7,0.92)", "rgba(3,5,7,0.62)", "rgba(3,5,7,0.1)"]} locations={[0, 0.5, 1]} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={FUELLEN} />
       <View style={{ flex: 1, padding: 18, justifyContent: "space-between" }}>
         <View style={{ gap: 5, maxWidth: "74%" }}>

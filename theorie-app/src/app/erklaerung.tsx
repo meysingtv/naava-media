@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEvent } from "expo";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useFenster } from "@/lib/fenster";
 import { ErklaerAnimationSpieler } from "@/components/erklaer-animation";
 import { FrageKopf, GlasRund, KopfPille } from "@/components/frage-rahmen";
 import { Icon } from "@/components/icon";
@@ -52,7 +53,7 @@ function VideoErklaerung({ url }: { url: string }) {
 function Inhalt() {
   const f = useFarbwelt();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const params = useLocalSearchParams<{ frage?: string; art?: string }>();
   const frage = params.frage ? frageVon(params.frage) : undefined;
   const { geladen, videos } = useErklaervideos();

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Image, Text, View, useWindowDimensions } from "react-native";
+import { Image, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withTiming, type SharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
+import { useFenster } from "@/lib/fenster";
 import { Icon } from "@/components/icon";
 import { StricheSvg } from "@/components/live-tafel";
 import { stoss, tippen } from "@/lib/haptik";
@@ -100,7 +101,7 @@ export function LiveBildEbene({
   /** In die Löschleiste gezogen. */
   onLoeschen?: () => void;
 }) {
-  const { width: breite, height: fenster } = useWindowDimensions();
+  const { width: breite, height: fenster } = useFenster();
   const [zieht, setZieht] = useState(false);
   const [ueber, setUeber] = useState(false);
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, Easing, KeyboardAvoidingView, Linking, Platform, Pressable, Text, TextInput, useWindowDimensions, View } from "react-native";
+import { Animated, Easing, KeyboardAvoidingView, Linking, Platform, Pressable, Text, TextInput, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Reanimated, { Easing as REasing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useFenster } from "@/lib/fenster";
 import { auswahlBlatt } from "@/components/auswahl-blatt";
 import { dialog } from "@/components/dialog";
 import { Glas } from "@/components/glas";
@@ -124,7 +125,7 @@ export default function LiveSenden() {
   const [runde, setRunde] = useState(0);
   const [quizWahl, setQuizWahl] = useState(false);
   const [panelHoehe, setPanelHoehe] = useState(0);
-  const { height: fensterHoehe, width: fensterBreite } = useWindowDimensions();
+  const { height: fensterHoehe, width: fensterBreite } = useFenster();
 
   const steuerung = useRef<LiveSteuerung | null>(null);
   const meldeFehler = (text: string) => hinweis.zeigen({ icon: "alert-circle", text, farbe: LIVE_ROT });

@@ -1,9 +1,10 @@
 import { useRef, useState } from "react";
-import { Keyboard, KeyboardAvoidingView, ScrollView, useWindowDimensions, View } from "react-native";
+import { Keyboard, KeyboardAvoidingView, ScrollView, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useFenster } from "@/lib/fenster";
 import { kopfOben } from "@/components/ui";
 import { AllesRichtig, ErgebnisHeld, ErgebnisRing, ErgebnisWerte, FehlerKarte, LeerZustand, type Ton } from "@/components/auswertung";
 import { FrageAktionen } from "@/components/frage-aktionen";
@@ -59,7 +60,7 @@ function fragenFuer(p: Params, s: Stand): string[] {
 export default function Training() {
   const params = useLocalSearchParams<Params>();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const { farbwelt: f, belohnungen } = useDarstellung();
   const { stand, antwort, merken, trainingFertig } = useStand();
   const { videos } = useErklaervideos();

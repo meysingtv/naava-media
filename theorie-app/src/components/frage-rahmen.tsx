@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Animated, Easing, Image, Pressable, ScrollView, Text, View, useWindowDimensions, type ImageSourcePropType, type StyleProp, type ViewStyle } from "react-native";
+import { Animated, Easing, Image, Pressable, ScrollView, Text, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import type { SFSymbol } from "expo-symbols";
 
+import { useFenster } from "@/lib/fenster";
 import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
 import { useFarbwelt } from "@/lib/darstellung";
@@ -85,7 +86,7 @@ export function FrageKopf({ oben, links, rechts, titel, unter, children }: { obe
  */
 export function FragenNavigator({ anzahl, aktiv, erledigt, onWahl }: { anzahl: number; aktiv: number; erledigt: (i: number) => boolean; onWahl: (i: number) => void }) {
   const f = useFarbwelt();
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const scroll = useRef<ScrollView>(null);
   const G = 38;
   const A = 8;

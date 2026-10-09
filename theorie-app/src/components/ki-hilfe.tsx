@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, LinearGradient as SvgVerlauf, Path, Stop } from "react-native-svg";
 
+import { SPALTE_MAX } from "@/lib/fenster";
 import { HauptKnopf } from "@/components/frage-rahmen";
 import { Glas } from "@/components/glas";
 import { DekoSvg } from "@/components/grafik";
@@ -456,8 +457,10 @@ export function KiBlase({ kontext, anker, onSchliessen }: { kontext: KiKontext; 
 
   // Lage: über dem Knopf (unten auf dem Bildschirm) oder darunter; mit Tastatur direkt darüber.
   const drueber = !a || a.y > height * 0.42;
-  const breite = width - RAND * 2;
-  const spitzeX = a ? Math.min(breite - 8, Math.max(8, a.x + a.breite / 2 - RAND)) : breite / 2;
+  // Auf dem iPad bleibt die Blase in der Inhaltsspalte.
+  const links = Math.max(0, (width - SPALTE_MAX) / 2) + RAND;
+  const breite = Math.min(width, SPALTE_MAX) - RAND * 2;
+  const spitzeX = a ? Math.min(breite - 8, Math.max(8, a.x + a.breite / 2 - links)) : breite / 2;
   let lage: ViewStyle;
   let maxHoehe: number;
   if (tastatur > 0) {
@@ -516,13 +519,13 @@ export function KiBlase({ kontext, anker, onSchliessen }: { kontext: KiKontext; 
   );
 
   return (
-    <Modal visible={anker != null} transparent animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onSchliessen}>
+    <Modal supportedOrientations={["portrait", "landscape"]} visible={anker != null} transparent animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onSchliessen}>
       <Pressable onPress={onSchliessen} accessibilityLabel="KI-Hilfe schließen" style={[FUELLEN, { backgroundColor: f.hell ? "rgba(24,18,10,0.36)" : "rgba(0,0,0,0.58)" }]} />
       {a && tastatur === 0 ? <AnkerKopie anker={a} onPress={onSchliessen} /> : null}
 
       <Animated.View
         style={[
-          { position: "absolute", left: RAND, right: RAND },
+          { position: "absolute", left: links, width: breite },
           lage,
           {
             opacity: rein,

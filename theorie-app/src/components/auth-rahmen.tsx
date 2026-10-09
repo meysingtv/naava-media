@@ -7,11 +7,11 @@ import {
   Text,
   TextInput,
   View,
-  useWindowDimensions,
   type TextInputProps,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useFenster } from "@/lib/fenster";
 import { Logo } from "@/components/grafik";
 import { Icon, type IconName } from "@/components/icon";
 import { T, zurueck } from "@/components/ui";
@@ -39,7 +39,7 @@ const GLAS = {
 export function AuthRahmen({ titel, unter, onZurueck, children }: { titel: string; unter: string; onZurueck?: () => void; children: ReactNode }) {
   const insets = useSafeAreaInsets();
   // Feste Größe statt „füllen“: So springt das Bild nicht, wenn die Tastatur den Bildschirm verkleinert.
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useFenster();
 
   return (
     <View style={{ flex: 1, backgroundColor: BILD_GRUND }}>

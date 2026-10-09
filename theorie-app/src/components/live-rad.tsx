@@ -1,10 +1,11 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { Animated as RNAnimated, Easing as RNEasing, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Animated as RNAnimated, Easing as RNEasing, Pressable, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Reanimated, { Easing, cancelAnimation, useAnimatedReaction, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withTiming } from "react-native-reanimated";
 import { Circle, Defs, G, Line, LinearGradient as SvgVerlauf, Path, Polygon, RadialGradient, Stop, Text as SvgText } from "react-native-svg";
 import { scheduleOnRN } from "react-native-worklets";
 
+import { useFenster } from "@/lib/fenster";
 import { DekoSvg } from "@/components/grafik";
 import { Icon } from "@/components/icon";
 import { erfolg, tippen } from "@/lib/haptik";
@@ -257,7 +258,7 @@ export function ThemenRad({
   /** Gastgeber: Rad schließen – Zuschauer: nur bei sich ausblenden */
   onSchliessen: () => void;
 }) {
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useFenster();
   const d = Math.max(220, Math.min(width - 56, 340, height - oben - unten - 330));
   const n = rad.themen.length;
   const feld = 360 / n;

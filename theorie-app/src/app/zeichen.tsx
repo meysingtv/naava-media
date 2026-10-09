@@ -65,7 +65,7 @@ export default function Zeichen() {
         <HauptKnopf titel="Zeichenfragen üben" icon="arrow-forward" onPress={() => router.push({ pathname: "/training", params: { modus: "zeichen" } })} style={{ flex: 1 }} />
       </AktionsLeiste>
 
-      <Modal visible={offen != null} transparent animationType="fade" onRequestClose={() => setOffen(null)}>
+      <Modal supportedOrientations={["portrait", "landscape"]} visible={offen != null} transparent animationType="fade" onRequestClose={() => setOffen(null)}>
         <Pressable onPress={() => setOffen(null)} style={{ flex: 1, backgroundColor: f.hell ? "rgba(20,16,10,0.35)" : "rgba(5,8,18,0.72)", justifyContent: "flex-end" }}>
           {offen ? (
             <Pressable

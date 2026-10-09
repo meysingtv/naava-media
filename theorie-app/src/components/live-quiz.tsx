@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Animated, Easing, FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions, type LayoutChangeEvent, type StyleProp, type ViewStyle } from "react-native";
+import { Animated, Easing, FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Circle, Defs, Ellipse, RadialGradient, Stop } from "react-native-svg";
 
+import { useFenster } from "@/lib/fenster";
 import { DekoSvg } from "@/components/grafik";
 import { Icon, type IconName } from "@/components/icon";
 import { Lageplan } from "@/components/lagen";
@@ -112,7 +113,7 @@ function useAuftritt(schluessel: string | null, weg: boolean) {
  * der Naht das Abzeichen mit warmem Glühen (grün/rot/gold nach der Auflösung).
  */
 export function Bereich({ abzeichen, glut = farben.orange, unten, children }: { abzeichen: ReactNode; glut?: string; unten: number; children: ReactNode }) {
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   return (
     <View>
       <LinearGradient pointerEvents="none" colors={["rgba(12,13,17,0)", "rgba(12,13,17,0.8)", BEREICH_GRUND]} locations={[0, 0.5, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: QUIZ_UEBERBLEND }} />
@@ -275,7 +276,7 @@ export function RundKnopf({ onPress, label }: { onPress: () => void; label: stri
 /** Kleines Bild zur Frage (Zeichen, Lageplan, Leuchte) – antippen vergrößert. */
 export function QuizBild({ bild }: { bild: string | null }) {
   const [gross, setGross] = useState(false);
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   if (!bild || !BEKANNTE_BILDER.has(bild)) return null;
   const lage = bild.startsWith("lage_");
   const leuchte = bild.startsWith("leuchte_");
@@ -957,7 +958,7 @@ export function QuizAuswahl({
   onSchliessen: () => void;
 }) {
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
+  const { height } = useFenster();
   const [suche, setSuche] = useState("");
   const [thema, setThema] = useState<ThemaId | null>(null);
   const [vorschau, setVorschau] = useState<Frage | null>(null);
@@ -992,7 +993,7 @@ export function QuizAuswahl({
   }
 
   return (
-    <Modal visible={sichtbar} transparent animationType="slide" onRequestClose={onSchliessen} statusBarTranslucent>
+    <Modal supportedOrientations={["portrait", "landscape"]} visible={sichtbar} transparent animationType="slide" onRequestClose={onSchliessen} statusBarTranslucent>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, justifyContent: "flex-end" }}>
         <Pressable style={{ flex: 1 }} onPress={onSchliessen} accessibilityLabel="Schließen" />
         <View style={{ height: Math.round(height * 0.8), backgroundColor: "#0E1014", borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1, borderBottomWidth: 0, borderColor: "rgba(255,255,255,0.09)", overflow: "hidden" }}>

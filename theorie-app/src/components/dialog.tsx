@@ -96,7 +96,7 @@ export function DialogHost() {
   const haupt = [...knoepfe].reverse().find((k) => k.style !== "cancel" && k.style !== "destructive");
 
   return (
-    <Modal visible={aktuell != null} transparent animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={zurueck}>
+    <Modal supportedOrientations={["portrait", "landscape"]} visible={aktuell != null} transparent animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={zurueck}>
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.42)" }}>
         {aktuell ? (
           <Animated.View

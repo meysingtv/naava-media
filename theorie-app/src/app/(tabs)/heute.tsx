@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { Pressable, ScrollView, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useFenster } from "@/lib/fenster";
 import { CrewBereich } from "@/components/crew";
 import { FokusKarte, GRUSS, Handschrift, HeldWerte, heldHoehe, KinoHeld, Kopfzeile, PruefungKarte, Schnellstart, StartKnopf, tageszeit, ThemenKarussell, ZitatKarte } from "@/components/home";
 import { Icon } from "@/components/icon";
@@ -29,7 +30,7 @@ const ZITATE: [string, string][] = [
 
 export default function Home() {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const inhaltUnten = useInhaltUnten();
   const leistenScroll = useLeistenScroll();
   const fokus = useIsFocused();

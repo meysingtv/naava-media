@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Image, KeyboardAvoidingView, Pressable, ScrollView, useWindowDimensions, View } from "react-native";
+import { Image, KeyboardAvoidingView, Pressable, ScrollView, View } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useFenster } from "@/lib/fenster";
 import { Eingabe, Knopf, T } from "@/components/ui";
 import { Logo } from "@/components/grafik";
 import { FOTOS } from "@/lib/fotos";
@@ -13,7 +14,7 @@ import { abstand, farben, RAND, schrift } from "@/lib/theme";
 
 export default function Willkommen() {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const { alsGast } = useKonto();
   const [gastForm, setGastForm] = useState(false);
   const [name, setName] = useState("");

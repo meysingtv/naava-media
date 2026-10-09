@@ -1,9 +1,10 @@
 import { useCallback, useState } from "react";
-import { FlatList, Image, Pressable, RefreshControl, Text, useWindowDimensions, View } from "react-native";
+import { FlatList, Image, Pressable, RefreshControl, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useFenster } from "@/lib/fenster";
 import { dialog } from "@/components/dialog";
 import { Icon } from "@/components/icon";
 import { Lader } from "@/components/lader";
@@ -32,7 +33,7 @@ function Zahl({ wert, label }: { wert: number; label: string }) {
 export default function NutzerProfil() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const { session } = useKonto();
   const [profil, setProfil] = useState<ErstellerProfil | null>(null);
   const [clips, setClips] = useState<ClipEintrag[] | null>(null);

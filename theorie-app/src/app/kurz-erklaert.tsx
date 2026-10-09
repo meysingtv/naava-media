@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, FlatList, Pressable, Share, useWindowDimensions, View, type ViewToken } from "react-native";
+import { Animated, FlatList, Pressable, Share, View, type ViewToken } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useFenster } from "@/lib/fenster";
 import { Icon } from "@/components/icon";
 import { Seite } from "@/components/seite";
 import { Chip, kartenFlaeche, Knopf, KopfTaste, Plakette, T, zurueck } from "@/components/ui";
@@ -85,7 +86,7 @@ function Aktion({ icon, aktiv, farbe, text, onPress, label }: { icon: keyof type
 
 function ClipKarte({ clip, index, anzahl, hoehe, aktiv }: { clip: Clip; index: number; anzahl: number; hoehe: number; aktiv: boolean }) {
   const f = useFarbwelt();
-  const { width } = useWindowDimensions();
+  const { width } = useFenster();
   const { stand, clipUmschalten } = useStand();
   const breite = width - RAND * 2;
   const gemocht = stand.clips.gemocht.includes(clip.id);

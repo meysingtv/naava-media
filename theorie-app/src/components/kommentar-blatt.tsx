@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, KeyboardAvoidingView, Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { SPALTE_MAX } from "@/lib/fenster";
 import { Icon } from "@/components/icon";
 import { NutzerBild } from "@/components/profilbild";
 import { dialog } from "@/components/dialog";
@@ -316,10 +317,10 @@ export function KommentarBlatt({
   };
 
   return (
-    <Modal visible={clip != null} transparent animationType="slide" onRequestClose={onSchliessen} statusBarTranslucent>
+    <Modal supportedOrientations={["portrait", "landscape"]} visible={clip != null} transparent animationType="slide" onRequestClose={onSchliessen} statusBarTranslucent>
       <View style={{ flex: 1, justifyContent: "flex-end" }}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onSchliessen} accessibilityLabel="Kommentare schließen" />
-        <KeyboardAvoidingView behavior="padding">
+        <KeyboardAvoidingView behavior="padding" style={{ width: "100%", maxWidth: SPALTE_MAX, alignSelf: "center" }}>
           <View style={{ height: Math.round(height * 0.68), backgroundColor: BLATT, borderTopLeftRadius: 18, borderTopRightRadius: 18, overflow: "hidden" }}>
             {/* Kopf */}
             <View style={{ height: 50, alignItems: "center", justifyContent: "center", borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.06)" }}>
