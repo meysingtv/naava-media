@@ -253,33 +253,6 @@ Einrichten:
    `update-crew.sql`. Unter Edge Functions → Logs steht je Antwort, wie viele
    Tokens sie gebraucht hat.
 
-## KI-Seite (Fahrschul KI)
-
-Oben auf der Startseite öffnet der Knopf „KI“ die KI-Seite (`src/app/ki.tsx`).
-In der Mitte die animierte KI-Kugel (`src/components/ki-kugel.tsx`, Shader in
-`src/lib/ki-kugel.ts`): eine Glaskugel mit fließender Energie und ein
-Tacho-Kranz, der unten offen ist wie das Lenkrad im Logo. Beim Zuhören schlagen
-die Striche mit der Lautstärke des Mikrofons aus, beim Antworten mit der
-Stimme. Im dunklen Modus Türkis, im hellen Logo-Blau – Knöpfe und Symbole der
-Seite passen sich an.
-
-- **Tippen oder sprechen:** Mikrofon-Knopf → Spracherkennung
-  (`expo-speech-recognition`, Deutsch, Fachwörter wie „rechts vor links“
-  vorgegeben). Wer fertig gesprochen hat, tippt auf Stopp – oder hört einfach
-  auf zu reden.
-- **Antwort:** kommt von der Funktion `ki-hilfe` (Modus `chat`) mit einem
-  kurzen Lernstand (Fortschritt, Fehler, schwächste Themen, Tage bis zur
-  Prüfung) und wird mit `expo-speech` vorgelesen (abschaltbar über den
-  Lautsprecher oben rechts). Die KI kann bis zu zwei Knöpfe vorschlagen –
-  z. B. „Fehler üben“ oder „Vorfahrt & Vorrang üben“ –, die direkt ins
-  passende Training führen. Ohne Server antwortet die App aus dem Lernstoff.
-- **Neu nötig:** die geänderte Funktion bereitstellen
-  (`npx supabase functions deploy ki-hilfe`) und ein neuer App-Build (Skia,
-  Spracherkennung, Sprachausgabe; auf Android ist das Mikrofon dafür jetzt
-  freigegeben – gefragt wird erst beim ersten Tippen aufs Mikrofon). In
-  älteren Builds geht nur Tippen, die Kugel ist dann ruhig.
-- Das Tageslimit (40 Anfragen) teilen sich KI-Hilfe und KI-Seite.
-
 ## Live-Stream in Clips
 
 Live gehen der Inhaber der App (E-Mail in `lern_inhaber`) und angenommene

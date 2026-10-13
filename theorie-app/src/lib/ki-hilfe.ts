@@ -286,20 +286,6 @@ function rechnen(frage: string): string | null {
   return zeilen.join("\n");
 }
 
-/**
- * Antwort aus dem eigenen Lernstoff ohne bestimmte Prüfungsfrage (für die
- * KI-Seite, wenn der Server nicht erreichbar ist). null, wenn nichts passt.
- */
-export function lernstoffAntwort(frage: string): string | null {
-  const rechnung = rechnen(frage);
-  if (rechnung) return rechnung;
-  const liste = suchen(frage).filter((t) => t.wert >= 1.4 && t.abgedeckt >= 0.5);
-  const [erster, zweiter] = liste;
-  if (!erster) return null;
-  const passt = zweiter && zweiter.wert >= erster.wert * 0.9 && zweiter.abgedeckt >= erster.abgedeckt && zweiter.eintrag.antwort !== erster.eintrag.antwort;
-  return `${erster.eintrag.antwort}${passt ? `\n\nAußerdem: ${zweiter.eintrag.antwort}` : ""}`;
-}
-
 /** Eine freie Frage ohne Server beantworten. */
 function lokalAntworten(k: KiKontext, frage: string): string {
   const f = k.frage;

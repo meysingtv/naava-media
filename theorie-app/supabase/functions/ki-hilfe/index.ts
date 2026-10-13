@@ -1,6 +1,6 @@
-// KI-Hilfe für Fahrschul Pro: erklärt eine Prüfungsfrage, beantwortet freie
-// Fragen und ist der Chat auf der KI-Seite (art „chat“). Läuft als Supabase
-// Edge Function – der API-Schlüssel bleibt auf dem Server und kommt nie in die App.
+// KI-Hilfe für Fahrschul Pro: erklärt eine Prüfungsfrage oder beantwortet freie
+// Fragen. Läuft als Supabase Edge Function – der API-Schlüssel bleibt auf dem
+// Server und kommt nie in die App.
 //
 // Einrichten (Anleitung im README, Abschnitt „KI-Hilfe“):
 //   Secrets: ANTHROPIC_API_KEY (Schlüssel von console.anthropic.com) und
@@ -35,25 +35,6 @@ So antwortest du:
 - Nach den Regeln in Deutschland (StVO, Fahrerlaubnis-Verordnung). Bist du dir bei einer Regel nicht sicher, sag das ehrlich.
 - Sagt jemand „Ich verstehe diese Frage nicht“, erklärst du, worum es in der Frage geht, welche Regel dahintersteckt und warum die richtigen Antworten richtig und die falschen falsch sind. Zum Schluss ein kurzer Merksatz.
 - Du beantwortest auch Fragen, die nichts mit der Prüfungsfrage oder dem Führerschein zu tun haben – hilfsbereit und kurz.`;
-
-const CHAT_ANLEITUNG = `Du bist „Fahrschul KI“, der persönliche Lern-Coach in der App „Fahrschul Pro“ für die theoretische Führerscheinprüfung in Deutschland. Du sprichst die Person mit „du“ an – locker, freundlich und ermutigend, wie ein guter Fahrlehrer.
-
-So antwortest du:
-- Auf Deutsch und kurz: meist zwei bis vier Sätze. Deine Antworten werden oft vorgelesen – schreib so, wie man spricht. Nur wenn jemand ausdrücklich eine Zusammenfassung, einen Plan oder eine Liste möchte, darfst du eine kurze Liste mit „• “ machen.
-- Wichtige Wörter darfst du mit **fett** markieren. Keine Überschriften, keine Tabellen, keine Emojis.
-- Nach den Regeln in Deutschland (StVO, Fahrerlaubnis-Verordnung). Bist du dir nicht sicher, sag das ehrlich.
-- Nutze den Lernstand unten, wenn er passt (zum Beispiel für „Was soll ich heute lernen?“) – zähl ihn aber nicht einfach auf.
-- Du beantwortest auch Fragen abseits des Führerscheins hilfsbereit und kurz.
-
-Knöpfe: Wenn es passt, darfst du am Ende deiner Antwort höchstens zwei Knöpfe vorschlagen, jeweils genau in dieser Schreibweise und nur aus dieser Liste:
-[[aktion:smart]] – gemischtes Lernen mit den wichtigsten Fragen
-[[aktion:fehler]] – Fragen üben, die die Person schon falsch hatte (auch für „Quiz aus meinen Fehlern“)
-[[aktion:thema:ID]] – ein Thema üben; ID ist eine der Themen-IDs aus dem Lernstand (z. B. vorfahrt, tempo, zeichen)
-[[aktion:pruefung]] – Prüfungssimulation
-[[aktion:karteikarten]], [[aktion:schilder]], [[aktion:formeln]], [[aktion:statistik]], [[aktion:termin]]
-Erfinde keine anderen Knöpfe und erwähne die Schreibweise nie im Text.`;
-
-const THEMEN_IDS = "gefahren, vorfahrt, zeichen, umwelt, technik, manoever, tempo, parken, autobahn, mensch, zahlen";
 
 type Antwortmoeglichkeit = { text: string; richtig: boolean };
 
@@ -121,7 +102,6 @@ Deno.serve(async (req) => {
   if ((count ?? 0) >= LIMIT_PRO_TAG) return antwort({ fehler: "limit" }, 429);
 
   const eingang = await req.json().catch(() => null);
-  const chat = eingang?.art === "chat";
   const verlauf = nachrichten(eingang?.verlauf);
   if (!verlauf.length || verlauf[verlauf.length - 1].role !== "user") return antwort({ fehler: "eingabe" }, 400);
 
@@ -138,15 +118,10 @@ Deno.serve(async (req) => {
       fallbacks: "default",
       output_config: { effort: "low" },
       cache_control: { type: "ephemeral" },
-      system: chat
-        ? [
-            { type: "text", text: CHAT_ANLEITUNG },
-            { type: "text", text: `Themen-IDs: ${THEMEN_IDS}\n\nLernstand der Person:\n${text(eingang?.lernstand, 1500) || "unbekannt"}` },
-          ]
-        : [
-            { type: "text", text: ANLEITUNG },
-            { type: "text", text: kontext(eingang?.frage) },
-          ],
+      system: [
+        { type: "text", text: ANLEITUNG },
+        { type: "text", text: kontext(eingang?.frage) },
+      ],
       messages: verlauf,
     });
 

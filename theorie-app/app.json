@@ -35,7 +35,8 @@
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT"
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.RECORD_AUDIO"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
@@ -68,14 +69,14 @@
         {
           "photosPermission": "Fahrschul Pro greift nur auf deine Fotos und Videos zu, wenn du ein Profilbild, einen Clip zum Hochladen, ein Schildfoto für die Schilder-Jagd oder ein Bild für deinen Live-Stream auswählst.",
           "cameraPermission": "Fahrschul Pro nutzt die Kamera für die Schilder-Jagd (du scannst echte Verkehrsschilder, die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert) und für Live-Streams in Clips.",
-          "microphonePermission": "Fahrschul Pro nutzt das Mikrofon, wenn du mit der KI sprichst oder in Clips einen Live-Stream startest."
+          "microphonePermission": "Fahrschul Pro nutzt das Mikrofon nur, wenn du in Clips einen Live-Stream startest."
         }
       ],
       [
         "expo-camera",
         {
           "cameraPermission": "Fahrschul Pro nutzt die Kamera für die Schilder-Jagd (du scannst echte Verkehrsschilder, die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert) und für Live-Streams in Clips.",
-          "microphonePermission": "Fahrschul Pro nutzt das Mikrofon, wenn du mit der KI sprichst oder in Clips einen Live-Stream startest.",
+          "microphonePermission": "Fahrschul Pro nutzt das Mikrofon nur, wenn du in Clips einen Live-Stream startest.",
           "recordAudioAndroid": false
         }
       ],
@@ -99,7 +100,7 @@
         "@config-plugins/react-native-webrtc",
         {
           "cameraPermission": "Fahrschul Pro nutzt die Kamera für die Schilder-Jagd (du scannst echte Verkehrsschilder, die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert) und für Live-Streams in Clips.",
-          "microphonePermission": "Fahrschul Pro nutzt das Mikrofon, wenn du mit der KI sprichst oder in Clips einen Live-Stream startest."
+          "microphonePermission": "Fahrschul Pro nutzt das Mikrofon nur, wenn du in Clips einen Live-Stream startest."
         }
       ],
       [
@@ -178,13 +179,6 @@
             }
           }
         ]
-      ],
-      [
-        "expo-speech-recognition",
-        {
-          "microphonePermission": "Fahrschul Pro nutzt das Mikrofon, wenn du mit der KI sprichst oder in Clips einen Live-Stream startest.",
-          "speechRecognitionPermission": "Fahrschul Pro wandelt deine Sprache in Text um, wenn du mit der KI sprichst."
-        }
       ]
     ],
     "experiments": {

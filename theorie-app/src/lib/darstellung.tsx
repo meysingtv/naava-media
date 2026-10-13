@@ -189,7 +189,6 @@ const HELLE_SEITEN = new Set([
   "bildnachweise",
   "einrichtung",
   "app-icon",
-  "ki",
 ]);
 
 /** Ist die Seite (Name der Route oder Pfad wie „/heute“ oder „/thema/vorfahrt“) gerade hell? */
