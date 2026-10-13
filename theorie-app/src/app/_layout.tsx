@@ -7,13 +7,14 @@ import * as Notifications from "expo-notifications";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Archivo_800ExtraBold, useFonts } from "@expo-google-fonts/archivo";
+import { Archivo_600SemiBold, Archivo_800ExtraBold, Archivo_800ExtraBold_Italic, useFonts } from "@expo-google-fonts/archivo";
 import { MarckScript_400Regular } from "@expo-google-fonts/marck-script";
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 
 import { AuswahlBlattHost } from "@/components/auswahl-blatt";
 import { BossTrefferAnzeige } from "@/components/crew";
 import { DialogHost } from "@/components/dialog";
+import { StartAnimation } from "@/components/start-animation";
 import { Icon } from "@/components/icon";
 import { TourOverlay } from "@/components/tour";
 import { erfolgVon } from "@/lib/erfolge";
@@ -184,6 +185,8 @@ function Navigation() {
 export default function RootLayout() {
   const [schriftenGeladen] = useFonts({
     Archivo_800ExtraBold,
+    Archivo_800ExtraBold_Italic,
+    Archivo_600SemiBold,
     MarckScript_400Regular,
     Inter_400Regular,
     Inter_500Medium,
@@ -208,6 +211,8 @@ export default function RootLayout() {
               <Navigation />
             </CrewProvider>
             <DialogHost />
+            {/* Logo-Animation beim Start, blendet aus, sobald die App bereit ist */}
+            <StartAnimation />
           </KontoProvider>
         </DarstellungProvider>
       </StandProvider>

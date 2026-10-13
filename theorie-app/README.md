@@ -48,6 +48,18 @@ Ohne Server läuft die App im Gastmodus – der Lernstand bleibt auf dem Gerät.
    Dann öffnen die Links aus der Passwort-Mail direkt die App (auf dem iPhone)
    und melden an.
 
+## Start-Animation
+
+Beim Kaltstart zeigt die App kurz das Fahrschul-Pro-Logo als Animation
+(`src/components/start-animation.tsx`): Der Lenkradkranz zeichnet sich beim
+Einlenken, die Speichen springen rein, „FAHRSCHUL“ fährt ein, „PRO“ knallt
+rein, der Slogan blendet auf, ein Glanz läuft drüber – nach gut 2 Sekunden
+blendet alles aus (frühestens, wenn die App fertig geladen ist). Antippen
+überspringt; bei „Bewegung reduzieren“ erscheint das Logo ohne Animation.
+Das Logo ist dort als Vektor nachgebaut (Lenkrad als SVG-Pfade, Schrift Archivo
+Italic). Das native Splash davor ist schlicht weiß (`splash-leer.png` in
+`app.json`) – das wirkt erst nach einem neuen nativen Build.
+
 ## Einrichtung und App-Tour
 
 Nach der Registrierung kommt nicht sofort die Startseite, sondern die
