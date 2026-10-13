@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Linking, Pressable, ScrollView, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GrossKopf, Seite } from "@/components/seite";
@@ -13,6 +14,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { Schalter } from "@/components/schalter";
 import { tourStarten } from "@/components/tour";
+import { APP_ICONS, aktivesIcon } from "@/lib/app-icon";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
 import { useDarstellung, useFarbwelt } from "@/lib/darstellung";
 import { useFenster } from "@/lib/fenster";
@@ -49,6 +51,9 @@ export default function Einstellungen() {
   const rechte = useClipRechte();
   const { liste: bewerbungen } = useBewerbungen(rechte.inhaber);
   const offeneBewerbungen = (bewerbungen ?? []).filter((b) => b.status === "offen").length;
+  // Beim Zurückkommen von der Icon-Seite neu lesen
+  const fokus = useIsFocused();
+  const iconTitel = fokus ? (APP_ICONS.find((i) => i.id === aktivesIcon())?.titel ?? "Standard") : "";
   const { bewerbung: meineBewerbung } = useMeineBewerbung();
   const { darstellung, setzen: darstellungSetzen, belohnungen, belohnungenSetzen } = useDarstellung();
   const [name, setName] = useState(anzeigeName);
@@ -176,6 +181,7 @@ export default function Einstellungen() {
             Gilt für die ganze App – nur Clips, Kamera und Anmeldung bleiben dunkel.
           </T>
           <GlasGruppe style={{ marginTop: abstand(4) }}>
+            <Zeile icon="color-palette" iconFarbe="#9B5CFF" titel="App-Icon" unter="Dein Lenkrad für den Homescreen" wert={iconTitel} onPress={() => router.push("/app-icon")} />
             <Zeile
               icon="flash"
               iconFarbe={farben.orange}

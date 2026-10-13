@@ -10,6 +10,7 @@ export type IconName = keyof typeof Ionicons.glyphMap;
  * Die Namen bleiben Ionicons-Namen, damit alle Stellen gleich bleiben.
  */
 const SF: Partial<Record<IconName, SFSymbol>> = {
+  "color-palette": "paintpalette.fill",
   "arrow-back": "arrow.left",
   "arrow-forward": "arrow.right",
   close: "xmark",

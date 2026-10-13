@@ -102,6 +102,91 @@
           "cameraPermission": "Fahrschul Pro nutzt die Kamera für die Schilder-Jagd (du scannst echte Verkehrsschilder, die Fotos werden nur auf deinem Gerät ausgewertet und nicht gespeichert) und für Live-Streams in Clips.",
           "microphonePermission": "Fahrschul Pro nutzt das Mikrofon nur, wenn du in Clips einen Live-Stream startest."
         }
+      ],
+      [
+        "expo-alternate-app-icons",
+        [
+          {
+            "name": "Klassik",
+            "ios": "./assets/app-icons/ios/klassik.png",
+            "android": {
+              "foregroundImage": "./assets/app-icons/android/klassik.png",
+              "backgroundColor": "#EEF2F8"
+            }
+          },
+          {
+            "name": "Nacht",
+            "ios": "./assets/app-icons/ios/nacht.png",
+            "android": {
+              "foregroundImage": "./assets/app-icons/android/nacht.png",
+              "backgroundColor": "#0B1018"
+            }
+          },
+          {
+            "name": "Orange",
+            "ios": "./assets/app-icons/ios/orange.png",
+            "android": {
+              "foregroundImage": "./assets/app-icons/android/orange.png",
+              "backgroundColor": "#F2540A"
+            }
+          },
+          {
+            "name": "Ozean",
+            "ios": "./assets/app-icons/ios/ozean.png",
+            "android": {
+              "foregroundImage": "./assets/app-icons/android/ozean.png",
+              "backgroundColor": "#2453C9"
+            }
+          },
+          {
+            "name": "Racing",
+            "ios": "./assets/app-icons/ios/racing.png",
+            "android": {
+              "foregroundImage": "./assets/app-icons/android/racing.png",
+              "backgroundColor": "#C80F1C"
+            }
+          },
+          {
+            "name": "Gold",
+            "ios": "./assets/app-icons/ios/gold.png",
+            "android": {
+              "foregroundImage": "./assets/app-icons/android/gold.png",
+              "backgroundColor": "#111113"
+            }
+          },
+          {
+            "name": "Neon",
+            "ios": "./assets/app-icons/ios/neon.png",
+            "android": {
+              "foregroundImage": "./assets/app-icons/android/neon.png",
+              "backgroundColor": "#14072B"
+            }
+          },
+          {
+            "name": "Carbon",
+            "ios": "./assets/app-icons/ios/carbon.png",
+            "android": {
+              "foregroundImage": "./assets/app-icons/android/carbon.png",
+              "backgroundColor": "#16181C"
+            }
+          },
+          {
+            "name": "Sunset",
+            "ios": "./assets/app-icons/ios/sunset.png",
+            "android": {
+              "foregroundImage": "./assets/app-icons/android/sunset.png",
+              "backgroundColor": "#FF8A6A"
+            }
+          },
+          {
+            "name": "Mint",
+            "ios": "./assets/app-icons/ios/mint.png",
+            "android": {
+              "foregroundImage": "./assets/app-icons/android/mint.png",
+              "backgroundColor": "#12A985"
+            }
+          }
+        ]
       ]
     ],
     "experiments": {
