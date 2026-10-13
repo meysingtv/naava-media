@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFenster } from "@/lib/fenster";
 import { CrewBereich } from "@/components/crew";
 import { FokusKarte, GRUSS, Handschrift, HeldWerte, heldHoehe, KinoHeld, Kopfzeile, PruefungKarte, Schnellstart, StartKnopf, tageszeit, ThemenKarussell, ZitatKarte } from "@/components/home";
+import { Glas } from "@/components/glas";
 import { Icon } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { useInhaltUnten } from "@/components/tab-leiste";
@@ -92,6 +93,20 @@ export default function Home() {
                   {vorname}
                 </Text>
               </View>
+              <Pressable
+                onPress={() => {
+                  tippen();
+                  router.push("/ki");
+                }}
+                accessibilityLabel="Fahrschul KI"
+                hitSlop={6}
+                style={({ pressed }) => ({ marginTop: 13, marginRight: 16, transform: [{ scale: pressed ? 0.94 : 1 }] })}
+              >
+                <Glas klar style={{ height: 36, borderRadius: 18, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Icon name="sparkles" size={16} color="#FFFFFF" />
+                  <Text style={{ ...schrift.textFett, fontSize: 14, color: "#FFFFFF" }}>KI</Text>
+                </Glas>
+              </Pressable>
               <Pressable
                 onPress={() => {
                   tippen();

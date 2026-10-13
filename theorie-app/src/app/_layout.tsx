@@ -168,6 +168,7 @@ function Navigation() {
           <Stack.Screen name="premium" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="einstellungen" />
           <Stack.Screen name="app-icon" />
+          <Stack.Screen name="ki" options={{ animation: "fade" }} />
           <Stack.Screen name="erklaerung" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="erklaervideos" />
           <Stack.Screen name="bildnachweise" />
