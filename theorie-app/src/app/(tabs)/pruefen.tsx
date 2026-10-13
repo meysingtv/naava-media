@@ -10,6 +10,7 @@ import { Kopfzeile, StartKnopf } from "@/components/home";
 import { Icon } from "@/components/icon";
 import { Baustellen, Eckdaten, ErgebnisListe, FehlerpunkteVerlauf, Instrumententafel, PruefungsTicket, RegelListe, Tacho, type Baustelle, type Regel } from "@/components/pruefen";
 import { useInhaltUnten } from "@/components/tab-leiste";
+import { TourZiel, useTourBlatt } from "@/components/tour";
 import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
 import { THEMEN, fragenZuThema } from "@/lib/fragen";
 import { useLeistenScroll } from "@/lib/leisten-scroll";
@@ -30,6 +31,7 @@ export default function Pruefen() {
   const { width } = useFenster();
   const inhaltUnten = useInhaltUnten();
   const leistenScroll = useLeistenScroll();
+  const tourBlatt = useTourBlatt("/pruefen");
   const fokus = useIsFocused();
   const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();
@@ -62,7 +64,7 @@ export default function Pruefen() {
     <FarbweltBereich farbwelt={f}>
       {fokus ? <StatusBar style={f.hell ? "dark" : "light"} /> : null}
       <View style={{ flex: 1, backgroundColor: f.grund }}>
-        <ScrollView {...leistenScroll} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
+        <ScrollView {...leistenScroll} {...tourBlatt} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
           <Instrumententafel hoehe={heldHoehe} lichtY={tachoOben + tachoGroesse / 2}>
             <View style={{ position: "absolute", top: insets.top + 4, left: RAND, right: RAND, flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
               <View>
@@ -82,9 +84,9 @@ export default function Pruefen() {
             </View>
           </Instrumententafel>
 
-          <View style={{ marginTop: -80, paddingHorizontal: RAND }}>
+          <TourZiel id="pruefen-start" style={{ marginTop: -80, marginHorizontal: RAND }}>
             <StartKnopf titel="Simulation starten" unter="30 Fragen · 45 Minuten · wie beim TÜV" onPress={starten} />
-          </View>
+          </TourZiel>
 
           <Kopfzeile titel="Dein Prüfungstag" style={{ marginTop: 32 }} />
           <PruefungsTicket

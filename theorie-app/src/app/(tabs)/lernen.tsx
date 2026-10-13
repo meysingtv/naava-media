@@ -29,6 +29,7 @@ import {
   type ThemaPosterDaten,
 } from "@/components/lernen";
 import { useInhaltUnten } from "@/components/tab-leiste";
+import { TourZiel, useTourBlatt } from "@/components/tour";
 import { Verkehrszeichen } from "@/components/zeichen";
 import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
 import { FRAGEN, THEMEN, fragenZuThema, themaVon, type ThemaId, type ZeichenKey } from "@/lib/fragen";
@@ -54,6 +55,7 @@ export default function Lernen() {
   const insets = useSafeAreaInsets();
   const inhaltUnten = useInhaltUnten();
   const leistenScroll = useLeistenScroll();
+  const tourBlatt = useTourBlatt("/lernen");
   const fokus = useIsFocused();
   const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();
@@ -153,7 +155,7 @@ export default function Lernen() {
     <FarbweltBereich farbwelt={f}>
       {statusLeiste}
       <View style={{ flex: 1, backgroundColor: f.grund }}>
-        <ScrollView {...leistenScroll} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
+        <ScrollView {...leistenScroll} {...tourBlatt} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
           {/* Lichtgrund scrollt mit und beginnt erst unter der Themenwand – sonst Kante am Foto */}
           {kopfHoehe > 0 ? <GlasGrund ab={kopfHoehe} dezent /> : null}
           {/* Kopf als ein Block: Titel, Suche, Stand und Startknopf dicht beieinander */}
@@ -187,7 +189,7 @@ export default function Lernen() {
           />
 
           <Kopfzeile titel="Lernmodi" style={{ marginTop: 20 }} />
-          <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: RAND }}>
+          <TourZiel id="lernen-modi" style={{ flexDirection: "row", gap: 10, marginHorizontal: RAND }}>
             <ModusKarte
               titel="Karteikarten"
               unter={dran.gesamt > 0 ? `${dran.gesamt} ${dran.gesamt === 1 ? "Karte" : "Karten"} heute dran` : kartenBegonnen ? "Alles wiederholt" : "Als Karten lernen"}
@@ -205,7 +207,7 @@ export default function Lernen() {
               anteil={gefunden.length / ALBUM.length}
               onPress={() => router.push("/schilder-jagd")}
             />
-          </View>
+          </TourZiel>
           <ModusRaster modi={modi} style={{ marginTop: 10 }} />
 
           <Kopfzeile titel="Alle Themen" link={`${THEMEN.length} Themen`} style={{ marginTop: 32 }} />

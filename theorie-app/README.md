@@ -48,6 +48,25 @@ Ohne Server läuft die App im Gastmodus – der Lernstand bleibt auf dem Gerät.
    Dann öffnen die Links aus der Passwort-Mail direkt die App (auf dem iPhone)
    und melden an.
 
+## Einrichtung und App-Tour
+
+Nach der Registrierung kommt nicht sofort die Startseite, sondern die
+Einrichtung (`src/app/einrichtung.tsx`) in vier Schritten: Führerscheinklasse,
+Prüfungstermin (eigener Kalender mit Uhrzeit oder „Noch kein Termin“),
+Tagesziel mit Empfehlung passend zum Termin plus tägliche Erinnerung, und
+Hell/Dunkel mit Live-Vorschau. Danach eine Zusammenfassung und auf Wunsch die
+App-Tour. „Später“ oben rechts überspringt alles. Kommt man aus dem Gastmodus,
+geht es nach der Einrichtung wieder dorthin zurück (ohne Tour).
+Ob die Einrichtung durch ist, merkt sich das Gerät (`src/lib/einrichtung.ts`).
+
+Die Tour (`src/components/tour.tsx`) dunkelt die App ab, lässt nur die erklärte
+Stelle frei (mit leuchtendem Rahmen) und zeigt daneben eine Karte mit Text,
+„Überspringen“ und „Weiter“. Sie wechselt selbst zwischen Home, Lernen und
+Prüfung und scrollt die Stelle ins Bild. Neue Stellen markiert man mit
+`<TourZiel id="…">`; die Schritte stehen oben in `SCHRITTE`. In den
+Einstellungen unter „Hilfe & Rechtliches“: „App-Tour ansehen“ und
+„Einrichtung wiederholen“.
+
 ## Tab-Leiste
 
 Die Leiste unten ist die native iOS-Tab-Leiste (ab iOS 26 im Liquid-Glass-Look,

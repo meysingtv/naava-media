@@ -3,14 +3,6 @@ import { Linking, Pressable, ScrollView, Text, View, type StyleProp, type ViewSt
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BusIcon } from "phosphor-react-native/src/icons/Bus";
-import { CarIcon } from "phosphor-react-native/src/icons/Car";
-import { MopedIcon } from "phosphor-react-native/src/icons/Moped";
-import { MotorcycleIcon } from "phosphor-react-native/src/icons/Motorcycle";
-import { TractorIcon } from "phosphor-react-native/src/icons/Tractor";
-import { TruckIcon } from "phosphor-react-native/src/icons/Truck";
-import { TruckTrailerIcon } from "phosphor-react-native/src/icons/TruckTrailer";
-import type { Icon as PhosphorIcon } from "phosphor-react-native";
 
 import { GrossKopf, Seite } from "@/components/seite";
 import { Abschnitt, Chip, Eingabe, Knopf, PasswortEingabe, Segment, T, Zeile } from "@/components/ui";
@@ -20,9 +12,11 @@ import { GlasGrund, GlasGruppe, GlasKarte } from "@/components/glas-flaeche";
 import { Icon, type IconName } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { Schalter } from "@/components/schalter";
+import { tourStarten } from "@/components/tour";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
 import { useDarstellung, useFarbwelt } from "@/lib/darstellung";
 import { useFenster } from "@/lib/fenster";
+import { KLASSEN } from "@/lib/klassen";
 import { tippen } from "@/lib/haptik";
 import { useClipRechte } from "@/lib/clips-server";
 import { STATUS_TEXT, useBewerbungen, useMeineBewerbung } from "@/lib/creator";
@@ -42,25 +36,6 @@ const ZEITEN: [number, number][] = [
   [21, 0],
 ];
 const ZIEL_STUFE: Record<number, string> = { 15: "Locker", 30: "Normal", 50: "Ehrgeizig", 80: "Intensiv" };
-// Führerscheinklassen, nach Fahrzeug sortiert
-const KLASSEN: { id: string; text: string; symbol: PhosphorIcon }[] = [
-  { id: "B", text: "Pkw bis 3,5 t", symbol: CarIcon },
-  { id: "BE", text: "Pkw mit Anhänger", symbol: CarIcon },
-  { id: "AM", text: "Roller und Moped bis 45 km/h", symbol: MopedIcon },
-  { id: "A1", text: "Leichtkraftrad bis 125 cm³", symbol: MotorcycleIcon },
-  { id: "A2", text: "Motorrad bis 35 kW", symbol: MotorcycleIcon },
-  { id: "A", text: "Motorrad ohne Leistungsgrenze", symbol: MotorcycleIcon },
-  { id: "C1", text: "Lkw bis 7,5 t", symbol: TruckIcon },
-  { id: "C1E", text: "Lkw bis 7,5 t mit Anhänger", symbol: TruckTrailerIcon },
-  { id: "C", text: "Lkw über 3,5 t", symbol: TruckIcon },
-  { id: "CE", text: "Lkw mit Anhänger", symbol: TruckTrailerIcon },
-  { id: "D1", text: "Kleinbus bis 16 Fahrgäste", symbol: BusIcon },
-  { id: "D1E", text: "Kleinbus mit Anhänger", symbol: BusIcon },
-  { id: "D", text: "Bus", symbol: BusIcon },
-  { id: "DE", text: "Bus mit Anhänger", symbol: BusIcon },
-  { id: "L", text: "Zugmaschine bis 40 km/h", symbol: TractorIcon },
-  { id: "T", text: "Traktor bis 60 km/h", symbol: TractorIcon },
-];
 
 const SUPPORT = process.env.EXPO_PUBLIC_SUPPORT_EMAIL;
 const DATENSCHUTZ = process.env.EXPO_PUBLIC_DATENSCHUTZ_URL;
@@ -449,6 +424,17 @@ export default function Einstellungen() {
             {DATENSCHUTZ ? <Zeile icon="shield-checkmark" iconFarbe="#4DA3FF" titel="Datenschutz" onPress={() => Linking.openURL(DATENSCHUTZ)} /> : null}
             {IMPRESSUM ? <Zeile icon="document-text" iconFarbe="#7C8BA1" titel="Impressum" onPress={() => Linking.openURL(IMPRESSUM)} /> : null}
             {AGB ? <Zeile icon="reader" iconFarbe="#7C8BA1" titel="AGB" onPress={() => Linking.openURL(AGB)} /> : null}
+            <Zeile
+              icon="sparkles"
+              iconFarbe={farben.orange}
+              titel="App-Tour ansehen"
+              unter="Die wichtigsten Stellen kurz erklärt"
+              onPress={() => {
+                router.navigate("/heute");
+                setTimeout(tourStarten, 450);
+              }}
+            />
+            <Zeile icon="options" iconFarbe="#4DA3FF" titel="Einrichtung wiederholen" unter="Klasse, Prüfungstermin, Tagesziel, Darstellung" onPress={() => router.push("/einrichtung")} />
             <Zeile icon="images" iconFarbe="#E0A100" titel="Bildnachweise" onPress={() => router.push("/bildnachweise")} />
           </GlasGruppe>
         </View>

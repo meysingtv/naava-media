@@ -103,10 +103,12 @@ export default function Registrieren() {
   const [fertig, setFertig] = useState(false);
 
   // Erst weiter, wenn die Anmeldung wirklich da ist (sonst blockiert die Navigation).
+  // Danach kommt die Einrichtung (Klasse, Termin, Tagesziel, Darstellung) – aus
+  // dem Gastmodus geht es nach der Einrichtung dorthin zurück, wo man war.
   useEffect(() => {
     if (!fertig || !session) return;
-    if (ausGastmodus && router.canGoBack()) router.back();
-    else router.replace("/heute");
+    if (ausGastmodus && router.canGoBack()) router.replace({ pathname: "/einrichtung", params: { zurueck: "1" } });
+    else router.replace("/einrichtung");
   }, [fertig, session, ausGastmodus]);
   const { setzen } = useStand();
 

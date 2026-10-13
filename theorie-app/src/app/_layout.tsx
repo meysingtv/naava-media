@@ -15,6 +15,7 @@ import { AuswahlBlattHost } from "@/components/auswahl-blatt";
 import { BossTrefferAnzeige } from "@/components/crew";
 import { DialogHost } from "@/components/dialog";
 import { Icon } from "@/components/icon";
+import { TourOverlay } from "@/components/tour";
 import { erfolgVon } from "@/lib/erfolge";
 import { erfolg } from "@/lib/haptik";
 import { CrewProvider } from "@/lib/crew";
@@ -130,6 +131,7 @@ function Navigation() {
         </Stack.Protected>
         <Stack.Protected guard={drin}>
           <Stack.Screen name="(tabs)" options={{ animation: "fade" }} />
+          <Stack.Screen name="einrichtung" options={{ animation: "fade", gestureEnabled: false }} />
           <Stack.Screen name="training" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="pruefung" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
@@ -174,6 +176,7 @@ function Navigation() {
       {belohnungen ? <BossTrefferAnzeige /> : null}
       <LiveBruecke />
       <AuswahlBlattHost />
+      <TourOverlay />
     </View>
   );
 }

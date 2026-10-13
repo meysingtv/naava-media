@@ -11,6 +11,7 @@ import { FokusKarte, GRUSS, Handschrift, HeldWerte, heldHoehe, KinoHeld, Kopfzei
 import { Icon } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { useInhaltUnten } from "@/components/tab-leiste";
+import { TourZiel, useTourBlatt } from "@/components/tour";
 import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
 import { FRAGEN, THEMEN, type ThemaId } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
@@ -33,6 +34,7 @@ export default function Home() {
   const { width } = useFenster();
   const inhaltUnten = useInhaltUnten();
   const leistenScroll = useLeistenScroll();
+  const tourBlatt = useTourBlatt("/heute");
   const fokus = useIsFocused();
   const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();
@@ -80,7 +82,7 @@ export default function Home() {
     <FarbweltBereich farbwelt={f}>
       {fokus ? <StatusBar style={f.hell && !ueberFoto ? "dark" : "light"} /> : null}
       <View style={{ flex: 1, backgroundColor: f.grund }}>
-        <ScrollView onScroll={beimScrollen} scrollEventThrottle={16} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
+        <ScrollView {...tourBlatt} onScroll={beimScrollen} scrollEventThrottle={16} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
           <KinoHeld zeit={zeit}>
             {/* Begrüßung */}
             <View style={{ position: "absolute", top: insets.top + 2, left: 26, right: RAND, flexDirection: "row", alignItems: "flex-start" }}>
@@ -119,49 +121,52 @@ export default function Home() {
             <Handschrift zeilen={zeilen} style={{ position: "absolute", left: 30, top: insets.top + 112 }} />
 
             <View style={{ position: "absolute", left: RAND, right: RAND, bottom: 104 }}>
-              <HeldWerte
-                reife={gesamt.anteil}
-                sicher={gesamt.richtig}
-                gesamt={gesamt.gesamt}
-                serie={serie}
-                heute={heute}
-                ziel={stand.tagesziel}
-                onReife={() => router.push("/statistik")}
-                onSerie={() => router.push("/statistik")}
-                onHeute={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
-              />
+              <TourZiel id="home-werte">
+                <HeldWerte
+                  reife={gesamt.anteil}
+                  sicher={gesamt.richtig}
+                  gesamt={gesamt.gesamt}
+                  serie={serie}
+                  heute={heute}
+                  ziel={stand.tagesziel}
+                  onReife={() => router.push("/statistik")}
+                  onSerie={() => router.push("/statistik")}
+                  onHeute={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
+                />
+              </TourZiel>
             </View>
           </KinoHeld>
 
-          <View style={{ marginTop: -80, paddingHorizontal: RAND }}>
+          <TourZiel id="home-start" style={{ marginTop: -80, marginHorizontal: RAND }}>
             <StartKnopf
               titel={heute > 0 ? "Weiterlernen" : "Lernen starten"}
               unter={rest > 0 ? `Noch ${rest} Fragen bis zum Tagesziel` : "Tagesziel geschafft – jede Frage zählt extra"}
               onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
             />
-          </View>
+          </TourZiel>
 
-          <Schnellstart
-            style={{ marginTop: 18 }}
-            ziele={[
-              { icon: "heart", titel: "Favoriten", zahl: gemerktIds(stand).length, onPress: () => router.push("/favoriten") },
-              { icon: "refresh", titel: "Fehler üben", zahl: fehlerIds(stand).length, onPress: () => router.push({ pathname: "/training", params: { modus: "fehler" } }) },
-              { icon: "albums-outline", titel: "Karteikarten", zahl: heuteDran(stand).gesamt, onPress: () => router.push("/karteikarten") },
-              { icon: "camera", titel: "Schilder-Jagd", onPress: () => router.push("/schilder-jagd") },
-              { icon: "flash", titel: "Duell", onPress: () => router.push("/duell") },
-              { icon: "stats-chart", titel: "Statistik", onPress: () => router.push("/statistik") },
-            ]}
-          />
+          <TourZiel id="home-schnell" style={{ marginTop: 18 }}>
+            <Schnellstart
+              ziele={[
+                { icon: "heart", titel: "Favoriten", zahl: gemerktIds(stand).length, onPress: () => router.push("/favoriten") },
+                { icon: "refresh", titel: "Fehler üben", zahl: fehlerIds(stand).length, onPress: () => router.push({ pathname: "/training", params: { modus: "fehler" } }) },
+                { icon: "albums-outline", titel: "Karteikarten", zahl: heuteDran(stand).gesamt, onPress: () => router.push("/karteikarten") },
+                { icon: "camera", titel: "Schilder-Jagd", onPress: () => router.push("/schilder-jagd") },
+                { icon: "flash", titel: "Duell", onPress: () => router.push("/duell") },
+                { icon: "stats-chart", titel: "Statistik", onPress: () => router.push("/statistik") },
+              ]}
+            />
+          </TourZiel>
 
-          <Kopfzeile titel="Dein Fokus heute" style={{ marginTop: 30 }} />
-          <View style={{ paddingHorizontal: RAND }}>
+          <TourZiel id="home-fokus" style={{ marginTop: 30, marginHorizontal: RAND }}>
+            <Kopfzeile titel="Dein Fokus heute" style={{ paddingHorizontal: 0 }} />
             <FokusKarte
               thema={fokusThema.id}
               anteil={fokusThema.anteil}
               offen={fokusThema.offen}
               onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: fokusThema.id } })}
             />
-          </View>
+          </TourZiel>
 
           <Kopfzeile titel="Deine Themen" link="Alle ansehen" onLink={() => router.navigate("/lernen")} style={{ marginTop: 30 }} />
           <ThemenKarussell themen={themen} onThema={(id) => router.push({ pathname: "/thema/[id]", params: { id } })} />
