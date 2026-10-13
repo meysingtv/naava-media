@@ -29,7 +29,6 @@ export const APP_ICONS: AppIcon[] = [
   { id: "Ozean", titel: "Ozean", vorschau: require("../../assets/app-icons/vorschau/ozean.png") },
   { id: "Racing", titel: "Racing", vorschau: require("../../assets/app-icons/vorschau/racing.png") },
   { id: "Gold", titel: "Gold", vorschau: require("../../assets/app-icons/vorschau/gold.png") },
-  { id: "Neon", titel: "Neon", vorschau: require("../../assets/app-icons/vorschau/neon.png") },
   { id: "Carbon", titel: "Carbon", vorschau: require("../../assets/app-icons/vorschau/carbon.png") },
   { id: "Sunset", titel: "Sunset", vorschau: require("../../assets/app-icons/vorschau/sunset.png") },
   { id: "Mint", titel: "Mint", vorschau: require("../../assets/app-icons/vorschau/mint.png") },

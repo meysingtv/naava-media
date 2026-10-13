@@ -155,14 +155,6 @@
             }
           },
           {
-            "name": "Neon",
-            "ios": "./assets/app-icons/ios/neon.png",
-            "android": {
-              "foregroundImage": "./assets/app-icons/android/neon.png",
-              "backgroundColor": "#14072B"
-            }
-          },
-          {
             "name": "Carbon",
             "ios": "./assets/app-icons/ios/carbon.png",
             "android": {

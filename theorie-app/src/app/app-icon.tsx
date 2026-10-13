@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Animated, Image, ImageBackground, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Image, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CheckIcon } from "phosphor-react-native/src/icons/Check";
 import { InfoIcon } from "phosphor-react-native/src/icons/Info";
@@ -13,38 +13,10 @@ import { useFenster } from "@/lib/fenster";
 import { erfolg, tippen } from "@/lib/haptik";
 import { leuchten, RAND, schrift } from "@/lib/theme";
 
-// App-Icon auswählen: oben eine kleine Homescreen-Vorschau mit dem gewählten
-// Icon, darunter alle Designs im Raster. Antippen wechselt das echte Icon.
+// App-Icon auswählen: alle Designs im Raster, Antippen wechselt das echte Icon.
 
-const WALLPAPER = require("../../assets/images/home/held-abend.jpg");
 /** Ecken wie beim iPhone-Icon. */
 const ecke = (g: number) => g * 0.225;
-
-function Vorschau({ icon }: { icon: AppIcon }) {
-  const puls = useRef(new Animated.Value(1)).current;
-  useEffect(() => {
-    puls.setValue(0.82);
-    Animated.spring(puls, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 12 }).start();
-  }, [icon.id, puls]);
-  const leer = (k: string) => <View key={k} style={{ width: 58, height: 58, borderRadius: ecke(58), backgroundColor: "rgba(255,255,255,0.22)" }} />;
-  return (
-    <GlasKarte style={{ borderRadius: 30 }}>
-      <ImageBackground source={WALLPAPER} blurRadius={Platform.OS === "web" ? 0 : 14} resizeMode="cover" style={{ height: 210, alignItems: "center", justifyContent: "center" }}>
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(10,12,18,0.28)" }]} />
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 22 }}>
-          {leer("a")}
-          <View style={{ alignItems: "center", gap: 8 }}>
-            <Animated.View style={[{ transform: [{ scale: puls }] }, leuchten("#000000", 0.45, 18, 8)]}>
-              <Image source={icon.vorschau} style={{ width: 84, height: 84, borderRadius: ecke(84) }} />
-            </Animated.View>
-            <Text style={{ ...schrift.textHalb, fontSize: 13, color: "#FFFFFF", textShadowColor: "rgba(0,0,0,0.5)", textShadowRadius: 4 }}>Fahrschul Pro</Text>
-          </View>
-          {leer("b")}
-        </View>
-      </ImageBackground>
-    </GlasKarte>
-  );
-}
 
 function Kachel({ icon, aktiv, breite, onPress }: { icon: AppIcon; aktiv: boolean; breite: number; onPress: () => void }) {
   const f = useFarbwelt();
@@ -85,13 +57,12 @@ function Inhalt() {
   const spalten = width >= 600 ? 4 : 3;
   const abstand = 14;
   const breite = (inhalt - abstand * (spalten - 1)) / spalten;
-  const gewaehlt = APP_ICONS.find((i) => i.id === aktiv) ?? APP_ICONS[0];
 
   async function waehlen(icon: AppIcon) {
     if (icon.id === aktiv || laeuft) return;
     tippen();
     if (!iconWechselMoeglich) {
-      // Nur Vorschau – das echte Icon kann diese App-Version noch nicht wechseln.
+      // Nur Auswahl anzeigen – das echte Icon kann diese App-Version noch nicht wechseln.
       setAktiv(icon.id);
       return;
     }
@@ -115,13 +86,11 @@ function Inhalt() {
         contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: 14, paddingBottom: insets.bottom + 40, width: "100%", maxWidth: 620, alignSelf: "center", gap: 22 }}
         showsVerticalScrollIndicator={false}
       >
-        <Vorschau icon={gewaehlt} />
-
         {!iconWechselMoeglich ? (
           <GlasKarte style={{ flexDirection: "row", gap: 12, padding: 14, alignItems: "center" }}>
             <InfoIcon size={22} color={f.orange} weight="fill" />
             <Text style={{ ...schrift.text, fontSize: 14, lineHeight: 19, color: f.text2, flex: 1 }}>
-              Hier siehst du erst die Vorschau. Wechseln lässt sich das Icon mit dem nächsten App-Update.
+              Wechseln lässt sich das Icon erst mit dem nächsten App-Update.
             </Text>
           </GlasKarte>
         ) : null}

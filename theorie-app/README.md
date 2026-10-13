@@ -63,14 +63,13 @@ Italic). Das native Splash davor ist schlicht weiß (`splash-leer.png` in
 ## App-Icon wechseln
 
 Unter Einstellungen → Darstellung → „App-Icon“ (`src/app/app-icon.tsx`) gibt es
-neben dem normalen Icon zehn Lenkrad-Designs: Klassik, Nachtfahrt, Orange,
-Ozean, Racing, Gold, Neon, Carbon, Sunset und Mint. Oben zeigt eine kleine
-Homescreen-Vorschau das gewählte Icon, Antippen wechselt das echte Icon.
+neben dem normalen Icon neun Lenkrad-Designs: Klassik, Nachtfahrt, Orange,
+Ozean, Racing, Gold, Carbon, Sunset und Mint. Antippen wechselt das echte Icon.
 Technik: `expo-alternate-app-icons` (Plugin in `app.json`), Bilder in
 `assets/app-icons/` – `ios/` (1024 × 1024 ohne Transparenz), `android/`
 (Vordergrund für das adaptive Icon) und `vorschau/` (klein, für die Seite).
 Die Icons kommen erst mit einem neuen nativen Build in die App; vorher (und
-in Expo Go) zeigt die Seite nur die Vorschau. Ein neues Design: Bilder in die
+in Expo Go) lässt sich auf der Seite nur auswählen, nicht wirklich wechseln. Ein neues Design: Bilder in die
 drei Ordner legen, in `app.json` beim Plugin eintragen und in
 `src/lib/app-icon.ts` ergänzen.
 
