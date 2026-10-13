@@ -53,7 +53,7 @@ Ohne Server läuft die App im Gastmodus – der Lernstand bleibt auf dem Gerät.
 Nach der Registrierung kommt nicht sofort die Startseite, sondern die
 Einrichtung (`src/app/einrichtung.tsx`) in vier Schritten: Führerscheinklasse,
 Prüfungstermin (eigener Kalender mit Uhrzeit oder „Noch kein Termin“),
-Tagesziel mit Empfehlung passend zum Termin plus tägliche Erinnerung, und
+Tagesziel (empfohlen: Normal, 30 Fragen) plus tägliche Erinnerung, und
 Hell/Dunkel mit Live-Vorschau. Danach eine Zusammenfassung und auf Wunsch die
 App-Tour. „Später“ oben rechts überspringt alles. Kommt man aus dem Gastmodus,
 geht es nach der Einrichtung wieder dorthin zurück (ohne Tour).

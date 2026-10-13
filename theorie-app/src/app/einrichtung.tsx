@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Animated, BackHandler, Easing, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
@@ -27,7 +27,6 @@ import { tourStarten } from "@/components/tour";
 import { useDarstellung, useFarbwelt, type Darstellung, type Farbwelt } from "@/lib/darstellung";
 import { einrichtungErledigt } from "@/lib/einrichtung";
 import { erinnerungPlanen } from "@/lib/erinnerung";
-import { FRAGEN } from "@/lib/fragen";
 import { erfolg, tippen } from "@/lib/haptik";
 import { HAUPT_KLASSEN, KLASSEN } from "@/lib/klassen";
 import { useKonto } from "@/lib/konto";
@@ -571,14 +570,8 @@ function Inhalt() {
   const liste = useRef<ScrollView>(null);
   const vorname = (anzeigeName ?? "").trim().split(/\s+/)[0] ?? "";
 
-  // Empfehlung: „Normal“ – nur wenn die Prüfung so nah ist, dass man alle
-  // Fragen sonst nicht zweimal schafft, eine Stufe mehr.
-  const empfohlen = useMemo(() => {
-    if (!termin || keinTermin) return 30;
-    const tage = Math.max(1, tageBis(termin));
-    const proTag = (FRAGEN.length * 2) / tage;
-    return ZIELE.find((z) => z.n >= Math.max(30, proTag))?.n ?? 80;
-  }, [termin, keinTermin]);
+  // Empfohlen ist immer „Normal“.
+  const empfohlen = 30;
   const tagesziel = ziel ?? empfohlen;
 
   // Android-Zurück: einen Schritt zurück statt die App zu verlassen.
