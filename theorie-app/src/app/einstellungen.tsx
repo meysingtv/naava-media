@@ -169,8 +169,8 @@ export default function Einstellungen() {
         <View>
           <Abschnitt titel="Darstellung" klein />
           <View style={{ flexDirection: "row", gap: abstand(3) }}>
-            <DarstellungKachel art="dunkel" aktiv={darstellung === "dunkel"} onPress={() => darstellungSetzen("dunkel")} />
             <DarstellungKachel art="hell" aktiv={darstellung === "hell"} onPress={() => darstellungSetzen("hell")} />
+            <DarstellungKachel art="dunkel" aktiv={darstellung === "dunkel"} onPress={() => darstellungSetzen("dunkel")} />
           </View>
           <T v="klein" style={{ marginTop: abstand(2) }}>
             Gilt für die ganze App – nur Clips, Kamera und Anmeldung bleiben dunkel.

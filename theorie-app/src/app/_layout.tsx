@@ -103,8 +103,8 @@ function ErfolgHinweis() {
 function Navigation() {
   const { drin, laedt, session, passwortNeuFaellig } = useKonto();
   const { bereit } = useStand();
-  const { belohnungen } = useDarstellung();
-  const fertig = !laedt && bereit;
+  const { belohnungen, bereit: darstellungBereit } = useDarstellung();
+  const fertig = !laedt && bereit && darstellungBereit;
 
   useEffect(() => {
     if (fertig) SplashScreen.hideAsync().catch(() => {});

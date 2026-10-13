@@ -475,12 +475,12 @@ function MiniApp({ hell }: { hell: boolean }) {
 function SchrittDarstellung({ wert, onWahl }: { wert: Darstellung; onWahl: (d: Darstellung) => void }) {
   const f = useFarbwelt();
   const optionen: { id: Darstellung; titel: string; unter: string; symbol: PhosphorIcon }[] = [
-    { id: "dunkel", titel: "Nachtfahrt", unter: "Dunkel", symbol: MoonIcon },
     { id: "hell", titel: "Tagfahrt", unter: "Hell", symbol: SunIcon },
+    { id: "dunkel", titel: "Nachtfahrt", unter: "Dunkel", symbol: MoonIcon },
   ];
   return (
     <View>
-      <Kopf nr={4} symbol={MoonIcon} titel="Hell oder dunkel?" unter="Wähl, wie die App aussehen soll – du siehst es sofort." />
+      <Kopf nr={4} symbol={SunIcon} titel="Hell oder dunkel?" unter="Wähl, wie die App aussehen soll – du siehst es sofort." />
       <View style={{ flexDirection: "row", gap: 12 }}>
         {optionen.map((o) => {
           const aktiv = o.id === wert;
@@ -571,12 +571,13 @@ function Inhalt() {
   const liste = useRef<ScrollView>(null);
   const vorname = (anzeigeName ?? "").trim().split(/\s+/)[0] ?? "";
 
-  // Empfehlung: alle Fragen bis zum Termin etwa zweimal schaffen.
+  // Empfehlung: „Normal“ – nur wenn die Prüfung so nah ist, dass man alle
+  // Fragen sonst nicht zweimal schafft, eine Stufe mehr.
   const empfohlen = useMemo(() => {
     if (!termin || keinTermin) return 30;
     const tage = Math.max(1, tageBis(termin));
     const proTag = (FRAGEN.length * 2) / tage;
-    return ZIELE.find((z) => z.n >= proTag)?.n ?? 80;
+    return ZIELE.find((z) => z.n >= Math.max(30, proTag))?.n ?? 80;
   }, [termin, keinTermin]);
   const tagesziel = ziel ?? empfohlen;
 

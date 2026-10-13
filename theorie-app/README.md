@@ -82,8 +82,9 @@ Handschrift und auf Glas Prüfungsreife, Serie und Tagesziel. Darunter der
 Startknopf, Schnellstart, das Thema mit dem meisten Nachholbedarf, alle Themen
 als Karussell, die Prüfungssimulation, die Crew und ein Spruch des Tages.
 
-Unter Einstellungen → Darstellung gibt es „Nachtfahrt (dunkel)“ und
-„Tagfahrt (hell)“. Die helle Darstellung gilt für die ganze App – nur Clips,
+Unter Einstellungen → Darstellung gibt es „Tagfahrt (hell)“ – das ist der
+Standard – und „Nachtfahrt (dunkel)“. Gewählt wird auch schon in der
+Einrichtung. Die helle Darstellung gilt für die ganze App – nur Clips,
 der Kamera-Scanner und Anmelden/Registrieren bleiben bewusst dunkel. Auf den
 Tabs ist dann auch die Tab-Leiste unten helles Glas. Auf dem iPhone
 schaltet die App dafür das Fenster auf hell (`DarstellungBruecke` in

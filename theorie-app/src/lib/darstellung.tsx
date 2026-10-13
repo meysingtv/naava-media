@@ -5,8 +5,8 @@ import { usePathname } from "expo-router";
 
 import { farben } from "@/lib/theme";
 
-// Darstellung „Nachtfahrt“ (dunkel) oder „Tagfahrt“ (hell). Die Einstellung
-// gilt fürs Gerät und wird nicht mit dem Konto synchronisiert.
+// Darstellung „Tagfahrt“ (hell, Standard) oder „Nachtfahrt“ (dunkel). Die
+// Einstellung gilt fürs Gerät und wird nicht mit dem Konto synchronisiert.
 
 export type Darstellung = "dunkel" | "hell";
 
@@ -91,20 +91,25 @@ type Kontext = {
   /** XP, HP und neue Abzeichen beim Lernen einblenden. */
   belohnungen: boolean;
   belohnungenSetzen: (an: boolean) => void;
+  /** Gespeicherte Wahl gelesen – vorher nichts zeigen, sonst blitzt kurz die falsche Farbe. */
+  bereit: boolean;
 };
 
-const DarstellungKontext = createContext<Kontext>({ darstellung: "dunkel", farbwelt: NACHT, setzen: () => {}, belohnungen: false, belohnungenSetzen: () => {} });
+const DarstellungKontext = createContext<Kontext>({ darstellung: "hell", farbwelt: TAG, setzen: () => {}, belohnungen: false, belohnungenSetzen: () => {}, bereit: true });
 
 export function DarstellungProvider({ children }: { children: ReactNode }) {
-  const [darstellung, setDarstellung] = useState<Darstellung>("dunkel");
+  // Ohne gespeicherte Wahl ist die App hell; dunkel nur, wenn man es so eingestellt hat.
+  const [darstellung, setDarstellung] = useState<Darstellung>("hell");
   const [belohnungen, setBelohnungen] = useState(false);
+  const [bereit, setBereit] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(SPEICHER)
       .then((w) => {
         if (w === "hell" || w === "dunkel") setDarstellung(w);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setBereit(true));
     AsyncStorage.getItem(SPEICHER_BELOHNUNGEN)
       .then((w) => setBelohnungen(w === "an"))
       .catch(() => {});
@@ -123,8 +128,9 @@ export function DarstellungProvider({ children }: { children: ReactNode }) {
         setBelohnungen(an);
         AsyncStorage.setItem(SPEICHER_BELOHNUNGEN, an ? "an" : "aus").catch(() => {});
       },
+      bereit,
     }),
-    [darstellung, belohnungen],
+    [darstellung, belohnungen, bereit],
   );
 
   return <DarstellungKontext.Provider value={wert}>{children}</DarstellungKontext.Provider>;
