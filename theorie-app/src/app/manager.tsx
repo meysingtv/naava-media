@@ -31,7 +31,7 @@ const VIOLETT = "#8B5CF6";
 
 export default function ManagerSeite() {
   return (
-    <Seite>
+    <Seite breit>
       <Inhalt />
     </Seite>
   );
@@ -41,9 +41,9 @@ function Inhalt() {
   const f = useFarbwelt();
   const { session } = useKonto();
   const desktop = useDesktop();
-  // Seitenleiste links nur bei viel Platz – sonst Reiter oben, damit die Tabelle Luft hat.
+  // Eigene Seitenleiste nur auf sehr breiten Bildschirmen (links steht schon die App-Leiste) – sonst Reiter oben.
   const fensterBreite = useWindowDimensions().width;
-  const seitenleiste = desktop && fensterBreite >= 1280;
+  const seitenleiste = desktop && fensterBreite >= 2000;
   const params = useLocalSearchParams<{ bereich?: string }>();
   const [bereich, setBereich] = useState<Bereich>(BEREICHE.some((b) => b.id === params.bereich) ? (params.bereich as Bereich) : "uebersicht");
   const [nutzer, setNutzer] = useState<ManagerNutzer[] | null>(null);

@@ -4,7 +4,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Defs, Ellipse, RadialGradient, Stop } from "react-native-svg";
 
 import { Glas } from "@/components/glas";
-import { SeitenAuslauf } from "@/components/home";
 import { useFarbwelt } from "@/lib/darstellung";
 import { useFenster } from "@/lib/fenster";
 import { mitDeckkraft } from "@/lib/theme";
@@ -78,8 +77,8 @@ function Lichtflecken({ flecken, breite, hoehe }: { flecken: Fleck[]; breite: nu
  */
 export function GlasGrund({ ab, dezent }: { ab?: number; dezent?: boolean }) {
   const f = useFarbwelt();
-  // Am PC: Breite der Inhaltsspalte, die Ränder laufen weich in den Grund aus.
-  const { width, height, desktop } = useFenster();
+  // Am PC: Breite neben der Seitenleiste.
+  const { width, height } = useFenster();
   const [inhaltHoehe, setInhaltHoehe] = useState(0);
   const s = f.hell ? 0.75 : 1;
 
@@ -92,7 +91,6 @@ export function GlasGrund({ ab, dezent }: { ab?: number; dezent?: boolean }) {
     return (
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <Lichtflecken flecken={flecken} breite={width} hoehe={height} />
-        {desktop ? <SeitenAuslauf grund={f.grund} /> : null}
       </View>
     );
   }
@@ -115,7 +113,6 @@ export function GlasGrund({ ab, dezent }: { ab?: number; dezent?: boolean }) {
       {inhaltHoehe > 0 ? <Lichtflecken flecken={flecken} breite={width} hoehe={inhaltHoehe} /> : null}
       {/* Oben weich aus dem Grund heraus – keine Kante unter dem Foto */}
       <LinearGradient colors={[f.grund, mitDeckkraft(f.grund, 0)]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: Math.min(260, height * 0.3) }} />
-      {desktop ? <SeitenAuslauf grund={f.grund} /> : null}
     </View>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, Text, View } from "react-native";
+import { Animated, Text, useWindowDimensions, View } from "react-native";
 import { router, Stack, usePathname } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as SplashScreen from "expo-splash-screen";
@@ -17,12 +17,12 @@ import { DialogHost } from "@/components/dialog";
 import { StartAnimation } from "@/components/start-animation";
 import { Icon } from "@/components/icon";
 import { TourOverlay } from "@/components/tour";
-import { WebLeiste, zeigtWebLeiste } from "@/components/web-leiste";
+import { WebLeiste } from "@/components/web-leiste";
 import { erfolgVon } from "@/lib/erfolge";
 import { erfolg } from "@/lib/haptik";
 import { CrewProvider } from "@/lib/crew";
 import { DarstellungBruecke, DarstellungProvider, istHelleSeite, TAG, useDarstellung } from "@/lib/darstellung";
-import { breiteSpalte, useDesktop } from "@/lib/fenster";
+import { desktopAufteilung, useDesktop, zeigtSeitenleiste } from "@/lib/fenster";
 import { KontoProvider, useKonto } from "@/lib/konto";
 import { LiveBruecke } from "@/lib/live-bruecke";
 import { StandProvider, useStand } from "@/lib/stand";
@@ -112,7 +112,9 @@ function Navigation() {
   // Browser am PC: Leiste oben, Inhalt in einer mittigen Spalte, daneben der Grund der Seite.
   const desktop = useDesktop();
   const pfad = usePathname();
-  const leiste = desktop && drin && zeigtWebLeiste(pfad);
+  const { width: fensterBreite } = useWindowDimensions();
+  const aufteilung = desktopAufteilung(fensterBreite, pfad);
+  const leiste = desktop && drin && zeigtSeitenleiste(pfad);
   const grund = desktop && istHelleSeite(darstellung, pfad) ? TAG.grund : farben.grund;
 
   useEffect(() => {
@@ -131,9 +133,10 @@ function Navigation() {
   if (!fertig) return <View style={{ flex: 1, backgroundColor: farben.grund }} />;
 
   return (
-    <View style={{ flex: 1, backgroundColor: grund }}>
-      {leiste ? <WebLeiste /> : null}
-      <View style={desktop ? { flex: 1, width: "100%", maxWidth: breiteSpalte(pfad), alignSelf: "center", overflow: "hidden" } : { flex: 1 }}>
+    <View style={{ flex: 1, flexDirection: desktop ? "row" : "column", backgroundColor: grund }}>
+      {leiste ? <WebLeiste breite={aufteilung.leiste} /> : null}
+      <View style={desktop ? { flex: 1, alignItems: "center" } : { flex: 1 }}>
+      <View style={desktop ? { flex: 1, width: "100%", maxWidth: aufteilung.inhalt, overflow: "hidden" } : { flex: 1 }}>
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: farben.grund }, animation: "slide_from_right" }}>
         <Stack.Screen name="index" options={{ animation: "none" }} />
         {/* Registrieren und Anmelden gehen auch aus dem Gastmodus heraus */}
@@ -189,6 +192,7 @@ function Navigation() {
           <Stack.Screen name="themavideo" options={{ animation: "slide_from_bottom" }} />
         </Stack.Protected>
       </Stack>
+      </View>
       </View>
       <ErfolgHinweis />
       {/* „−5 HP“ beim Crew-Boss nur, wenn XP, HP & Abzeichen in den Einstellungen an sind */}

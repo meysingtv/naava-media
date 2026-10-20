@@ -50,10 +50,27 @@ const WEG_RAND = 42;
  * außen daneben. Das Auto steht zwischen dem letzten erreichten und dem
  * nächsten Meilenstein (`zwischen` = Anteil der Strecke dazwischen).
  */
-export function Fuehrerscheinweg({ meilensteine, anteil, zeile, zwischen = 0.5, onPress, style }: { meilensteine: Meilenstein[]; anteil: number; zeile: string; zwischen?: number; onPress: () => void; style?: StyleProp<ViewStyle> }) {
+export function Fuehrerscheinweg({
+  meilensteine,
+  anteil,
+  zeile,
+  zwischen = 0.5,
+  onPress,
+  style,
+  breite: vorgabe,
+}: {
+  meilensteine: Meilenstein[];
+  anteil: number;
+  zeile: string;
+  zwischen?: number;
+  onPress: () => void;
+  style?: StyleProp<ViewStyle>;
+  /** Breite der Karte (am PC in einer Spalte), sonst Fenster minus Rand. */
+  breite?: number;
+}) {
   const f = useFarbwelt();
   const { width } = useFenster();
-  const breite = width - 2 * RAND;
+  const breite = vorgabe ?? width - 2 * RAND;
   const n = 160;
 
   const m = meilensteine.length;
@@ -169,12 +186,12 @@ export function Fuehrerscheinweg({ meilensteine, anteil, zeile, zwischen = 0.5, 
 
 export type Medaille = { id: string; titel: string; icon: IconName; erreicht: boolean };
 
-export function Medaillen({ medaillen, onPress }: { medaillen: Medaille[]; onPress: (id: string) => void }) {
+export function Medaillen({ medaillen, onPress, umbrechen }: { medaillen: Medaille[]; onPress: (id: string) => void; umbrechen?: boolean }) {
   const f = useFarbwelt();
   // Erreichte zuerst – so beginnt die Reihe mit dem, was man schon hat.
   const sortiert = [...medaillen].sort((a, b) => Number(b.erreicht) - Number(a.erreicht));
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: RAND - 6, gap: 0 }}>
+  const inhalt = (
+    <>
       {sortiert.map((m) => (
         <Pressable
           key={m.id}
@@ -202,6 +219,13 @@ export function Medaillen({ medaillen, onPress }: { medaillen: Medaille[]; onPre
           </Text>
         </Pressable>
       ))}
+    </>
+  );
+  // Am PC: alle Abzeichen als Raster statt seitlich zu scrollen.
+  if (umbrechen) return <View style={{ flexDirection: "row", flexWrap: "wrap", rowGap: 14, marginHorizontal: -6 }}>{inhalt}</View>;
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: RAND - 6, gap: 0 }}>
+      {inhalt}
     </ScrollView>
   );
 }
@@ -340,14 +364,14 @@ function MiniDiagramm({ mini, farbe }: { mini: Mini; farbe: string }) {
 }
 
 /** Vier Kennzahlen wie in Apple Fitness: Titel in Farbe, große Zahl, Mini-Diagramm. Auf dem iPad alle vier nebeneinander. */
-export function ZahlenRaster({ zahlen, onPress }: { zahlen: Zahl[]; onPress: () => void }) {
+export function ZahlenRaster({ zahlen, onPress, spalten: vorgabe, ohneRand }: { zahlen: Zahl[]; onPress: () => void; spalten?: number; ohneRand?: boolean }) {
   const f = useFarbwelt();
   const { width } = useFenster();
-  const spalten = width >= 700 ? 4 : 2;
+  const spalten = vorgabe ?? (width >= 700 ? 4 : 2);
   const reihen: Zahl[][] = [];
   for (let i = 0; i < zahlen.length; i += spalten) reihen.push(zahlen.slice(i, i + spalten));
   return (
-    <View style={{ paddingHorizontal: RAND, gap: 10 }}>
+    <View style={{ paddingHorizontal: ohneRand ? 0 : RAND, gap: 10 }}>
       {reihen.map((reihe, r) => (
         <View key={r} style={{ flexDirection: "row", gap: 10 }}>
           {reihe.map((z) => (

@@ -5,9 +5,8 @@ import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useFenster } from "@/lib/fenster";
+import { SpaltenKontext, UNTERSEITE_MAX, UNTERSEITE_RAND, useFenster } from "@/lib/fenster";
 import { Ring } from "@/components/grafik";
-import { SeitenAuslauf } from "@/components/home";
 import { kartenFlaeche, kopfOben, KopfTaste, zurueck } from "@/components/ui";
 import { FarbweltBereich, NACHT, useDarstellung, useFarbwelt } from "@/lib/darstellung";
 import { mitDeckkraft, RAND, schrift, verlauf } from "@/lib/theme";
@@ -18,15 +17,28 @@ import { mitDeckkraft, RAND, schrift, verlauf } from "@/lib/theme";
 
 const FUELLEN = { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } as const;
 
-/** Farbwelt, Statusleiste und Grund einer Unterseite. `dunkel` hält sie immer dunkel. */
-export function Seite({ children, dunkel }: { children: ReactNode; dunkel?: boolean }) {
+/**
+ * Farbwelt, Statusleiste und Grund einer Unterseite. `dunkel` hält sie immer
+ * dunkel. Am PC mit Rand wie die Hauptseiten (außer `breit`).
+ */
+export function Seite({ children, dunkel, breit }: { children: ReactNode; dunkel?: boolean; breit?: boolean }) {
   const { farbwelt } = useDarstellung();
   const f = dunkel ? NACHT : farbwelt;
   const fokus = useIsFocused();
+  const { width, desktop } = useFenster();
+  const spalte = desktop && !breit ? Math.min(width - 2 * UNTERSEITE_RAND, UNTERSEITE_MAX) : null;
   return (
     <FarbweltBereich farbwelt={f}>
       {fokus ? <StatusBar style={f.hell ? "dark" : "light"} /> : null}
-      <View style={{ flex: 1, backgroundColor: f.grund }}>{children}</View>
+      <View style={{ flex: 1, backgroundColor: f.grund }}>
+        {spalte ? (
+          <SpaltenKontext.Provider value={spalte}>
+            <View style={{ flex: 1, width: spalte, alignSelf: "center" }}>{children}</View>
+          </SpaltenKontext.Provider>
+        ) : (
+          children
+        )}
+      </View>
     </FarbweltBereich>
   );
 }
@@ -81,6 +93,38 @@ export function FotoKopf({
   const grund = (a: number) => mitDeckkraft(f.grund, a);
   const scale = fahrt.interpolate({ inputRange: [0, 1], outputRange: [1.04, 1.13] });
 
+  // Am PC: Foto als große Karte mit Rand, Titel weiß auf dem abgedunkelten Foto.
+  if (desktop) {
+    const kartenHoehe = Math.min(340, Math.max(260, hoehe));
+    return (
+      <View>
+        <View style={{ paddingHorizontal: RAND, paddingTop: 22, gap: 16 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            {ohneZurueck ? <View /> : <KopfTaste icon={schliessen ? "close" : "chevron-back"} label={schliessen ? "Schließen" : "Zurück"} onPress={onZurueck ?? zurueck} />}
+            <View style={{ flexDirection: "row", gap: 10 }}>{rechts}</View>
+          </View>
+          <View style={{ height: kartenHoehe, borderRadius: 30, overflow: "hidden", backgroundColor: "#0B0E12" }}>
+            <Animated.Image source={bild} resizeMode="cover" fadeDuration={0} style={{ position: "absolute", width: "100%", height: "100%", transform: [{ scale }] }} />
+            <LinearGradient colors={["rgba(3,5,7,0)", "rgba(3,5,7,0.35)", "rgba(3,5,7,0.85)"]} locations={[0.25, 0.55, 1]} style={FUELLEN} />
+            <LinearGradient colors={["rgba(3,5,7,0.45)", "rgba(3,5,7,0)"]} start={{ x: 0, y: 0.5 }} end={{ x: 0.7, y: 0.5 }} style={FUELLEN} />
+            <View style={{ position: "absolute", left: 32, right: 32, bottom: 28, gap: 6 }}>
+              {ueber}
+              <Text style={{ ...schrift.titel, fontSize: 40, lineHeight: 46, letterSpacing: -0.7, color: "#FFFFFF" }} numberOfLines={2}>
+                {titel}
+              </Text>
+              {unter ? (
+                <Text style={{ ...schrift.textMittel, fontSize: 16, lineHeight: 22, color: "rgba(255,255,255,0.85)" }} numberOfLines={2}>
+                  {unter}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+        </View>
+        {children}
+      </View>
+    );
+  }
+
   return (
     <View>
       <View style={{ width, height: h, overflow: "hidden", backgroundColor: f.grund }}>
@@ -89,7 +133,6 @@ export function FotoKopf({
         {/* Oben etwas Grund für Statusleiste und Knöpfe, unten weich in den Grund */}
         <LinearGradient colors={[grund(f.hell ? 0.75 : 0.7), grund(0)]} locations={[0, 0.34]} style={FUELLEN} />
         <LinearGradient colors={[grund(0), grund(0.5), grund(0.88), f.grund]} locations={[0.42, 0.66, 0.86, 1]} style={[FUELLEN, { bottom: -1 }]} />
-        {desktop ? <SeitenAuslauf grund={f.grund} /> : null}
         <View style={{ position: "absolute", top: kopfOben(insets.top), left: RAND, right: RAND, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           {ohneZurueck ? <View /> : <KopfTaste icon={schliessen ? "close" : "chevron-back"} label={schliessen ? "Schließen" : "Zurück"} onPress={onZurueck ?? zurueck} />}
           <View style={{ flexDirection: "row", gap: 10 }}>{rechts}</View>

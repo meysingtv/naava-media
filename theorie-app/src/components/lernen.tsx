@@ -10,7 +10,6 @@ import { KartenStapelBild } from "@/components/karteikarten-karte";
 import { Kontrollleuchte } from "@/components/leuchten";
 import { Verkehrszeichen } from "@/components/zeichen";
 import { useFarbwelt } from "@/lib/darstellung";
-import { SeitenAuslauf } from "@/components/home";
 import { useFenster } from "@/lib/fenster";
 import { FOTOS, themaFoto } from "@/lib/fotos";
 import { istZeichen, themaVon, THEMEN, type Frage, type LeuchteKey, type ThemaId, type ZeichenKey } from "@/lib/fragen";
@@ -46,9 +45,10 @@ function reihenFotos(i: number): ThemaId[] {
  * ziehen ganz langsam gegeneinander vorbei; unten läuft die Wand in den Grund aus.
  * Die Höhe ergibt sich aus dem Inhalt – die Wand liegt nur dahinter.
  */
-export function Themenwand({ children }: { children?: ReactNode }) {
+export function Themenwand({ children, breite }: { children?: ReactNode; breite?: number }) {
   const f = useFarbwelt();
-  const { width, desktop } = useFenster();
+  const fenster = useFenster();
+  const width = breite ?? fenster.width;
   const fahrt = useRef(new Animated.Value(0)).current;
   const strecke = THEMEN.length * (KACHEL_B + LUECKE);
   const wandBreite = width * 1.9;
@@ -82,7 +82,6 @@ export function Themenwand({ children }: { children?: ReactNode }) {
       <View style={[FUELLEN, { backgroundColor: f.hell ? "rgba(244,241,236,0.34)" : "rgba(3,5,7,0.5)" }]} />
       <LinearGradient colors={[grund(f.hell ? 0.96 : 0.82), grund(f.hell ? 0.55 : 0.35), grund(0)]} locations={[0, 0.22, 0.42]} style={FUELLEN} />
       <LinearGradient colors={[grund(0), grund(0.6), grund(0.92), f.grund]} locations={[0.56, 0.76, 0.9, 1]} style={[FUELLEN, { bottom: -1 }]} />
-      {desktop ? <SeitenAuslauf grund={f.grund} /> : null}
       {children}
     </View>
   );
@@ -325,9 +324,9 @@ function ModusKachel({ modus }: { modus: Modus }) {
 }
 
 /** Lernmodi im Raster: zwei nebeneinander, auf dem iPad drei. */
-export function ModusRaster({ modi, style }: { modi: Modus[]; style?: StyleProp<ViewStyle> }) {
+export function ModusRaster({ modi, style, spalten: vorgabe }: { modi: Modus[]; style?: StyleProp<ViewStyle>; spalten?: number }) {
   const { width } = useFenster();
-  const spalten = width >= 700 ? 3 : 2;
+  const spalten = vorgabe ?? (width >= 700 ? 3 : 2);
   const reihen: Modus[][] = [];
   for (let i = 0; i < modi.length; i += spalten) reihen.push(modi.slice(i, i + spalten));
   return (
@@ -491,12 +490,13 @@ function ThemaPoster({ thema, breite, onPress }: { thema: ThemaPosterDaten; brei
   );
 }
 
-/** Themen als Poster in zwei Spalten. */
-export function ThemenRaster({ themen, onThema, style }: { themen: ThemaPosterDaten[]; onThema: (id: ThemaId) => void; style?: StyleProp<ViewStyle> }) {
+/** Themen als Poster in zwei Spalten – am PC mit `breite` (ohne Rand) und `spalten`. */
+export function ThemenRaster({ themen, onThema, style, breite: vorgabe, spalten = 2 }: { themen: ThemaPosterDaten[]; onThema: (id: ThemaId) => void; style?: StyleProp<ViewStyle>; breite?: number; spalten?: number }) {
   const { width } = useFenster();
-  const breite = Math.floor((width - 2 * RAND - 12) / 2);
+  const luecke = vorgabe ? 16 : 12;
+  const breite = vorgabe ? Math.floor((vorgabe - (spalten - 1) * luecke) / spalten) : Math.floor((width - 2 * RAND - 12) / 2);
   return (
-    <View style={[{ paddingHorizontal: RAND, flexDirection: "row", flexWrap: "wrap", gap: 12 }, style]}>
+    <View style={[{ paddingHorizontal: vorgabe ? 0 : RAND, flexDirection: "row", flexWrap: "wrap", gap: luecke }, style]}>
       {themen.map((t) => (
         <ThemaPoster key={t.id} thema={t} breite={breite} onPress={() => onThema(t.id)} />
       ))}

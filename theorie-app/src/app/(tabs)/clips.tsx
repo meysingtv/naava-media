@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Animated, AppState, FlatList, Pressable, RefreshControl, Text, View, type ViewToken } from "react-native";
+import { Animated, AppState, FlatList, Pressable, RefreshControl, Text, useWindowDimensions, View, type ViewToken } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -23,7 +23,7 @@ import { beiNeuenClips, feedLaden, useClipRechte, type ClipEintrag, type FeedArt
 import { useDarfLive } from "@/lib/creator";
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
-import { istTablet } from "@/lib/fenster";
+import { istTablet, useDesktop } from "@/lib/fenster";
 import { useLive } from "@/lib/live";
 import { serverVerbunden } from "@/lib/supabase";
 import { farben, schrift } from "@/lib/theme";
@@ -120,6 +120,8 @@ function Hinweis({ icon, sf, titel, text, children }: { icon: IconName; sf: SFSy
 }
 
 export default function Clips() {
+  const desktop = useDesktop();
+  const fensterHoehe = useWindowDimensions().height;
   const sicher = useSafeAreaInsets();
   // iPad: dort sitzt die Tab-Leiste von iOS oben – die Kopfzeile rückt darunter.
   const insets = istTablet ? { ...sicher, top: sicher.top + 62 } : sicher;
@@ -433,7 +435,11 @@ export default function Clips() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#000000" }}>
-      <View style={{ flex: 1 }} onLayout={(e) => setMasse({ breite: e.nativeEvent.layout.width, hoehe: e.nativeEvent.layout.height })}>
+      {/* Am PC läuft der Feed in einer Hochkant-Spalte in der Mitte – wie Clips am Handy */}
+      <View
+        style={desktop ? { flex: 1, width: Math.min(Math.round((fensterHoehe * 9) / 16), 620), alignSelf: "center" } : { flex: 1 }}
+        onLayout={(e) => setMasse({ breite: e.nativeEvent.layout.width, hoehe: e.nativeEvent.layout.height })}
+      >
         {inhalt}
       </View>
 

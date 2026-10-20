@@ -48,7 +48,7 @@ export const GRUSS: Record<Tageszeit, string> = {
   nacht: "Noch wach?",
 };
 
-const HELD_FOTO: Record<Tageszeit, ImageSourcePropType> = {
+export const HELD_FOTO: Record<Tageszeit, ImageSourcePropType> = {
   morgen: FOTOS.heldMorgen,
   tag: FOTOS.heldTag,
   abend: FOTOS.heldAbend,
@@ -87,7 +87,7 @@ export function KinoHeld({
   children?: ReactNode;
 }) {
   const f = useFarbwelt();
-  const { width, desktop } = useFenster();
+  const { width } = useFenster();
   const hoehe = vorgabe ?? heldHoehe(width);
   const fahrt = useRef(new Animated.Value(0)).current;
 
@@ -122,21 +122,8 @@ export function KinoHeld({
         locations={auslauf(ausblendenAb ?? (f.hell ? 0.7 : 0.46))}
         style={[FUELLEN, { bottom: -1 }]}
       />
-      {/* Am PC steht das Foto in einer Spalte – links und rechts ebenfalls weich in den Grund */}
-      {desktop ? <SeitenAuslauf grund={f.grund} /> : null}
       {children}
     </View>
-  );
-}
-
-/** Weicher Übergang links und rechts in den Grund (Fotos in der Desktop-Spalte). */
-export function SeitenAuslauf({ grund }: { grund: string }) {
-  const verlauf = [grund, mitAlpha(grund, 0.6), mitAlpha(grund, 0)] as const;
-  return (
-    <>
-      <LinearGradient pointerEvents="none" colors={verlauf} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ position: "absolute", top: 0, bottom: 0, left: -1, width: 90 }} />
-      <LinearGradient pointerEvents="none" colors={verlauf} start={{ x: 1, y: 0.5 }} end={{ x: 0, y: 0.5 }} style={{ position: "absolute", top: 0, bottom: 0, right: -1, width: 90 }} />
-    </>
   );
 }
 
@@ -424,7 +411,7 @@ export function Schnellstart({ ziele, style }: { ziele: Schnellziel[]; style?: S
 // Fotokarten
 // ---------------------------------------------------------------------------
 
-function Fortschritt({ anteil, hoehe = 6 }: { anteil: number; hoehe?: number }) {
+export function Fortschritt({ anteil, hoehe = 6 }: { anteil: number; hoehe?: number }) {
   return (
     <View style={{ height: hoehe, borderRadius: hoehe / 2, backgroundColor: "rgba(255,255,255,0.18)", overflow: "hidden" }}>
       <LinearGradient colors={verlauf.balken} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ width: `${Math.max(3, anteil * 100)}%`, height: "100%", borderRadius: hoehe / 2 }} />
@@ -475,42 +462,46 @@ export function FokusKarte({ thema, anteil, offen, style, onPress }: { thema: Th
   );
 }
 
+/** Ein Thema als Poster: Foto, Symbol, Titel und Fortschritt. */
+export function ThemaPoster({ id, anteil, breite = 148, hoehe = 204, onPress }: { id: ThemaId; anteil: number; breite?: number | `${number}%`; hoehe?: number; onPress: () => void }) {
+  const t = themaVon(id);
+  return (
+    <Pressable
+      onPress={() => {
+        tippen();
+        onPress();
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={`${t.titel}, ${Math.round(anteil * 100)} Prozent`}
+      style={({ pressed }) => ({ width: breite, height: hoehe, borderRadius: 24, overflow: "hidden", transform: [{ scale: pressed ? 0.97 : 1 }] })}
+    >
+      <Image source={themaFoto(id)} style={FOTO} resizeMode="cover" fadeDuration={0} />
+      <LinearGradient colors={["rgba(3,5,7,0.15)", "rgba(3,5,7,0.2)", "rgba(3,5,7,0.92)"]} locations={[0, 0.4, 1]} style={FUELLEN} />
+      <Glas klar style={{ position: "absolute", top: 12, left: 12, width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" }}>
+        <Icon name={t.icon as IconName} size={18} color="#FFFFFF" />
+      </Glas>
+      <View style={{ position: "absolute", left: 13, right: 13, bottom: 13, gap: 8 }}>
+        <Text style={{ ...schrift.titelFett, fontSize: 16, lineHeight: 20, color: "#FFFFFF" }} numberOfLines={2}>
+          {t.titel}
+        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <Fortschritt anteil={anteil} hoehe={5} />
+          </View>
+          <Text style={{ ...schrift.textHalb, fontSize: 12, color: "rgba(255,255,255,0.85)", fontVariant: ["tabular-nums"] }}>{Math.round(anteil * 100)}%</Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
 /** Themen als Poster zum Durchwischen. */
 export function ThemenKarussell({ themen, onThema }: { themen: { id: ThemaId; anteil: number }[]; onThema: (id: ThemaId) => void }) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} decelerationRate="fast" snapToInterval={160} contentContainerStyle={{ paddingHorizontal: RAND, gap: 12 }}>
-      {themen.map(({ id, anteil }) => {
-        const t = themaVon(id);
-        return (
-          <Pressable
-            key={id}
-            onPress={() => {
-              tippen();
-              onThema(id);
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={`${t.titel}, ${Math.round(anteil * 100)} Prozent`}
-            style={({ pressed }) => ({ width: 148, height: 204, borderRadius: 24, overflow: "hidden", transform: [{ scale: pressed ? 0.97 : 1 }] })}
-          >
-            <Image source={themaFoto(id)} style={FOTO} resizeMode="cover" fadeDuration={0} />
-            <LinearGradient colors={["rgba(3,5,7,0.15)", "rgba(3,5,7,0.2)", "rgba(3,5,7,0.92)"]} locations={[0, 0.4, 1]} style={FUELLEN} />
-            <Glas klar style={{ position: "absolute", top: 12, left: 12, width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" }}>
-              <Icon name={t.icon as IconName} size={18} color="#FFFFFF" />
-            </Glas>
-            <View style={{ position: "absolute", left: 13, right: 13, bottom: 13, gap: 8 }}>
-              <Text style={{ ...schrift.titelFett, fontSize: 16, lineHeight: 20, color: "#FFFFFF" }} numberOfLines={2}>
-                {t.titel}
-              </Text>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <View style={{ flex: 1 }}>
-                  <Fortschritt anteil={anteil} hoehe={5} />
-                </View>
-                <Text style={{ ...schrift.textHalb, fontSize: 12, color: "rgba(255,255,255,0.85)", fontVariant: ["tabular-nums"] }}>{Math.round(anteil * 100)}%</Text>
-              </View>
-            </View>
-          </Pressable>
-        );
-      })}
+      {themen.map(({ id, anteil }) => (
+        <ThemaPoster key={id} id={id} anteil={anteil} onPress={() => onThema(id)} />
+      ))}
     </ScrollView>
   );
 }

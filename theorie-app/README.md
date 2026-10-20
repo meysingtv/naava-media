@@ -255,9 +255,13 @@ Einrichten:
 
 ## Web-Panel & Manager
 
-Die App läuft auch im Browser – am PC (Windows, Mac) mit einer Leiste oben
-statt der Tab-Leiste unten, gleichen Farben, gleichem Aufbau und dem Inhalt in
-einer mittigen Spalte. Auf schmalen Fenstern sieht sie aus wie auf dem Handy.
+Die App läuft auch im Browser. Am PC (Windows, Mac) mit eigenem Desktop-Design
+über den ganzen Bildschirm: links eine Seitenleiste (bei kleineren Fenstern nur
+Symbole, unten Hell/Dunkel und das Profil), Home als Dashboard mit großem Foto,
+„Heute“-Karte, Schnellstart-Kacheln und Themenraster, Lernen, Prüfung und
+Profil mehrspaltig, Clips als Hochkant-Feed in der Mitte. Unterseiten zeigen
+ihr Titelfoto als große Karte. Gleiche Farben, Fotos und Bausteine wie in der
+App; auf schmalen Fenstern sieht sie aus wie auf dem Handy.
 
 ```
 cd theorie-app
@@ -272,7 +276,7 @@ sofortigem Neuladen: `npm run web`.
 
 **Manager** unter `http://localhost:8080/manager` – nur für den Inhaber (E-Mail
 in `lern_inhaber`, siehe `schema.sql`). Im Browser in den Einstellungen und
-oben in der Leiste verlinkt.
+in der Seitenleiste verlinkt.
 
 - **Übersicht:** Zugänge, Fahrschüler, Fahrlehrer, wer diese Woche aktiv war,
   Status, Lernstand, Zuletzt angelegt, Fahrlehrer mit ihren Schülern und was

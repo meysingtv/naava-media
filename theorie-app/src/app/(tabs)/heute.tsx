@@ -5,9 +5,10 @@ import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useFenster } from "@/lib/fenster";
+import { useDesktop, useFenster } from "@/lib/fenster";
 import { CrewBereich } from "@/components/crew";
 import { FokusKarte, GRUSS, Handschrift, HeldWerte, heldHoehe, KinoHeld, Kopfzeile, PruefungKarte, Schnellstart, StartKnopf, tageszeit, ThemenKarussell, ZitatKarte } from "@/components/home";
+import { HomeDesktop } from "@/components/home-desktop";
 import { Icon } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { useInhaltUnten } from "@/components/tab-leiste";
@@ -19,7 +20,7 @@ import { heuteDran } from "@/lib/karteikarten";
 import { useKonto } from "@/lib/konto";
 import { useLeistenScroll } from "@/lib/leisten-scroll";
 import { tageBis, terminDatum } from "@/lib/pruefungstag";
-import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, serieAktuell, useStand } from "@/lib/stand";
+import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, serieAktuell, useStand, wocheTage, xpWoche } from "@/lib/stand";
 import { RAND, schrift } from "@/lib/theme";
 
 const ZITATE: [string, string][] = [
@@ -40,6 +41,7 @@ export default function Home() {
   const { stand } = useStand();
   const { anzeigeName } = useKonto();
   const [ueberFoto, setUeberFoto] = useState(true);
+  const desktop = useDesktop();
 
   const jetzt = new Date();
   const zeit = tageszeit(jetzt.getHours());
@@ -69,6 +71,44 @@ export default function Home() {
   const letzte = stand.pruefungen[0] ?? null;
   const zitat = ZITATE[jetzt.getDate() % ZITATE.length];
   const glockePunkt = !stand.erinnerung.an;
+
+  // Am PC: eigenes Dashboard über die ganze Breite.
+  if (desktop) {
+    return (
+      <FarbweltBereich farbwelt={f}>
+        <HomeDesktop
+          d={{
+            zeit,
+            vorname,
+            zeilen,
+            reife: gesamt.anteil,
+            sicher: gesamt.richtig,
+            fragenGesamt: gesamt.gesamt,
+            serie,
+            heute,
+            ziel: stand.tagesziel,
+            rest,
+            xpWoche: xpWoche(stand),
+            woche: wocheTage(stand),
+            kommend,
+            letzte,
+            fokus: fokusThema,
+            themen,
+            zitat,
+            glockePunkt,
+            schnell: [
+              { icon: "heart", farbe: "#FF4D6D", titel: "Favoriten", unter: "Gemerkte Fragen", zahl: gemerktIds(stand).length, onPress: () => router.push("/favoriten") },
+              { icon: "refresh", farbe: "#FF4A3D", titel: "Fehler üben", unter: "Falsche Fragen wiederholen", zahl: fehlerIds(stand).length, onPress: () => router.push({ pathname: "/training", params: { modus: "fehler" } }) },
+              { icon: "albums", farbe: "#4DA3FF", titel: "Karteikarten", unter: "Heute fällig", zahl: heuteDran(stand).gesamt, onPress: () => router.push("/karteikarten") },
+              { icon: "camera", farbe: "#23A548", titel: "Schilder-Jagd", unter: "Schilder sammeln", onPress: () => router.push("/schilder-jagd") },
+              { icon: "flash", farbe: "#FFB400", titel: "Duell", unter: "Gegen Freunde spielen", onPress: () => router.push("/duell") },
+              { icon: "stats-chart", farbe: "#8B5CF6", titel: "Statistik", unter: "Dein Lernverlauf", onPress: () => router.push("/statistik") },
+            ],
+          }}
+        />
+      </FarbweltBereich>
+    );
+  }
 
   // Über dem Foto hell, darunter (im hellen Modus) dunkle Statusleiste.
   const schwelle = heldHoehe(width) - insets.top - 60;

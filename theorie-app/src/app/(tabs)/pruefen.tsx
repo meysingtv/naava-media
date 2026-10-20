@@ -4,7 +4,8 @@ import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useFenster } from "@/lib/fenster";
+import { useDesktop, useFenster } from "@/lib/fenster";
+import { DesktopAbschnitt, DesktopKopf, DesktopSeite, DKarte, KopfKapsel, LUECKE, useDesktopBreite } from "@/components/desktop";
 import { Glas } from "@/components/glas";
 import { Kopfzeile, StartKnopf } from "@/components/home";
 import { Icon } from "@/components/icon";
@@ -35,6 +36,8 @@ export default function Pruefen() {
   const fokus = useIsFocused();
   const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();
+  const desktop = useDesktop();
+  const desktopBreite = useDesktopBreite();
 
   const reife = fortschritt(stand);
   const pruefungen = stand.pruefungen;
@@ -59,6 +62,60 @@ export default function Pruefen() {
   const heldHoehe = Math.round(tachoOben + tachoGroesse * 0.9 + 96);
   const kopfText = f.hell ? "#14171B" : "#FFFFFF";
   const terminChip = !termin || wann === "vorbei" ? "Termin?" : wann === "heute" ? "Heute" : wann === "morgen" ? "Morgen" : wann;
+
+  // Am PC: Tacho und Start links, Prüfungstag und Ablauf rechts, darunter Verlauf und Baustellen.
+  if (desktop) {
+    const zwei = desktopBreite >= 1100;
+    const ticket = (
+      <PruefungsTicket
+        termin={termin}
+        wann={wann}
+        hinweis={countdownMoeglich() ? "Countdown auf dem Sperrbildschirm" : "Erinnerung am Prüfungsmorgen"}
+        hinweisIcon={countdownMoeglich() ? "lock-closed" : "notifications"}
+        onPress={() => router.push("/pruefungstermin")}
+      />
+    );
+    return (
+      <FarbweltBereich farbwelt={f}>
+        <DesktopSeite>
+          <DesktopKopf
+            ueber={`Theorieprüfung · Klasse ${stand.klasse}`}
+            titel="Prüfung"
+            unter="Teste dich unter echten Bedingungen – 30 Fragen, 45 Minuten."
+            rechts={<KopfKapsel icon="calendar" text={termin ? (wann === "vorbei" ? "Neuen Termin eintragen" : `Prüfung: ${terminChip}`) : "Prüfungstermin eintragen"} onPress={() => router.push("/pruefungstermin")} />}
+          />
+          <View style={{ flexDirection: zwei ? "row" : "column", gap: LUECKE, alignItems: zwei ? "stretch" : undefined }}>
+            <DKarte style={{ flex: zwei ? 1 : undefined, alignItems: "center", justifyContent: "center", gap: 22, paddingVertical: 34 }}>
+              <Tacho anteil={reife.anteil} sicher={reife.richtig} gesamt={reife.gesamt} groesse={320} />
+              <StartKnopf titel="Simulation starten" unter="30 Fragen · 45 Minuten · wie beim TÜV" onPress={starten} style={{ alignSelf: "stretch" }} />
+            </DKarte>
+            <View style={{ flex: zwei ? 1.3 : undefined, gap: 32 }}>
+              <DesktopAbschnitt titel="Dein Prüfungstag">{ticket}</DesktopAbschnitt>
+              <DesktopAbschnitt titel="So läuft es ab">
+                <Eckdaten />
+                <RegelListe regeln={REGELN} />
+              </DesktopAbschnitt>
+            </View>
+          </View>
+          <View style={{ flexDirection: zwei ? "row" : "column", gap: LUECKE, alignItems: "flex-start" }}>
+            <DesktopAbschnitt titel="Deine Simulationen" link={pruefungen.length > 0 ? `${bestanden} von ${pruefungen.length} bestanden` : undefined} style={{ flex: zwei ? 1.3 : undefined, width: zwei ? undefined : "100%" }}>
+              <FehlerpunkteVerlauf pruefungen={pruefungen} />
+              {pruefungen.length > 0 ? <ErgebnisListe pruefungen={pruefungen.slice(0, 5)} /> : null}
+            </DesktopAbschnitt>
+            <DesktopAbschnitt titel="Vorher noch üben" link="Alle Themen" onLink={() => router.navigate("/lernen")} style={{ flex: zwei ? 1 : undefined, width: zwei ? undefined : "100%" }}>
+              {baustellen.length > 0 ? (
+                <Baustellen themen={baustellen} onThema={(id) => router.push({ pathname: "/training", params: { modus: "thema", thema: id } })} />
+              ) : (
+                <DKarte>
+                  <Text style={{ ...schrift.textMittel, fontSize: 15, lineHeight: 21, color: f.text2 }}>Sobald du ein paar Themen geübt hast, steht hier, wo du vor der Prüfung noch nachlegen solltest.</Text>
+                </DKarte>
+              )}
+            </DesktopAbschnitt>
+          </View>
+        </DesktopSeite>
+      </FarbweltBereich>
+    );
+  }
 
   return (
     <FarbweltBereich farbwelt={f}>
