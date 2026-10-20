@@ -1,0 +1,185 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+import { createClient } from "@/lib/supabase/server";
+import { getKontext } from "@/lib/supabase/queries";
+import { zufallsAvatarFarbe } from "@/lib/constants";
+import { darf } from "@/lib/zugriff";
+
+/** Zahlungs- und Preisangaben – nur für Rollen mit Zugriff auf Rechnungen. */
+const FINANZFELDER = [
+  "preisliste",
+  "zahlungsart",
+  "iban",
+  "sepa_mandat_ref",
+  "sepa_mandat_am",
+  "kostentraeger",
+  "kostentraeger_email",
+  "vorgangsnummer",
+  "intensivkurs",
+  "zweiter_preis",
+  "autom_leistungspakete",
+] as const;
+
+export interface SchuelerFormState {
+  error?: string;
+}
+
+function leerZuNull(v: FormDataEntryValue | null): string | null {
+  const s = String(v ?? "").trim();
+  return s === "" ? null : s;
+}
+
+/** Legt einen Schüler an oder aktualisiert ihn (abhängig vom Feld `id`). */
+export async function schuelerSpeichern(
+  _prev: SchuelerFormState,
+  formData: FormData,
+): Promise<SchuelerFormState> {
+  const kontext = await getKontext();
+  if (!kontext?.fahrschule) {
+    redirect("/auth/login");
+  }
+
+  const supabase = createClient();
+
+  const id = leerZuNull(formData.get("id"));
+  const vorname = String(formData.get("vorname") ?? "").trim();
+  const nachname = String(formData.get("nachname") ?? "").trim();
+
+  if (!vorname || !nachname) {
+    return { error: "Vor- und Nachname sind Pflichtfelder." };
+  }
+
+  const klassen = formData.getAll("klassen").map(String);
+
+  const datensatz = {
+    vorname,
+    nachname,
+    geburtsdatum: leerZuNull(formData.get("geburtsdatum")),
+    strasse: leerZuNull(formData.get("strasse")),
+    plz: leerZuNull(formData.get("plz")),
+    ort: leerZuNull(formData.get("ort")),
+    telefon: leerZuNull(formData.get("telefon")),
+    email: leerZuNull(formData.get("email")),
+    fuehrerscheinklassen: klassen,
+    theorie_bestanden: formData.get("theorie_bestanden") === "on",
+    theorie_termin: leerZuNull(formData.get("theorie_termin")),
+    pruefung_termin: leerZuNull(formData.get("pruefung_termin")),
+    notizen: leerZuNull(formData.get("notizen")),
+    anmeldedatum:
+      leerZuNull(formData.get("anmeldedatum")) ?? new Date().toISOString().slice(0, 10),
+    // Kundenakte / Verwaltung
+    kostentraeger: leerZuNull(formData.get("kostentraeger")),
+    filiale: leerZuNull(formData.get("filiale")),
+    prueforganisation: leerZuNull(formData.get("prueforganisation")),
+    preisliste: leerZuNull(formData.get("preisliste")),
+    iban: leerZuNull(formData.get("iban")),
+    sepa_mandat_ref: leerZuNull(formData.get("sepa_mandat_ref")),
+    sepa_mandat_am: leerZuNull(formData.get("sepa_mandat_am")),
+    sehtest_am: leerZuNull(formData.get("sehtest_am")),
+    erste_hilfe_am: leerZuNull(formData.get("erste_hilfe_am")),
+    antrag_gestellt_am: leerZuNull(formData.get("antrag_gestellt_am")),
+    passbild_ok: formData.get("passbild_ok") === "on",
+    ausweis_ok: formData.get("ausweis_ok") === "on",
+    intensivkurs: formData.get("intensivkurs") === "on",
+    theorie_versuch: Number(formData.get("theorie_versuch") ?? 1) || 1,
+    praxis_versuch: Number(formData.get("praxis_versuch") ?? 1) || 1,
+    lernstatus: Math.min(100, Math.max(0, Number(formData.get("lernstatus") ?? 0) || 0)),
+    // Kundenakte v2
+    anrede: leerZuNull(formData.get("anrede")),
+    geburtsort: leerZuNull(formData.get("geburtsort")),
+    staatsangehoerigkeit: leerZuNull(formData.get("staatsangehoerigkeit")),
+    telefon_beruflich: leerZuNull(formData.get("telefon_beruflich")),
+    schluesselzahl: leerZuNull(formData.get("schluesselzahl")),
+    erteilungsart: leerZuNull(formData.get("erteilungsart")),
+    fuehrerscheinnummer: leerZuNull(formData.get("fuehrerscheinnummer")),
+    kurs: leerZuNull(formData.get("kurs")),
+    bf17: formData.get("bf17") === "on",
+    zahlungsart: leerZuNull(formData.get("zahlungsart")),
+    kostentraeger_email: leerZuNull(formData.get("kostentraeger_email")),
+    vorgangsnummer: leerZuNull(formData.get("vorgangsnummer")),
+    pruefort: leerZuNull(formData.get("pruefort")),
+    sehhilfe: formData.get("sehhilfe") === "on",
+    ausbildung_beendet: formData.get("ausbildung_beendet") === "on",
+    telefon_privat: leerZuNull(formData.get("telefon_privat")),
+    bisherige_klasse: leerZuNull(formData.get("bisherige_klasse")),
+    ausgabedatum: leerZuNull(formData.get("ausgabedatum")),
+    zweiter_preis: formData.get("zweiter_preis") === "on",
+    autom_leistungspakete: formData.get("autom_leistungspakete") === "on",
+  };
+
+  // Ohne Zugriff auf Rechnungen sieht das Formular die Zahlungsangaben nicht –
+  // dann bleiben sie beim Speichern unangetastet, statt geleert zu werden.
+  if (!(await darf("/rechnungen"))) {
+    for (const feld of FINANZFELDER) delete (datensatz as Partial<typeof datensatz>)[feld];
+  }
+
+  let schuelerId = id;
+
+  if (id) {
+    const { error } = await supabase.from("fahrschueler").update(datensatz).eq("id", id);
+    if (error) return { error: error.message };
+  } else {
+    const anmeldedatum =
+      leerZuNull(formData.get("anmeldedatum")) ?? new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabase
+      .from("fahrschueler")
+      .insert({
+        ...datensatz,
+        fahrschule_id: kontext.fahrschule.id,
+        anmeldedatum,
+        avatar_farbe: leerZuNull(formData.get("avatar_farbe")) ?? zufallsAvatarFarbe(),
+      })
+      .select("id")
+      .single();
+    if (error || !data) {
+      return { error: error?.message ?? "Der Schüler konnte nicht angelegt werden." };
+    }
+    schuelerId = data.id;
+  }
+
+  // Für jede (neue) Klasse einen Fortschritts-Datensatz sicherstellen.
+  if (schuelerId && klassen.length > 0) {
+    const rows = klassen.map((klasse) => ({ schueler_id: schuelerId as string, klasse }));
+    await supabase
+      .from("schueler_fortschritt")
+      .upsert(rows, { onConflict: "schueler_id,klasse", ignoreDuplicates: true });
+  }
+
+  revalidatePath("/schueler", "layout");
+  if (schuelerId) revalidatePath(`/schueler/${schuelerId}`);
+  redirect(`/schueler/${schuelerId}`);
+}
+
+/** Aktiviert den Portal-Zugang und erzeugt einen Zugangscode. */
+export async function portalZugangAktivieren(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+  const supabase = createClient();
+  await supabase.from("fahrschueler").update({ portal_aktiv: true, portal_code: code }).eq("id", id);
+  revalidatePath("/schueler", "layout");
+}
+
+/** Sperrt den Portal-Zugang und trennt die Verknüpfung zum Konto. */
+export async function portalZugangSperren(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const supabase = createClient();
+  await supabase.from("fahrschueler").update({ portal_aktiv: false, user_id: null }).eq("id", id);
+  revalidatePath("/schueler", "layout");
+}
+
+/** Löscht einen Schüler vollständig (DSGVO – inkl. abhängiger Datensätze per Cascade). */
+export async function schuelerLoeschen(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) redirect("/schueler");
+
+  const supabase = createClient();
+  await supabase.from("fahrschueler").delete().eq("id", id);
+
+  revalidatePath("/schueler", "layout");
+  redirect("/schueler");
+}
