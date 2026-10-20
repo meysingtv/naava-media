@@ -16,7 +16,8 @@ npx expo prebuild -p ios --clean
 cd ios
 WS=$(ls -d *.xcworkspace | head -1)
 SCHEMA="${WS%.xcworkspace}"
-rm -rf build Payload
+# Nicht ios/build löschen – dort liegen die Codegen-Dateien aus „pod install“.
+rm -rf archiv Payload
 
 # Alte Pod-Mindestversionen hebt plugins/ios-pod-ziel.js beim Prebuild an.
 echo "Baue die App – das dauert ein paar Minuten …"
@@ -26,23 +27,23 @@ if ! xcodebuild \
   -configuration Release \
   -sdk iphoneos \
   -destination "generic/platform=iOS" \
-  -archivePath build/App.xcarchive \
+  -archivePath archiv/App.xcarchive \
   archive \
   CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" > build.log 2>&1; then
   echo ""
   echo "Build fehlgeschlagen. Die Fehler:"
-  grep -E "error:|\*\* ARCHIVE FAILED" build.log | sort -u | head -n 30
+  grep -E "(^| )error:|\*\* ARCHIVE FAILED" build.log | grep -v "warning:" | sort -u | head -n 30
   echo "Ganzes Protokoll: $(pwd)/build.log"
   exit 1
 fi
 
-if ! ls build/App.xcarchive/Products/Applications/*.app >/dev/null 2>&1; then
+if ! ls archiv/App.xcarchive/Products/Applications/*.app >/dev/null 2>&1; then
   echo "Keine App im Archiv gefunden – Protokoll: $(pwd)/build.log"
   exit 1
 fi
 
 mkdir Payload
-cp -R build/App.xcarchive/Products/Applications/*.app Payload/
+cp -R archiv/App.xcarchive/Products/Applications/*.app Payload/
 rm -f ../FahrschulPro.ipa
 zip -qry ../FahrschulPro.ipa Payload
 rm -rf Payload
