@@ -18,7 +18,7 @@ WS=$(ls -d *.xcworkspace | head -1)
 SCHEMA="${WS%.xcworkspace}"
 rm -rf build Payload
 
-# Neue Xcode-Versionen lehnen alte Pod-Ziele (iOS 9/12/13) ab – daher alles auf 15.1 setzen.
+# Alte Pod-Mindestversionen hebt plugins/ios-pod-ziel.js beim Prebuild an.
 echo "Baue die App – das dauert ein paar Minuten …"
 if ! xcodebuild \
   -workspace "$WS" \
@@ -28,7 +28,6 @@ if ! xcodebuild \
   -destination "generic/platform=iOS" \
   -archivePath build/App.xcarchive \
   archive \
-  IPHONEOS_DEPLOYMENT_TARGET=15.1 \
   CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" > build.log 2>&1; then
   echo ""
   echo "Build fehlgeschlagen. Die Fehler:"

@@ -84,6 +84,7 @@
       "expo-web-browser",
       "expo-apple-authentication",
       "./plugins/android-sicherheit",
+      "./plugins/ios-pod-ziel",
       "expo-secure-store",
       "react-native-compressor",
       "@bacons/apple-targets",
