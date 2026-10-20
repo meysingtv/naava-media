@@ -87,7 +87,7 @@ export function KinoHeld({
   children?: ReactNode;
 }) {
   const f = useFarbwelt();
-  const { width } = useFenster();
+  const { width, desktop } = useFenster();
   const hoehe = vorgabe ?? heldHoehe(width);
   const fahrt = useRef(new Animated.Value(0)).current;
 
@@ -122,8 +122,21 @@ export function KinoHeld({
         locations={auslauf(ausblendenAb ?? (f.hell ? 0.7 : 0.46))}
         style={[FUELLEN, { bottom: -1 }]}
       />
+      {/* Am PC steht das Foto in einer Spalte – links und rechts ebenfalls weich in den Grund */}
+      {desktop ? <SeitenAuslauf grund={f.grund} /> : null}
       {children}
     </View>
+  );
+}
+
+/** Weicher Übergang links und rechts in den Grund (Fotos in der Desktop-Spalte). */
+export function SeitenAuslauf({ grund }: { grund: string }) {
+  const verlauf = [grund, mitAlpha(grund, 0.6), mitAlpha(grund, 0)] as const;
+  return (
+    <>
+      <LinearGradient pointerEvents="none" colors={verlauf} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ position: "absolute", top: 0, bottom: 0, left: -1, width: 90 }} />
+      <LinearGradient pointerEvents="none" colors={verlauf} start={{ x: 1, y: 0.5 }} end={{ x: 0, y: 0.5 }} style={{ position: "absolute", top: 0, bottom: 0, right: -1, width: 90 }} />
+    </>
   );
 }
 

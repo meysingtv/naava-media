@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useFenster } from "@/lib/fenster";
 import { Ring } from "@/components/grafik";
+import { SeitenAuslauf } from "@/components/home";
 import { kartenFlaeche, kopfOben, KopfTaste, zurueck } from "@/components/ui";
 import { FarbweltBereich, NACHT, useDarstellung, useFarbwelt } from "@/lib/darstellung";
 import { mitDeckkraft, RAND, schrift, verlauf } from "@/lib/theme";
@@ -62,7 +63,7 @@ export function FotoKopf({
 }) {
   const f = useFarbwelt();
   const insets = useSafeAreaInsets();
-  const { width } = useFenster();
+  const { width, desktop } = useFenster();
   const h = insets.top + hoehe;
   const fahrt = useRef(new Animated.Value(0)).current;
 
@@ -88,6 +89,7 @@ export function FotoKopf({
         {/* Oben etwas Grund für Statusleiste und Knöpfe, unten weich in den Grund */}
         <LinearGradient colors={[grund(f.hell ? 0.75 : 0.7), grund(0)]} locations={[0, 0.34]} style={FUELLEN} />
         <LinearGradient colors={[grund(0), grund(0.5), grund(0.88), f.grund]} locations={[0.42, 0.66, 0.86, 1]} style={[FUELLEN, { bottom: -1 }]} />
+        {desktop ? <SeitenAuslauf grund={f.grund} /> : null}
         <View style={{ position: "absolute", top: kopfOben(insets.top), left: RAND, right: RAND, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           {ohneZurueck ? <View /> : <KopfTaste icon={schliessen ? "close" : "chevron-back"} label={schliessen ? "Schließen" : "Zurück"} onPress={onZurueck ?? zurueck} />}
           <View style={{ flexDirection: "row", gap: 10 }}>{rechts}</View>

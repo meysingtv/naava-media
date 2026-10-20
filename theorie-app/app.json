@@ -10,7 +10,8 @@
     "backgroundColor": "#030507",
     "platforms": [
       "ios",
-      "android"
+      "android",
+      "web"
     ],
     "ios": {
       "icon": "./assets/images/icon.png",

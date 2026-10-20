@@ -253,6 +253,58 @@ Einrichten:
    `update-crew.sql`. Unter Edge Functions → Logs steht je Antwort, wie viele
    Tokens sie gebraucht hat.
 
+## Web-Panel & Manager
+
+Die App läuft auch im Browser – am PC (Windows, Mac) mit einer Leiste oben
+statt der Tab-Leiste unten, gleichen Farben, gleichem Aufbau und dem Inhalt in
+einer mittigen Spalte. Auf schmalen Fenstern sieht sie aus wie auf dem Handy.
+
+```
+cd theorie-app
+npm install
+npm run panel            # baut beim ersten Mal, dann http://localhost:8080
+npm run panel -- --neu   # nach einem git pull neu bauen
+```
+
+Läuft auf Windows genauso (nur Node.js nötig). Die `.env` muss im Ordner
+liegen, sonst gibt es kein Anmelden und keinen Manager. Zum Entwickeln mit
+sofortigem Neuladen: `npm run web`.
+
+**Manager** unter `http://localhost:8080/manager` – nur für den Inhaber (E-Mail
+in `lern_inhaber`, siehe `schema.sql`). Im Browser in den Einstellungen und
+oben in der Leiste verlinkt.
+
+- **Übersicht:** Zugänge, Fahrschüler, Fahrlehrer, wer diese Woche aktiv war,
+  Status, Lernstand, Zuletzt angelegt, Fahrlehrer mit ihren Schülern und was
+  zu erledigen ist (Schüler ohne Fahrlehrer, nie benutzte Zugänge).
+- **Zugänge:** Tabelle mit Suche und Filtern. Zugang anlegen mit E-Mail und
+  Passwort (Vorschlag per Klick, gilt sofort, ohne Bestätigungs-Mail), Rolle
+  Fahrschüler/Fahrlehrer, Führerscheinklasse, Fahrlehrer zuordnen, Clips-Recht
+  und eine Notiz nur für den Inhaber. Klick auf eine Zeile öffnet die Details:
+  alles ändern, neues Passwort setzen, **pausieren** (1 Woche, 2 Wochen,
+  1 Monat oder bis aufgehoben), **sperren** oder **löschen**. Pausierte und
+  gesperrte Konten werden in der App abgemeldet und kommen nicht mehr rein.
+  Inhaber-Konten und das eigene Konto lassen sich nicht sperren oder löschen.
+- **Videos:** Videos zu Themen (mehrere je Thema, erscheinen auf der
+  Themenseite der App) und Erklärvideos zu einzelnen Fragen (erscheinen beim
+  Lernen neben der KI-Hilfe). Datei hineinziehen oder klicken, MP4 oder MOV
+  bis 50 MB, mit Fortschritt; Titel ändern, Reihenfolge, löschen.
+
+Einrichten (einmal):
+
+1. Supabase → SQL Editor → Inhalt von `supabase/update-manager.sql` ausführen
+   (steht auch in `schema.sql`, Abschnitt 26).
+2. Edge Function bereitstellen – im Ordner `theorie-app`:
+   `npx supabase functions deploy manager` (vorher wie bei der KI-Hilfe
+   `npx supabase login` und `npx supabase link --project-ref <Projekt-ID>`).
+   Oder im Dashboard: Edge Functions → „Deploy a new function“ → Name `manager`
+   → Inhalt von `supabase/functions/manager/index.ts` einfügen → Deploy.
+   Secrets braucht sie keine – den Dienstschlüssel stellt Supabase selbst
+   bereit, er kommt nie in die App oder in den Browser.
+3. Für Google/Apple-Anmeldung im Browser: Authentication → URL Configuration
+   → Redirect URLs zusätzlich `http://localhost:8080/**` eintragen. E-Mail und
+   Passwort gehen ohne.
+
 ## Live-Stream in Clips
 
 Live gehen der Inhaber der App (E-Mail in `lern_inhaber`) und angenommene

@@ -3,6 +3,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { dateiHochladen, MAX_VIDEO_BYTES } from "./clips-server";
 import { serverVerbunden, supabase } from "./supabase";
 import { verkleinernNoetig, videoVerkleinern } from "./video-verkleinern";
+import { dateiName, videoEndung, webHochladen } from "./web-hochladen";
 
 /**
  * Erklärvideos zu einzelnen Fragen (SQL Abschnitt 21). Der Inhaber lädt sie in
@@ -116,6 +117,26 @@ export async function erklaervideoHochladen(d: {
   } catch (e) {
     throw new Error(meldung(e));
   }
+  const { data: alt, error } = await supabase.rpc("lern_erklaervideo_setzen", { p_frage: d.frageId, p_pfad: pfad, p_dauer: d.dauer });
+  if (error) {
+    await supabase.storage.from(ERKLAER_BUCKET).remove([pfad]).catch(() => {});
+    throw new Error(meldung(error));
+  }
+  if (typeof alt === "string" && alt) await supabase.storage.from(ERKLAER_BUCKET).remove([alt]).catch(() => {});
+  setzen({ geladen: true, videos: { ...stand.videos, [d.frageId]: { frage_id: d.frageId, pfad, dauer: d.dauer, aktualisiert_am: new Date().toISOString() } } });
+}
+
+/** Inhaber im Web-Panel: Video zu einer Frage aus einer ausgewählten Datei hochladen. */
+export async function erklaervideoHochladenDatei(d: {
+  frageId: string;
+  datei: File;
+  dauer: number | null;
+  onFortschritt?: (anteil: number) => void;
+  abbruch?: { aktuell: (() => void) | null };
+}): Promise<void> {
+  const endung = videoEndung(d.datei);
+  const pfad = `${d.frageId}/${dateiName(endung)}`;
+  await webHochladen({ bucket: ERKLAER_BUCKET, pfad, datei: d.datei, typ: endung === "mov" ? "video/quicktime" : "video/mp4", onFortschritt: d.onFortschritt, abbruch: d.abbruch });
   const { data: alt, error } = await supabase.rpc("lern_erklaervideo_setzen", { p_frage: d.frageId, p_pfad: pfad, p_dauer: d.dauer });
   if (error) {
     await supabase.storage.from(ERKLAER_BUCKET).remove([pfad]).catch(() => {});

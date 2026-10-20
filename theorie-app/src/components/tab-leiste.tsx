@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon, type IconName } from "@/components/icon";
 import { istHelleSeite, TAG, useDarstellung } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
 import { tippen } from "@/lib/haptik";
 import { leisteAufklappen, leisteKlein } from "@/lib/leisten-scroll";
 import { useLive } from "@/lib/live";
@@ -52,6 +53,9 @@ const FEDER_LUPE = { damping: 13, stiffness: 240, mass: 0.7 };
 /** Höhe, die die Leiste unten belegt (inkl. Home-Indikator bzw. Android-Navigation). */
 export function useLeistenHoehe(): number {
   const insets = useSafeAreaInsets();
+  // Am PC im Browser steht die Leiste oben (web-leiste.tsx) – unten bleibt nichts belegt.
+  const desktop = useDesktop();
+  if (desktop) return 0;
   return Platform.OS === "ios" ? insets.bottom + 58 : insets.bottom + UNTEN + KAPSEL;
 }
 

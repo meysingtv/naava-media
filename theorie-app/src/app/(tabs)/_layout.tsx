@@ -4,6 +4,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Badge, Icon, Label, NativeTabs, VectorIcon } from "expo-router/unstable-native-tabs";
 
 import { TabLeiste } from "@/components/tab-leiste";
+import { useDesktop } from "@/lib/fenster";
 import { useLive } from "@/lib/live";
 import { farben } from "@/lib/theme";
 
@@ -12,7 +13,8 @@ import { farben } from "@/lib/theme";
  * schwebend und beim Scrollen kleiner – wie in den Apple-Apps.
  * iOS zeigt höchstens fünf Reiter (sonst kommt „Mehr“), daher ist
  * „Statistiken“ eine eigene Seite (Home → „Alle ansehen“, Profil).
- * Auf Android gibt es kein Liquid Glass – dort eine eigene Leiste im App-Look.
+ * Auf Android gibt es kein Liquid Glass – dort eine eigene Leiste im App-Look,
+ * die auch im Browser läuft (am PC steht die Navigation oben).
  */
 export default function TabsLayout() {
   // Läuft ein Live, zeigt der Clips-Reiter einen roten Punkt.
@@ -46,8 +48,10 @@ export default function TabsLayout() {
 }
 
 function AndroidTabs() {
+  // Im Browser am PC navigiert die Leiste oben (web-leiste.tsx) – unten keine Leiste.
+  const desktop = useDesktop();
   return (
-    <Tabs tabBar={(props) => <TabLeiste {...props} />} screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: farben.grund } }}>
+    <Tabs tabBar={(props) => (desktop ? null : <TabLeiste {...props} />)} screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: farben.grund } }}>
       <Tabs.Screen name="heute" options={{ title: "Home" }} />
       <Tabs.Screen name="lernen" options={{ title: "Lernen" }} />
       <Tabs.Screen name="clips" options={{ title: "Clips" }} />

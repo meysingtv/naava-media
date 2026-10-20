@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Linking, Pressable, ScrollView, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { Linking, Platform, Pressable, ScrollView, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
@@ -419,6 +419,9 @@ export default function Einstellungen() {
             <Abschnitt titel="Lernen" klein />
             <GlasGruppe>
               <Zeile icon="play-circle-outline" iconFarbe={farben.orange} titel="Erklärvideos" unter="Videos zu einzelnen Fragen – erscheinen beim Lernen" onPress={() => router.push("/erklaervideos")} />
+              {Platform.OS === "web" ? (
+                <Zeile icon="grid" iconFarbe="#8B5CF6" titel="Manager" unter="Zugänge anlegen und sperren, Videos zu Themen hochladen" onPress={() => router.push("/manager")} />
+              ) : null}
             </GlasGruppe>
           </View>
         ) : null}

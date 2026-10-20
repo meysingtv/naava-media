@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as Crypto from "expo-crypto";
@@ -98,6 +98,7 @@ function fehlerText(meldung: string): string {
   if (/valid email|invalid email/i.test(meldung)) return "Bitte gib eine gültige E-Mail-Adresse ein.";
   if (/network|fetch/i.test(meldung)) return "Keine Verbindung. Bitte prüfe dein Internet.";
   if (/rate limit/i.test(meldung)) return "Zu viele Versuche. Bitte warte kurz.";
+  if (/user is banned|banned/i.test(meldung)) return "Dein Zugang ist pausiert oder gesperrt. Wende dich bei Fragen an deine Fahrschule.";
   if (/provider is not enabled|unsupported provider/i.test(meldung)) return "Diese Anmeldung ist auf dem Server noch nicht eingeschaltet.";
   if (/lern_profil_name_laenge/.test(meldung)) return "Der Name darf höchstens 40 Zeichen lang sein.";
   if (/lern_profil_bundesland_gueltig/.test(meldung)) return "Bitte wähle ein Bundesland aus der Liste.";
@@ -367,6 +368,34 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.rpc("lern_benutzername_frei", { p_name: name.trim().toLowerCase() });
     return error ? null : Boolean(data);
   }, []);
+
+  // Im Manager pausiert oder gesperrt: abmelden und Bescheid geben. Geprüft
+  // beim Start und jedes Mal, wenn die App wieder nach vorn kommt. Fehlt das
+  // SQL-Update (Abschnitt 26), gibt es die Abfrage nicht – dann nichts tun.
+  const nutzerId = session?.user.id ?? null;
+  useEffect(() => {
+    if (!serverVerbunden || !nutzerId) return;
+    let aktiv = true;
+    async function pruefen() {
+      const { data, error } = await supabase.rpc("lern_mein_zugang");
+      if (!aktiv || error || (data !== "pausiert" && data !== "gesperrt")) return;
+      await supabase.auth.signOut().catch(() => {});
+      setSession(null);
+      setProfil(null);
+      dialog(
+        data === "pausiert" ? "Zugang pausiert" : "Zugang gesperrt",
+        data === "pausiert" ? "Dein Zugang ist gerade pausiert. Wende dich bei Fragen an deine Fahrschule." : "Dein Zugang wurde gesperrt. Wende dich bei Fragen an deine Fahrschule.",
+      );
+    }
+    pruefen();
+    const abo = AppState.addEventListener("change", (s) => {
+      if (s === "active") pruefen();
+    });
+    return () => {
+      aktiv = false;
+      abo.remove();
+    };
+  }, [nutzerId]);
 
   // Links aus den Mails (Bestätigung, Passwort zurücksetzen) melden direkt an –
   // aber nur mit dem Einmal-Code, den diese App selbst angefordert hat.

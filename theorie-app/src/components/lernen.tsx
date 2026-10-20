@@ -10,6 +10,7 @@ import { KartenStapelBild } from "@/components/karteikarten-karte";
 import { Kontrollleuchte } from "@/components/leuchten";
 import { Verkehrszeichen } from "@/components/zeichen";
 import { useFarbwelt } from "@/lib/darstellung";
+import { SeitenAuslauf } from "@/components/home";
 import { useFenster } from "@/lib/fenster";
 import { FOTOS, themaFoto } from "@/lib/fotos";
 import { istZeichen, themaVon, THEMEN, type Frage, type LeuchteKey, type ThemaId, type ZeichenKey } from "@/lib/fragen";
@@ -47,7 +48,7 @@ function reihenFotos(i: number): ThemaId[] {
  */
 export function Themenwand({ children }: { children?: ReactNode }) {
   const f = useFarbwelt();
-  const { width } = useFenster();
+  const { width, desktop } = useFenster();
   const fahrt = useRef(new Animated.Value(0)).current;
   const strecke = THEMEN.length * (KACHEL_B + LUECKE);
   const wandBreite = width * 1.9;
@@ -81,6 +82,7 @@ export function Themenwand({ children }: { children?: ReactNode }) {
       <View style={[FUELLEN, { backgroundColor: f.hell ? "rgba(244,241,236,0.34)" : "rgba(3,5,7,0.5)" }]} />
       <LinearGradient colors={[grund(f.hell ? 0.96 : 0.82), grund(f.hell ? 0.55 : 0.35), grund(0)]} locations={[0, 0.22, 0.42]} style={FUELLEN} />
       <LinearGradient colors={[grund(0), grund(0.6), grund(0.92), f.grund]} locations={[0.56, 0.76, 0.9, 1]} style={[FUELLEN, { bottom: -1 }]} />
+      {desktop ? <SeitenAuslauf grund={f.grund} /> : null}
       {children}
     </View>
   );
