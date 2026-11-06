@@ -10,6 +10,7 @@ import { B, Chip, Eingabe, Kachel, Knopf, ListenZeile, n, Raster, Reiter, Schalt
 import { WebSeite } from "@/components/web/rahmen";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
 import { STATUS_TEXT } from "@/lib/creator";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 import { useEinstellungen, ZEITEN, ZIEL_STUFE, ZIELE } from "@/lib/einstellungen-aktionen";
 import { uhrzeit } from "@/lib/format";
 import { KLASSEN } from "@/lib/klassen";
@@ -19,9 +20,6 @@ import { KLASSEN } from "@/lib/klassen";
 // Zustand und Aktionen kommen aus useEinstellungen – dieselben wie am Handy.
 
 const SUPPORT = process.env.EXPO_PUBLIC_SUPPORT_EMAIL;
-const DATENSCHUTZ = process.env.EXPO_PUBLIC_DATENSCHUTZ_URL;
-const IMPRESSUM = process.env.EXPO_PUBLIC_IMPRESSUM_URL;
-const AGB = process.env.EXPO_PUBLIC_AGB_URL;
 
 const GRAU: Ton = { farbe: "#8A8F96", kante: "#6E737A", hell: "#F0F1F2" };
 
@@ -76,7 +74,7 @@ export function EinstellungenWeb() {
   return (
     <WebSeite ohneRechts>
       <Spalte>
-        <UnterKopf titel="Einstellungen" unter="Konto, Lernziel und Mitteilungen" />
+        <UnterKopf titel="Einstellungen" unter={FRAGEN_AKTIV ? "Konto, Lernziel und Mitteilungen" : "Konto, Mitteilungen und Darstellung"} />
 
         {/* Konto */}
         <Kachel style={{ padding: 22, flexDirection: "row", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
@@ -108,6 +106,7 @@ export function EinstellungenWeb() {
 
         {/* Tagesziel und Klasse */}
         <View style={{ flexDirection: "row", gap: 20, flexWrap: "wrap", alignItems: "stretch" }}>
+          {FRAGEN_AKTIV ? (
           <View style={{ flex: 1, minWidth: 380, flexDirection: "row" }}>
             <Gruppe titel="Tagesziel" fuellen>
               <Kachel style={{ padding: 22, gap: 18, flex: 1 }}>
@@ -152,6 +151,7 @@ export function EinstellungenWeb() {
               </Kachel>
             </Gruppe>
           </View>
+          ) : null}
 
           <View style={{ flex: 1, minWidth: 380, flexDirection: "row" }}>
             <Gruppe titel="Führerscheinklasse" fuellen>
@@ -235,17 +235,25 @@ export function EinstellungenWeb() {
               {session ? (
                 <Kachel>
                   <ListenZeile icon="mail" ton={TOENE.blau} titel={session.user.email ?? ""} unter="E-Mail · Anmelden mit Code" />
+                  <ListenZeile
+                    icon="ban"
+                    ton={GRAU}
+                    titel="Blockierte Personen"
+                    unter={e.blockiert.size ? `${e.blockiert.size} ${e.blockiert.size === 1 ? "Person" : "Personen"}` : "Niemand blockiert"}
+                    onPress={() => router.push("/blockiert")}
+                    oben
+                  />
                 </Kachel>
               ) : (
                 <Kachel>
-                  <ListenZeile icon="person-add" ton={TOENE.orange} titel="Konto erstellen" unter={gast ? "Sichert deinen Fortschritt, schaltet Liga, Likes und Kommentare frei" : undefined} onPress={() => router.push("/registrieren")} />
+                  <ListenZeile icon="person-add" ton={TOENE.orange} titel="Konto erstellen" unter={gast ? (FRAGEN_AKTIV ? "Sichert deinen Fortschritt, schaltet Liga, Likes und Kommentare frei" : "Schaltet Likes, Kommentare und dein Profilbild frei") : undefined} onPress={() => router.push("/registrieren")} />
                   <ListenZeile icon="log-in" ton={TOENE.blau} titel="Ich habe schon ein Konto" onPress={() => router.push("/anmelden")} oben />
                 </Kachel>
               )}
             </Gruppe>
 
             {session ? (
-              <Gruppe titel="Bundesland" hinweis="Für die regionale Rangliste in der Liga.">
+              <Gruppe titel="Bundesland" hinweis={FRAGEN_AKTIV ? "Für die regionale Rangliste in der Liga." : "Freiwillig – erscheint in deinem Profil."}>
                 <Kachel style={{ padding: 18, flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                   {BUNDESLAENDER.map((b) => (
                     <Wahl key={b} text={b} aktiv={profil?.bundesland === b} onPress={() => e.bundeslandWaehlen(b)} />
@@ -291,7 +299,9 @@ export function EinstellungenWeb() {
                   }
                 />
                 <ListenZeile icon="color-palette" ton={TOENE.lila} titel="App-Icon" unter="Dein Lenkrad für den Homescreen" rechts={<Wert text={e.iconTitel} />} onPress={() => router.push("/app-icon")} oben />
-                <ListenZeile icon="flash" ton={TOENE.orange} titel="XP, HP & Abzeichen einblenden" unter={belohnungen ? "Beim Lernen und in den Ergebnissen sichtbar" : "Aus – keine Einblendungen beim Lernen"} rechts={<Schalter wert={belohnungen} onWechsel={belohnungenSetzen} />} oben />
+                {FRAGEN_AKTIV ? (
+                  <ListenZeile icon="flash" ton={TOENE.orange} titel="XP, HP & Abzeichen einblenden" unter={belohnungen ? "Beim Lernen und in den Ergebnissen sichtbar" : "Aus – keine Einblendungen beim Lernen"} rechts={<Schalter wert={belohnungen} onWechsel={belohnungenSetzen} />} oben />
+                ) : null}
               </Kachel>
             </Gruppe>
 
@@ -324,9 +334,9 @@ export function EinstellungenWeb() {
               <Kachel>
                 {[
                   SUPPORT ? <ListenZeile key="hilfe" icon="help-buoy" ton={TOENE.gruen} titel="Hilfe & Kontakt" onPress={() => Linking.openURL(`mailto:${SUPPORT}`)} /> : null,
-                  DATENSCHUTZ ? <ListenZeile key="ds" icon="shield-checkmark" ton={TOENE.blau} titel="Datenschutz" onPress={() => Linking.openURL(DATENSCHUTZ)} /> : null,
-                  IMPRESSUM ? <ListenZeile key="imp" icon="document-text" ton={GRAU} titel="Impressum" onPress={() => Linking.openURL(IMPRESSUM)} /> : null,
-                  AGB ? <ListenZeile key="agb" icon="reader" ton={GRAU} titel="AGB" onPress={() => Linking.openURL(AGB)} /> : null,
+                  <ListenZeile key="ds" icon="shield-checkmark" ton={TOENE.blau} titel="Datenschutz" onPress={() => router.push("/datenschutz")} />,
+                  <ListenZeile key="imp" icon="document-text" ton={GRAU} titel="Impressum" onPress={() => router.push("/impressum")} />,
+                  <ListenZeile key="nb" icon="reader" ton={GRAU} titel="Nutzungsbedingungen" onPress={() => router.push("/nutzungsbedingungen")} />,
                   <ListenZeile
                     key="tour"
                     icon="sparkles"
@@ -338,7 +348,7 @@ export function EinstellungenWeb() {
                       setTimeout(tourStarten, 450);
                     }}
                   />,
-                  <ListenZeile key="einr" icon="options" ton={TOENE.blau} titel="Einrichtung wiederholen" unter="Klasse, Prüfungstermin, Tagesziel, Darstellung" onPress={() => router.push("/einrichtung")} />,
+                  <ListenZeile key="einr" icon="options" ton={TOENE.blau} titel="Einrichtung wiederholen" unter={FRAGEN_AKTIV ? "Klasse, Prüfungstermin, Tagesziel, Darstellung" : "Klasse, Prüfungstermin, Erinnerung, Darstellung"} onPress={() => router.push("/einrichtung")} />,
                   <ListenZeile key="bild" icon="images" ton={TOENE.gelb} titel="Bildnachweise" onPress={() => router.push("/bildnachweise")} />,
                 ]
                   .filter(Boolean)
@@ -352,7 +362,18 @@ export function EinstellungenWeb() {
 
             <Gruppe titel="Daten">
               <Kachel>
-                <ListenZeile icon="refresh-circle" titel="Fortschritt zurücksetzen" unter="Antworten, Serien, Abzeichen" gefahr rechts={<View />} onPress={e.zuruecksetzenFragen} />
+                <ListenZeile icon="refresh-circle" titel="Fortschritt zurücksetzen" unter={FRAGEN_AKTIV ? "Antworten, Serien, Abzeichen" : "Gespeicherter Fortschritt auf diesem Gerät"} gefahr rechts={<View />} onPress={e.zuruecksetzenFragen} />
+                {session ? (
+                  <ListenZeile
+                    icon="trash"
+                    titel={e.loeschtKonto ? "Konto wird gelöscht …" : "Konto löschen"}
+                    unter="Konto und alle Daten endgültig entfernen"
+                    gefahr
+                    rechts={<View />}
+                    onPress={e.loeschtKonto ? () => {} : e.kontoLoeschenFragen}
+                    oben
+                  />
+                ) : null}
               </Kachel>
             </Gruppe>
           </View>
@@ -360,7 +381,7 @@ export function EinstellungenWeb() {
 
         <View style={{ alignItems: "center", gap: 8, marginTop: 8 }}>
           <Logo groesse={24} hell={!webDunkel()} />
-          <Text style={{ ...n.halb, fontSize: 13, color: B.text3 }}>Version 1.0 · Beispielfragen, nicht der amtliche Katalog</Text>
+          <Text style={{ ...n.halb, fontSize: 13, color: B.text3 }}>{FRAGEN_AKTIV ? "Version 1.0 · Beispielfragen, nicht der amtliche Katalog" : "Version 1.0"}</Text>
         </View>
       </Spalte>
     </WebSeite>

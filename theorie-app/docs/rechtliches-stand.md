@@ -44,6 +44,10 @@ Prozentzahlen sind grobe Schätzungen und keine Statistik.
    Verfasser eine kurze Begründung schicken (DSA Art. 16 und 17, gilt auch für
    Kleinstanbieter). Noch nicht gebaut.
 7. Gewerbe anmelden, sobald mit der App Geld verdient wird (z. B. Premium).
+8. Code-Login: Absender-Mail über Gmail einrichten (`docs/login-einrichten.md`,
+   Schritt 2) und `supabase/update-code-login.sql` ausführen. Google- und
+   Apple-Login sind raus; die Datenschutzerklärung nennt dafür den Mailversand
+   über Google.
 
 ## Gesetzeslage (recherchiert im November 2026)
 

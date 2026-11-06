@@ -12,7 +12,7 @@ import { FotoKopf, Seite, StandKarte } from "@/components/seite";
 import { Knopf } from "@/components/ui";
 import { useDarstellung } from "@/lib/darstellung";
 import { useDesktop } from "@/lib/fenster";
-import { ThemaWeb } from "@/components/web/thema-web";
+import { ThemaVideosWeb, ThemaWeb } from "@/components/web/thema-web";
 import { fragenZuThema, themaVon, type ThemaId } from "@/lib/fragen";
 import { themaFoto } from "@/lib/fotos";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
@@ -67,9 +67,15 @@ export default function ThemaSeite() {
   return FRAGEN_AKTIV ? <ThemaMitFragen /> : <ThemaNurVideos />;
 }
 
-/** Ohne Fragen: Titelfoto und alle Videos des Themas untereinander. */
+/** Ohne Fragen: Titelfoto und alle Videos des Themas – am PC als eigene Fassung. */
 function ThemaNurVideos() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const desktop = useDesktop();
+  if (desktop) return <ThemaVideosWeb id={themaVon(id as ThemaId).id} />;
+  return <ThemaNurVideosHandy id={id} />;
+}
+
+function ThemaNurVideosHandy({ id }: { id: string }) {
   const insets = useSafeAreaInsets();
   const { farbwelt: f } = useDarstellung();
   const { width } = useFenster();

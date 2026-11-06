@@ -8,6 +8,7 @@ import { useTasten } from "@/components/web/frage-web";
 import { TastenKappe } from "@/components/web/karteikarten-web";
 import { WebSeite } from "@/components/web/rahmen";
 import { Verkehrszeichen, ZEICHEN_INFO, type ZeichenInfo } from "@/components/zeichen";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 // Verkehrszeichen am PC: oben Gruppen und Suche, links alle Zeichen als
 // Raster, rechts groß das gewählte Zeichen mit Bedeutung und Fundort.
@@ -79,7 +80,7 @@ export function ZeichenWeb() {
           rechts={
             <View style={{ flexDirection: "row", gap: 10 }}>
               <Knopf titel="Schilder-Jagd" icon="camera" art="rand" ton="blau" onPress={() => router.push("/schilder-jagd")} />
-              <Knopf titel="Zeichenfragen üben" icon="play" onPress={() => router.push({ pathname: "/training", params: { modus: "zeichen" } })} />
+              {FRAGEN_AKTIV ? <Knopf titel="Zeichenfragen üben" icon="play" onPress={() => router.push({ pathname: "/training", params: { modus: "zeichen" } })} /> : null}
             </View>
           }
         />

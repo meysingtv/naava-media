@@ -5,7 +5,9 @@ import { Icon, type IconName } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { Abschnitt, B, Chip, Kachel, Knopf, n, Raster, Spalte, Symbol, TOENE, zahlen, type Ton, type Zustand } from "@/components/web/bunt";
 import { WebSeite } from "@/components/web/rahmen";
+import { CLIPS } from "@/lib/clips";
 import { useCrew } from "@/lib/crew";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 import { ERFOLGE } from "@/lib/erfolge";
 import { heuteDran } from "@/lib/karteikarten";
 import { useKonto } from "@/lib/konto";
@@ -55,7 +57,14 @@ export function ProfilWeb() {
   const antworten = letzteTage.map((t) => stand.antwortenTage[t] ?? 0);
   const meisteAntworten = Math.max(1, ...antworten);
 
-  const mehr: { icon: IconName; titel: string; unter: string; ton: Ton; onPress: () => void }[] = [
+  const gemerkt = CLIPS.filter((c) => stand.clips.gemerkt.includes(c.id)).length;
+  const mehrOhneFragen: { icon: IconName; titel: string; unter: string; ton: Ton; onPress: () => void }[] = [
+    { icon: "camera", titel: "Schilder-Jagd", unter: schilder ? `${schilder} von ${ALBUM.length} gefunden` : "Schilder sammeln", ton: TOENE.blau, onPress: () => router.push("/schilder-jagd") },
+    { icon: "bulb", titel: "Kurz erklärt", unter: gemerkt ? `${gemerkt} gemerkt` : "Regeln in 30 Sekunden", ton: TOENE.koralle, onPress: () => router.push("/kurz-erklaert") },
+    { icon: "warning", titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", ton: TOENE.rot, onPress: () => router.push("/zeichen") },
+    { icon: "calculator", titel: "Formeln", unter: "Anhalteweg & Co.", ton: TOENE.bernstein, onPress: () => router.push("/formeln") },
+  ];
+  const mehrMitFragen: { icon: IconName; titel: string; unter: string; ton: Ton; onPress: () => void }[] = [
     { icon: "stats-chart", titel: "Mein Fortschritt", unter: "Stärken & Schwächen", ton: TOENE.indigo, onPress: () => router.push("/statistik") },
     { icon: "albums", titel: "Karteikarten", unter: kartenDran ? `${kartenDran} heute dran` : "Fragen als Karten", ton: TOENE.tuerkis, onPress: () => router.push("/karteikarten") },
     { icon: "people", titel: "Meine Crew", unter: crewDaten?.crew ? `${crewDaten.crew.name} · Tag ${crewDaten.crew.flamme}` : "Gemeinsam lernen", ton: TOENE.koralle, onPress: () => router.push("/crew") },
@@ -63,6 +72,19 @@ export function ProfilWeb() {
     { icon: "heart", titel: "Favoriten", unter: "Gemerkte Fragen", ton: TOENE.pink, onPress: () => router.push("/favoriten") },
     { icon: "trophy", titel: "Liga & Duelle", unter: `${stand.duell.siege} Siege · Elo ${stand.duell.rating}`, ton: TOENE.gelb, onPress: () => router.push("/liga") },
   ];
+  const mehr = FRAGEN_AKTIV ? mehrMitFragen : mehrOhneFragen;
+  const werte: { icon: IconName; ton: Ton; wert: string; titel: string; onPress?: () => void }[] = FRAGEN_AKTIV
+    ? [
+        { icon: "flash", ton: TOENE.gelb, wert: zahlen(stand.xp), titel: "XP gesamt", onPress: () => router.push("/liga") },
+        { icon: "flame", ton: TOENE.orange, wert: String(serie), titel: serie === 1 ? "Tag Serie" : "Tage Serie", onPress: () => router.push("/statistik") },
+        { icon: "ribbon", ton: TOENE.lila, wert: `${freigeschaltet}/${ERFOLGE.length}`, titel: "Abzeichen" },
+        { icon: "time", ton: TOENE.blau, wert: lernzeitText(gesamtZahlen.sekunden), titel: "Lernzeit", onPress: () => router.push("/statistik") },
+      ]
+    : [
+        { icon: "camera", ton: TOENE.blau, wert: `${schilder}/${ALBUM.length}`, titel: "Schilder gefunden", onPress: () => router.push("/schilder-jagd") },
+        { icon: "calendar", ton: TOENE.orange, wert: tage !== null && tage >= 0 ? String(tage) : "–", titel: tage === 1 ? "Tag bis zur Prüfung" : "Tage bis zur Prüfung", onPress: () => router.push("/pruefungstermin") },
+        { icon: "bookmark", ton: TOENE.gelb, wert: String(gemerkt), titel: "Gemerkt", onPress: () => router.push("/kurz-erklaert") },
+      ];
 
   return (
     <WebSeite ohneRechts>
@@ -82,9 +104,11 @@ export function ProfilWeb() {
             {anzeigeName}
           </Text>
           <Text style={{ ...n.halb, fontSize: 15.5, color: B.text2 }}>{unterzeile}</Text>
-          <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
-            <Chip icon="trophy" text={liga.name} ton={TOENE.lila} onPress={() => router.push("/liga")} />
-          </View>
+          {FRAGEN_AKTIV ? (
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
+              <Chip icon="trophy" text={liga.name} ton={TOENE.lila} onPress={() => router.push("/liga")} />
+            </View>
+          ) : null}
         </View>
         <Knopf titel="Einstellungen" icon="settings" art="rand" ton="blau" onPress={() => router.push("/einstellungen")} />
       </Kachel>
@@ -92,7 +116,9 @@ export function ProfilWeb() {
       {!session ? (
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 16, paddingLeft: 20, borderRadius: 16, backgroundColor: B.ton, flexWrap: "wrap" }}>
           <Icon name="cloud-upload-outline" size={22} color={B.text2} />
-          <Text style={{ flex: 1, minWidth: 240, ...n.halb, fontSize: 15, color: B.text2 }}>Du lernst als Gast. Mit einem kostenlosen Konto ist dein Fortschritt gesichert – und Liga, Crew und Duelle gehen.</Text>
+          <Text style={{ flex: 1, minWidth: 240, ...n.halb, fontSize: 15, color: B.text2 }}>
+            {FRAGEN_AKTIV ? "Du lernst als Gast. Mit einem kostenlosen Konto ist dein Fortschritt gesichert – und Liga, Crew und Duelle gehen." : "Du schaust als Gast. Mit einem kostenlosen Konto kannst du liken, kommentieren und ein Profilbild zeigen."}
+          </Text>
           <Knopf titel="Anmelden" art="rand" ton="blau" groesse="klein" onPress={() => router.push("/anmelden")} />
           <Knopf titel="Konto erstellen" ton="gruen" groesse="klein" onPress={() => router.push("/registrieren")} />
         </View>
@@ -100,12 +126,7 @@ export function ProfilWeb() {
 
       {/* Große Zahlen */}
       <Raster min={150} max={4} abstand={16}>
-        {[
-          { icon: "flash" as IconName, ton: TOENE.gelb, wert: zahlen(stand.xp), titel: "XP gesamt", onPress: () => router.push("/liga") },
-          { icon: "flame" as IconName, ton: TOENE.orange, wert: String(serie), titel: serie === 1 ? "Tag Serie" : "Tage Serie", onPress: () => router.push("/statistik") },
-          { icon: "ribbon" as IconName, ton: TOENE.lila, wert: `${freigeschaltet}/${ERFOLGE.length}`, titel: "Abzeichen" },
-          { icon: "time" as IconName, ton: TOENE.blau, wert: lernzeitText(gesamtZahlen.sekunden), titel: "Lernzeit", onPress: () => router.push("/statistik") },
-        ].map((w) => (
+        {werte.map((w) => (
           <Kachel key={w.titel} onPress={w.onPress} style={{ padding: 18, flexDirection: "row", alignItems: "center", gap: 12 }}>
             <Icon name={w.icon} size={28} color={w.ton.farbe} />
             <View style={{ flex: 1 }}>
@@ -118,6 +139,8 @@ export function ProfilWeb() {
         ))}
       </Raster>
 
+      {FRAGEN_AKTIV ? (
+        <>
       {/* Weg zum Führerschein */}
       <View>
         <Abschnitt titel="Dein Weg zum Führerschein" link={reife >= 0.9 ? "Prüfungsreif!" : `Noch ${Math.max(1, Math.ceil((0.9 - reife) * 100))} % bis prüfungsreif`} />
@@ -189,9 +212,12 @@ export function ProfilWeb() {
         </Kachel>
       </View>
 
+        </>
+      ) : null}
+
       {/* Mehr */}
       <View>
-        <Abschnitt titel="Mehr" />
+        <Abschnitt titel={FRAGEN_AKTIV ? "Mehr" : "Lernhilfen"} />
         <Raster min={220} abstand={16}>
           {mehr.map((m) => (
             <Kachel key={m.titel} onPress={m.onPress} style={{ padding: 18, flexDirection: "row", alignItems: "center", gap: 14 }}>
@@ -210,6 +236,9 @@ export function ProfilWeb() {
       <View style={{ flexDirection: "row", gap: 12, flexWrap: "wrap" }}>
         <Knopf titel="Premium" icon="diamond" art="rand" ton="orange" onPress={() => router.push("/premium")} />
         <Knopf titel="Bildnachweise" icon="images" art="rand" ton="blau" onPress={() => router.push("/bildnachweise")} />
+        <Knopf titel="Impressum" icon="document-text" art="rand" ton="blau" onPress={() => router.push("/impressum")} />
+        <Knopf titel="Datenschutz" icon="shield-checkmark" art="rand" ton="blau" onPress={() => router.push("/datenschutz")} />
+        <Knopf titel="Nutzungsbedingungen" icon="reader" art="rand" ton="blau" onPress={() => router.push("/nutzungsbedingungen")} />
         <Knopf titel={gast ? "Gastmodus beenden" : "Abmelden"} icon="log-out" art="rand" ton="rot" onPress={abmeldenFragen} />
       </View>
       </Spalte>

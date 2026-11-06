@@ -1,5 +1,9 @@
 # Login einrichten: Code per E-Mail, Fahrlehrer
 
+Kurz: SQL ausführen (Schritt 1 und `supabase/update-code-login.sql`,
+Abschnitt 28), Gmail als Absender eintragen (Schritt 2), Code in die
+Mail-Vorlagen (Schritt 3), Code-Länge prüfen (Schritt 4), neu bauen.
+
 Anmelden und Registrieren laufen ohne Passwort: Man gibt die E-Mail ein,
 bekommt einen 6-stelligen Code und tippt ihn in der App ein. Google und Apple
 gibt es nicht mehr.
@@ -15,14 +19,44 @@ Im Supabase-SQL-Editor einmal `supabase/update-rollen-login.sql` ausführen
 Beim Registrieren gehen Name, Benutzername, Rolle, Klasse usw. wie bisher als
 Konto-Daten mit; der Trigger legt daraus das Profil an, sobald der Code stimmt.
 
-## 2. E-Mail-Anbieter (SMTP) eintragen – Pflicht
+## 2. Absender: deine Gmail-Adresse (SMTP) – Pflicht
 
-Supabase schickt mit dem eingebauten Versand nur sehr wenige Mails pro Stunde
-und nur an Adressen aus deinem Supabase-Team. Für echte Nutzer:
+Ohne eigenen Versand kommen die Mails von einer Supabase-Adresse – und
+Supabase schickt dann nur sehr wenige Mails pro Stunde. So kommen die Codes
+von deiner Adresse, z. B. **fahrschulpro@gmail.com**, mit dem Namen
+„Fahrschul Pro“:
 
-Supabase → Authentication → **SMTP Settings** → eigenen Anbieter eintragen
-(z. B. Resend, Brevo, Postmark). Danach unter Authentication → **Rate Limits**
-„Emails sent per hour“ hochsetzen.
+1. **Zwei-Faktor-Schutz im Google-Konto einschalten** (nötig für Schritt 2):
+   myaccount.google.com → Sicherheit → Bestätigung in zwei Schritten.
+2. **App-Passwort anlegen:** myaccount.google.com/apppasswords → Name z. B.
+   „Supabase“ → Erstellen. Das 16-stellige Passwort kopieren (wird nur einmal
+   gezeigt). Es ist **nicht** dein normales Google-Passwort.
+3. **In Supabase eintragen:** Authentication → Emails → **SMTP Settings** →
+   „Enable custom SMTP“:
+
+   | Feld | Wert |
+   |---|---|
+   | Sender email | `fahrschulpro@gmail.com` (deine Gmail-Adresse) |
+   | Sender name | `Fahrschul Pro` |
+   | Host | `smtp.gmail.com` |
+   | Port | `465` (falls es nicht klappt: `587`) |
+   | Username | `fahrschulpro@gmail.com` |
+   | Password | das App-Passwort aus Schritt 2 (ohne Leerzeichen) |
+
+4. Authentication → **Rate Limits** → „Emails sent per hour“ hochsetzen,
+   z. B. auf 100.
+5. Testen: In der App „Anmelden“ → eigene Adresse → Code senden. Die Mail
+   muss von „Fahrschul Pro <fahrschulpro@gmail.com>“ kommen.
+
+**Grenzen:** Ein normales Gmail-Konto schafft rund 500 Mails am Tag – für den
+Anfang reicht das gut. Wird es mehr, lohnt sich eine eigene Domain (z. B.
+`noreply@fahrschulpro.de`) über Resend oder Brevo. Wichtig: Eine
+`@gmail.com`-Adresse als Absender funktioniert nur über Googles eigenen
+Server wie oben. Über andere Anbieter landen solche Mails im Spam oder werden
+abgelehnt.
+
+Das App-Passwort gehört nur in die Supabase-Einstellungen – nie in den Code
+oder in eine Datei im Projekt.
 
 ## 3. Code in die E-Mail schreiben
 

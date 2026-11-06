@@ -1,5 +1,5 @@
 -- =====================================================================
--- 27) Anmelden mit Code per E-Mail
+-- 28) Anmelden mit Code per E-Mail
 -- =====================================================================
 -- Die App meldet nur noch mit einem Code aus der E-Mail an (kein Passwort,
 -- kein Google/Apple). Wer so hereinkommt, hat die Adresse bewiesen. Konten
@@ -11,7 +11,7 @@
 -- So geht's: Supabase → SQL Editor → „New query“ → diese ganze Datei einfügen
 -- → „Run“. Vorher muss Abschnitt 15 (update-ohne-bestaetigung.sql) gelaufen
 -- sein. Mehrfaches Ausführen ist unschädlich. Steht auch in schema.sql
--- (Abschnitt 27).
+-- (Abschnitt 28).
 
 create or replace function public.lern_ist_inhaber()
 returns boolean

@@ -12,6 +12,7 @@ import { WebSeite } from "@/components/web/rahmen";
 import { CLIPS, type Clip } from "@/lib/clips";
 import { themaVon } from "@/lib/fragen";
 import { useStand } from "@/lib/stand";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 // Kurz erklärt am PC: oben der gewählte Clip – links die bewegte Grafik,
 // rechts Titel, die drei Sätze und die Aktionen –, darunter alle Clips als
@@ -199,7 +200,11 @@ export function KurzErklaertWeb() {
                   </View>
                   <View style={{ flex: 1 }} />
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                    <Knopf titel="Thema üben" icon="play" onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: clip.thema } })} />
+                    {FRAGEN_AKTIV ? (
+                      <Knopf titel="Thema üben" icon="play" onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: clip.thema } })} />
+                    ) : (
+                      <Knopf titel="Videos zum Thema" icon="play" art="rand" ton="blau" onPress={() => router.push({ pathname: "/thema/[id]", params: { id: clip.thema } })} />
+                    )}
                     <Aktion icon={gemocht ? "heart" : "heart-outline"} aktiv={gemocht} ton={TOENE.pink} text={String(clip.basis + (gemocht ? 1 : 0))} label="Gefällt mir" onPress={() => clipUmschalten(clip.id, "gemocht")} />
                     <Aktion icon={gemerkt ? "bookmark" : "bookmark-outline"} aktiv={gemerkt} ton={TOENE.blau} label="Merken" onPress={() => clipUmschalten(clip.id, "gemerkt")} />
                     <Aktion icon={kopiert ? "checkmark" : "share-outline"} aktiv={kopiert} ton={TOENE.gruen} text={kopiert ? "Kopiert" : undefined} label="Teilen" onPress={() => teilen(clip)} />

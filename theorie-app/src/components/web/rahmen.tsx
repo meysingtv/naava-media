@@ -7,10 +7,13 @@ import { Icon, type IconName } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { B, Balken, Kachel, Knopf, n, TOENE, Wert, zahlen, type Ton, type Zustand, webDunkel } from "@/components/web/bunt";
 import { useClipRechte } from "@/lib/clips-server";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 import { SEITENLEISTE, SEITENLEISTE_SCHMAL } from "@/lib/fenster";
 import { useKonto } from "@/lib/konto";
 import { useLive } from "@/lib/live";
+import { tageBis, terminDatum } from "@/lib/pruefungstag";
 import { ligaVon } from "@/lib/rangliste";
+import { ALBUM } from "@/lib/schilder-jagd";
 import { heuteBeantwortet, serieAktuell, useStand } from "@/lib/stand";
 
 // Rahmen der Lern-App im Browser: links eine breite Leiste mit großen, bunten
@@ -22,17 +25,28 @@ type Punkt = { pfad: string; titel: string; an: IconName; aus: IconName; ton: To
 const HAUPT: Punkt[] = [
   { pfad: "/heute", titel: "Home", an: "home", aus: "home-outline", ton: TOENE.orange },
   { pfad: "/lernen", titel: "Lernen", an: "book", aus: "book-outline", ton: TOENE.gruen },
-  { pfad: "/pruefen", titel: "Prüfung", an: "shield-checkmark", aus: "shield-checkmark-outline", ton: TOENE.blau },
+  // Prüfung nur mit Fragen (lib/funktionen.ts)
+  ...(FRAGEN_AKTIV ? [{ pfad: "/pruefen", titel: "Prüfung", an: "shield-checkmark", aus: "shield-checkmark-outline", ton: TOENE.blau } as Punkt] : []),
   { pfad: "/clips", titel: "Clips", an: "film", aus: "film-outline", ton: TOENE.pink },
   { pfad: "/profil", titel: "Profil", an: "person-circle", aus: "person-circle-outline", ton: TOENE.lila },
 ];
 
-const MEHR: Punkt[] = [
-  { pfad: "/statistik", titel: "Statistik", an: "stats-chart", aus: "stats-chart-outline", ton: TOENE.indigo },
-  { pfad: "/karteikarten", titel: "Karteikarten", an: "albums", aus: "albums-outline", ton: TOENE.tuerkis },
-  { pfad: "/crew", titel: "Crew", an: "people", aus: "people-outline", ton: TOENE.koralle },
-  { pfad: "/einstellungen", titel: "Einstellungen", an: "settings", aus: "settings-outline", ton: { farbe: "#8A8F96", kante: "#6E737A", hell: "#F0F1F2" } },
-];
+const EINSTELLUNGEN: Punkt = { pfad: "/einstellungen", titel: "Einstellungen", an: "settings", aus: "settings-outline", ton: { farbe: "#8A8F96", kante: "#6E737A", hell: "#F0F1F2" } };
+
+const MEHR: Punkt[] = FRAGEN_AKTIV
+  ? [
+      { pfad: "/statistik", titel: "Statistik", an: "stats-chart", aus: "stats-chart-outline", ton: TOENE.indigo },
+      { pfad: "/karteikarten", titel: "Karteikarten", an: "albums", aus: "albums-outline", ton: TOENE.tuerkis },
+      { pfad: "/crew", titel: "Crew", an: "people", aus: "people-outline", ton: TOENE.koralle },
+      EINSTELLUNGEN,
+    ]
+  : [
+      { pfad: "/zeichen", titel: "Verkehrszeichen", an: "warning", aus: "warning-outline", ton: TOENE.rot },
+      { pfad: "/kurz-erklaert", titel: "Kurz erklärt", an: "bulb", aus: "bulb-outline", ton: TOENE.koralle },
+      { pfad: "/formeln", titel: "Formeln", an: "calculator", aus: "calculator-outline", ton: TOENE.bernstein },
+      { pfad: "/schilder-jagd", titel: "Schilder-Jagd", an: "camera", aus: "camera-outline", ton: TOENE.tuerkis },
+      EINSTELLUNGEN,
+    ];
 
 /** Punkt der Seitenleiste – auch für den Manager. */
 export function LeistenPunkt({ titel, an, aus, ton, aktiv, schmal, punkt, zahl, onPress }: { titel: string; an: IconName; aus: IconName; ton: Ton; aktiv: boolean; schmal: boolean; punkt?: boolean; zahl?: number; onPress: () => void }) {
@@ -116,6 +130,58 @@ export function WebSeitenleiste() {
 
 /** Serie, XP, Tagesziel und Liga – rechts neben dem Inhalt der Hauptseiten. */
 export function RechteSpalte({ children }: { children?: ReactNode }) {
+  return FRAGEN_AKTIV ? <SpalteMitFragen>{children}</SpalteMitFragen> : <SpalteOhneFragen>{children}</SpalteOhneFragen>;
+}
+
+/** Solange die Fragen aus sind: Prüfungstermin, Schilder-Jagd und Lernvideos statt Serie, XP und Liga. */
+function SpalteOhneFragen({ children }: { children?: ReactNode }) {
+  const { stand } = useStand();
+  const termin = terminDatum(stand.pruefungstermin);
+  const tage = termin ? tageBis(termin) : null;
+  const gefunden = ALBUM.filter((k) => stand.schilder[k]).length;
+  return (
+    <View style={{ gap: 20 }}>
+      <Kachel onPress={() => router.push("/pruefungstermin")} style={{ padding: 20, gap: 10 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+          <View style={{ width: 52, height: 52, borderRadius: 16, backgroundColor: TOENE.orange.farbe, alignItems: "center", justifyContent: "center", borderBottomWidth: 4, borderBottomColor: "rgba(0,0,0,0.18)" }}>
+            <Icon name="calendar" size={24} color="#FFFFFF" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ ...n.schwarz, fontSize: 17, color: B.text }}>
+              {tage !== null && tage >= 0 ? (tage === 0 ? "Heute ist Prüfung" : tage === 1 ? "Morgen ist Prüfung" : `Noch ${tage} Tage`) : "Prüfungstermin"}
+            </Text>
+            <Text style={{ ...n.halb, fontSize: 13.5, color: B.text2 }}>{tage !== null && tage >= 0 ? "bis zur Theorieprüfung" : "Trag deinen Termin ein"}</Text>
+          </View>
+        </View>
+      </Kachel>
+
+      <Kachel onPress={() => router.push("/schilder-jagd")} style={{ padding: 20, gap: 12 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Text style={{ ...n.schwarz, fontSize: 18, color: B.text }}>Schilder-Jagd</Text>
+          <Text style={{ ...n.fett, fontSize: 14, color: B.text3, fontVariant: ["tabular-nums"] }}>
+            {gefunden} / {ALBUM.length}
+          </Text>
+        </View>
+        <Balken anteil={ALBUM.length ? gefunden / ALBUM.length : 0} ton={TOENE.tuerkis} />
+        <Text style={{ ...n.halb, fontSize: 13.5, color: B.text2 }}>Echte Schilder mit der Kamera sammeln</Text>
+      </Kachel>
+
+      <Kachel onPress={() => router.push("/lernen")} style={{ padding: 20, gap: 8 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Icon name="play-circle" size={30} color={TOENE.gruen.farbe} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ ...n.schwarz, fontSize: 17, color: B.text }}>Lernvideos</Text>
+            <Text style={{ ...n.halb, fontSize: 13.5, color: B.text2 }}>Alle Themen kurz und einfach erklärt</Text>
+          </View>
+        </View>
+      </Kachel>
+
+      {children}
+    </View>
+  );
+}
+
+function SpalteMitFragen({ children }: { children?: ReactNode }) {
   const { stand } = useStand();
   const serie = serieAktuell(stand);
   const heute = heuteBeantwortet(stand);
@@ -185,7 +251,9 @@ export function KontoHinweis() {
   return (
     <Kachel style={{ padding: 20, gap: 14 }}>
       <Text style={{ ...n.schwarz, fontSize: 18, color: B.text }}>Fortschritt sichern</Text>
-      <Text style={{ ...n.halb, fontSize: 14.5, lineHeight: 20, color: B.text2 }}>Mit einem kostenlosen Konto gehen Liga, Crew und Duelle – und nichts geht verloren.</Text>
+      <Text style={{ ...n.halb, fontSize: 14.5, lineHeight: 20, color: B.text2 }}>
+        {FRAGEN_AKTIV ? "Mit einem kostenlosen Konto gehen Liga, Crew und Duelle – und nichts geht verloren." : "Mit einem kostenlosen Konto kannst du liken, kommentieren und ein Profilbild zeigen – und nichts geht verloren."}
+      </Text>
       <Knopf titel="Konto erstellen" ton="gruen" onPress={() => router.push("/registrieren")} />
       <Knopf titel="Anmelden" art="rand" ton="blau" onPress={() => router.push("/anmelden")} />
     </Kachel>

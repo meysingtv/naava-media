@@ -8,9 +8,12 @@ import { Lader } from "@/components/lader";
 import { NutzerBild, ProfilBild } from "@/components/profilbild";
 import { Abschnitt, B, Kachel, Knopf, Leer, n, Raster, Spalte, TOENE, type Zustand } from "@/components/web/bunt";
 import { WebSeite } from "@/components/web/rahmen";
+import { entblocken, useBlockiert } from "@/lib/blockieren";
+import { blockierenFragen } from "@/lib/blockieren-fragen";
 import { anmeldenFragen } from "@/lib/clip-aktionen";
 import { clipsVonLaden, dateiUrl, erstellerProfilLaden, folgenSetzen, kurzeZahl, type ClipEintrag, type ErstellerProfil } from "@/lib/clips-server";
 import { CREW_MAX, useCrew } from "@/lib/crew";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 import { erfolg } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 
@@ -81,9 +84,12 @@ export type NutzerAnsichtProps = {
   /** In die eigene Crew einladen – nur wenn möglich. */
   onEinladen?: () => void;
   eingeladen: boolean;
+  /** Blockieren bzw. Blockierung aufheben (nicht beim eigenen Profil). */
+  onBlockieren?: () => void;
+  gesperrt?: boolean;
 };
 
-export function NutzerAnsichtWeb({ id, profil, clips, fehler, onFolgen, onNeuLaden, onEinladen, eingeladen }: NutzerAnsichtProps) {
+export function NutzerAnsichtWeb({ id, profil, clips, fehler, onFolgen, onNeuLaden, onEinladen, eingeladen, onBlockieren, gesperrt }: NutzerAnsichtProps) {
   const name = profil ? profil.name || profil.benutzername : "";
 
   return (
@@ -114,12 +120,13 @@ export function NutzerAnsichtWeb({ id, profil, clips, fehler, onFolgen, onNeuLad
             <View style={{ gap: 10, minWidth: 200 }}>
               {profil.ich ? (
                 <Knopf titel="Profil bearbeiten" icon="create" art="rand" ton="blau" onPress={() => router.push("/einstellungen")} />
-              ) : profil.folge_ich ? (
+              ) : gesperrt ? null : profil.folge_ich ? (
                 <Knopf titel="Folge ich" icon="checkmark" art="rand" ton="blau" onPress={onFolgen} />
               ) : (
                 <Knopf titel="Folgen" icon="person-add" ton="blau" onPress={onFolgen} />
               )}
               {onEinladen ? <Knopf titel={eingeladen ? "Eingeladen" : "In Crew einladen"} icon={eingeladen ? "checkmark" : "people"} art="rand" ton="orange" deaktiviert={eingeladen} onPress={onEinladen} /> : null}
+              {!profil.ich && onBlockieren ? <Knopf titel={gesperrt ? "Blockierung aufheben" : "Blockieren"} icon="ban" art="rand" ton="rot" groesse="klein" onPress={onBlockieren} /> : null}
             </View>
           </Kachel>
         ) : fehler ? null : (
@@ -152,6 +159,10 @@ export function NutzerAnsichtWeb({ id, profil, clips, fehler, onFolgen, onNeuLad
                   <ClipKachel key={c.id} clip={c} onPress={() => router.push({ pathname: "/clip-ansicht", params: { nutzer: id, start: c.id } })} />
                 ))}
               </Raster>
+            ) : gesperrt ? (
+              <Kachel>
+                <Leer icon="ban" ton={TOENE.rot} titel="Du hast diese Person blockiert" text="Ihre Clips, Kommentare und Chat-Nachrichten siehst du nicht mehr." />
+              </Kachel>
             ) : (
               <Kachel>
                 <Leer icon="film" ton={TOENE.pink} titel="Noch keine Clips" text={profil.ich ? "Deine Clips erscheinen hier, sobald du den ersten hochgeladen hast." : `${name} hat noch keine Clips veröffentlicht.`} />
@@ -173,6 +184,8 @@ export function NutzerWeb() {
   const [clips, setClips] = useState<ClipEintrag[] | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
   const [eingeladen, setEingeladen] = useState(false);
+  const blockiert = useBlockiert();
+  const gesperrt = Boolean(profil && blockiert.has(profil.id));
 
   const laden = useCallback(async () => {
     if (!id) return;
@@ -207,7 +220,22 @@ export function NutzerWeb() {
     }
   }
 
-  const kannEinladen = !!profil && !profil.ich && !!crew.daten?.crew && !crew.daten.mitglieder?.some((m) => m.id === profil.id) && (crew.daten.mitglieder?.length ?? 0) < CREW_MAX;
+  async function blockierenUmschalten() {
+    if (!profil) return;
+    if (!session) {
+      anmeldenFragen("Blockieren");
+      return;
+    }
+    if (gesperrt) {
+      const problem = await entblocken(profil.id);
+      if (problem) dialog("Nicht aufgehoben", problem);
+      else laden();
+    } else {
+      blockierenFragen(profil.id, profil.name || profil.benutzername, () => setProfil((p) => (p ? { ...p, folge_ich: false } : p)));
+    }
+  }
+
+  const kannEinladen = FRAGEN_AKTIV && !gesperrt && !!profil && !profil.ich && !!crew.daten?.crew && !crew.daten.mitglieder?.some((m) => m.id === profil.id) && (crew.daten.mitglieder?.length ?? 0) < CREW_MAX;
 
   async function einladen() {
     if (!profil) return;
@@ -219,5 +247,18 @@ export function NutzerWeb() {
     }
   }
 
-  return <NutzerAnsichtWeb id={id ?? ""} profil={profil} clips={clips} fehler={fehler} onFolgen={folgen} onNeuLaden={laden} onEinladen={kannEinladen ? einladen : undefined} eingeladen={eingeladen} />;
+  return (
+    <NutzerAnsichtWeb
+      id={id ?? ""}
+      profil={profil}
+      clips={gesperrt ? [] : clips}
+      fehler={fehler}
+      onFolgen={folgen}
+      onNeuLaden={laden}
+      onEinladen={kannEinladen ? einladen : undefined}
+      eingeladen={eingeladen}
+      onBlockieren={blockierenUmschalten}
+      gesperrt={gesperrt}
+    />
+  );
 }

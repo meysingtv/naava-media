@@ -4,10 +4,12 @@ import { router } from "expo-router";
 
 import { Icon, type IconName } from "@/components/icon";
 import { Abschnitt, B, Balken, Kachel, Knopf, n, Raster, Reiter, SeitenTitel, Spalte, Symbol, THEMA_TON, TOENE, type Ton, type Zustand } from "@/components/web/bunt";
-import { ThemenListe } from "@/components/web/home-web";
+import { ThemenListe, ThemenVideoListe } from "@/components/web/home-web";
 import { WebSeite } from "@/components/web/rahmen";
 import { FRAGEN, THEMEN, fragenZuThema, themaVon, type ThemaId } from "@/lib/fragen";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 import { heuteDran } from "@/lib/karteikarten";
+import { useLernvideos } from "@/lib/lernvideos";
 import { ALBUM } from "@/lib/schilder-jagd";
 import { fehlerIds, fortschritt, gemerktIds, schwierigeIds, useStand } from "@/lib/stand";
 
@@ -38,6 +40,53 @@ const VORSCHLAEGE = ["Kreisverkehr", "Rettungsgasse", "Promille", "Überholen", 
 type Modus = { titel: string; unter: string; icon: IconName; ton: Ton; zahl?: number; onPress: () => void };
 
 export function LernenWeb() {
+  return FRAGEN_AKTIV ? <LernenWebMitFragen /> : <LernenWebOhneFragen />;
+}
+
+/** Lernen am PC ohne Fragen: Lernhilfen als Kacheln und alle Themen mit ihren Videos. */
+function LernenWebOhneFragen() {
+  const { stand } = useStand();
+  const { zuThema } = useLernvideos();
+  const gefunden = ALBUM.filter((k) => stand.schilder[k]).length;
+  const alleVideos = THEMEN.reduce((sum, t) => sum + zuThema(t.id).length, 0);
+  const modi: Modus[] = [
+    { titel: "Kurz erklärt", unter: "Regeln in 30 Sekunden", icon: "bulb", ton: TOENE.lila, onPress: () => router.push("/kurz-erklaert") },
+    { titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", icon: "warning", ton: TOENE.gelb, onPress: () => router.push("/zeichen") },
+    { titel: "Formeln", unter: "Anhalteweg & Co.", icon: "calculator", ton: TOENE.limette, onPress: () => router.push("/formeln") },
+    { titel: "Schilder-Jagd", unter: gefunden > 0 ? `${gefunden} von ${ALBUM.length} gefunden` : "Schilder sammeln", icon: "camera", ton: TOENE.blau, onPress: () => router.push("/schilder-jagd") },
+  ];
+  return (
+    <WebSeite ohneRechts>
+      <Spalte>
+        <SeitenTitel titel="Lernen" unter={`${THEMEN.length} Themen${alleVideos ? ` · ${alleVideos} Videos` : ""} · Klasse ${stand.klasse}`} />
+        <View>
+          <Abschnitt titel="Lernhilfen" />
+          <Raster min={240} abstand={12}>
+            {modi.map((m) => (
+              <Kachel key={m.titel} onPress={m.onPress} style={{ paddingHorizontal: 16, paddingVertical: 14, flexDirection: "row", alignItems: "center", gap: 14 }}>
+                <Symbol icon={m.icon} ton={m.ton} groesse={42} />
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={{ ...n.fett, fontSize: 15.5, color: B.text }} numberOfLines={1}>
+                    {m.titel}
+                  </Text>
+                  <Text style={{ ...n.halb, fontSize: 13.5, color: B.text2 }} numberOfLines={1}>
+                    {m.unter}
+                  </Text>
+                </View>
+              </Kachel>
+            ))}
+          </Raster>
+        </View>
+        <View>
+          <Abschnitt titel="Alle Themen" />
+          <ThemenVideoListe videos={(id) => zuThema(id).length} />
+        </View>
+      </Spalte>
+    </WebSeite>
+  );
+}
+
+function LernenWebMitFragen() {
   const { stand } = useStand();
   const [suche, setSuche] = useState("");
   const [stufe, setStufe] = useState<Stufe>("alle");

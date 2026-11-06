@@ -10,10 +10,12 @@ import { Lader } from "@/components/lader";
 import { Abschnitt, B, Kachel, Knopf, Leer, n, Reiter, Spalte, Symbol, THEMA_TON, UnterKopf, type Zustand } from "@/components/web/bunt";
 import { WebSeite } from "@/components/web/rahmen";
 import { FrageBild } from "@/components/web/thema-web";
-import { animationFuer } from "@/lib/erklaer-animationen";
+import { animationFuer, ANIMATION_TITEL, animationZuLage } from "@/lib/erklaer-animationen";
 import { erklaervideoUrl, useErklaervideos } from "@/lib/erklaervideos";
-import { frageVon, themaVon, type ThemaId } from "@/lib/fragen";
-import { themavideoUrl, useThemenvideos, type Themavideo } from "@/lib/themenvideos";
+import { FRAGEN, frageVon, themaVon, type ThemaId } from "@/lib/fragen";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
+import { useLernvideos, type Lernvideo } from "@/lib/lernvideos";
+import { themavideoUrl, useThemenvideos } from "@/lib/themenvideos";
 
 // Videos am PC: Themenvideo und Erklärung zu einer Frage. Links groß der
 // Spieler (16:9), rechts, worum es geht, und wie es weitergeht.
@@ -60,42 +62,70 @@ function Platzhalter({ laedt, icon, titel, text }: { laedt: boolean; icon: IconN
 // Themenvideo
 // ---------------------------------------------------------------------------
 
-function VideoZeile({ video, aktiv, oben }: { video: Themavideo; aktiv: boolean; oben: boolean }) {
-  const ton = THEMA_TON[video.thema_id as ThemaId];
+function VideoZeile({ video, themaId, aktiv, oben }: { video: Lernvideo; themaId: ThemaId; aktiv: boolean; oben: boolean }) {
+  const ton = THEMA_TON[themaId];
   const dauer = dauerText(video.dauer);
   return (
     <Pressable
       disabled={aktiv}
-      onPress={() => router.replace({ pathname: "/themavideo", params: { id: video.id } })}
+      onPress={() => router.replace({ pathname: "/themavideo", params: video.params })}
       accessibilityRole="button"
       accessibilityLabel={`Video: ${video.titel}`}
       style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: oben ? 1.5 : 0, borderTopColor: B.ton, backgroundColor: aktiv ? B.ton : z.hovered ? B.hover : "transparent" })}
     >
-      <Symbol icon={aktiv ? "volume-high" : "play"} ton={ton ?? THEMA_TON.vorfahrt} groesse={36} />
+      <Symbol icon={aktiv ? "volume-high" : video.art === "animation" ? "git-branch" : "play"} ton={ton ?? THEMA_TON.vorfahrt} groesse={36} />
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={{ ...n.fett, fontSize: 14.5, color: B.text }} numberOfLines={2}>
           {video.titel}
         </Text>
-        <Text style={{ ...n.halb, fontSize: 12.5, color: B.text3 }}>{aktiv ? "läuft gerade" : dauer ? `${dauer} Min.` : "Video"}</Text>
+        <Text style={{ ...n.halb, fontSize: 12.5, color: B.text3 }}>{aktiv ? "läuft gerade" : video.art === "animation" ? "Animation" : dauer ? `${dauer} Min.` : "Video"}</Text>
       </View>
     </Pressable>
   );
 }
 
+/**
+ * Ein Lernvideo am PC: Themenvideo (?id=), Erklärvideo zu einer Frage
+ * (?frage=, ohne Fragetext) oder eingebaute Animation (?lage=).
+ */
 export function ThemavideoWeb() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const { geladen, videos } = useThemenvideos();
-  const video = videos.find((v) => v.id === id);
-  const thema = video ? themaVon(video.thema_id as ThemaId) : null;
+  const params = useLocalSearchParams<{ id?: string; frage?: string; lage?: string }>();
+  const themen = useThemenvideos();
+  const erklaer = useErklaervideos();
+  const { zuThema } = useLernvideos();
+  const [breite, setBreite] = useState(0);
+
+  const themavideo = params.id ? themen.videos.find((v) => v.id === params.id) : undefined;
+  const frage = params.frage ? frageVon(params.frage) : undefined;
+  const fragevideo = frage ? erklaer.videos[frage.id] : undefined;
+  const animation = animationZuLage(params.lage);
+  const themaId = (themavideo?.thema_id ?? frage?.thema ?? (params.lage ? FRAGEN.find((q) => q.bild === params.lage)?.thema : undefined)) as ThemaId | undefined;
+  const thema = themaId ? themaVon(themaId) : null;
   const ton = thema ? THEMA_TON[thema.id] : null;
-  const andere = video ? videos.filter((v) => v.thema_id === video.thema_id) : [];
+  const url = themavideo ? themavideoUrl(themavideo.pfad) : fragevideo ? erklaervideoUrl(fragevideo.pfad) : null;
+  const geladen = params.id ? themen.geladen : params.frage ? erklaer.geladen : true;
+  const titel = themavideo?.titel ?? (animation && params.lage ? (ANIMATION_TITEL[params.lage] ?? "Animation") : fragevideo ? "Erklärvideo" : "Video");
+  const andere = thema ? zuThema(thema.id) : [];
+  const aktiv = params.id ? `t-${params.id}` : params.frage ? `f-${params.frage}` : params.lage ? `a-${params.lage}` : "";
 
   return (
     <WebSeite ohneRechts>
       <Spalte breite={1180}>
-        <UnterKopf titel={video?.titel ?? "Video"} unter={thema ? `Video zum Thema ${thema.titel}` : undefined} />
+        <UnterKopf titel={titel} unter={thema ? `Video zum Thema ${thema.titel}` : undefined} />
         <View style={{ flexDirection: "row", gap: 24, alignItems: "flex-start" }}>
-          <View style={{ flex: 1, minWidth: 0 }}>{video ? <Spieler key={video.id} url={themavideoUrl(video.pfad)} /> : <Platzhalter laedt={!geladen} icon="film-outline" titel="Dieses Video gibt es nicht mehr" text="Vielleicht hat es der Inhaber gerade ersetzt." />}</View>
+          <View style={{ flex: 1, minWidth: 0 }} onLayout={(e) => setBreite(e.nativeEvent.layout.width)}>
+            {url ? (
+              <Spieler key={url} url={url} />
+            ) : animation ? (
+              breite ? (
+                <View style={{ width: Math.min(breite, 640), alignSelf: "center" }}>
+                  <ErklaerAnimationSpieler animation={animation} breite={Math.min(breite, 640)} />
+                </View>
+              ) : null
+            ) : (
+              <Platzhalter laedt={!geladen} icon="film-outline" titel="Dieses Video gibt es nicht mehr" text="Vielleicht hat es der Inhaber gerade ersetzt." />
+            )}
+          </View>
 
           {thema && ton ? (
             <View style={{ width: 340, gap: 20 }}>
@@ -111,7 +141,7 @@ export function ThemavideoWeb() {
                     </Text>
                   </View>
                 </View>
-                <Knopf titel="Thema lernen" icon="play" onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: thema.id } })} />
+                {FRAGEN_AKTIV ? <Knopf titel="Thema lernen" icon="play" onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: thema.id } })} /> : null}
                 <Knopf titel="Zur Themenseite" art="rand" ton="blau" onPress={() => router.push({ pathname: "/thema/[id]", params: { id: thema.id } })} />
               </Kachel>
 
@@ -120,7 +150,7 @@ export function ThemavideoWeb() {
                   <Abschnitt titel="Weitere Videos" link={`${andere.length} Videos`} />
                   <Kachel>
                     {andere.map((v, i) => (
-                      <VideoZeile key={v.id} video={v} aktiv={v.id === video?.id} oben={i > 0} />
+                      <VideoZeile key={v.schluessel} video={v} themaId={thema.id} aktiv={v.schluessel === aktiv} oben={i > 0} />
                     ))}
                   </Kachel>
                 </View>

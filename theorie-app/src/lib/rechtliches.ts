@@ -111,7 +111,7 @@ export const DATENSCHUTZ: Abschnitt[] = [
       "Wenn du ein Konto erstellst, verarbeiten wir:",
       {
         liste: [
-          "E-Mail-Adresse und Passwort (nur verschlüsselt als Prüfwert gespeichert, wir kennen es nicht)",
+          "E-Mail-Adresse – angemeldet wird ohne Passwort mit einem Code, den wir dir per E-Mail schicken",
           "Vorname, Benutzername und Rolle (Fahrschüler oder Fahrlehrer) – Vorname und Benutzername sind für andere sichtbar",
           "freiwillig: Nachname, Telefonnummer, Geburtsdatum, Führerscheinklasse und Bundesland – Nachname, Telefon und Geburtsdatum sind nicht öffentlich",
           "Lernstand und Einstellungen (zur Synchronisierung zwischen deinen Geräten)",
@@ -123,9 +123,9 @@ export const DATENSCHUTZ: Abschnitt[] = [
     ],
   },
   {
-    titel: "5. Anmeldung mit Apple oder Google",
+    titel: "5. Versand der Anmelde-Codes",
     inhalt: [
-      "Wenn du „Mit Apple anmelden“ oder „Mit Google anmelden“ wählst, erhalten wir vom jeweiligen Anbieter deine E-Mail-Adresse (bei Apple auf Wunsch eine anonyme Weiterleitungsadresse) und gegebenenfalls deinen Namen. Anbieter sind Apple Distribution International Ltd., Hollyhill Industrial Estate, Cork, Irland, bzw. Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland. Für die Datenverarbeitung bei Apple und Google gelten deren Datenschutzbestimmungen. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO.",
+      "Zum Anmelden und Registrieren schicken wir dir einen Code per E-Mail. Die Mails versenden wir über den E-Mail-Dienst von Google (Gmail; Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland). Dabei verarbeitet Google deine E-Mail-Adresse und den Inhalt der Mail. Rechtsgrundlage ist die Erfüllung des Nutzungsvertrags (Art. 6 Abs. 1 lit. b DSGVO). Soweit Daten dabei in die USA gelangen, geschieht das auf Grundlage eines Angemessenheitsbeschlusses bzw. der EU-Standardvertragsklauseln.",
     ],
   },
   {
@@ -212,7 +212,7 @@ export const NUTZUNGSBEDINGUNGEN: Abschnitt[] = [
   {
     titel: "2. Konto",
     inhalt: [
-      "Für einige Funktionen brauchst du ein Konto. Bitte mach wahre Angaben und halte dein Passwort geheim. Wer jünger als 16 Jahre ist, braucht die Zustimmung der Eltern. Du kannst dein Konto jederzeit in den Einstellungen löschen.",
+      "Für einige Funktionen brauchst du ein Konto. Angemeldet wird mit einem Code, den wir an deine E-Mail-Adresse schicken. Bitte mach wahre Angaben und schütze den Zugang zu deinem E-Mail-Postfach. Wer jünger als 16 Jahre ist, braucht die Zustimmung der Eltern. Du kannst dein Konto jederzeit in den Einstellungen löschen.",
     ],
   },
   {

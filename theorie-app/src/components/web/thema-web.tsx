@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 
 import { Icon, type IconName } from "@/components/icon";
 import { Kontrollleuchte } from "@/components/leuchten";
 import { Verkehrszeichen } from "@/components/zeichen";
-import { Abschnitt, B, Chip, DickRing, Kachel, Knopf, Leer, n, Reiter, Spalte, Symbol, THEMA_TON, UnterKopf, type Ton, type Zustand } from "@/components/web/bunt";
+import { Abschnitt, B, Chip, DickRing, Kachel, Knopf, Leer, n, Raster, Reiter, Spalte, Symbol, THEMA_TON, UnterKopf, type Ton, type Zustand } from "@/components/web/bunt";
 import { WebSeite } from "@/components/web/rahmen";
 import { fragenZuThema, istZeichen, THEMEN, themaVon, type Frage, type LeuchteKey, type ThemaId, type ZeichenKey } from "@/lib/fragen";
+import { themaFoto } from "@/lib/fotos";
+import { useLernvideos } from "@/lib/lernvideos";
 import { fortschritt, themaStatistik, useStand, type Stand } from "@/lib/stand";
 import { useThemenvideos } from "@/lib/themenvideos";
 
@@ -236,6 +238,94 @@ export function ThemaWeb({ id }: { id: ThemaId }) {
                         {t.titel}
                       </Text>
                       <Text style={{ ...n.schwarz, fontSize: 13.5, color: anteil > 0 ? B.text : B.text3, fontVariant: ["tabular-nums"] }}>{Math.round(anteil * 100)}%</Text>
+                    </Pressable>
+                  );
+                })}
+              </Kachel>
+            </View>
+          </View>
+        </View>
+      </Spalte>
+    </WebSeite>
+  );
+}
+
+/**
+ * Themenseite am PC, solange die Fragen aus sind: alle Videos des Themas als
+ * Kacheln (Themenvideos, Erklärvideos ohne Fragetext, Animationen), rechts die
+ * nächsten Themen.
+ */
+export function ThemaVideosWeb({ id }: { id: ThemaId }) {
+  const thema = themaVon(id);
+  const ton: Ton = THEMA_TON[thema.id];
+  const { geladen, zuThema } = useLernvideos();
+  const videos = zuThema(thema.id);
+  const platz = THEMEN.findIndex((t) => t.id === thema.id);
+  const weitere = [1, 2, 3, 4].map((k) => THEMEN[(platz + k) % THEMEN.length]);
+
+  return (
+    <WebSeite ohneRechts>
+      <Spalte breite={1180}>
+        <UnterKopf titel={thema.titel} unter={thema.kurz} rechts={<Chip icon="play-circle" text={videos.length === 1 ? "1 Video" : `${videos.length} Videos`} ton={ton} />} />
+        <View style={{ flexDirection: "row", gap: 24, alignItems: "flex-start" }}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Abschnitt titel="Videos" />
+            {videos.length ? (
+              <Raster min={250} abstand={16}>
+                {videos.map((v) => {
+                  const dauer = dauerText(v.dauer);
+                  return (
+                    <Kachel key={v.schluessel} onPress={() => router.push({ pathname: "/themavideo", params: v.params })} style={{ overflow: "hidden" }}>
+                      <View style={{ height: 150, backgroundColor: "#0B0E12" }}>
+                        <Image source={themaFoto(thema.id)} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.25)" }}>
+                          <View style={{ width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.25)", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}>
+                            <Icon name={v.art === "animation" ? "git-branch" : "play"} size={22} color="#FFFFFF" />
+                          </View>
+                        </View>
+                        {dauer ? (
+                          <View style={{ position: "absolute", right: 10, bottom: 10, paddingHorizontal: 8, height: 24, borderRadius: 12, justifyContent: "center", backgroundColor: "rgba(0,0,0,0.6)" }}>
+                            <Text style={{ ...n.fett, fontSize: 12, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{dauer}</Text>
+                          </View>
+                        ) : null}
+                      </View>
+                      <View style={{ padding: 14, gap: 4 }}>
+                        <Text style={{ ...n.fett, fontSize: 15, lineHeight: 20, color: B.text }} numberOfLines={2}>
+                          {v.titel}
+                        </Text>
+                        <Text style={{ ...n.halb, fontSize: 13, color: B.text3 }}>{v.art === "animation" ? "Animation" : dauer ? `${dauer} Min.` : "Video"}</Text>
+                      </View>
+                    </Kachel>
+                  );
+                })}
+              </Raster>
+            ) : (
+              <Kachel>
+                <Leer icon="film-outline" ton={ton} titel={geladen ? "Videos folgen bald" : "Videos werden geladen …"} text={geladen ? "Zu diesem Thema gibt es noch keine Videos." : undefined} />
+              </Kachel>
+            )}
+          </View>
+
+          <View style={{ width: 340, gap: 28 }}>
+            <View>
+              <Abschnitt titel="Weitere Themen" link="Alle" onLink={() => router.navigate("/lernen")} />
+              <Kachel>
+                {weitere.map((t, i) => {
+                  const tt = THEMA_TON[t.id];
+                  const zahl = zuThema(t.id).length;
+                  return (
+                    <Pressable
+                      key={t.id}
+                      onPress={() => router.replace({ pathname: "/thema/[id]", params: { id: t.id } })}
+                      accessibilityRole="button"
+                      accessibilityLabel={t.titel}
+                      style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, height: 58, borderTopWidth: i ? 1.5 : 0, borderTopColor: B.ton, backgroundColor: z.hovered ? B.hover : "transparent" })}
+                    >
+                      <Symbol icon={t.icon as IconName} ton={tt} groesse={34} />
+                      <Text style={{ flex: 1, ...n.fett, fontSize: 14.5, color: B.text }} numberOfLines={1}>
+                        {t.titel}
+                      </Text>
+                      <Text style={{ ...n.halb, fontSize: 13, color: B.text3 }}>{zahl === 1 ? "1 Video" : zahl ? `${zahl} Videos` : "bald"}</Text>
                     </Pressable>
                   );
                 })}

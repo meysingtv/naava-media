@@ -8,6 +8,7 @@ import { useTasten } from "@/components/web/frage-web";
 import { TastenKappe } from "@/components/web/karteikarten-web";
 import { WebSeite } from "@/components/web/rahmen";
 import { zahlText } from "@/lib/fragen";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 // Formeln am PC: links das Tempo als echte Schilder und der Anhalteweg groß
 // mit beiden Bremsarten als Balken, rechts alle Tempi im Vergleich, darunter
@@ -229,16 +230,18 @@ export function FormelnWeb() {
           titel="Formeln"
           unter="Wie lang ist der Weg bis zum Stillstand?"
           rechts={
-            <Knopf
-              titel="Zahlenfragen üben"
-              icon="play"
-              onPress={() =>
-                router.push({
-                  pathname: "/training",
-                  params: { modus: "zahl" },
-                })
-              }
-            />
+            FRAGEN_AKTIV ? (
+              <Knopf
+                titel="Zahlenfragen üben"
+                icon="play"
+                onPress={() =>
+                  router.push({
+                    pathname: "/training",
+                    params: { modus: "zahl" },
+                  })
+                }
+              />
+            ) : undefined
           }
         />
 

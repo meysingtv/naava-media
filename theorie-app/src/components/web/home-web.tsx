@@ -6,9 +6,11 @@ import { GRUSS, tageszeit } from "@/components/home";
 import { Abschnitt, B, Balken, DickRing, Kachel, Knopf, n, Raster, Symbol, THEMA_TON, TOENE, Wert, zahlen, type Ton, type Zustand } from "@/components/web/bunt";
 import { WebSeite } from "@/components/web/rahmen";
 import { FRAGEN, THEMEN, themaVon, type ThemaId } from "@/lib/fragen";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 import { heuteDran } from "@/lib/karteikarten";
 import { useKonto } from "@/lib/konto";
 import { tageBis, terminDatum } from "@/lib/pruefungstag";
+import { useLernvideos } from "@/lib/lernvideos";
 import { ligaVon } from "@/lib/rangliste";
 import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, serieAktuell, useStand } from "@/lib/stand";
 
@@ -19,6 +21,130 @@ import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, serieAktuell, use
 type Schnell = { icon: IconName; titel: string; ton: Ton; zahl?: number; onPress: () => void };
 
 export function HomeWeb() {
+  return FRAGEN_AKTIV ? <HomeWebMitFragen /> : <HomeWebOhneFragen />;
+}
+
+/**
+ * Home am PC, solange die Fragen aus sind (lib/funktionen.ts): Lernvideos im
+ * Mittelpunkt, Prüfungstermin, Schnellstart zu den Lernhilfen, Themen mit
+ * ihren Videos.
+ */
+function HomeWebOhneFragen() {
+  const { stand } = useStand();
+  const { anzeigeName, gast } = useKonto();
+  const { zuThema } = useLernvideos();
+
+  const vorname = anzeigeName.split(" ")[0] || "Gast";
+  const gruss = GRUSS[tageszeit(new Date().getHours())];
+  const termin = terminDatum(stand.pruefungstermin);
+  const tage = termin ? tageBis(termin) : null;
+  const kommend = tage !== null && tage >= 0 ? tage : null;
+  const unterzeile =
+    kommend === null ? "Mach deinen Führerschein möglich." : kommend === 0 ? "Heute ist dein Tag – du schaffst das." : kommend === 1 ? "Morgen ist Prüfung. Noch ein Video?" : `Noch ${kommend} Tage bis zur Prüfung.`;
+
+  const schnell: Schnell[] = [
+    { icon: "play-circle", titel: "Lernvideos", ton: TOENE.gruen, onPress: () => router.navigate("/lernen") },
+    { icon: "bulb", titel: "Kurz erklärt", ton: TOENE.koralle, onPress: () => router.push("/kurz-erklaert") },
+    { icon: "warning", titel: "Verkehrszeichen", ton: TOENE.rot, onPress: () => router.push("/zeichen") },
+    { icon: "calculator", titel: "Formeln", ton: TOENE.bernstein, onPress: () => router.push("/formeln") },
+    { icon: "camera", titel: "Schilder-Jagd", ton: TOENE.blau, onPress: () => router.push("/schilder-jagd") },
+    { icon: "film", titel: "Clips", ton: TOENE.pink, onPress: () => router.navigate("/clips") },
+  ];
+
+  return (
+    <WebSeite ohneRechts>
+      <View style={{ width: "100%", maxWidth: 1080, alignSelf: "center", gap: 36 }}>
+        <View style={{ flex: 1, minWidth: 280 }}>
+          <Text style={{ ...n.schwarz, fontSize: 34, lineHeight: 40, color: B.text }}>
+            {gruss}, {vorname}
+          </Text>
+          <Text style={{ ...n.halb, fontSize: 16.5, color: B.text2, marginTop: 2 }}>{unterzeile}</Text>
+        </View>
+
+        <View style={{ flexDirection: "row", gap: 20, flexWrap: "wrap" }}>
+          <Kachel style={{ flex: 2, minWidth: 420, padding: 28, gap: 18 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+              <Symbol icon="play-circle" ton={TOENE.gruen} groesse={56} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...n.schwarz, fontSize: 26, color: B.text }}>Lernvideos</Text>
+                <Text style={{ ...n.halb, fontSize: 15.5, color: B.text2 }}>Alle Themen der Theorie kurz und einfach erklärt</Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <Knopf titel="Lernvideos ansehen" icon="play" groesse="gross" onPress={() => router.navigate("/lernen")} style={{ minWidth: 220 }} />
+              <Knopf titel="Kurz erklärt" art="rand" ton="blau" onPress={() => router.push("/kurz-erklaert")} />
+            </View>
+          </Kachel>
+
+          <Kachel onPress={() => router.push("/pruefungstermin")} style={{ flex: 1, minWidth: 260, padding: 28, alignItems: "center", justifyContent: "center", gap: 10 }}>
+            <Symbol icon="calendar" ton={TOENE.orange} groesse={52} />
+            <Text style={{ ...n.schwarz, fontSize: 22, color: B.text, fontVariant: ["tabular-nums"] }}>
+              {kommend === null ? "Prüfungstermin" : kommend === 0 ? "Heute" : kommend === 1 ? "Morgen" : `Noch ${kommend} Tage`}
+            </Text>
+            <Text style={{ ...n.halb, fontSize: 14, color: B.text2 }}>{kommend === null ? "Trag deinen Termin ein" : "bis zur Theorieprüfung"}</Text>
+          </Kachel>
+        </View>
+
+        {gast ? (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 16, paddingLeft: 20, borderRadius: 16, backgroundColor: B.ton, flexWrap: "wrap" }}>
+            <Icon name="cloud-upload-outline" size={22} color={B.text2} />
+            <Text style={{ flex: 1, minWidth: 240, ...n.halb, fontSize: 15, color: B.text2 }}>Du schaust als Gast. Mit einem kostenlosen Konto kannst du liken, kommentieren und ein Profilbild zeigen.</Text>
+            <Knopf titel="Anmelden" art="rand" ton="blau" groesse="klein" onPress={() => router.push("/anmelden")} />
+            <Knopf titel="Konto erstellen" ton="gruen" groesse="klein" onPress={() => router.push("/registrieren")} />
+          </View>
+        ) : null}
+
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+          {schnell.map((x) => (
+            <Pressable
+              key={x.titel}
+              onPress={x.onPress}
+              style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 9, height: 44, paddingLeft: 12, paddingRight: 16, borderRadius: 12, borderWidth: 1.5, borderColor: z.hovered ? B.kante : B.linie, backgroundColor: z.hovered ? B.hover : B.flaeche })}
+            >
+              <Icon name={x.icon} size={19} color={x.ton.farbe} />
+              <Text style={{ ...n.fett, fontSize: 14.5, color: B.text }}>{x.titel}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <View>
+          <Abschnitt titel="Lernvideos nach Thema" link="Alle ansehen" onLink={() => router.navigate("/lernen")} />
+          <ThemenVideoListe videos={(id) => zuThema(id).length} />
+        </View>
+      </View>
+    </WebSeite>
+  );
+}
+
+/** Themen mit der Zahl ihrer Videos – für die Fassung ohne Fragen. */
+export function ThemenVideoListe({ videos, min = 400, max = 2 }: { videos: (id: ThemaId) => number; min?: number; max?: number }) {
+  return (
+    <Raster min={min} max={max} abstand={10}>
+      {THEMEN.map((t) => {
+        const ton = THEMA_TON[t.id as ThemaId];
+        const zahl = videos(t.id as ThemaId);
+        return (
+          <Pressable
+            key={t.id}
+            onPress={() => router.push({ pathname: "/thema/[id]", params: { id: t.id } })}
+            style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 14, height: 64, borderRadius: 14, borderWidth: 1.5, borderColor: z.hovered ? B.kante : B.linie, backgroundColor: z.hovered ? B.hover : B.flaeche })}
+          >
+            <Symbol icon={t.icon as IconName} ton={ton} groesse={38} />
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={{ ...n.fett, fontSize: 15, color: B.text }} numberOfLines={1}>
+                {t.titel}
+              </Text>
+              <Text style={{ ...n.halb, fontSize: 13, color: B.text3 }}>{zahl ? (zahl === 1 ? "1 Video" : `${zahl} Videos`) : "Videos folgen"}</Text>
+            </View>
+            <Icon name="play-circle" size={22} color={zahl ? ton.farbe : B.text3} />
+          </Pressable>
+        );
+      })}
+    </Raster>
+  );
+}
+
+function HomeWebMitFragen() {
   const { stand } = useStand();
   const { anzeigeName, gast } = useKonto();
 

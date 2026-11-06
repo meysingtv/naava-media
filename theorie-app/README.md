@@ -537,7 +537,9 @@ Handy lässt sich nie verhindern. Braucht einen neuen nativen Build.
 ## Konto löschen, Blockieren, Rechtliches
 
 - **SQL:** `supabase/update-konto.sql` einmal im SQL-Editor ausführen
-  (Abschnitt 27 in `schema.sql`).
+  (Abschnitt 27 in `schema.sql`). Für den Code-Login zusätzlich
+  `supabase/update-code-login.sql` (Abschnitt 28), siehe
+  `docs/login-einrichten.md`.
 - **Konto löschen:** Einstellungen → Daten → Konto löschen. Löscht das Konto
   samt Profil, Lernstand, Clips, Kommentaren, Chat und Dateien. Das
   Inhaber-Konto lässt sich in der App nicht löschen.

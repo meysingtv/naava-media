@@ -8,13 +8,14 @@ import { B, Chip, Kachel, Knopf, n, Raster, Reiter, Schalter, TOENE, type Zustan
 import { useTasten } from "@/components/web/frage-web";
 import type { Darstellung } from "@/lib/darstellung";
 import { HAUPT_KLASSEN, KLASSEN } from "@/lib/klassen";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 // Einrichtung am PC: oben Logo, Schritt-Anzeige und „Später“, in der Mitte
 // eine breite Karte mit dem Schritt (große Auswahl-Kacheln), unten in der
 // Karte Zurück und Weiter. Enter geht einen Schritt weiter. Die Logik bleibt
 // in der Route (app/einrichtung.tsx).
 
-const NAMEN = ["Klasse", "Prüfung", "Tagesziel", "Darstellung"];
+const NAMEN = ["Klasse", "Prüfung", FRAGEN_AKTIV ? "Tagesziel" : "Erinnerung", "Darstellung"];
 const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 const MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
 const TAGE_KURZ = ["So.", "Mo.", "Di.", "Mi.", "Do.", "Fr.", "Sa."];
@@ -342,6 +343,7 @@ function SchrittZiel(p: EinrichtungWebProps) {
   };
   return (
     <View style={{ gap: 20 }}>
+      {FRAGEN_AKTIV ? (
       <Raster min={160} max={4} abstand={14}>
         {p.ziele.map((z) => {
           const aktiv = z.n === p.ziel;
@@ -362,12 +364,13 @@ function SchrittZiel(p: EinrichtungWebProps) {
           );
         })}
       </Raster>
+      ) : null}
 
       <View style={{ flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 14, paddingHorizontal: 18, borderRadius: 16, borderWidth: 1.5, borderColor: B.linie, flexWrap: "wrap" }}>
         <Icon name="notifications-outline" size={24} color={B.orange} />
         <View style={{ flex: 1, minWidth: 200 }}>
           <Text style={{ ...n.fett, fontSize: 16, color: B.text }}>Tägliche Erinnerung</Text>
-          <Text style={{ ...n.halb, fontSize: 13.5, color: B.text2 }}>Ein kurzer Stups, damit deine Serie hält</Text>
+          <Text style={{ ...n.halb, fontSize: 13.5, color: B.text2 }}>{FRAGEN_AKTIV ? "Ein kurzer Stups, damit deine Serie hält" : "Ein kurzer Stups, damit du dranbleibst"}</Text>
         </View>
         {e.an ? (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
@@ -473,8 +476,10 @@ function Fertig({ name, zeilen }: { name: string; zeilen: { icon: IconName; tite
 
 const KOEPFE: { titel: string; unter: string }[] = [
   { titel: "Welchen Führerschein machst du?", unter: "Wir zeigen dir genau die Fragen, die in deiner Prüfung drankommen." },
-  { titel: "Wann ist deine Theorieprüfung?", unter: "Dann planen wir dein Tagesziel passend und zählen mit dir runter." },
-  { titel: "Wie viel pro Tag?", unter: "Kleine, tägliche Schritte bringen am meisten. Du kannst es jederzeit ändern." },
+  { titel: "Wann ist deine Theorieprüfung?", unter: FRAGEN_AKTIV ? "Dann planen wir dein Tagesziel passend und zählen mit dir runter." : "Dann zählen wir mit dir bis zum Prüfungstag runter." },
+  FRAGEN_AKTIV
+    ? { titel: "Wie viel pro Tag?", unter: "Kleine, tägliche Schritte bringen am meisten. Du kannst es jederzeit ändern." }
+    : { titel: "Sollen wir dich erinnern?", unter: "Kleine, tägliche Schritte bringen am meisten. Du kannst es jederzeit ändern." },
   { titel: "Hell oder dunkel?", unter: "Wähl, wie die App aussehen soll." },
 ];
 
@@ -540,7 +545,7 @@ export function EinrichtungWeb(p: EinrichtungWebProps) {
                 zeilen={[
                   { icon: "car-outline", titel: "Führerschein", wert: `Klasse ${p.klasse}${k ? ` · ${k.kurz}` : ""}` },
                   { icon: "calendar-outline", titel: "Prüfung", wert: p.terminText },
-                  { icon: "flag-outline", titel: "Tagesziel", wert: `${p.ziel} Fragen` },
+                  ...(FRAGEN_AKTIV ? [{ icon: "flag-outline" as const, titel: "Tagesziel", wert: `${p.ziel} Fragen` }] : []),
                   { icon: "notifications-outline", titel: "Erinnerung", wert: e.an ? `täglich ${zwei(e.stunde)}:${zwei(e.minute)}` : "aus" },
                 ]}
               />

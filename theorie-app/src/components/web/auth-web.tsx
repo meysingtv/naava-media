@@ -5,8 +5,10 @@ import { router } from "expo-router";
 import { Logo } from "@/components/grafik";
 import { Icon, type IconName } from "@/components/icon";
 import { B, Kachel, Knopf, n, TOENE, type Ton, type Zustand, webDunkel } from "@/components/web/bunt";
+import { RechtsLinks } from "@/components/rechts-seite";
 import { CODE_LAENGE, useKonto, type CodeAblauf, type Rolle } from "@/lib/konto";
 import { serverVerbunden } from "@/lib/supabase";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 // Willkommen, Anmelden, Registrieren und Code-Eingabe am PC: zweigeteilter
 // Bildschirm. Links eine ruhige, leicht getönte Fläche mit Logo, Claim und
@@ -17,11 +19,17 @@ import { serverVerbunden } from "@/lib/supabase";
 // Rahmen
 // ---------------------------------------------------------------------------
 
-const VORTEILE: { icon: IconName; ton: Ton; titel: string; text: string }[] = [
-  { icon: "flash", ton: TOENE.orange, titel: "Kurze Lerneinheiten", text: "Ein paar Minuten am Tag reichen – die App merkt sich, was noch nicht sitzt." },
-  { icon: "shield-checkmark", ton: TOENE.blau, titel: "Echte Prüfungslogik", text: "Übe die Theorieprüfung mit Fehlerpunkten und Zeitlimit, bevor es ernst wird." },
-  { icon: "stats-chart", ton: TOENE.gruen, titel: "Klarer Überblick", text: "Du siehst jederzeit, wie prüfungsreif du bist – Thema für Thema." },
-];
+const VORTEILE: { icon: IconName; ton: Ton; titel: string; text: string }[] = FRAGEN_AKTIV
+  ? [
+      { icon: "flash", ton: TOENE.orange, titel: "Kurze Lerneinheiten", text: "Ein paar Minuten am Tag reichen – die App merkt sich, was noch nicht sitzt." },
+      { icon: "shield-checkmark", ton: TOENE.blau, titel: "Echte Prüfungslogik", text: "Übe die Theorieprüfung mit Fehlerpunkten und Zeitlimit, bevor es ernst wird." },
+      { icon: "stats-chart", ton: TOENE.gruen, titel: "Klarer Überblick", text: "Du siehst jederzeit, wie prüfungsreif du bist – Thema für Thema." },
+    ]
+  : [
+      { icon: "play-circle", ton: TOENE.orange, titel: "Kurze Lernvideos", text: "Alle Themen der Theorie kurz und einfach erklärt." },
+      { icon: "warning", ton: TOENE.blau, titel: "Verkehrszeichen & Formeln", text: "Jedes Zeichen erklärt, Anhalteweg & Co. zum Nachrechnen." },
+      { icon: "camera", ton: TOENE.gruen, titel: "Schilder-Jagd", text: "Echte Schilder mit der Kamera sammeln – direkt auf dem Handy." },
+    ];
 
 /** Linke Hälfte: Logo, Claim, drei Vorteile. */
 function SeitenFlaeche({ breite }: { breite: number }) {
@@ -34,7 +42,7 @@ function SeitenFlaeche({ breite }: { breite: number }) {
         <View style={{ gap: 14 }}>
           <Text style={{ ...n.fett, fontSize: 15, color: B.orange }}>Führerschein-Theorie</Text>
           <Text style={{ ...n.schwarz, fontSize: 44, lineHeight: 50, color: B.text }}>Deine Theorie.{"\n"}Klar geplant.</Text>
-          <Text style={{ ...n.halb, fontSize: 17, lineHeight: 25, color: B.text2 }}>Lernen, üben und prüfen – in deinem Tempo, auf dem Handy und am PC.</Text>
+          <Text style={{ ...n.halb, fontSize: 17, lineHeight: 25, color: B.text2 }}>{FRAGEN_AKTIV ? "Lernen, üben und prüfen – in deinem Tempo, auf dem Handy und am PC." : "Lernen in deinem Tempo – auf dem Handy und am PC."}</Text>
         </View>
         <View style={{ gap: 22 }}>
           {VORTEILE.map((v) => (
@@ -342,6 +350,7 @@ export function WillkommenWeb() {
             <Icon name="chevron-forward" size={18} color={B.text3} />
           </Pressable>
         )}
+        <RechtsLinks />
       </FormKachel>
     </AuthBuehne>
   );
@@ -385,6 +394,7 @@ export function AnmeldenWeb(p: AnmeldenWebProps) {
         {p.ablauf.fehler ? <Meldung text={p.ablauf.fehler} /> : null}
         <HauptKnopf titel="Code senden" laedt={p.ablauf.laedt} deaktiviert={!adresseOk} onPress={p.onSenden} />
         <Wechsel frage="Kein Konto?" aktion="Registrieren" onPress={() => router.replace("/registrieren")} />
+        <RechtsLinks />
       </FormKachel>
     </AuthBuehne>
   );
@@ -640,6 +650,7 @@ export function RegistrierenWeb(p: RegistrierenWebProps) {
         {p.ablauf.fehler ? <Meldung text={p.ablauf.fehler} /> : null}
         <HauptKnopf titel="Code senden" laedt={p.ablauf.laedt} deaktiviert={!p.allesOk} onPress={p.onAbsenden} />
         <Wechsel frage="Bereits ein Konto?" aktion="Anmelden" onPress={() => router.replace("/anmelden")} />
+        <RechtsLinks einwilligung />
       </FormKachel>
     </AuthBuehne>
   );

@@ -73,7 +73,7 @@ export function RechtsLinks({ einwilligung }: { einwilligung?: boolean }) {
   if (einwilligung) {
     return (
       <Text style={{ ...schrift.text, fontSize: 12.5, lineHeight: 18, color: f.text3, textAlign: "center" }}>
-        Mit der Registrierung – auch über Apple oder Google – akzeptierst du die {link("Nutzungsbedingungen", "/nutzungsbedingungen")}. Wie wir deine Daten verarbeiten, steht in der{" "}
+        Mit der Registrierung akzeptierst du die {link("Nutzungsbedingungen", "/nutzungsbedingungen")}. Wie wir deine Daten verarbeiten, steht in der{" "}
         {link("Datenschutzerklärung", "/datenschutz")}.
       </Text>
     );
