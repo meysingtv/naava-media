@@ -60,7 +60,7 @@ const MIT_FRAGEN: Schritt[] = [
 /** Solange die Fragen aus sind (funktionen.ts): nur Videos und Lernhilfen. */
 const OHNE_FRAGEN: Schritt[] = [
   { ziel: "home-start", tab: "/heute", titel: "Thema des Tages", text: "Jeden Tag ein Thema mit seinen Videos – ein Tipp, und du bist drin.", symbol: LightningIcon },
-  { ziel: "home-werte", tab: "/heute", titel: "Dein Stand auf einen Blick", text: "Tage bis zur Prüfung, gesammelte Schilder und alle Videos. Ein Tipp auf einen Wert bringt dich direkt hin.", symbol: ChartLineUpIcon },
+  { ziel: "home-werte", tab: "/heute", titel: "Dein Stand auf einen Blick", text: "Gesammelte Schilder, alle Videos und Regeln. Ein Tipp auf einen Wert bringt dich direkt hin.", symbol: ChartLineUpIcon },
   { ziel: "home-schnell", tab: "/heute", titel: "Lernhilfen", text: "Verkehrszeichen, Kurz erklärt, Formeln und Schilder-Jagd – alles mit einem Tipp.", symbol: RocketIcon },
   { ziel: "tabs", tab: "/heute", titel: "Alles in vier Tabs", text: "Home, Lernen, Clips mit Lives und Profil – hier unten wechselst du jederzeit.", symbol: HandTapIcon },
   { ziel: "lernen-modi", tab: "/lernen", titel: "Lern so, wie du willst", text: "Schilder-Jagd mit der Kamera und Regeln in 30 Sekunden – darunter alle Themen als Videos.", symbol: SparkleIcon },
