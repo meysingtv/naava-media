@@ -49,8 +49,8 @@ type Schritt = { ziel: Ziel | null; tab: Tab; titel: string; text: string; symbo
 const MIT_FRAGEN: Schritt[] = [
   { ziel: "home-werte", tab: "/heute", titel: "Dein Stand auf einen Blick", text: "Prüfungsreife, Serie und Tagesziel. Tippe auf einen Wert, um mehr zu sehen.", symbol: ChartLineUpIcon },
   { ziel: "home-start", tab: "/heute", titel: "Ein Tipp – los geht's", text: "Die App sucht dir die Fragen aus, die dich gerade am meisten weiterbringen.", symbol: LightningIcon },
-  { ziel: "home-schnell", tab: "/heute", titel: "Schnellzugriff", text: "Favoriten, Fehler üben, Karteikarten, Schilder-Jagd, Duell und Statistik – alles mit einem Tipp.", symbol: RocketIcon },
-  { ziel: "home-fokus", tab: "/heute", titel: "Dein Fokus heute", text: "Hier holst du am meisten raus: das Thema, bei dem dir gerade am meisten fehlt.", symbol: TargetIcon },
+  { ziel: "home-schnell", tab: "/heute", titel: "Üben", text: "Fehler üben, Karteikarten, Favoriten und Duell – alles mit einem Tipp.", symbol: RocketIcon },
+  { ziel: "home-fokus", tab: "/heute", titel: "Prüfung üben", text: "30 Fragen, 45 Minuten – so wie in der echten Prüfung.", symbol: TargetIcon },
   { ziel: "tabs", tab: "/heute", titel: "Alles in fünf Tabs", text: "Home, Lernen, Clips mit Lives, Prüfung und Profil – hier unten wechselst du jederzeit.", symbol: HandTapIcon },
   { ziel: "lernen-modi", tab: "/lernen", titel: "Lern so, wie du willst", text: "Karteikarten zum Wiederholen, Schilder-Jagd mit der Kamera – darunter Fehler üben, Formeln und mehr.", symbol: SparkleIcon },
   { ziel: "pruefen-start", tab: "/pruefen", titel: "Echte Prüfung üben", text: "30 Fragen, 45 Minuten, Fehlerpunkte wie beim TÜV. Der Tacho zeigt dir, wie bereit du bist.", symbol: TrophyIcon },
@@ -59,8 +59,8 @@ const MIT_FRAGEN: Schritt[] = [
 
 /** Solange die Fragen aus sind (funktionen.ts): nur Videos und Lernhilfen. */
 const OHNE_FRAGEN: Schritt[] = [
-  { ziel: "home-start", tab: "/heute", titel: "Los geht's", text: "Alle Themen der Theorie in kurzen Videos erklärt – hier startest du.", symbol: LightningIcon },
-  { ziel: "home-schnell", tab: "/heute", titel: "Schnellzugriff", text: "Lernvideos, Kurz erklärt, Verkehrszeichen, Formeln, Schilder-Jagd und Clips – alles mit einem Tipp.", symbol: RocketIcon },
+  { ziel: "home-start", tab: "/heute", titel: "Thema des Tages", text: "Jeden Tag ein Thema mit seinen Videos – ein Tipp, und du bist drin.", symbol: LightningIcon },
+  { ziel: "home-schnell", tab: "/heute", titel: "Lernhilfen", text: "Verkehrszeichen, Kurz erklärt, Formeln und Schilder-Jagd – alles mit einem Tipp.", symbol: RocketIcon },
   { ziel: "tabs", tab: "/heute", titel: "Alles in vier Tabs", text: "Home, Lernen, Clips mit Lives und Profil – hier unten wechselst du jederzeit.", symbol: HandTapIcon },
   { ziel: "lernen-modi", tab: "/lernen", titel: "Lern so, wie du willst", text: "Schilder-Jagd mit der Kamera und Regeln in 30 Sekunden – darunter alle Themen als Videos.", symbol: SparkleIcon },
   { ziel: null, tab: "/heute", titel: "Du bist startklar!", text: "Viel Erfolg beim Lernen. Die Tour findest du jederzeit wieder in den Einstellungen.", symbol: ConfettiIcon },
