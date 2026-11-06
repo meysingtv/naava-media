@@ -15,8 +15,8 @@ import { useClipRechte } from "@/lib/clips-server";
  * bleiben schwarz, die App-Übersicht ist leer.
  * iOS: Das eigene Modul modules/aufnahme-schutz legt bei einer Aufnahme (oder
  * Bildschirmspiegelung) ein verschwommenes Fenster über die ganze App – das
- * landet so auch in der Aufnahme. Dazu expo-screen-capture für leere
- * Screenshots und die verschwommene App-Übersicht.
+ * landet so auch in der Aufnahme. Dazu expo-screen-capture nur für die
+ * verschwommene App-Übersicht. Screenshots lassen sich auf iOS nicht sperren.
  * Im Browser lässt sich das nicht verhindern. Braucht einen neuen nativen Build.
  */
 
@@ -62,15 +62,17 @@ export function BildschirmSchutz() {
   const frei = inhaber && inhaberDarf;
 
   useEffect(() => {
-    if (Platform.OS === "web") return;
-    if (frei) {
-      ScreenCapture.allowScreenCaptureAsync(SCHLUESSEL).catch(() => {});
-      if (Platform.OS === "ios") ScreenCapture.disableAppSwitcherProtectionAsync().catch(() => {});
-      nativ?.setzen(false).catch(() => {});
-    } else {
-      ScreenCapture.preventScreenCaptureAsync(SCHLUESSEL).catch(() => {});
-      if (Platform.OS === "ios") ScreenCapture.enableAppSwitcherProtectionAsync(0.9).catch(() => {});
-      nativ?.setzen(true).catch(() => {});
+    if (Platform.OS === "android") {
+      // FLAG_SECURE: Aufnahmen und Screenshots bleiben schwarz
+      if (frei) ScreenCapture.allowScreenCaptureAsync(SCHLUESSEL).catch(() => {});
+      else ScreenCapture.preventScreenCaptureAsync(SCHLUESSEL).catch(() => {});
+    } else if (Platform.OS === "ios") {
+      // Nicht preventScreenCaptureAsync: Das hängt die Fensterebene in ein
+      // Passwortfeld um – auf neuen iOS-Versionen wirkungslos und ein
+      // Absturzrisiko beim Start. Stattdessen das eigene Modul (Unschärfe).
+      nativ?.setzen(!frei).catch(() => {});
+      if (frei) ScreenCapture.disableAppSwitcherProtectionAsync().catch(() => {});
+      else ScreenCapture.enableAppSwitcherProtectionAsync(0.9).catch(() => {});
     }
   }, [frei]);
 
