@@ -36,6 +36,16 @@ public class AufnahmeSchutzModule: Module {
       return AufnahmeSchutzModule.wirdAufgenommen()
     }.runOnQueue(.main)
 
+    /// Zuletzt abgefangene Ausnahme eines nativen Moduls (siehe AusnahmeFang.m) – einmal abholen.
+    Function("letzteAusnahme") { () -> String? in
+      let schluessel = "fahrschulpro.letzteAusnahme"
+      let text = UserDefaults.standard.string(forKey: schluessel)
+      if text != nil {
+        UserDefaults.standard.removeObject(forKey: schluessel)
+      }
+      return text
+    }
+
     OnDestroy {
       DispatchQueue.main.async { [weak self] in
         self?.aufhoeren()

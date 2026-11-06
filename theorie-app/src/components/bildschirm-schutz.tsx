@@ -1,5 +1,5 @@
 import { useEffect, useSyncExternalStore } from "react";
-import { Platform } from "react-native";
+import { Alert, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { requireOptionalNativeModule } from "expo";
 import * as ScreenCapture from "expo-screen-capture";
@@ -23,7 +23,7 @@ import { useClipRechte } from "@/lib/clips-server";
 const SCHLUESSEL = "app";
 const SPEICHER = "spur-aufnahme-erlaubt";
 
-type Nativ = { setzen(an: boolean): Promise<void> };
+type Nativ = { setzen(an: boolean): Promise<void>; letzteAusnahme?(): string | null };
 const nativ = Platform.OS === "ios" ? requireOptionalNativeModule<Nativ>("AufnahmeSchutz") : null;
 
 // --- Schalter für den Inhaber: Aufnahmen für mich erlauben (Standard: ja) ------
@@ -66,6 +66,20 @@ export function useInhaberAufnahme(): [boolean, (an: boolean) => void] {
 
 export function BildschirmSchutz() {
   const { inhaber } = useClipRechte();
+
+  // Hat ein natives Modul beim letzten Mal eine Ausnahme geworfen (abgefangen
+  // in modules/aufnahme-schutz/ios/AusnahmeFang.m), kurz anzeigen – zur Fehlersuche.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        const text = typeof nativ?.letzteAusnahme === "function" ? nativ.letzteAusnahme() : null;
+        if (text) Alert.alert("Technischer Hinweis", `${text}\n\nBitte schick uns einen Screenshot davon.`);
+      } catch {
+        // nur zur Fehlersuche
+      }
+    }, 3000);
+    return () => clearTimeout(t);
+  }, []);
   const [inhaberDarf] = useInhaberAufnahme();
   const frei = inhaber && inhaberDarf;
 
