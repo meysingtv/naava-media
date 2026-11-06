@@ -522,11 +522,13 @@ neu bauen, dann ist alles wieder da.
 
 ## Sperre gegen Bildschirmaufnahmen
 
-`src/components/bildschirm-schutz.tsx` (Modul `expo-screen-capture`) sperrt in
-der ganzen App Bildschirmaufnahmen und Screenshots – nur für das
-Inhaber-Konto nicht. Android: Aufnahme und Screenshot bleiben schwarz. iOS:
-schwarz während einer Aufnahme, Screenshots leer, in der App-Übersicht
-verschwommen. Im Browser geht das technisch nicht; abfilmen mit einem zweiten
+`src/components/bildschirm-schutz.tsx` sperrt in der ganzen App
+Bildschirmaufnahmen und Screenshots – nur für das Inhaber-Konto nicht (zum
+Testen unter Einstellungen → „Bildschirmaufnahmen erlauben“ ausschalten).
+Android (`expo-screen-capture`): Aufnahme und Screenshot bleiben schwarz.
+iOS: Das eigene Modul `modules/aufnahme-schutz` legt bei einer Aufnahme ein
+verschwommenes Fenster über die ganze App (auch über Modals), Screenshots
+bleiben leer, die App-Übersicht ist verschwommen. Im Browser geht das technisch nicht; abfilmen mit einem zweiten
 Handy lässt sich nie verhindern. Braucht einen neuen nativen Build.
 
 ## Konto löschen, Blockieren, Rechtliches

@@ -14,6 +14,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { Schalter } from "@/components/schalter";
 import { tourStarten } from "@/components/tour";
+import { useInhaberAufnahme } from "@/components/bildschirm-schutz";
 import { APP_ICONS, aktivesIcon } from "@/lib/app-icon";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
 import { useDarstellung, useFarbwelt } from "@/lib/darstellung";
@@ -49,6 +50,7 @@ export default function Einstellungen() {
   const { stand, setzen, zuruecksetzen } = useStand();
   const { session, profil, gast, anzeigeName, profilSpeichern, passwortAendern, benutzernameFrei, benutzernameAendern, rolleSetzen, abmelden } = useKonto();
   const blockiert = useBlockiert();
+  const [aufnahmeErlaubt, aufnahmeSetzen] = useInhaberAufnahme();
   const [loeschtKonto, setLoeschtKonto] = useState(false);
   const rechte = useClipRechte();
   const { liste: bewerbungen } = useBewerbungen(rechte.inhaber);
@@ -466,6 +468,15 @@ export default function Einstellungen() {
               <Zeile icon="play-circle-outline" iconFarbe={farben.orange} titel="Erklärvideos" unter="Videos zu einzelnen Fragen – erscheinen beim Lernen" onPress={() => router.push("/erklaervideos")} />
               {Platform.OS === "web" ? (
                 <Zeile icon="grid" iconFarbe="#8B5CF6" titel="Manager" unter="Zugänge anlegen und sperren, Videos zu Themen hochladen" onPress={() => router.push("/manager")} />
+              ) : null}
+              {Platform.OS !== "web" ? (
+                <Zeile
+                  icon="videocam-outline"
+                  iconFarbe="#FF4A3D"
+                  titel="Bildschirmaufnahmen erlauben"
+                  unter={aufnahmeErlaubt ? "Nur für dich an – alle anderen sind gesperrt" : "Aus – du siehst die Sperre wie alle anderen"}
+                  rechts={<Schalter wert={aufnahmeErlaubt} onWechsel={aufnahmeSetzen} />}
+                />
               ) : null}
             </GlasGruppe>
           </View>
