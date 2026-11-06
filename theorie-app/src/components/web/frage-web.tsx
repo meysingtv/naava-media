@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, Text, TextInput, View } from "react-native";
 
 import { FrageBild } from "@/components/frage-bild";
 import { Icon, type IconName } from "@/components/icon";
@@ -28,7 +28,9 @@ export function useTasten(handler: (e: KeyboardEvent) => void, { immer = false }
   const ref = useRef(handler);
   ref.current = handler;
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    // Nur im Browser: In der App gibt es `window` zwar auch, aber ohne
+    // addEventListener – der Aufruf würde die App beim Start abstürzen lassen.
+    if (Platform.OS !== "web" || typeof window === "undefined" || typeof window.addEventListener !== "function") return;
     const h = (e: KeyboardEvent) => {
       // Ist ein Dialog offen, gehören die Tasten ihm – nicht der Seite darunter.
       if (tastenSperre.an && !immer) return;
