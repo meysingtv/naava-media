@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDesktop } from "@/lib/fenster";
 import { HomeWeb } from "@/components/web/home-web";
 import { tageszeit } from "@/components/home";
-import { AKZENT, FotoBanner, HeldKarte, HilfenRaster, mitAlpha, RegelKarte, StartAbschnitt, StartKopf, THEMA_FARBE, ThemenReihe, WerteReihe, type Hilfe, type Wert } from "@/components/start";
+import { AKZENT, FotoBanner, HeldKarte, HilfenRaster, mitAlpha, RegelKarte, StartAbschnitt, StartKopf, ThemenReihe, WerteReihe, type Hilfe, type Wert } from "@/components/start";
 import { useInhaltUnten } from "@/components/tab-leiste";
 import { TourZiel, useTourBlatt } from "@/components/tour";
 import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
@@ -32,8 +32,8 @@ export default function Home() {
 /**
  * Startseite am Handy: Kopf mit Datum, großes Foto mit dem Thema des Tages
  * (bzw. Weiterlernen), drei farbige Werte, Lernhilfen als Fotokacheln, Regel
- * des Tages und alle Themen als Fotokarten. Oben ein zarter Schein in der
- * Farbe des Tages-Themas – die Seite sieht jeden Tag etwas anders aus.
+ * des Tages und alle Themen als Fotokarten. Hauptfarbe ist das Orange der
+ * Marke, die übrigen Farben sind nur Akzente.
  */
 function HomeHandy() {
   const insets = useSafeAreaInsets();
@@ -73,8 +73,8 @@ function HomeHandy() {
   const minuten = Math.round(tagesVideos.reduce((sum, v) => sum + (v.dauer ?? 0), 0) / 60);
   const videosGesamt = THEMEN.reduce((sum, t) => sum + zuThema(t.id as ThemaId).length, 0);
 
-  const heldThema = FRAGEN_AKTIV ? fokusThema.id : tagesThema;
-  const tagesFarbe = THEMA_FARBE[heldThema];
+  // Hauptfarbe der App: Orange (Fotokarte oben, Schein, Hauptknopf).
+  const haupt = f.orange;
 
   const gesamt = fortschritt(stand);
   const serie = serieAktuell(stand);
@@ -89,14 +89,14 @@ function HomeHandy() {
 
   const werte: Wert[] = FRAGEN_AKTIV
     ? [
-        { icon: "flame", farbe: AKZENT.koralle, wert: String(serie), label: serie === 1 ? "Tag Serie" : "Tage Serie", onPress: () => router.push("/statistik") },
+        { icon: "flame", farbe: haupt, wert: String(serie), label: serie === 1 ? "Tag Serie" : "Tage Serie", onPress: () => router.push("/statistik") },
         { icon: "trending-up", farbe: AKZENT.blau, wert: `${Math.round(gesamt.anteil * 100)} %`, label: "prüfungsreif", onPress: () => router.push("/statistik") },
         { icon: "checkmark-done", farbe: AKZENT.gruen, wert: `${Math.min(heute, 999)}/${stand.tagesziel}`, label: "Fragen heute", onPress: () => router.push({ pathname: "/training", params: { modus: "smart" } }) },
       ]
     : [
         {
           icon: "calendar",
-          farbe: AKZENT.lila,
+          farbe: haupt,
           wert: kommend === null ? "Termin?" : kommend === 0 ? "Heute" : String(kommend),
           label: kommend === null ? "Prüfung eintragen" : kommend === 0 ? "ist Prüfung" : kommend === 1 ? "Tag bis zur Prüfung" : "Tage bis zur Prüfung",
           onPress: zumTermin,
@@ -115,7 +115,7 @@ function HomeHandy() {
     : [
         { icon: "warning", farbe: AKZENT.rot, foto: FOTOS.vorfahrt, titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", onPress: () => router.push("/zeichen") },
         { icon: "bulb", farbe: AKZENT.blau, foto: FOTOS.simulation, titel: "Kurz erklärt", unter: "Regeln in 30 Sek.", onPress: () => router.push("/kurz-erklaert") },
-        { icon: "calculator", farbe: AKZENT.lila, foto: FOTOS.zahlen, titel: "Formeln", unter: "Anhalteweg & Co.", onPress: () => router.push("/formeln") },
+        { icon: "calculator", farbe: AKZENT.tuerkis, foto: FOTOS.zahlen, titel: "Formeln", unter: "Anhalteweg & Co.", onPress: () => router.push("/formeln") },
         { icon: "camera", farbe: AKZENT.gruen, foto: FOTOS.strasse2, titel: "Schilder-Jagd", unter: "Schilder sammeln", onPress: () => router.push("/schilder-jagd") },
       ];
 
@@ -138,10 +138,10 @@ function HomeHandy() {
       {fokus ? <StatusBar style={f.hell ? "dark" : "light"} /> : null}
       <View style={{ flex: 1, backgroundColor: f.grund }}>
         <ScrollView {...leistenScroll} {...tourBlatt} contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: inhaltUnten + 20 }} showsVerticalScrollIndicator={false}>
-          {/* Zarter Schein oben in der Farbe des Tages-Themas */}
+          {/* Zarter orangefarbener Schein oben */}
           <LinearGradient
             pointerEvents="none"
-            colors={[mitAlpha(tagesFarbe, f.hell ? 0.2 : 0.26), mitAlpha(tagesFarbe, f.hell ? 0.07 : 0.08), mitAlpha(tagesFarbe, 0)]}
+            colors={[mitAlpha(haupt, f.hell ? 0.16 : 0.22), mitAlpha(haupt, f.hell ? 0.05 : 0.06), mitAlpha(haupt, 0)]}
             locations={[0, 0.55, 1]}
             style={{ position: "absolute", left: 0, right: 0, top: 0, height: insets.top + 420 }}
           />
@@ -160,7 +160,7 @@ function HomeHandy() {
             {FRAGEN_AKTIV ? (
               <HeldKarte
                 foto={themaFoto(fokusThema.id)}
-                farbe={tagesFarbe}
+                farbe={haupt}
                 etikett="Dein Fokus"
                 ecke={themaVon(fokusThema.id).titel}
                 titel={heute > 0 ? "Weiter geht's" : "Bereit für heute?"}
@@ -172,7 +172,7 @@ function HomeHandy() {
             ) : (
               <HeldKarte
                 foto={themaFoto(tagesThema)}
-                farbe={tagesFarbe}
+                farbe={haupt}
                 etikett="Thema des Tages"
                 ecke={videoText ? (minuten > 0 ? `${videoText} · ${minuten} Min.` : videoText) : undefined}
                 titel={themaVon(tagesThema).titel}
@@ -188,7 +188,7 @@ function HomeHandy() {
           </TourZiel>
 
           {FRAGEN_AKTIV ? (
-            <FotoBanner foto={FOTOS.pruefung} farbe={AKZENT.lila} icon="calendar" titel={terminTitel} unter={terminUnter} onPress={zumTermin} style={{ marginTop: 16 }} />
+            <FotoBanner foto={FOTOS.pruefung} farbe={AKZENT.tuerkis} icon="calendar" titel={terminTitel} unter={terminUnter} onPress={zumTermin} style={{ marginTop: 16 }} />
           ) : null}
 
           <StartAbschnitt titel={FRAGEN_AKTIV ? "Üben" : "Lernhilfen"} style={{ marginTop: 30 }} />

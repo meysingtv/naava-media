@@ -13,7 +13,7 @@ import { leuchten, RAND, schrift } from "@/lib/theme";
 // Bausteine der Startseite am Handy: große Fotos, jede Sache mit eigener
 // Farbe, feste Flächen statt Glas, große Tippflächen.
 
-/** Kräftige Akzentfarben der Startseite (Orange bleibt der Marke vorbehalten). */
+/** Akzentfarben der Startseite – nur für einzelne Kacheln. Hauptfarbe bleibt das Orange der Marke. */
 export const AKZENT = {
   rot: "#EF4444",
   blau: "#2F6BFF",
@@ -118,8 +118,8 @@ export function StartAbschnitt({ titel, link, onLink, style }: { titel: string; 
       <Text style={{ ...schrift.titel, fontSize: 21, letterSpacing: -0.2, color: f.text }}>{titel}</Text>
       {link && onLink ? (
         <Pressable onPress={onLink} hitSlop={10} accessibilityRole="link" style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
-          <Text style={{ ...schrift.textHalb, fontSize: 15, color: f.hell ? AKZENT.blau : "#7FA6FF" }}>{link}</Text>
-          <Icon name="chevron-forward" size={15} color={f.hell ? AKZENT.blau : "#7FA6FF"} />
+          <Text style={{ ...schrift.textHalb, fontSize: 15, color: f.orange }}>{link}</Text>
+          <Icon name="chevron-forward" size={15} color={f.orange} />
         </Pressable>
       ) : null}
     </View>
