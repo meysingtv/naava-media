@@ -6,9 +6,8 @@ import UIKit
 /// Unschärfe über der ganzen App – auch über Modals und Vollbild-Seiten. Das
 /// Fenster ist Teil der Aufnahme, dort ist also nur die Unschärfe zu sehen.
 ///
-/// Erkennung: ab iOS 17 über `sceneCaptureState` der Szenen, sonst
-/// `UIScreen.isCaptured`. Zusätzlich zur Mitteilung von iOS wird jede Sekunde
-/// nachgesehen, damit nichts verpasst wird.
+/// Erkennung über `UIScreen.isCaptured`. Zusätzlich zur Mitteilung von iOS
+/// wird jede Sekunde nachgesehen, damit nichts verpasst wird.
 public class AufnahmeSchutzModule: Module {
   private var schutzAn = false
   private var zuletzt = false
@@ -55,13 +54,8 @@ public class AufnahmeSchutzModule: Module {
   }
 
   static func wirdAufgenommen() -> Bool {
-    if #available(iOS 17.0, *) {
-      for szene in UIApplication.shared.connectedScenes {
-        if let fensterSzene = szene as? UIWindowScene, fensterSzene.traitCollection.sceneCaptureState == .active {
-          return true
-        }
-      }
-    }
+    // Bewusst nur isCaptured (seit iOS 11): neuere APIs sind je nach SDK
+    // unterschiedlich verfügbar und können den Build scheitern lassen.
     return UIScreen.main.isCaptured
   }
 
