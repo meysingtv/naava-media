@@ -5,6 +5,7 @@ import { Badge, Icon, Label, NativeTabs, VectorIcon } from "expo-router/unstable
 
 import { TabLeiste } from "@/components/tab-leiste";
 import { useDesktop } from "@/lib/fenster";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 import { useLive } from "@/lib/live";
 import { farben } from "@/lib/theme";
 
@@ -35,7 +36,8 @@ export default function TabsLayout() {
         <Icon sf={{ default: "play.rectangle.on.rectangle", selected: "play.rectangle.on.rectangle.fill" }} androidSrc={<VectorIcon family={Ionicons} name="film" />} />
         <Badge hidden={!live} />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="pruefen">
+      {/* Prüfung ist aus, bis die Lizenz für den Fragenkatalog da ist (lib/funktionen.ts) */}
+      <NativeTabs.Trigger name="pruefen" hidden={!FRAGEN_AKTIV}>
         <Label>Prüfung</Label>
         <Icon sf={{ default: "checkmark.seal", selected: "checkmark.seal.fill" }} androidSrc={<VectorIcon family={Ionicons} name="ribbon" />} />
       </NativeTabs.Trigger>
@@ -55,7 +57,7 @@ function AndroidTabs() {
       <Tabs.Screen name="heute" options={{ title: "Home" }} />
       <Tabs.Screen name="lernen" options={{ title: "Lernen" }} />
       <Tabs.Screen name="clips" options={{ title: "Clips" }} />
-      <Tabs.Screen name="pruefen" options={{ title: "Prüfung" }} />
+      <Tabs.Screen name="pruefen" options={{ title: "Prüfung", href: FRAGEN_AKTIV ? undefined : null }} />
       <Tabs.Screen name="profil" options={{ title: "Profil" }} />
     </Tabs>
   );

@@ -22,6 +22,7 @@ import { useLeistenScroll } from "@/lib/leisten-scroll";
 import { tageBis, terminDatum } from "@/lib/pruefungstag";
 import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, serieAktuell, useStand, wocheTage, xpWoche } from "@/lib/stand";
 import { RAND, schrift } from "@/lib/theme";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 const ZITATE: [string, string][] = [
   ["Kleine Schritte.", "Große Freiheit."],
@@ -29,6 +30,16 @@ const ZITATE: [string, string][] = [
   ["Jede Frage zählt.", "Du packst das."],
   ["Dranbleiben.", "Die Straße wartet."],
 ];
+
+/** Schnellziele, solange die Fragen aus sind: nur Inhalte ohne Prüfungsfragen. */
+const SCHNELL_OHNE_FRAGEN = [
+  { icon: "play-circle", farbe: "#4DA3FF", titel: "Lernvideos", unter: "Alle Themen erklärt", ziel: "/lernen" },
+  { icon: "bulb", farbe: "#FF4D6D", titel: "Kurz erklärt", unter: "Regeln in 30 Sekunden", ziel: "/kurz-erklaert" },
+  { icon: "warning", farbe: "#E5392C", titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", ziel: "/zeichen" },
+  { icon: "calculator", farbe: "#E0A100", titel: "Formeln", unter: "Anhalteweg & Co.", ziel: "/formeln" },
+  { icon: "camera", farbe: "#23A548", titel: "Schilder-Jagd", unter: "Schilder sammeln", ziel: "/schilder-jagd" },
+  { icon: "film", farbe: "#8B5CF6", titel: "Clips", unter: "Kurze Videos", ziel: "/clips" },
+] as const;
 
 export default function Home() {
   const insets = useSafeAreaInsets();
@@ -96,14 +107,16 @@ export default function Home() {
             themen,
             zitat,
             glockePunkt,
-            schnell: [
-              { icon: "heart", farbe: "#FF4D6D", titel: "Favoriten", unter: "Gemerkte Fragen", zahl: gemerktIds(stand).length, onPress: () => router.push("/favoriten") },
-              { icon: "refresh", farbe: "#FF4A3D", titel: "Fehler üben", unter: "Falsche Fragen wiederholen", zahl: fehlerIds(stand).length, onPress: () => router.push({ pathname: "/training", params: { modus: "fehler" } }) },
-              { icon: "albums", farbe: "#4DA3FF", titel: "Karteikarten", unter: "Heute fällig", zahl: heuteDran(stand).gesamt, onPress: () => router.push("/karteikarten") },
-              { icon: "camera", farbe: "#23A548", titel: "Schilder-Jagd", unter: "Schilder sammeln", onPress: () => router.push("/schilder-jagd") },
-              { icon: "flash", farbe: "#FFB400", titel: "Duell", unter: "Gegen Freunde spielen", onPress: () => router.push("/duell") },
-              { icon: "stats-chart", farbe: "#8B5CF6", titel: "Statistik", unter: "Dein Lernverlauf", onPress: () => router.push("/statistik") },
-            ],
+            schnell: FRAGEN_AKTIV
+              ? [
+                  { icon: "heart", farbe: "#FF4D6D", titel: "Favoriten", unter: "Gemerkte Fragen", zahl: gemerktIds(stand).length, onPress: () => router.push("/favoriten") },
+                  { icon: "refresh", farbe: "#FF4A3D", titel: "Fehler üben", unter: "Falsche Fragen wiederholen", zahl: fehlerIds(stand).length, onPress: () => router.push({ pathname: "/training", params: { modus: "fehler" } }) },
+                  { icon: "albums", farbe: "#4DA3FF", titel: "Karteikarten", unter: "Heute fällig", zahl: heuteDran(stand).gesamt, onPress: () => router.push("/karteikarten") },
+                  { icon: "camera", farbe: "#23A548", titel: "Schilder-Jagd", unter: "Schilder sammeln", onPress: () => router.push("/schilder-jagd") },
+                  { icon: "flash", farbe: "#FFB400", titel: "Duell", unter: "Gegen Freunde spielen", onPress: () => router.push("/duell") },
+                  { icon: "stats-chart", farbe: "#8B5CF6", titel: "Statistik", unter: "Dein Lernverlauf", onPress: () => router.push("/statistik") },
+                ]
+              : SCHNELL_OHNE_FRAGEN.map((z) => ({ ...z, onPress: () => router.push(z.ziel as never) })),
           }}
         />
       </FarbweltBereich>
@@ -160,6 +173,7 @@ export default function Home() {
 
             <Handschrift zeilen={zeilen} style={{ position: "absolute", left: 30, top: insets.top + 112 }} />
 
+            {FRAGEN_AKTIV ? (
             <View style={{ position: "absolute", left: RAND, right: RAND, bottom: 104 }}>
               <TourZiel id="home-werte">
                 <HeldWerte
@@ -175,49 +189,64 @@ export default function Home() {
                 />
               </TourZiel>
             </View>
+            ) : null}
           </KinoHeld>
 
           <TourZiel id="home-start" style={{ marginTop: -80, marginHorizontal: RAND }}>
-            <StartKnopf
-              titel={heute > 0 ? "Weiterlernen" : "Lernen starten"}
-              unter={rest > 0 ? `Noch ${rest} Fragen bis zum Tagesziel` : "Tagesziel geschafft – jede Frage zählt extra"}
-              onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
-            />
+            {FRAGEN_AKTIV ? (
+              <StartKnopf
+                titel={heute > 0 ? "Weiterlernen" : "Lernen starten"}
+                unter={rest > 0 ? `Noch ${rest} Fragen bis zum Tagesziel` : "Tagesziel geschafft – jede Frage zählt extra"}
+                onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
+              />
+            ) : (
+              <StartKnopf titel="Lernvideos ansehen" unter="Alle Themen kurz und einfach erklärt" onPress={() => router.navigate("/lernen")} />
+            )}
           </TourZiel>
 
           <TourZiel id="home-schnell" style={{ marginTop: 18 }}>
             <Schnellstart
-              ziele={[
-                { icon: "heart", titel: "Favoriten", zahl: gemerktIds(stand).length, onPress: () => router.push("/favoriten") },
-                { icon: "refresh", titel: "Fehler üben", zahl: fehlerIds(stand).length, onPress: () => router.push({ pathname: "/training", params: { modus: "fehler" } }) },
-                { icon: "albums-outline", titel: "Karteikarten", zahl: heuteDran(stand).gesamt, onPress: () => router.push("/karteikarten") },
-                { icon: "camera", titel: "Schilder-Jagd", onPress: () => router.push("/schilder-jagd") },
-                { icon: "flash", titel: "Duell", onPress: () => router.push("/duell") },
-                { icon: "stats-chart", titel: "Statistik", onPress: () => router.push("/statistik") },
-              ]}
+              ziele={
+                FRAGEN_AKTIV
+                  ? [
+                      { icon: "heart", titel: "Favoriten", zahl: gemerktIds(stand).length, onPress: () => router.push("/favoriten") },
+                      { icon: "refresh", titel: "Fehler üben", zahl: fehlerIds(stand).length, onPress: () => router.push({ pathname: "/training", params: { modus: "fehler" } }) },
+                      { icon: "albums-outline", titel: "Karteikarten", zahl: heuteDran(stand).gesamt, onPress: () => router.push("/karteikarten") },
+                      { icon: "camera", titel: "Schilder-Jagd", onPress: () => router.push("/schilder-jagd") },
+                      { icon: "flash", titel: "Duell", onPress: () => router.push("/duell") },
+                      { icon: "stats-chart", titel: "Statistik", onPress: () => router.push("/statistik") },
+                    ]
+                  : SCHNELL_OHNE_FRAGEN.map((z) => ({ icon: z.icon, titel: z.titel, onPress: () => router.push(z.ziel as never) }))
+              }
             />
           </TourZiel>
 
-          <TourZiel id="home-fokus" style={{ marginTop: 30, marginHorizontal: RAND }}>
-            <Kopfzeile titel="Dein Fokus heute" style={{ paddingHorizontal: 0 }} />
-            <FokusKarte
-              thema={fokusThema.id}
-              anteil={fokusThema.anteil}
-              offen={fokusThema.offen}
-              onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: fokusThema.id } })}
-            />
-          </TourZiel>
+          {FRAGEN_AKTIV ? (
+            <TourZiel id="home-fokus" style={{ marginTop: 30, marginHorizontal: RAND }}>
+              <Kopfzeile titel="Dein Fokus heute" style={{ paddingHorizontal: 0 }} />
+              <FokusKarte
+                thema={fokusThema.id}
+                anteil={fokusThema.anteil}
+                offen={fokusThema.offen}
+                onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: fokusThema.id } })}
+              />
+            </TourZiel>
+          ) : null}
 
-          <Kopfzeile titel="Deine Themen" link="Alle ansehen" onLink={() => router.navigate("/lernen")} style={{ marginTop: 30 }} />
-          <ThemenKarussell themen={themen} onThema={(id) => router.push({ pathname: "/thema/[id]", params: { id } })} />
+          <Kopfzeile titel={FRAGEN_AKTIV ? "Deine Themen" : "Lernvideos nach Thema"} link="Alle ansehen" onLink={() => router.navigate("/lernen")} style={{ marginTop: 30 }} />
+          <ThemenKarussell themen={themen} ohneStand={!FRAGEN_AKTIV} onThema={(id) => router.push({ pathname: "/thema/[id]", params: { id } })} />
 
-          <Kopfzeile titel="Deine Prüfung" style={{ marginTop: 30 }} />
-          <View style={{ paddingHorizontal: RAND }}>
-            <PruefungKarte tage={kommend} letzte={letzte} onPress={() => router.navigate("/pruefen")} onTermin={() => router.push("/pruefungstermin")} />
-          </View>
+          {FRAGEN_AKTIV ? (
+            <>
+              <Kopfzeile titel="Deine Prüfung" style={{ marginTop: 30 }} />
+              <View style={{ paddingHorizontal: RAND }}>
+                <PruefungKarte tage={kommend} letzte={letzte} onPress={() => router.navigate("/pruefen")} onTermin={() => router.push("/pruefungstermin")} />
+              </View>
 
-          {/* Crew: gemeinsame Flamme und Wochen-Boss */}
-          <CrewBereich style={{ marginHorizontal: RAND }} kopf={<Kopfzeile titel="Deine Crew" link="Öffnen" onLink={() => router.push("/crew")} style={{ marginTop: 30, marginHorizontal: -RAND }} />} />
+              {/* Crew: gemeinsame Flamme und Wochen-Boss */}
+              <CrewBereich style={{ marginHorizontal: RAND }} kopf={<Kopfzeile titel="Deine Crew" link="Öffnen" onLink={() => router.push("/crew")} style={{ marginTop: 30, marginHorizontal: -RAND }} />} />
+            </>
+          ) : null}
 
           <View style={{ paddingHorizontal: RAND, marginTop: 30 }}>
             <ZitatKarte zeilen={zitat} />

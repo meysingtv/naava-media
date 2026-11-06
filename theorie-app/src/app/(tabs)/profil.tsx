@@ -21,6 +21,7 @@ import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
 import { ERFOLGE } from "@/lib/erfolge";
 import { tausender } from "@/lib/format";
 import { FOTOS } from "@/lib/fotos";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 import { tippen } from "@/lib/haptik";
 import { heuteDran, kartenZahlen } from "@/lib/karteikarten";
 import { useKonto } from "@/lib/konto";
@@ -145,7 +146,7 @@ export default function Profil() {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={{ ...schrift.textHalb, fontSize: 16, color: f.text }}>Kostenloses Konto erstellen</Text>
-          <Text style={{ ...schrift.text, fontSize: 13.5, lineHeight: 18, color: f.text2, marginTop: 2 }}>Fortschritt sichern, Liga, Crew und Duelle.</Text>
+          <Text style={{ ...schrift.text, fontSize: 13.5, lineHeight: 18, color: f.text2, marginTop: 2 }}>{FRAGEN_AKTIV ? "Fortschritt sichern, Liga, Crew und Duelle." : "Profilbild, eigene Clips und Kommentare."}</Text>
         </View>
       </View>
       <View style={{ flexDirection: "row", gap: 10 }}>
@@ -214,7 +215,27 @@ export default function Profil() {
       ]}
     />
   );
-  const mehrZeilen = [
+  const tageText = tage !== null && tage >= 0 ? `${tage}` : "–";
+  /** Werte oben im Profil, wenn die Fragen aus sind. */
+  const werteOhneFragen = [
+    { icon: "camera" as const, farbe: "#4DA3FF", wert: `${schilderGefunden}/${ALBUM.length}`, label: "Schilder", onPress: () => router.push("/schilder-jagd") },
+    { icon: "calendar" as const, farbe: "#FF8A2A", wert: tageText, label: tage === 1 ? "Tag bis Prüfung" : "Tage bis Prüfung", onPress: () => router.push("/pruefungstermin") },
+    { icon: "bookmark" as const, farbe: "#FFC857", wert: `${gemerkteClips}`, label: "Gemerkt", onPress: () => router.push("/kurz-erklaert") },
+  ];
+  const mehrOhneFragen = [
+    <MenueZeile
+      key="schilder"
+      icon="camera"
+      farbe="#4DA3FF"
+      titel="Schilder-Jagd"
+      unter={schilderGefunden > 0 ? `${schilderGefunden} von ${ALBUM.length} Schildern gefunden` : "Echte Schilder mit der Kamera sammeln"}
+      onPress={() => router.push("/schilder-jagd")}
+    />,
+    <MenueZeile key="kurz" icon="bulb" farbe="#FF4D6D" titel="Kurz erklärt" unter={gemerkteClips > 0 ? `${gemerkteClips} gemerkt` : "Regeln in 30 Sekunden"} onPress={() => router.push("/kurz-erklaert")} />,
+    <MenueZeile key="zeichen" icon="warning" farbe="#E5392C" titel="Verkehrszeichen" unter="Alle Zeichen erklärt" onPress={() => router.push("/zeichen")} />,
+    <MenueZeile key="formeln" icon="calculator" farbe="#E0A100" titel="Formeln" unter="Anhalteweg & Co." onPress={() => router.push("/formeln")} />,
+  ];
+  const mehrZeilen = FRAGEN_AKTIV ? [
     <MenueZeile key="fortschritt" icon="stats-chart" farbe="#FC5B0E" titel="Mein Fortschritt" unter="Statistiken, Stärken & Schwächen" onPress={() => router.push("/statistik")} />,
     <MenueZeile
       key="schilder"
@@ -243,12 +264,15 @@ export default function Profil() {
     <MenueZeile key="kurz" icon="bulb" farbe="#FF4D6D" titel="Kurz erklärt" unter={gemerkteClips > 0 ? `${gemerkteClips} gemerkt` : "Regeln in 30 Sekunden"} onPress={() => router.push("/kurz-erklaert")} />,
     <MenueZeile key="favoriten" icon="heart" farbe="#FF8A1E" titel="Favoriten" unter="Gemerkte und schwierige Fragen" onPress={() => router.push("/favoriten")} />,
     <MenueZeile key="formeln" icon="calculator" farbe="#E0A100" titel="Formeln" unter="Anhalteweg & Co." onPress={() => router.push("/formeln")} />,
-  ];
+  ] : mehrOhneFragen;
   const kontoGruppe = (
     <MenueGruppe>
       <MenueZeile icon="settings-outline" farbe="#7C838C" titel="Einstellungen & Konto" unter={gast ? "Gastmodus" : undefined} onPress={() => router.push("/einstellungen")} />
       <MenueZeile icon="diamond-outline" farbe="#FC5B0E" titel="Premium" unter="Bald verfügbar" onPress={() => router.push("/premium")} />
       <MenueZeile icon="images-outline" farbe="#E0A100" titel="Bildnachweise" onPress={() => router.push("/bildnachweise")} />
+      <MenueZeile icon="document-text-outline" farbe="#7C838C" titel="Impressum" onPress={() => router.push("/impressum")} />
+      <MenueZeile icon="shield-checkmark-outline" farbe="#4DA3FF" titel="Datenschutz" onPress={() => router.push("/datenschutz")} />
+      <MenueZeile icon="reader-outline" farbe="#7C838C" titel="Nutzungsbedingungen" onPress={() => router.push("/nutzungsbedingungen")} />
       <MenueZeile icon="log-out-outline" farbe="#FF4A3D" titel={gast ? "Gastmodus beenden" : "Abmelden"} gefahr onPress={abmeldenFragen} />
     </MenueGruppe>
   );
@@ -262,7 +286,7 @@ export default function Profil() {
     return (
       <FarbweltBereich farbwelt={f}>
         <DesktopSeite>
-          <DesktopKopf titel="Profil" unter="Dein Weg zum Führerschein, Abzeichen und Zahlen." rechts={<KopfRund icon="settings-outline" label="Einstellungen" onPress={() => router.push("/einstellungen")} />} />
+          <DesktopKopf titel="Profil" unter={FRAGEN_AKTIV ? "Dein Weg zum Führerschein, Abzeichen und Zahlen." : "Dein Konto, Schilder-Jagd und Lernhilfen."} rechts={<KopfRund icon="settings-outline" label="Einstellungen" onPress={() => router.push("/einstellungen")} />} />
           <View style={{ flexDirection: zwei ? "row" : "column", gap: LUECKE, alignItems: "flex-start" }}>
             <View style={{ width: links, gap: 24 }}>
               <DKarte style={{ padding: 0, overflow: "hidden" }}>
@@ -280,18 +304,24 @@ export default function Profil() {
                   <Text style={{ ...schrift.textMittel, fontSize: 14.5, color: f.text2, marginTop: 2 }} numberOfLines={1}>
                     {unterzeile}
                   </Text>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 7, height: 32, paddingHorizontal: 13, borderRadius: 16, marginTop: 12, backgroundColor: f.hell ? "#F4F1EC" : "rgba(255,255,255,0.07)" }}>
-                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: liga.farbe }} />
-                    <Text style={{ ...schrift.textHalb, fontSize: 13, color: f.text }}>{liga.name}</Text>
-                  </View>
+                  {FRAGEN_AKTIV ? (
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 7, height: 32, paddingHorizontal: 13, borderRadius: 16, marginTop: 12, backgroundColor: f.hell ? "#F4F1EC" : "rgba(255,255,255,0.07)" }}>
+                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: liga.farbe }} />
+                      <Text style={{ ...schrift.textHalb, fontSize: 13, color: f.text }}>{liga.name}</Text>
+                    </View>
+                  ) : null}
                   <GlasLeiste
                     hell={f.hell}
                     style={{ alignSelf: "stretch", marginTop: 20 }}
-                    werte={[
-                      { icon: "star", farbe: "#FFC857", wert: tausender(stand.xp), label: "Punkte", onPress: () => router.push("/liga") },
-                      { icon: "flame", farbe: "#FF8A2A", wert: `${serie}`, label: serie === 1 ? "Tag Serie" : "Tage Serie", onPress: () => router.push("/statistik") },
-                      { icon: "ribbon", farbe: "#FFB45C", wert: `${freigeschaltet}/${ERFOLGE.length}`, label: "Abzeichen", onPress: () => router.push("/statistik") },
-                    ]}
+                    werte={
+                      FRAGEN_AKTIV
+                        ? [
+                            { icon: "star", farbe: "#FFC857", wert: tausender(stand.xp), label: "Punkte", onPress: () => router.push("/liga") },
+                            { icon: "flame", farbe: "#FF8A2A", wert: `${serie}`, label: serie === 1 ? "Tag Serie" : "Tage Serie", onPress: () => router.push("/statistik") },
+                            { icon: "ribbon", farbe: "#FFB45C", wert: `${freigeschaltet}/${ERFOLGE.length}`, label: "Abzeichen", onPress: () => router.push("/statistik") },
+                          ]
+                        : werteOhneFragen
+                    }
                   />
                 </View>
               </DKarte>
@@ -302,17 +332,21 @@ export default function Profil() {
             </View>
 
             <View style={{ width: rechts, gap: 32 }}>
-              <Fuehrerscheinweg meilensteine={meilensteine} anteil={reife} zeile={wegZeile} zwischen={zwischen} breite={rechts} onPress={() => router.push("/statistik")} />
-              <DesktopAbschnitt titel="Abzeichen" link={`${freigeschaltet} von ${ERFOLGE.length}`}>
-                <DKarte>
-                  <Medaillen umbrechen medaillen={ERFOLGE.map((e) => ({ id: e.id, titel: e.titel, icon: e.icon, erreicht: Boolean(stand.erfolge[e.id]) }))} onPress={abzeichenZeigen} />
-                </DKarte>
-              </DesktopAbschnitt>
-              <DesktopAbschnitt titel="Deine Zahlen" link="Statistik" onLink={() => router.push("/statistik")}>
-                {zahlenRaster}
-              </DesktopAbschnitt>
-              <DesktopAbschnitt titel="Liga & Duelle">{ligaKarte}</DesktopAbschnitt>
-              <DesktopAbschnitt titel="Mehr">
+              {FRAGEN_AKTIV ? (
+                <>
+                  <Fuehrerscheinweg meilensteine={meilensteine} anteil={reife} zeile={wegZeile} zwischen={zwischen} breite={rechts} onPress={() => router.push("/statistik")} />
+                  <DesktopAbschnitt titel="Abzeichen" link={`${freigeschaltet} von ${ERFOLGE.length}`}>
+                    <DKarte>
+                      <Medaillen umbrechen medaillen={ERFOLGE.map((e) => ({ id: e.id, titel: e.titel, icon: e.icon, erreicht: Boolean(stand.erfolge[e.id]) }))} onPress={abzeichenZeigen} />
+                    </DKarte>
+                  </DesktopAbschnitt>
+                  <DesktopAbschnitt titel="Deine Zahlen" link="Statistik" onLink={() => router.push("/statistik")}>
+                    {zahlenRaster}
+                  </DesktopAbschnitt>
+                  <DesktopAbschnitt titel="Liga & Duelle">{ligaKarte}</DesktopAbschnitt>
+                </>
+              ) : null}
+              <DesktopAbschnitt titel={FRAGEN_AKTIV ? "Mehr" : "Lernhilfen"}>
                 <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
                   <MenueGruppe style={{ flex: 1, marginHorizontal: 0 }}>{mehrZeilen.slice(0, haelfte)}</MenueGruppe>
                   <MenueGruppe style={{ flex: 1, marginHorizontal: 0 }}>{mehrZeilen.slice(haelfte)}</MenueGruppe>
@@ -364,42 +398,52 @@ export default function Profil() {
               <Text style={{ ...schrift.textMittel, fontSize: 14.5, color: f.hell ? "rgba(20,23,27,0.7)" : "rgba(255,255,255,0.82)", marginTop: 2 }} numberOfLines={1}>
                 {unterzeile}
               </Text>
-              <Glas klar hell={f.hell} style={{ flexDirection: "row", alignItems: "center", gap: 7, height: 32, paddingHorizontal: 13, borderRadius: 16, marginTop: 12 }}>
-                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: liga.farbe }} />
-                <Text style={{ ...schrift.textHalb, fontSize: 13, color: kopfText }}>{liga.name}</Text>
-              </Glas>
+              {FRAGEN_AKTIV ? (
+                <Glas klar hell={f.hell} style={{ flexDirection: "row", alignItems: "center", gap: 7, height: 32, paddingHorizontal: 13, borderRadius: 16, marginTop: 12 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: liga.farbe }} />
+                  <Text style={{ ...schrift.textHalb, fontSize: 13, color: kopfText }}>{liga.name}</Text>
+                </Glas>
+              ) : null}
             </View>
 
             <View style={{ position: "absolute", left: RAND, right: RAND, bottom: 18 }}>
               <GlasLeiste
                 hell={f.hell}
-                werte={[
-                  { icon: "star", farbe: "#FFC857", wert: tausender(stand.xp), label: "Punkte", onPress: () => router.push("/liga") },
-                  { icon: "flame", farbe: "#FF8A2A", wert: `${serie}`, label: serie === 1 ? "Tag Serie" : "Tage Serie", onPress: () => router.push("/statistik") },
-                  { icon: "ribbon", farbe: "#FFB45C", wert: `${freigeschaltet}/${ERFOLGE.length}`, label: "Abzeichen", onPress: () => dialog("Abzeichen", `${freigeschaltet} von ${ERFOLGE.length} freigeschaltet. Weiter unten siehst du alle.`) },
-                ]}
+                werte={
+                  FRAGEN_AKTIV
+                    ? [
+                        { icon: "star", farbe: "#FFC857", wert: tausender(stand.xp), label: "Punkte", onPress: () => router.push("/liga") },
+                        { icon: "flame", farbe: "#FF8A2A", wert: `${serie}`, label: serie === 1 ? "Tag Serie" : "Tage Serie", onPress: () => router.push("/statistik") },
+                        { icon: "ribbon", farbe: "#FFB45C", wert: `${freigeschaltet}/${ERFOLGE.length}`, label: "Abzeichen", onPress: () => dialog("Abzeichen", `${freigeschaltet} von ${ERFOLGE.length} freigeschaltet. Weiter unten siehst du alle.`) },
+                      ]
+                    : werteOhneFragen
+                }
               />
             </View>
           </KinoHeld>
 
           {!session ? <View style={{ marginHorizontal: RAND, marginTop: 18 }}>{gastKarte}</View> : null}
 
-          <View style={{ paddingHorizontal: RAND, marginTop: 22 }}>
-            <Fuehrerscheinweg meilensteine={meilensteine} anteil={reife} zeile={wegZeile} zwischen={zwischen} onPress={() => router.push("/statistik")} />
-          </View>
+          {FRAGEN_AKTIV ? (
+            <>
+              <View style={{ paddingHorizontal: RAND, marginTop: 22 }}>
+                <Fuehrerscheinweg meilensteine={meilensteine} anteil={reife} zeile={wegZeile} zwischen={zwischen} onPress={() => router.push("/statistik")} />
+              </View>
 
-          <Kopfzeile titel="Abzeichen" link={`${freigeschaltet} von ${ERFOLGE.length}`} style={{ marginTop: 30 }} />
-          <Medaillen medaillen={ERFOLGE.map((e) => ({ id: e.id, titel: e.titel, icon: e.icon, erreicht: Boolean(stand.erfolge[e.id]) }))} onPress={abzeichenZeigen} />
+              <Kopfzeile titel="Abzeichen" link={`${freigeschaltet} von ${ERFOLGE.length}`} style={{ marginTop: 30 }} />
+              <Medaillen medaillen={ERFOLGE.map((e) => ({ id: e.id, titel: e.titel, icon: e.icon, erreicht: Boolean(stand.erfolge[e.id]) }))} onPress={abzeichenZeigen} />
 
-          <Kopfzeile titel="Liga & Duelle" style={{ marginTop: 30 }} />
-          <View style={{ paddingHorizontal: RAND }}>
-            {ligaKarte}
-          </View>
+              <Kopfzeile titel="Liga & Duelle" style={{ marginTop: 30 }} />
+              <View style={{ paddingHorizontal: RAND }}>
+                {ligaKarte}
+              </View>
 
-          <Kopfzeile titel="Deine Zahlen" link="Statistik" onLink={() => router.push("/statistik")} style={{ marginTop: 30 }} />
-          {zahlenRaster}
+              <Kopfzeile titel="Deine Zahlen" link="Statistik" onLink={() => router.push("/statistik")} style={{ marginTop: 30 }} />
+              {zahlenRaster}
+            </>
+          ) : null}
 
-          <Kopfzeile titel="Mehr" style={{ marginTop: 30 }} />
+          <Kopfzeile titel={FRAGEN_AKTIV ? "Mehr" : "Lernhilfen"} style={{ marginTop: 30 }} />
           {(() => {
             const zeilen = mehrZeilen;
             // iPad: zwei Spalten nebeneinander statt einer langen, gestreckten Liste

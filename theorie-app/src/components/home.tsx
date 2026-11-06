@@ -463,7 +463,7 @@ export function FokusKarte({ thema, anteil, offen, style, onPress }: { thema: Th
 }
 
 /** Ein Thema als Poster: Foto, Symbol, Titel und Fortschritt. */
-export function ThemaPoster({ id, anteil, breite = 148, hoehe = 204, onPress }: { id: ThemaId; anteil: number; breite?: number | `${number}%`; hoehe?: number; onPress: () => void }) {
+export function ThemaPoster({ id, anteil, breite = 148, hoehe = 204, ohneStand, onPress }: { id: ThemaId; anteil: number; breite?: number | `${number}%`; hoehe?: number; ohneStand?: boolean; onPress: () => void }) {
   const t = themaVon(id);
   return (
     <Pressable
@@ -484,23 +484,30 @@ export function ThemaPoster({ id, anteil, breite = 148, hoehe = 204, onPress }: 
         <Text style={{ ...schrift.titelFett, fontSize: 16, lineHeight: 20, color: "#FFFFFF" }} numberOfLines={2}>
           {t.titel}
         </Text>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <View style={{ flex: 1 }}>
-            <Fortschritt anteil={anteil} hoehe={5} />
+        {ohneStand ? (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Icon name="play-circle" size={15} color="rgba(255,255,255,0.85)" />
+            <Text style={{ ...schrift.textHalb, fontSize: 12, color: "rgba(255,255,255,0.85)" }}>Videos ansehen</Text>
           </View>
-          <Text style={{ ...schrift.textHalb, fontSize: 12, color: "rgba(255,255,255,0.85)", fontVariant: ["tabular-nums"] }}>{Math.round(anteil * 100)}%</Text>
-        </View>
+        ) : (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <View style={{ flex: 1 }}>
+              <Fortschritt anteil={anteil} hoehe={5} />
+            </View>
+            <Text style={{ ...schrift.textHalb, fontSize: 12, color: "rgba(255,255,255,0.85)", fontVariant: ["tabular-nums"] }}>{Math.round(anteil * 100)}%</Text>
+          </View>
+        )}
       </View>
     </Pressable>
   );
 }
 
 /** Themen als Poster zum Durchwischen. */
-export function ThemenKarussell({ themen, onThema }: { themen: { id: ThemaId; anteil: number }[]; onThema: (id: ThemaId) => void }) {
+export function ThemenKarussell({ themen, onThema, ohneStand }: { themen: { id: ThemaId; anteil: number }[]; onThema: (id: ThemaId) => void; ohneStand?: boolean }) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} decelerationRate="fast" snapToInterval={160} contentContainerStyle={{ paddingHorizontal: RAND, gap: 12 }}>
       {themen.map(({ id, anteil }) => (
-        <ThemaPoster key={id} id={id} anteil={anteil} onPress={() => onThema(id)} />
+        <ThemaPoster key={id} id={id} anteil={anteil} ohneStand={ohneStand} onPress={() => onThema(id)} />
       ))}
     </ScrollView>
   );

@@ -9,6 +9,7 @@ import { FRAGEN, type ThemaId } from "./fragen";
 import { useKonto } from "./konto";
 import { useStand } from "./stand";
 import { serverVerbunden, supabase } from "./supabase";
+import { FRAGEN_AKTIV } from "./funktionen";
 
 /**
  * Crew: 2–6 Leute lernen zusammen. Gemeinsame Flamme (wächst nur, wenn alle ihr
@@ -228,7 +229,7 @@ export function CrewProvider({ children }: { children: ReactNode }) {
     if (Platform.OS === "web") return;
     const oeffnen = (antwort: Notifications.NotificationResponse | null) => {
       const url = antwort?.notification.request.content.data?.url;
-      if (typeof url === "string" && url.startsWith("/crew")) router.push(url as "/crew");
+      if (FRAGEN_AKTIV && typeof url === "string" && url.startsWith("/crew")) router.push(url as "/crew");
     };
     Notifications.getLastNotificationResponseAsync().then(oeffnen).catch(() => {});
     const abo = Notifications.addNotificationResponseReceivedListener(oeffnen);

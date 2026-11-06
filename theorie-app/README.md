@@ -510,3 +510,28 @@ die App einfach ohne weiter.
 `src/lib/fragen.ts` enthält selbst formulierte Beispielfragen. Der amtliche
 Fragenkatalog (mit Bildern und Videos) ist lizenzpflichtig
 (TÜV | DEKRA arge tp 21) und kann später im selben Format eingespielt werden.
+
+**Zurzeit ausgeschaltet:** Bis die Lizenz für den amtlichen Katalog da ist,
+steht in `src/lib/funktionen.ts` `FRAGEN_AKTIV = false`. Dann sind Training,
+Prüfung (Tab), Duelle, Karteikarten, Favoriten, Statistik, Liga, Crew und das
+Live-Quiz ausgeblendet und gesperrt. Lernen zeigt die Themen nur mit ihren
+Videos (Themenvideos aus dem Manager, Erklärvideos zu Fragen ohne Fragetext,
+eingebaute Animationen). Verkehrszeichen, Formeln, Kurz erklärt,
+Schilder-Jagd und Clips bleiben. Nichts ist gelöscht: auf `true` stellen und
+neu bauen, dann ist alles wieder da.
+
+## Konto löschen, Blockieren, Rechtliches
+
+- **SQL:** `supabase/update-konto.sql` einmal im SQL-Editor ausführen
+  (Abschnitt 27 in `schema.sql`).
+- **Konto löschen:** Einstellungen → Daten → Konto löschen. Löscht das Konto
+  samt Profil, Lernstand, Clips, Kommentaren, Chat und Dateien. Das
+  Inhaber-Konto lässt sich in der App nicht löschen.
+- **Blockieren:** über das „…“ an Clips, langes Drücken auf Kommentare und
+  Chat-Nachrichten oder im Profil einer Person. Liste und Aufheben unter
+  Einstellungen → Konto → Blockierte Personen.
+- **Impressum, Datenschutz, Nutzungsbedingungen** sind als Seiten eingebaut
+  (`/impressum`, `/datenschutz`, `/nutzungsbedingungen`, auch im Browser).
+  Vor der Veröffentlichung Name, Anschrift, E-Mail und Server-Region in
+  `src/lib/rechtliches.ts` eintragen – solange dort Platzhalter in
+  [eckigen Klammern] stehen, zeigen die Seiten einen gelben Hinweis.

@@ -32,6 +32,10 @@ const TITEL: Record<string, string> = {
   pruefung: "Prüfungssimulation",
   anmelden: "Anmelden",
   registrieren: "Registrieren",
+  impressum: "Impressum",
+  datenschutz: "Datenschutz",
+  nutzungsbedingungen: "Nutzungsbedingungen",
+  blockiert: "Blockierte Personen",
 };
 
 /** Titel im Browser-Tab passend zur Seite. */

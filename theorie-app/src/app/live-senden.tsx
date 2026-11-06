@@ -53,6 +53,7 @@ import { frageAusThema, radDrehen, radSchliessen, type LiveRad } from "@/lib/liv
 import { tafelAnwenden, tafelNachricht, tafelSichern, vereinfachen, type LiveTafel, type Strich, type TafelGrund, type TafelNachricht } from "@/lib/live-tafel";
 import { leuchten, schrift } from "@/lib/theme";
 import { kreisBegrenzen, KREIS_START, zweiKamerasMoeglich, zweitkameraAus, zweitkameraSetzen, type KreisLage } from "@/lib/zweitkamera";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 // Live gehen (nur der Inhaber der App): Kamera-Vorschau, Thema, Countdown,
 // dann live mit Chat, Zuschauern, Herzen, Quiz, Prüfung, Themenrad, Tafel, Bild
@@ -940,8 +941,8 @@ export default function LiveSenden() {
           <Werkzeug kompakt={eng} icon="image-outline" sf="photo" label="Bild" laedt={bildLaedt} onPress={bildMenue} />
           {greenscreenMoeglich ? <Werkzeug kompakt={eng} icon="person-outline" sf="person.crop.rectangle" label="Greenscreen" aktiv={Boolean(greenscreen)} laedt={greenscreenLaedt} onPress={greenscreenMenue} /> : null}
           {zweiKamerasMoeglich ? <Werkzeug kompakt={eng} icon="copy-outline" sf="pip" label="2 Kameras" aktiv={Boolean(zweit)} onPress={zweitMenue} /> : null}
-          {phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="flash-outline" sf="bolt" label="Quiz" onPress={quizOeffnen} /> : null}
-          {phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="document-text-outline" sf="doc.text" label="Prüfung" onPress={pruefungOeffnen} /> : null}
+          {FRAGEN_AKTIV && phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="flash-outline" sf="bolt" label="Quiz" onPress={quizOeffnen} /> : null}
+          {FRAGEN_AKTIV && phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="document-text-outline" sf="doc.text" label="Prüfung" onPress={pruefungOeffnen} /> : null}
           {phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="aperture-outline" sf="chart.pie" label="Rad" laedt={radLaedt} onPress={radStarten} /> : null}
           {phase === "live" && !geteilt ? <Werkzeug kompakt={eng} icon="brush-outline" sf="pencil.tip.crop.circle" label="Tafel" onPress={tafelOeffnen} /> : null}
         </View>

@@ -13,6 +13,7 @@ import { tippen } from "@/lib/haptik";
 import { useStand } from "@/lib/stand";
 import { serverVerbunden } from "@/lib/supabase";
 import { abstand, farben, radius, RAND, schrift } from "@/lib/theme";
+import { RechtsLinks } from "@/components/rechts-seite";
 
 const ROLLEN: Auswahl<Rolle>[] = [
   { id: "schueler", titel: "Fahrschüler", unter: "Ich lerne für die Prüfung", icon: "school-outline" },
@@ -335,6 +336,9 @@ export default function Registrieren() {
 
       <Oder />
       <SozialAnmeldung rolle={rolle} onAngemeldet={() => setFertig(true)} onFehler={setFehler} />
+      <View style={{ marginTop: abstand(3), paddingHorizontal: abstand(2) }}>
+        <RechtsLinks einwilligung />
+      </View>
 
       <VorwahlWahl
         offen={vorwahlOffen}

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
@@ -12,9 +13,12 @@ import { Knopf } from "@/components/ui";
 import { useDarstellung } from "@/lib/darstellung";
 import { fragenZuThema, themaVon, type ThemaId } from "@/lib/fragen";
 import { themaFoto } from "@/lib/fotos";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
+import { useLernvideos, type Lernvideo } from "@/lib/lernvideos";
 import { fortschritt, themaStatistik, useStand } from "@/lib/stand";
 import { leuchten, RAND, schrift } from "@/lib/theme";
 import { useThemenvideos, type Themavideo } from "@/lib/themenvideos";
+import { useFenster } from "@/lib/fenster";
 
 // Ein Thema im Kino-Look: Titelfoto, Stand als Ring mit Werten, Startknopf,
 // Videos zum Thema (falls der Inhaber welche hochgeladen hat) und alle Fragen
@@ -25,18 +29,18 @@ function dauerText(s: number | null): string | null {
   return `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
 }
 
-/** Karte eines Themenvideos: Themenfoto mit Abspielknopf, darunter der Titel. */
-function VideoKarte({ video, themaId }: { video: Themavideo; themaId: ThemaId }) {
+/** Karte eines Videos: Themenfoto mit Abspielknopf, darunter der Titel. */
+function VideoKarte({ video, themaId, breite = 220, params }: { video: Pick<Themavideo, "titel" | "dauer">; themaId: ThemaId; breite?: number; params: Lernvideo["params"] }) {
   const { farbwelt: f } = useDarstellung();
   const dauer = dauerText(video.dauer);
   return (
     <Pressable
-      onPress={() => router.push({ pathname: "/themavideo", params: { id: video.id } })}
+      onPress={() => router.push({ pathname: "/themavideo", params })}
       accessibilityRole="button"
       accessibilityLabel={`Video: ${video.titel}`}
-      style={({ pressed }) => ({ width: 220, gap: 8, transform: [{ scale: pressed ? 0.97 : 1 }] })}
+      style={({ pressed }) => ({ width: breite, gap: 8, transform: [{ scale: pressed ? 0.97 : 1 }] })}
     >
-      <View style={[{ height: 124, borderRadius: 18, overflow: "hidden", backgroundColor: "#0B0E12" }, f.hell ? leuchten("#3C2C18", 0.12, 10, 4) : null]}>
+      <View style={[{ height: Math.round(breite * 0.56), borderRadius: 18, overflow: "hidden", backgroundColor: "#0B0E12" }, f.hell ? leuchten("#3C2C18", 0.12, 10, 4) : null]}>
         <Image source={themaFoto(themaId)} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
         <LinearGradient colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0.55)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
         <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
@@ -58,6 +62,51 @@ function VideoKarte({ video, themaId }: { video: Themavideo; themaId: ThemaId })
 }
 
 export default function ThemaSeite() {
+  return FRAGEN_AKTIV ? <ThemaMitFragen /> : <ThemaNurVideos />;
+}
+
+/** Ohne Fragen: Titelfoto und alle Videos des Themas untereinander. */
+function ThemaNurVideos() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useSafeAreaInsets();
+  const { farbwelt: f } = useDarstellung();
+  const { width } = useFenster();
+  const [innen, setInnen] = useState(width - 2 * RAND);
+  const thema = themaVon(id as ThemaId);
+  const { geladen, zuThema } = useLernvideos();
+  const videos = zuThema(thema.id);
+  const spalten = innen >= 1100 ? 4 : innen >= 640 ? 3 : 2;
+  const breite = Math.floor((innen - (spalten - 1) * 12) / spalten);
+
+  return (
+    <Seite>
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }} showsVerticalScrollIndicator={false}>
+        <FotoKopf
+          bild={themaFoto(thema.id)}
+          hoehe={280}
+          titel={thema.titel}
+          unter={thema.kurz}
+          ueber={<View style={{ flexDirection: "row" }}><KopfPille icon="play-circle-outline" text={videos.length === 1 ? "1 Video" : `${videos.length} Videos`} /></View>}
+        />
+        <Kopfzeile titel="Videos" style={{ marginTop: 20 }} />
+        {videos.length ? (
+          <View onLayout={(e) => setInnen(Math.floor(e.nativeEvent.layout.width) - 2 * RAND)} style={{ paddingHorizontal: RAND, flexDirection: "row", flexWrap: "wrap", gap: 12, rowGap: 18 }}>
+            {videos.map((v) => (
+              <VideoKarte key={v.schluessel} video={v} themaId={thema.id} breite={breite} params={v.params} />
+            ))}
+          </View>
+        ) : (
+          <View style={{ marginHorizontal: RAND, paddingVertical: 36, paddingHorizontal: 24, borderRadius: 22, alignItems: "center", gap: 10, backgroundColor: f.flaeche, borderWidth: 1, borderColor: f.linie }}>
+            <Icon name="film-outline" size={28} color={f.text3} />
+            <Text style={{ ...schrift.textHalb, fontSize: 16, lineHeight: 22, color: f.text, textAlign: "center" }}>{geladen ? "Videos zu diesem Thema folgen bald." : "Videos werden geladen …"}</Text>
+          </View>
+        )}
+      </ScrollView>
+    </Seite>
+  );
+}
+
+function ThemaMitFragen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { farbwelt: f } = useDarstellung();
@@ -101,7 +150,7 @@ export default function ThemaSeite() {
             <Kopfzeile titel="Videos" link={videos.length === 1 ? "1 Video" : `${videos.length} Videos`} style={{ marginTop: 30 }} />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: RAND, gap: 12 }}>
               {videos.map((v) => (
-                <VideoKarte key={v.id} video={v} themaId={thema.id} />
+                <VideoKarte key={v.id} video={v} themaId={thema.id} params={{ id: v.id }} />
               ))}
             </ScrollView>
           </>

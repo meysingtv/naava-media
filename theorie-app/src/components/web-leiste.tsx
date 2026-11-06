@@ -6,6 +6,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { useClipRechte } from "@/lib/clips-server";
 import { NACHT, TAG, useDarstellung, type Farbwelt } from "@/lib/darstellung";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 import { SEITENLEISTE } from "@/lib/fenster";
 import { useKonto } from "@/lib/konto";
 import { useLive } from "@/lib/live";
@@ -22,17 +23,24 @@ type Ziel = { pfad: string; titel: string; an: IconName; aus: IconName };
 const HAUPT: Ziel[] = [
   { pfad: "/heute", titel: "Home", an: "home", aus: "home-outline" },
   { pfad: "/lernen", titel: "Lernen", an: "book", aus: "book-outline" },
-  { pfad: "/pruefen", titel: "Prüfung", an: "shield-checkmark", aus: "shield-checkmark-outline" },
+  ...(FRAGEN_AKTIV ? [{ pfad: "/pruefen", titel: "Prüfung", an: "shield-checkmark", aus: "shield-checkmark-outline" } as Ziel] : []),
   { pfad: "/clips", titel: "Clips", an: "film", aus: "film-outline" },
   { pfad: "/profil", titel: "Profil", an: "person-circle", aus: "person-circle-outline" },
 ];
 
-const MEHR: Ziel[] = [
-  { pfad: "/statistik", titel: "Statistik", an: "stats-chart", aus: "stats-chart-outline" },
-  { pfad: "/karteikarten", titel: "Karteikarten", an: "albums", aus: "albums-outline" },
-  { pfad: "/favoriten", titel: "Favoriten", an: "heart", aus: "heart-outline" },
-  { pfad: "/liga", titel: "Liga", an: "trophy", aus: "trophy-outline" },
-];
+const MEHR: Ziel[] = FRAGEN_AKTIV
+  ? [
+      { pfad: "/statistik", titel: "Statistik", an: "stats-chart", aus: "stats-chart-outline" },
+      { pfad: "/karteikarten", titel: "Karteikarten", an: "albums", aus: "albums-outline" },
+      { pfad: "/favoriten", titel: "Favoriten", an: "heart", aus: "heart-outline" },
+      { pfad: "/liga", titel: "Liga", an: "trophy", aus: "trophy-outline" },
+    ]
+  : [
+      { pfad: "/zeichen", titel: "Verkehrszeichen", an: "warning", aus: "warning-outline" },
+      { pfad: "/kurz-erklaert", titel: "Kurz erklärt", an: "bulb", aus: "bulb-outline" },
+      { pfad: "/formeln", titel: "Formeln", an: "calculator", aus: "calculator-outline" },
+      { pfad: "/schilder-jagd", titel: "Schilder-Jagd", an: "camera", aus: "camera-outline" },
+    ];
 
 /** Hover gibt es nur im Browser – React Native kennt den Zustand nicht. */
 type Zustand = PressableStateCallbackType & { hovered?: boolean };
@@ -176,8 +184,8 @@ export function WebLeiste({ breite }: { breite: number }) {
               {anzeigeName}
             </Text>
             <Text style={{ ...schrift.textMittel, fontSize: 12, color: f.text3 }} numberOfLines={1}>
-              {`Klasse ${profil?.klasse ?? "B"} · ${reife} % reif`}
-              {serie ? ` · 🔥 ${serie}` : ""}
+              {FRAGEN_AKTIV ? `Klasse ${profil?.klasse ?? "B"} · ${reife} % reif` : `Klasse ${profil?.klasse ?? "B"}`}
+              {FRAGEN_AKTIV && serie ? ` · 🔥 ${serie}` : ""}
             </Text>
           </View>
         )}

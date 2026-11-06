@@ -19,6 +19,10 @@ import {
   type ClipEintrag,
   type Kommentar,
 } from "@/lib/clips-server";
+import { useBlockiert } from "@/lib/blockieren";
+import { auswahl } from "@/lib/clip-aktionen";
+import { useKonto } from "@/lib/konto";
+import { blockierenFragen } from "@/lib/blockieren-fragen";
 import { stoss, tippen } from "@/lib/haptik";
 import { farben, schrift } from "@/lib/theme";
 
@@ -169,6 +173,8 @@ export function KommentarBlatt({
   const [aufgeklappt, setAufgeklappt] = useState<Set<string>>(new Set());
   const eingabe = useRef<TextInput>(null);
   const clipId = clip?.id ?? null;
+  const blockiert = useBlockiert();
+  const ich = useKonto().session?.user.id ?? null;
 
   useEffect(() => {
     if (!clipId) return;
@@ -189,7 +195,7 @@ export function KommentarBlatt({
 
   // Oben die neuesten Kommentare, darunter die Antworten der Reihe nach.
   const { oben, antworten } = useMemo(() => {
-    const alle = liste ?? [];
+    const alle = (liste ?? []).filter((k) => !blockiert.has(k.autor));
     const oben = alle.filter((k) => !k.antwort_auf).sort((a, b) => b.erstellt_am.localeCompare(a.erstellt_am));
     const antworten = new Map<string, Kommentar[]>();
     for (const k of alle) {
@@ -198,7 +204,7 @@ export function KommentarBlatt({
     }
     for (const l of antworten.values()) l.sort((a, b) => a.erstellt_am.localeCompare(b.erstellt_am));
     return { oben, antworten };
-  }, [liste]);
+  }, [liste, blockiert]);
 
   function aendern(id: string, teil: (k: Kommentar) => Partial<Kommentar>) {
     setListe((l) => (l ? l.map((k) => (k.id === id ? { ...k, ...teil(k) } : k)) : l));
@@ -304,6 +310,20 @@ export function KommentarBlatt({
     ]);
   }
 
+  /** Langer Druck: eigene löschen; bei anderen blockieren (und als Autor/Inhaber löschen). */
+  async function langDruck(k: Kommentar) {
+    if (!clipId) return;
+    if (!ich || k.autor === ich) {
+      loeschenFragen(k);
+      return;
+    }
+    tippen();
+    const wer = k.autor_name || k.autor_benutzername;
+    const i = await auswahl("Kommentar", [{ text: `${wer} blockieren`, gefahr: true }, ...(k.loeschbar ? [{ text: "Kommentar löschen", gefahr: true }] : [])]);
+    if (i === 0) blockierenFragen(k.autor, wer);
+    else if (i === 1) loeschenFragen(k);
+  }
+
   const anzahl = clip?.kommentare ?? 0;
   const zeilenProps = {
     onAntworten: antworten_,
@@ -313,7 +333,7 @@ export function KommentarBlatt({
       tippen();
       setAuswahlFuer((id) => (id === k.id ? null : k.id));
     },
-    onLoeschen: loeschenFragen,
+    onLoeschen: langDruck,
   };
 
   return (

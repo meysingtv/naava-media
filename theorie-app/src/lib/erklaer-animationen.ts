@@ -173,6 +173,22 @@ const ANIMATIONEN: Partial<Record<LageKey, ErklaerAnimation>> = {
 };
 
 /** Animation zur Frage (nur Fragen mit Lageplan). */
+/** Titel der eingebauten Animationen, wenn sie ohne Frage gezeigt werden. */
+export const ANIMATION_TITEL: Record<string, string> = {
+  lage_rechts_vor_links: "Rechts vor links",
+  lage_links_abbiegen: "Links abbiegen mit Gegenverkehr",
+  lage_kreisverkehr: "Durch den Kreisverkehr",
+  lage_rechts_abbiegen_rad: "Rechts abbiegen mit Radfahrer",
+  lage_rettungsgasse: "Rettungsgasse bilden",
+  lage_schulbus: "Vorbei am Schulbus",
+};
+
+/** Animation zu einem Lageplan-Schlüssel (für die Ansicht ohne Frage). */
+export function animationZuLage(lage: string | undefined): ErklaerAnimation | null {
+  if (!lage || !lage.startsWith("lage_")) return null;
+  return ANIMATIONEN[lage as LageKey] ?? null;
+}
+
 export function animationFuer(frage: Pick<Frage, "bild"> | undefined): ErklaerAnimation | null {
   const bild = frage?.bild;
   if (!bild || !bild.startsWith("lage_")) return null;

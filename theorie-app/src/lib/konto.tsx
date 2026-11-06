@@ -11,6 +11,7 @@ import { dialog } from "@/components/dialog";
 
 import { clipRechteNeuLaden } from "./clips-server";
 import { serverVerbunden, supabase } from "./supabase";
+import { blockiertLaden } from "./blockieren";
 
 /**
  * Eigenes Konto der Lern-App – unabhängig von der Fahrschul-Software.
@@ -368,6 +369,12 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.rpc("lern_benutzername_frei", { p_name: name.trim().toLowerCase() });
     return error ? null : Boolean(data);
   }, []);
+
+  // Blockierte Personen des angemeldeten Kontos laden (oder beim Abmelden leeren).
+  const blockId = session?.user.id ?? null;
+  useEffect(() => {
+    blockiertLaden(blockId);
+  }, [blockId]);
 
   // Im Manager pausiert oder gesperrt: abmelden und Bescheid geben. Geprüft
   // beim Start und jedes Mal, wenn die App wieder nach vorn kommt. Fehlt das

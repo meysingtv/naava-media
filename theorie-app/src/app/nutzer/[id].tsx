@@ -10,12 +10,15 @@ import { Icon } from "@/components/icon";
 import { Lader } from "@/components/lader";
 import { NutzerBild, ProfilBild } from "@/components/profilbild";
 import { Knopf, KopfTaste, kopfOben, zurueck } from "@/components/ui";
-import { anmeldenFragen } from "@/lib/clip-aktionen";
+import { auswahl, anmeldenFragen } from "@/lib/clip-aktionen";
+import { entblocken, useBlockiert } from "@/lib/blockieren";
+import { blockierenFragen } from "@/lib/blockieren-fragen";
 import { clipsVonLaden, dateiUrl, erstellerProfilLaden, folgenSetzen, kurzeZahl, type ClipEintrag, type ErstellerProfil } from "@/lib/clips-server";
 import { CREW_MAX, useCrew } from "@/lib/crew";
 import { erfolg, tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { farben, schrift } from "@/lib/theme";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 const SPALTEN = 3;
 const LUECKE = 2;
@@ -41,6 +44,8 @@ export default function NutzerProfil() {
   const [aktualisiert, setAktualisiert] = useState(false);
   const crew = useCrew();
   const [eingeladen, setEingeladen] = useState(false);
+  const blockiert = useBlockiert();
+  const gesperrt = Boolean(profil && blockiert.has(profil.id));
 
   const laden = useCallback(async () => {
     if (!id) return;
@@ -83,6 +88,25 @@ export default function NutzerProfil() {
     }
   }
 
+  /** „…“ oben rechts: blockieren oder die Blockierung aufheben. */
+  async function mehr() {
+    if (!profil) return;
+    if (!session) {
+      anmeldenFragen("Blockieren");
+      return;
+    }
+    const wer = profil.name || profil.benutzername;
+    const wahl = await auswahl(`@${profil.benutzername}`, [gesperrt ? { text: "Blockierung aufheben" } : { text: `${wer} blockieren`, gefahr: true }]);
+    if (wahl !== 0) return;
+    if (gesperrt) {
+      const problem = await entblocken(profil.id);
+      if (problem) dialog("Nicht aufgehoben", problem);
+      else laden();
+    } else {
+      blockierenFragen(profil.id, wer, () => setProfil((p) => (p ? { ...p, folge_ich: false } : p)));
+    }
+  }
+
   const kachelBreite = (width - LUECKE * (SPALTEN - 1)) / SPALTEN;
   const kachelHoehe = (kachelBreite * 16) / 9;
   const name = profil ? profil.name || profil.benutzername : "";
@@ -91,6 +115,8 @@ export default function NutzerProfil() {
     <View style={{ paddingTop: kopfOben(insets.top), paddingBottom: 14 }}>
       <View style={{ minHeight: 44, flexDirection: "row", alignItems: "center", paddingHorizontal: 16 }}>
         <KopfTaste icon="chevron-back" label="Zurück" onPress={zurueck} />
+        <View style={{ flex: 1 }} />
+        {profil && !profil.ich ? <KopfTaste icon="ellipsis-horizontal" label="Mehr" onPress={mehr} /> : null}
         <View pointerEvents="none" style={{ position: "absolute", left: 56, right: 56, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
           <Text numberOfLines={1} style={{ ...schrift.titelFett, fontSize: 18, color: "#FFFFFF" }}>
             {name}
@@ -122,14 +148,16 @@ export default function NutzerProfil() {
           </View>
 
           <View style={{ width: "62%", gap: 8 }}>
-            {profil.ich ? (
+            {gesperrt ? (
+              <Knopf titel="Blockierung aufheben" klein art="sekundaer" onPress={mehr} />
+            ) : profil.ich ? (
               <Knopf titel="Profil bearbeiten" klein art="sekundaer" onPress={() => router.push("/einstellungen")} />
             ) : profil.folge_ich ? (
               <Knopf titel="Folge ich" icon="checkmark" klein art="sekundaer" onPress={folgen} />
             ) : (
               <Knopf titel="Folgen" klein onPress={folgen} />
             )}
-            {!profil.ich && crew.daten?.crew && !crew.daten.mitglieder?.some((m) => m.id === profil.id) && (crew.daten.mitglieder?.length ?? 0) < CREW_MAX ? (
+            {FRAGEN_AKTIV && !gesperrt && !profil.ich && crew.daten?.crew && !crew.daten.mitglieder?.some((m) => m.id === profil.id) && (crew.daten.mitglieder?.length ?? 0) < CREW_MAX ? (
               <Knopf
                 titel={eingeladen ? "Eingeladen" : "In Crew einladen"}
                 icon={eingeladen ? "checkmark" : "people"}
@@ -164,7 +192,7 @@ export default function NutzerProfil() {
   return (
     <View style={{ flex: 1, backgroundColor: farben.grund }}>
       <FlatList
-        data={clips ?? []}
+        data={gesperrt ? [] : (clips ?? [])}
         numColumns={SPALTEN}
         keyExtractor={(c) => c.id}
         columnWrapperStyle={{ gap: LUECKE }}
@@ -179,8 +207,8 @@ export default function NutzerProfil() {
             </View>
           ) : clips && profil ? (
             <View style={{ alignItems: "center", gap: 8, paddingTop: 36, paddingHorizontal: 32 }}>
-              <Icon name="film-outline" sf="play.rectangle.on.rectangle" size={34} color={farben.text4} />
-              <Text style={{ ...schrift.textHalb, fontSize: 16, color: "#FFFFFF" }}>Noch keine Clips</Text>
+              <Icon name={gesperrt ? "ban-outline" : "film-outline"} sf={gesperrt ? "nosign" : "play.rectangle.on.rectangle"} size={34} color={farben.text4} />
+              <Text style={{ ...schrift.textHalb, fontSize: 16, color: "#FFFFFF" }}>{gesperrt ? "Du hast diese Person blockiert" : "Noch keine Clips"}</Text>
             </View>
           ) : null
         }

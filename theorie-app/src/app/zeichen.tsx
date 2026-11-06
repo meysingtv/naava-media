@@ -11,6 +11,7 @@ import { useDarstellung } from "@/lib/darstellung";
 import { FOTOS } from "@/lib/fotos";
 import { tippen } from "@/lib/haptik";
 import { RAND, schrift } from "@/lib/theme";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 const GRUPPEN: { id: "alle" | ZeichenInfo["gruppe"]; titel: string }[] = [
   { id: "alle", titel: "Alle" },
@@ -61,8 +62,14 @@ export default function Zeichen() {
       </ScrollView>
 
       <AktionsLeiste unten={insets.bottom}>
-        <NebenKnopf icon="camera" onPress={() => router.push("/schilder-jagd")} style={{ width: 56 }} />
-        <HauptKnopf titel="Zeichenfragen üben" icon="arrow-forward" onPress={() => router.push({ pathname: "/training", params: { modus: "zeichen" } })} style={{ flex: 1 }} />
+        {FRAGEN_AKTIV ? (
+          <>
+            <NebenKnopf icon="camera" onPress={() => router.push("/schilder-jagd")} style={{ width: 56 }} />
+            <HauptKnopf titel="Zeichenfragen üben" icon="arrow-forward" onPress={() => router.push({ pathname: "/training", params: { modus: "zeichen" } })} style={{ flex: 1 }} />
+          </>
+        ) : (
+          <HauptKnopf titel="Schilder-Jagd starten" icon="camera" onPress={() => router.push("/schilder-jagd")} style={{ flex: 1 }} />
+        )}
       </AktionsLeiste>
 
       <Modal supportedOrientations={["portrait", "landscape"]} visible={offen != null} transparent animationType="fade" onRequestClose={() => setOffen(null)}>

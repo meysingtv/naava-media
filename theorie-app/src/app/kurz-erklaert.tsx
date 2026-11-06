@@ -14,6 +14,7 @@ import { useFarbwelt } from "@/lib/darstellung";
 import { stoss, tippen } from "@/lib/haptik";
 import { useStand } from "@/lib/stand";
 import { abstand, farben, RAND, schrift } from "@/lib/theme";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 const SICHTBAR_AB = { itemVisiblePercentThreshold: 60 };
 
@@ -145,7 +146,11 @@ function ClipKarte({ clip, index, anzahl, hoehe, aktiv }: { clip: Clip; index: n
           </View>
           <View style={{ flex: 1 }} />
           <View style={{ flexDirection: "row", alignItems: "center", gap: abstand(2) }}>
-            <Knopf titel="Üben" klein icon="arrow-forward" onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: clip.thema } })} style={{ flex: 1 }} />
+            {FRAGEN_AKTIV ? (
+              <Knopf titel="Üben" klein icon="arrow-forward" onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: clip.thema } })} style={{ flex: 1 }} />
+            ) : (
+              <Knopf titel="Videos zum Thema" klein icon="play" art="sekundaer" onPress={() => router.push({ pathname: "/thema/[id]", params: { id: clip.thema } })} style={{ flex: 1 }} />
+            )}
             <Aktion icon={gemocht ? "heart" : "heart-outline"} aktiv={gemocht} text={String(clip.basis + (gemocht ? 1 : 0))} onPress={() => clipUmschalten(clip.id, "gemocht")} label="Gefällt mir" />
             <Aktion icon={gemerkt ? "bookmark" : "bookmark-outline"} aktiv={gemerkt} farbe={farben.blau} onPress={() => clipUmschalten(clip.id, "gemerkt")} label="Merken" />
             <Aktion

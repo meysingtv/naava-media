@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppState, Platform } from "react-native";
 import type { StyleProp, ViewStyle } from "react-native";
 
+import { useBlockiert } from "@/lib/blockieren";
 import { pushEinrichten } from "@/lib/crew";
 import type { LiveRad } from "@/lib/live-rad";
 import type { LiveTafel } from "@/lib/live-tafel";
@@ -252,7 +253,9 @@ export function useLiveChat(liveId: string | null): ChatNachricht[] {
       supabase.removeChannel(kanal);
     };
   }, [liveId]);
-  return nachrichten;
+  // Nachrichten von blockierten Personen gar nicht erst zeigen.
+  const blockiert = useBlockiert();
+  return useMemo(() => (blockiert.size ? nachrichten.filter((n) => !blockiert.has(n.user_id)) : nachrichten), [nachrichten, blockiert]);
 }
 
 /** Nachricht schreiben – `null` bei Erfolg, sonst eine verständliche Meldung. */

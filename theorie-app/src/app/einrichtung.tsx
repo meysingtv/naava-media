@@ -33,6 +33,7 @@ import { useKonto } from "@/lib/konto";
 import { pruefungstagErinnerungPlanen } from "@/lib/pruefungstag";
 import { useStand } from "@/lib/stand";
 import { leuchten, mitDeckkraft, RAND, schrift, verlauf } from "@/lib/theme";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 // Einrichtung direkt nach der Registrierung, bevor es zur Startseite geht:
 // Führerscheinklasse, Prüfungstermin, Tagesziel mit Erinnerung und hell oder
@@ -291,7 +292,7 @@ function SchrittTermin({ termin, keinTermin, stunde, onTermin, onKein, onStunde 
   const tage = termin ? tageBis(termin) : null;
   return (
     <View>
-      <Kopf nr={2} symbol={CalendarDotsIcon} titel="Wann ist deine Theorieprüfung?" unter="Dann planen wir dein Tagesziel passend und zählen mit dir runter." />
+      <Kopf nr={2} symbol={CalendarDotsIcon} titel="Wann ist deine Theorieprüfung?" unter={FRAGEN_AKTIV ? "Dann planen wir dein Tagesziel passend und zählen mit dir runter." : "Dann zählen wir mit dir bis zum Prüfungstag runter."} />
       <View style={{ flexDirection: "row", gap: 10, marginBottom: 14 }}>
         {[
           { kein: false, titel: "Termin steht" },
@@ -392,7 +393,12 @@ function SchrittZiel({
   };
   return (
     <View>
-      <Kopf nr={3} symbol={TargetIcon} titel="Wie viel pro Tag?" unter="Kleine, tägliche Schritte bringen am meisten. Du kannst es jederzeit ändern." />
+      {FRAGEN_AKTIV ? (
+        <Kopf nr={3} symbol={TargetIcon} titel="Wie viel pro Tag?" unter="Kleine, tägliche Schritte bringen am meisten. Du kannst es jederzeit ändern." />
+      ) : (
+        <Kopf nr={3} symbol={BellRingingIcon} titel="Sollen wir dich erinnern?" unter="Kleine, tägliche Schritte bringen am meisten. Du kannst es jederzeit ändern." />
+      )}
+      {FRAGEN_AKTIV ? (
       <View style={{ gap: 10 }}>
         {ZIELE.map((z) => {
           const aktiv = z.n === ziel;
@@ -420,15 +426,16 @@ function SchrittZiel({
           );
         })}
       </View>
+      ) : null}
 
-      <GlasKarte style={{ borderRadius: 24, marginTop: 18 }}>
+      <GlasKarte style={{ borderRadius: 24, marginTop: FRAGEN_AKTIV ? 18 : 0 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 16 }}>
           <View style={{ width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: f.orangeSoft }}>
             <BellRingingIcon size={21} color={f.orange} weight="fill" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ ...schrift.textFett, fontSize: 16, color: f.text }}>Tägliche Erinnerung</Text>
-            <Text style={{ ...schrift.text, fontSize: 13.5, color: f.text2 }}>Ein kurzer Stups, damit deine Serie hält</Text>
+            <Text style={{ ...schrift.text, fontSize: 13.5, color: f.text2 }}>{FRAGEN_AKTIV ? "Ein kurzer Stups, damit deine Serie hält" : "Ein kurzer Stups, damit du dranbleibst"}</Text>
           </View>
           <Schalter wert={erinnerung.an} onWechsel={(an) => onErinnerung({ ...erinnerung, an })} />
         </View>
@@ -681,7 +688,7 @@ function Inhalt() {
               zeilen={[
                 { symbol: k?.symbol ?? FlagCheckeredIcon, titel: "Führerschein", wert: `Klasse ${klasse}` },
                 { symbol: CalendarCheckIcon, titel: "Prüfung", wert: terminText },
-                { symbol: TargetIcon, titel: "Tagesziel", wert: `${tagesziel} Fragen` },
+                ...(FRAGEN_AKTIV ? [{ symbol: TargetIcon, titel: "Tagesziel", wert: `${tagesziel} Fragen` }] : []),
                 { symbol: BellRingingIcon, titel: "Erinnerung", wert: erinnerung.an ? `täglich ${zwei(erinnerung.stunde)}:${zwei(erinnerung.minute)}` : "aus" },
               ]}
             />

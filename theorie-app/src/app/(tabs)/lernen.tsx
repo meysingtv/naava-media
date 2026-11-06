@@ -33,6 +33,8 @@ import { useInhaltUnten } from "@/components/tab-leiste";
 import { TourZiel, useTourBlatt } from "@/components/tour";
 import { Verkehrszeichen } from "@/components/zeichen";
 import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
+import { useLernvideos } from "@/lib/lernvideos";
 import { useDesktop } from "@/lib/fenster";
 import { FRAGEN, THEMEN, fragenZuThema, themaVon, type ThemaId, type ZeichenKey } from "@/lib/fragen";
 import { heuteDran, kartenZahlen } from "@/lib/karteikarten";
@@ -54,6 +56,119 @@ function stufeVon(thema: ThemaId): Exclude<Stufe, "alle"> {
 const VORSCHLAEGE = ["Kreisverkehr", "Rettungsgasse", "Promille", "Überholen", "Schulbus", "Reifen", "Bahnübergang", "Anhalteweg"];
 
 export default function Lernen() {
+  return FRAGEN_AKTIV ? <LernenMitFragen /> : <LernenNurVideos />;
+}
+
+/**
+ * Ohne Fragen (bis die Lizenz da ist): Themen als Poster mit ihren Videos,
+ * dazu Schilder-Jagd, Kurz erklärt, Verkehrszeichen und Formeln.
+ */
+function LernenNurVideos() {
+  const insets = useSafeAreaInsets();
+  const inhaltUnten = useInhaltUnten();
+  const leistenScroll = useLeistenScroll();
+  const tourBlatt = useTourBlatt("/lernen");
+  const fokus = useIsFocused();
+  const { farbwelt: f } = useDarstellung();
+  const { stand } = useStand();
+  const { zuThema } = useLernvideos();
+  const [kopfHoehe, setKopfHoehe] = useState(0);
+  const desktop = useDesktop();
+  const desktopBreite = useDesktopBreite();
+
+  const gefunden = ALBUM.filter((k) => stand.schilder[k]);
+  const letztesSchild: ZeichenKey = [...gefunden].sort((a, b) => (stand.schilder[b] ?? "").localeCompare(stand.schilder[a] ?? ""))[0] ?? "z206";
+  const themen: ThemaPosterDaten[] = THEMEN.map((t) => ({ id: t.id, anteil: 0, anzahl: 0, stufe: "mittel", videos: zuThema(t.id).length }));
+  const alleVideos = themen.reduce((s, t) => s + (t.videos ?? 0), 0);
+  const kopfText = f.hell ? "#14171B" : "#FFFFFF";
+  const unterText = `${THEMEN.length} Themen${alleVideos > 0 ? ` · ${alleVideos} Videos` : ""} · Klasse ${stand.klasse}`;
+  const zumThema = (id: ThemaId) => router.push({ pathname: "/thema/[id]", params: { id } });
+
+  const schilderJagd = (
+    <ModusKarte
+      titel="Schilder-Jagd"
+      unter={gefunden.length > 0 ? `${gefunden.length} von ${ALBUM.length} gefunden` : "Schilder scannen"}
+      akzent="#4DA3FF"
+      bild={<SucherSchild zeichen={letztesSchild} groesse={28} />}
+      anteil={gefunden.length / ALBUM.length}
+      onPress={() => router.push("/schilder-jagd")}
+    />
+  );
+  const kurzErklaert = (
+    <ModusKarte titel="Kurz erklärt" unter="Regeln in 30 Sekunden" akzent="#FF4D6D" bild={<Icon name="bulb" sf="lightbulb.fill" size={28} color="#FF4D6D" />} onPress={() => router.push("/kurz-erklaert")} />
+  );
+  const zeichen: Modus = { titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", akzent: "#4DA3FF", icon: "warning", bild: <Verkehrszeichen zeichen="z205" groesse={27} />, onPress: () => router.push("/zeichen") };
+  const formeln: Modus = { titel: "Formeln", unter: "Anhalteweg & Co.", akzent: "#E0A100", icon: "calculator", sf: "function", onPress: () => router.push("/formeln") };
+  const clips: Modus = { titel: "Clips", unter: "Kurze Videos aus der Community", akzent: "#9B7BFF", icon: "film", onPress: () => router.push("/clips") };
+
+  if (desktop) {
+    const zwei = desktopBreite >= 1100;
+    const spalten = desktopBreite >= 1150 ? 6 : desktopBreite >= 760 ? 4 : 3;
+    return (
+      <FarbweltBereich farbwelt={f}>
+        <DesktopSeite>
+          <DesktopKopf ueber={unterText} titel="Lernen" unter="Alle Themen der Theorie in kurzen Videos erklärt – such dir eins aus." />
+
+          <View style={{ flexDirection: zwei ? "row" : "column", gap: LUECKE }}>
+            <View style={{ flex: zwei ? 1.6 : undefined, borderRadius: 30, overflow: "hidden" }}>
+              <Themenwand breite={zwei ? Math.floor(((desktopBreite - LUECKE) * 1.6) / 2.6) : desktopBreite}>
+                <View style={{ minHeight: 360, padding: 30, justifyContent: "flex-end", gap: 10 }}>
+                  <Text style={{ ...schrift.titel, fontSize: 30, letterSpacing: -0.4, color: kopfText }}>Lernvideos</Text>
+                  <Text style={{ ...schrift.textMittel, fontSize: 16, lineHeight: 22, maxWidth: 520, color: f.hell ? "rgba(20,23,27,0.7)" : "rgba(255,255,255,0.8)" }}>
+                    Vorfahrt, Abstand, Verkehrszeichen und mehr – jedes Thema kurz und einfach erklärt.
+                  </Text>
+                </View>
+              </Themenwand>
+            </View>
+            <View style={{ flex: zwei ? 1 : undefined, gap: LUECKE }}>
+              <View style={{ flex: 1, flexDirection: "row" }}>{schilderJagd}</View>
+              <View style={{ flex: 1, flexDirection: "row" }}>{kurzErklaert}</View>
+            </View>
+          </View>
+
+          <DesktopAbschnitt titel="Lernhilfen">
+            <ModusRaster modi={[zeichen, formeln, clips]} spalten={3} style={{ paddingHorizontal: 0 }} />
+          </DesktopAbschnitt>
+
+          <DesktopAbschnitt titel="Alle Themen" link={`${THEMEN.length} Themen`}>
+            <ThemenRaster themen={themen} breite={desktopBreite} spalten={spalten} onThema={zumThema} />
+          </DesktopAbschnitt>
+        </DesktopSeite>
+      </FarbweltBereich>
+    );
+  }
+
+  return (
+    <FarbweltBereich farbwelt={f}>
+      {fokus ? <StatusBar style={f.hell ? "dark" : "light"} /> : null}
+      <View style={{ flex: 1, backgroundColor: f.grund }}>
+        <ScrollView {...leistenScroll} {...tourBlatt} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
+          {kopfHoehe > 0 ? <GlasGrund ab={kopfHoehe} dezent /> : null}
+          <View onLayout={(e) => setKopfHoehe(Math.round(e.nativeEvent.layout.height))}>
+            <Themenwand>
+              <View style={{ paddingTop: insets.top + 4, paddingHorizontal: RAND, paddingBottom: 30 }}>
+                <Text style={{ ...schrift.titel, fontSize: 34, lineHeight: 40, color: kopfText, letterSpacing: -0.5 }}>Lernen</Text>
+                <Text style={{ ...schrift.textMittel, fontSize: 15, color: f.hell ? "rgba(20,23,27,0.66)" : "rgba(255,255,255,0.78)", marginTop: 1 }}>{unterText}</Text>
+              </View>
+            </Themenwand>
+          </View>
+
+          <Kopfzeile titel="Lernhilfen" style={{ marginTop: 20 }} />
+          <TourZiel id="lernen-modi" style={{ flexDirection: "row", gap: 10, marginHorizontal: RAND }}>
+            {schilderJagd}
+            {kurzErklaert}
+          </TourZiel>
+          <ModusRaster modi={[zeichen, formeln]} style={{ marginTop: 10 }} />
+
+          <Kopfzeile titel="Alle Themen" link={`${THEMEN.length} Themen`} style={{ marginTop: 32 }} />
+          <ThemenRaster themen={themen} onThema={zumThema} />
+        </ScrollView>
+      </View>
+    </FarbweltBereich>
+  );
+}
+
+function LernenMitFragen() {
   const insets = useSafeAreaInsets();
   const inhaltUnten = useInhaltUnten();
   const leistenScroll = useLeistenScroll();

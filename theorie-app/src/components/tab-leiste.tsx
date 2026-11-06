@@ -24,6 +24,7 @@ import { tippen } from "@/lib/haptik";
 import { leisteAufklappen, leisteKlein } from "@/lib/leisten-scroll";
 import { useLive } from "@/lib/live";
 import { farben, schrift } from "@/lib/theme";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 // Auf dem iPhone ist die Tab-Leiste die native iOS-Leiste mit Liquid Glass
 // (siehe app/(tabs)/_layout.tsx). Auf Android baut diese Leiste Look und
@@ -131,21 +132,24 @@ function Reiter({
 
 /** Tab-Leiste für Android im Liquid-Glass-Look. */
 export function TabLeiste({ state, descriptors, navigation }: BottomTabBarProps) {
+  // Ausgeblendete Reiter (Prüfung, solange die Fragen aus sind) gar nicht zeigen.
+  const routen = useMemo(() => (FRAGEN_AKTIV ? state.routes : state.routes.filter((r) => r.name !== "pruefen")), [state.routes]);
+  const aktuell = Math.max(0, routen.findIndex((r) => r.key === state.routes[state.index]?.key));
   const insets = useSafeAreaInsets();
   const { live } = useLive();
   const { width } = useWindowDimensions();
   const { darstellung } = useDarstellung();
-  const hell = istHelleSeite(darstellung, state.routes[state.index]?.name);
-  const anzahl = state.routes.length;
+  const hell = istHelleSeite(darstellung, routen[aktuell]?.name);
+  const anzahl = routen.length;
   const breite = width - 2 * SEITE;
   const feld = (breite - 2 * INNEN) / anzahl;
 
   const feldW = useSharedValue(feld);
-  const aktivIndex = useSharedValue(state.index);
-  const blaseX = useSharedValue(state.index * feld);
+  const aktivIndex = useSharedValue(aktuell);
+  const blaseX = useSharedValue(aktuell * feld);
   const dehnung = useSharedValue(1);
   const lupe = useSharedValue(0);
-  const unterFinger = useSharedValue(state.index);
+  const unterFinger = useSharedValue(aktuell);
   /** Nach einem Wisch sitzt die Blase schon – dann ohne zweiten Tropfen. */
   const nachWisch = useRef(false);
 
@@ -156,36 +160,36 @@ export function TabLeiste({ state, descriptors, navigation }: BottomTabBarProps)
   // Neuer Reiter: Blase gleitet als Tropfen hin, Leiste klappt auf.
   const erstesMal = useRef(true);
   useEffect(() => {
-    aktivIndex.value = state.index;
-    unterFinger.value = state.index;
+    aktivIndex.value = aktuell;
+    unterFinger.value = aktuell;
     leisteAufklappen();
     if (erstesMal.current) {
       erstesMal.current = false;
-      blaseX.value = state.index * feldW.value;
+      blaseX.value = aktuell * feldW.value;
       return;
     }
-    blaseX.value = withSpring(state.index * feldW.value, FEDER_BLASE);
+    blaseX.value = withSpring(aktuell * feldW.value, FEDER_BLASE);
     if (nachWisch.current) {
       nachWisch.current = false;
       return;
     }
     dehnung.value = withSequence(withTiming(1.16, { duration: 120 }), withSpring(1, { damping: 11, stiffness: 170 }));
-  }, [state.index, aktivIndex, unterFinger, blaseX, dehnung, feldW]);
+  }, [aktuell, aktivIndex, unterFinger, blaseX, dehnung, feldW]);
 
   const waehlen = useCallback(
     (i: number, gewischt: boolean) => {
-      const route = state.routes[i];
+      const route = routen[i];
       if (!route) return;
       const ereignis = navigation.emit({ type: "tabPress", target: route.key, canPreventDefault: true });
-      if (i !== state.index && !ereignis.defaultPrevented) {
+      if (i !== aktuell && !ereignis.defaultPrevented) {
         nachWisch.current = gewischt;
         tippen();
         navigation.navigate(route.name, route.params);
       } else {
-        blaseX.value = withSpring(state.index * feldW.value, FEDER_BLASE);
+        blaseX.value = withSpring(aktuell * feldW.value, FEDER_BLASE);
       }
     },
-    [state.routes, state.index, navigation, blaseX, feldW],
+    [routen, aktuell, navigation, blaseX, feldW],
   );
 
   const ticken = useCallback(() => tippen(), []);
@@ -253,7 +257,7 @@ export function TabLeiste({ state, descriptors, navigation }: BottomTabBarProps)
   const blaseFuellung = useAnimatedStyle(() => ({ opacity: 1 - 0.5 * lupe.value }));
   const lupenKante = useAnimatedStyle(() => ({ opacity: lupe.value }));
 
-  const mini = symbolVon(state.routes[state.index]?.name ?? "");
+  const mini = symbolVon(routen[aktuell]?.name ?? "");
 
   return (
     <View pointerEvents="box-none" style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: insets.bottom + UNTEN + KAPSEL + 34 }}>
@@ -340,13 +344,13 @@ export function TabLeiste({ state, descriptors, navigation }: BottomTabBarProps)
           {/* Reiter, auf die Kapselform zugeschnitten */}
           <View style={[StyleSheet.absoluteFill, { borderRadius: KAPSEL / 2, overflow: "hidden" }]}>
             <Animated.View style={[{ position: "absolute", top: 0, bottom: 0, left: INNEN, width: breite - 2 * INNEN, flexDirection: "row" }, reiterStil]}>
-              {state.routes.map((route, i) => (
+              {routen.map((route, i) => (
                 <Reiter
                   key={route.key}
                   index={i}
                   name={route.name}
                   titel={descriptors[route.key]?.options.title ?? route.name}
-                  aktiv={state.index === i}
+                  aktiv={aktuell === i}
                   hell={hell}
                   breite={feld}
                   unterFinger={unterFinger}

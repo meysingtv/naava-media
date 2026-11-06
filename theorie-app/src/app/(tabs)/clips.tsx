@@ -19,6 +19,7 @@ import { LiveFeed } from "@/components/live-feed";
 import { useLeistenHoehe } from "@/components/tab-leiste";
 import { Knopf } from "@/components/ui";
 import { useClipAktionen } from "@/lib/clip-aktionen";
+import { useBlockiert } from "@/lib/blockieren";
 import { beiNeuenClips, feedLaden, useClipRechte, type ClipEintrag, type FeedArt } from "@/lib/clips-server";
 import { useDarfLive } from "@/lib/creator";
 import { tippen } from "@/lib/haptik";
@@ -156,7 +157,11 @@ export default function Clips() {
   const generation = useRef<Record<FeedArt, number>>({ entdecken: 0, folge_ich: 0 });
   const liste = useRef<FlatList<ClipEintrag>>(null);
 
-  const feed = feeds[art];
+  // Clips von blockierten Personen nur in der Anzeige weglassen – geladen wird
+  // ungefiltert, damit das Weiterblättern stimmt.
+  const blockiert = useBlockiert();
+  const roh = feeds[art];
+  const feed = useMemo(() => (blockiert.size ? { ...roh, eintraege: roh.eintraege.filter((c) => !blockiert.has(c.autor)) } : roh), [roh, blockiert]);
   const aktivId = aktivProFeed[art] ?? feed.eintraege[0]?.id ?? null;
   const spielen = fokus && vordergrund && !liveAn;
 

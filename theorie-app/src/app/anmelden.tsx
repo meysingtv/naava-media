@@ -10,6 +10,7 @@ import { dialog } from "@/components/dialog";
 import { useKonto } from "@/lib/konto";
 import { serverVerbunden } from "@/lib/supabase";
 import { abstand, farben, schrift } from "@/lib/theme";
+import { RechtsLinks } from "@/components/rechts-seite";
 
 export default function Anmelden() {
   const { anmelden, passwortVergessen, gast, session } = useKonto();
@@ -94,6 +95,9 @@ export default function Anmelden() {
 
       <Oder />
       <SozialAnmeldung onAngemeldet={() => setFertig(true)} onFehler={setFehler} />
+      <View style={{ marginTop: abstand(4) }}>
+        <RechtsLinks />
+      </View>
     </AuthRahmen>
   );
 }

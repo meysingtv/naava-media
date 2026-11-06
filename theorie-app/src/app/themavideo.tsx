@@ -1,20 +1,25 @@
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEvent } from "expo";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { ErklaerAnimationSpieler } from "@/components/erklaer-animation";
 import { FrageKopf, GlasRund, KopfPille } from "@/components/frage-rahmen";
 import { Icon } from "@/components/icon";
 import { Lader } from "@/components/lader";
 import { Seite } from "@/components/seite";
 import { kopfOben } from "@/components/ui";
+import { ANIMATION_TITEL, animationZuLage } from "@/lib/erklaer-animationen";
+import { erklaervideoUrl, useErklaervideos } from "@/lib/erklaervideos";
+import { useFenster } from "@/lib/fenster";
 import { themaFoto } from "@/lib/fotos";
-import { themaVon, type ThemaId } from "@/lib/fragen";
+import { frageVon, themaVon, type ThemaId } from "@/lib/fragen";
 import { RAND, schrift } from "@/lib/theme";
 import { themavideoUrl, useThemenvideos } from "@/lib/themenvideos";
 
-// Ein Video zu einem Thema (vom Inhaber im Manager hochgeladen) abspielen.
+// Ein Lernvideo abspielen: Themenvideo (?id=), Erklärvideo einer Frage (?frage=)
+// oder eingebaute Animation (?lage=). Die Frage selbst wird hier nie gezeigt.
 
 const FUELLEN = { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } as const;
 
@@ -43,24 +48,42 @@ function Spieler({ url }: { url: string }) {
 }
 
 export default function ThemavideoSeite() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id?: string; frage?: string; lage?: string }>();
   const insets = useSafeAreaInsets();
-  const { geladen, videos } = useThemenvideos();
-  const video = videos.find((v) => v.id === id);
-  const thema = video ? themaVon(video.thema_id as ThemaId) : null;
+  const { width } = useFenster();
+  const themen = useThemenvideos();
+  const erklaer = useErklaervideos();
+
+  const themavideo = params.id ? themen.videos.find((v) => v.id === params.id) : undefined;
+  const frage = params.frage ? frageVon(params.frage) : undefined;
+  const fragevideo = frage ? erklaer.videos[frage.id] : undefined;
+  const animation = animationZuLage(params.lage);
+
+  const themaId = (themavideo?.thema_id ?? frage?.thema) as ThemaId | undefined;
+  const thema = themaId ? themaVon(themaId) : null;
+  const url = themavideo ? themavideoUrl(themavideo.pfad) : fragevideo ? erklaervideoUrl(fragevideo.pfad) : null;
+  const geladen = params.id ? themen.geladen : params.frage ? erklaer.geladen : true;
+  const titel = themavideo?.titel ?? (animation && params.lage ? ANIMATION_TITEL[params.lage] ?? "Animation" : fragevideo ? "Erklärvideo" : "Video");
+  const breite = Math.min(width - 2 * RAND, 560);
 
   return (
-    <Seite dunkel>
+    <Seite dunkel={!animation}>
       <FrageKopf
         oben={kopfOben(insets.top)}
         links={<GlasRund icon="close" label="Schließen" onPress={() => router.back()} />}
         rechts={<View />}
-        titel={video?.titel ?? "Video"}
+        titel={titel}
         unter={thema ? <KopfPille bild={themaFoto(thema.id)} text={thema.titel} /> : undefined}
       />
       <View style={{ flex: 1, paddingHorizontal: RAND, paddingBottom: insets.bottom + 12 }}>
-        {video ? (
-          <Spieler url={themavideoUrl(video.pfad)} />
+        {url ? (
+          <Spieler url={url} />
+        ) : animation ? (
+          <ScrollView style={{ marginHorizontal: -RAND }} contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: 12, alignItems: "center" }} showsVerticalScrollIndicator={false}>
+            <View style={{ width: breite }}>
+              <ErklaerAnimationSpieler animation={animation} breite={breite} />
+            </View>
+          </ScrollView>
         ) : (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 10 }}>
             {geladen ? <Text style={{ ...schrift.textHalb, fontSize: 15, color: "#FFFFFF" }}>Dieses Video gibt es nicht mehr.</Text> : <Lader color="#FFFFFF" size="large" />}

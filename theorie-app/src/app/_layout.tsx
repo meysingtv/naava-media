@@ -30,6 +30,7 @@ import { ProfilbildAbgleich } from "@/lib/profilbild";
 import { PruefungstagBruecke } from "@/lib/pruefungstag";
 import { SyncBruecke } from "@/lib/sync";
 import { farben, leuchten, schrift, verlauf } from "@/lib/theme";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 import { seitenTitelSetzen } from "@/lib/web-stil";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -144,18 +145,17 @@ function Navigation() {
         <Stack.Screen name="anmelden" />
         <Stack.Screen name="auth-callback" options={{ animation: "none" }} />
         <Stack.Screen name="passwort-neu" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
+        {/* Rechtstexte – auch ohne Anmeldung erreichbar (Willkommen, Registrieren, Browser) */}
+        <Stack.Screen name="impressum" />
+        <Stack.Screen name="datenschutz" />
+        <Stack.Screen name="nutzungsbedingungen" />
         <Stack.Protected guard={!drin}>
           <Stack.Screen name="willkommen" options={{ animation: "fade" }} />
         </Stack.Protected>
         <Stack.Protected guard={drin}>
           <Stack.Screen name="(tabs)" options={{ animation: "fade" }} />
           <Stack.Screen name="einrichtung" options={{ animation: "fade", gestureEnabled: false }} />
-          <Stack.Screen name="training" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
-          <Stack.Screen name="pruefung" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
-          <Stack.Screen name="duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
-          <Stack.Screen name="online-duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="kurz-erklaert" />
-          <Stack.Screen name="statistik" />
           <Stack.Screen name="clip-hochladen" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="clip-ersteller" />
           <Stack.Screen name="nutzer/[id]" />
@@ -165,30 +165,39 @@ function Navigation() {
           <Stack.Screen name="creator-bewerbung" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="creator-verwaltung" />
           <Stack.Screen name="creator-detail" />
-          <Stack.Screen name="liga" />
-          <Stack.Screen name="favoriten" />
           <Stack.Screen name="kalender" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="pruefungstermin" options={{ animation: "slide_from_bottom" }} />
-          <Stack.Screen name="crew" />
-          <Stack.Screen name="crew-beitreten" options={{ animation: "slide_from_bottom" }} />
-          <Stack.Screen name="crew-boss" />
-          <Stack.Screen name="elo" />
           <Stack.Screen name="thema/[id]" />
           <Stack.Screen name="formeln" />
           <Stack.Screen name="zeichen" />
           <Stack.Screen name="schilder-jagd" />
           <Stack.Screen name="schild-scanner" options={{ animation: "slide_from_bottom", presentation: "fullScreenModal" }} />
-          <Stack.Screen name="karteikarten" />
-          <Stack.Screen name="stapel/[id]" />
-          <Stack.Screen name="karten-lernen" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
-          <Stack.Screen name="karte-bearbeiten" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
           <Stack.Screen name="premium" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="einstellungen" />
           <Stack.Screen name="app-icon" />
-          <Stack.Screen name="erklaerung" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="erklaervideos" />
           <Stack.Screen name="bildnachweise" />
+          <Stack.Screen name="blockiert" />
           <Stack.Screen name="manager" />
+          {/* Fragen-Funktionen: aus, bis die Lizenz für den amtlichen Fragenkatalog da ist (lib/funktionen.ts) */}
+          <Stack.Protected guard={FRAGEN_AKTIV}>
+            <Stack.Screen name="training" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
+            <Stack.Screen name="pruefung" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
+            <Stack.Screen name="duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
+            <Stack.Screen name="online-duell" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
+            <Stack.Screen name="statistik" />
+            <Stack.Screen name="liga" />
+            <Stack.Screen name="favoriten" />
+            <Stack.Screen name="crew" />
+            <Stack.Screen name="crew-beitreten" options={{ animation: "slide_from_bottom" }} />
+            <Stack.Screen name="crew-boss" />
+            <Stack.Screen name="elo" />
+            <Stack.Screen name="karteikarten" />
+            <Stack.Screen name="stapel/[id]" />
+            <Stack.Screen name="karten-lernen" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
+            <Stack.Screen name="karte-bearbeiten" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
+            <Stack.Screen name="erklaerung" options={{ animation: "slide_from_bottom" }} />
+          </Stack.Protected>
           <Stack.Screen name="themavideo" options={{ animation: "slide_from_bottom" }} />
         </Stack.Protected>
       </Stack>

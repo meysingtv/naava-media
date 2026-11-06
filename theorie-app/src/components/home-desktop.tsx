@@ -13,6 +13,7 @@ import { useFarbwelt } from "@/lib/darstellung";
 import type { ThemaId } from "@/lib/fragen";
 import type { WochenTag } from "@/lib/stand";
 import { leuchten, mitDeckkraft, schrift, verlauf } from "@/lib/theme";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 // Startseite für den PC: oben Begrüßung, daneben Prüfungstermin und Glocke;
 // darunter das Foto zur Tageszeit als große Karte mit Startknopf und rechts
@@ -75,25 +76,25 @@ function HeldKarte({ d, hoehe }: { d: HomeDaten; hoehe: number }) {
 
       <View style={{ position: "absolute", left: 36, right: 36, bottom: 32, gap: 18 }}>
         <View style={{ gap: 4 }}>
-          <Text style={{ ...schrift.titel, fontSize: 34, lineHeight: 40, letterSpacing: -0.6, color: "#FFFFFF" }}>{d.heute > 0 ? "Weiterlernen" : "Bereit für heute?"}</Text>
+          <Text style={{ ...schrift.titel, fontSize: 34, lineHeight: 40, letterSpacing: -0.6, color: "#FFFFFF" }}>{!FRAGEN_AKTIV ? "Bereit für heute?" : d.heute > 0 ? "Weiterlernen" : "Bereit für heute?"}</Text>
           <Text style={{ ...schrift.textMittel, fontSize: 16, color: "rgba(255,255,255,0.86)" }}>
-            {d.rest > 0 ? `Noch ${d.rest} Fragen bis zu deinem Tagesziel` : "Tagesziel geschafft – jede Frage zählt extra"}
+            {!FRAGEN_AKTIV ? "Alle Themen in kurzen Videos erklärt" : d.rest > 0 ? `Noch ${d.rest} Fragen bis zu deinem Tagesziel` : "Tagesziel geschafft – jede Frage zählt extra"}
           </Text>
         </View>
         <View style={{ flexDirection: "row", gap: 12, flexWrap: "wrap" }}>
           <Pressable
-            onPress={() => lernen("smart")}
+            onPress={() => (FRAGEN_AKTIV ? lernen("smart") : router.navigate("/lernen"))}
             accessibilityRole="button"
             style={(z: Zustand) => [{ height: 54, paddingHorizontal: 26, borderRadius: 27, overflow: "hidden", flexDirection: "row", alignItems: "center", gap: 10, transform: [{ scale: z.pressed ? 0.98 : z.hovered ? 1.02 : 1 }] }, leuchten("#FC5B0E", z.hovered ? 0.6 : 0.45, 16, 6)]}
           >
             <LinearGradient colors={verlauf.knopf} locations={[0, 0.5, 1]} style={FUELLEN} />
             <Icon name="play" size={18} color="#FFFFFF" />
-            <Text style={{ ...schrift.textFett, fontSize: 17, color: "#FFFFFF" }}>{d.heute > 0 ? "Jetzt weiterlernen" : "Lernen starten"}</Text>
+            <Text style={{ ...schrift.textFett, fontSize: 17, color: "#FFFFFF" }}>{!FRAGEN_AKTIV ? "Lernvideos ansehen" : d.heute > 0 ? "Jetzt weiterlernen" : "Lernen starten"}</Text>
           </Pressable>
-          <Pressable onPress={() => router.push("/pruefung")} accessibilityRole="button" style={(z: Zustand) => ({ transform: [{ scale: z.pressed ? 0.98 : z.hovered ? 1.02 : 1 }] })}>
+          <Pressable onPress={() => router.push(FRAGEN_AKTIV ? "/pruefung" : "/zeichen")} accessibilityRole="button" style={(z: Zustand) => ({ transform: [{ scale: z.pressed ? 0.98 : z.hovered ? 1.02 : 1 }] })}>
             <Glas klar style={{ height: 54, paddingHorizontal: 22, borderRadius: 27, flexDirection: "row", alignItems: "center", gap: 10 }}>
-              <Icon name="shield-checkmark" size={18} color="#FFFFFF" />
-              <Text style={{ ...schrift.textHalb, fontSize: 16, color: "#FFFFFF" }}>Prüfung simulieren</Text>
+              <Icon name={FRAGEN_AKTIV ? "shield-checkmark" : "warning"} size={18} color="#FFFFFF" />
+              <Text style={{ ...schrift.textHalb, fontSize: 16, color: "#FFFFFF" }}>{FRAGEN_AKTIV ? "Prüfung simulieren" : "Verkehrszeichen"}</Text>
             </Glas>
           </Pressable>
         </View>
@@ -212,18 +213,18 @@ function ZielKachel({ z, breite }: { z: DesktopZiel; breite: number }) {
 function AllesKachel({ breite, hoehe }: { breite: number; hoehe: number }) {
   return (
     <Pressable
-      onPress={() => lernen("smart")}
+      onPress={() => (FRAGEN_AKTIV ? lernen("smart") : router.push("/zeichen"))}
       accessibilityRole="button"
-      accessibilityLabel="Alle Themen gemischt lernen"
+      accessibilityLabel={FRAGEN_AKTIV ? "Alle Themen gemischt lernen" : "Verkehrszeichen"}
       style={(z: Zustand) => [{ width: breite, height: hoehe, borderRadius: 24, overflow: "hidden", transform: [{ scale: z.pressed ? 0.97 : z.hovered ? 1.015 : 1 }] }, leuchten("#FC5B0E", 0.35, 14, 6)]}
     >
       <LinearGradient colors={["#FE8A2C", "#FC5D0D", "#E9430A"]} style={FUELLEN} />
       <View style={{ position: "absolute", top: 12, left: 12, width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.22)" }}>
-        <Icon name="shuffle" size={18} color="#FFFFFF" />
+        <Icon name={FRAGEN_AKTIV ? "shuffle" : "warning"} size={18} color="#FFFFFF" />
       </View>
       <View style={{ position: "absolute", left: 14, right: 14, bottom: 14, gap: 4 }}>
-        <Text style={{ ...schrift.titelFett, fontSize: 16, lineHeight: 20, color: "#FFFFFF" }}>Alles gemischt</Text>
-        <Text style={{ ...schrift.textMittel, fontSize: 12.5, color: "rgba(255,255,255,0.86)" }}>Smart aus allen Themen</Text>
+        <Text style={{ ...schrift.titelFett, fontSize: 16, lineHeight: 20, color: "#FFFFFF" }}>{FRAGEN_AKTIV ? "Alles gemischt" : "Verkehrszeichen"}</Text>
+        <Text style={{ ...schrift.textMittel, fontSize: 12.5, color: "rgba(255,255,255,0.86)" }}>{FRAGEN_AKTIV ? "Smart aus allen Themen" : "Alle Zeichen erklärt"}</Text>
       </View>
     </Pressable>
   );
@@ -258,7 +259,7 @@ export function HomeDesktop({ d }: { d: HomeDaten }) {
 
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: LUECKE }}>
         <HeldKarte d={d} hoehe={heldHoehe} />
-        <HeuteKarte d={d} hoehe={heldHoehe} />
+        {FRAGEN_AKTIV ? <HeuteKarte d={d} hoehe={heldHoehe} /> : null}
       </View>
 
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
@@ -267,6 +268,7 @@ export function HomeDesktop({ d }: { d: HomeDaten }) {
         ))}
       </View>
 
+      {FRAGEN_AKTIV ? (
       <View style={{ flexDirection: zweiSpaltig ? "row" : "column", gap: LUECKE }}>
         <DesktopAbschnitt titel="Dein Fokus heute" style={{ flex: zweiSpaltig ? 1.75 : undefined }}>
           <FokusKarte thema={d.fokus.id} anteil={d.fokus.anteil} offen={d.fokus.offen} style={{ height: 260 }} onPress={() => lernen("thema", d.fokus.id)} />
@@ -275,20 +277,23 @@ export function HomeDesktop({ d }: { d: HomeDaten }) {
           <PruefungKarte tage={d.kommend} letzte={d.letzte} style={{ height: 260 }} onPress={() => router.navigate("/pruefen")} onTermin={() => router.push("/pruefungstermin")} />
         </DesktopAbschnitt>
       </View>
+      ) : null}
 
-      <DesktopAbschnitt titel="Deine Themen" link="Zum Lernbereich" onLink={() => router.navigate("/lernen")}>
+      <DesktopAbschnitt titel={FRAGEN_AKTIV ? "Deine Themen" : "Lernvideos nach Thema"} link="Zum Lernbereich" onLink={() => router.navigate("/lernen")}>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
           {d.themen.map((t) => (
-            <ThemaPoster key={t.id} id={t.id} anteil={t.anteil} breite={poster} hoehe={posterHoehe} onPress={() => router.push({ pathname: "/thema/[id]", params: { id: t.id } })} />
+            <ThemaPoster key={t.id} id={t.id} anteil={t.anteil} ohneStand={!FRAGEN_AKTIV} breite={poster} hoehe={posterHoehe} onPress={() => router.push({ pathname: "/thema/[id]", params: { id: t.id } })} />
           ))}
           <AllesKachel breite={poster} hoehe={posterHoehe} />
         </View>
       </DesktopAbschnitt>
 
       <View style={{ flexDirection: zweiSpaltig ? "row" : "column", gap: LUECKE, alignItems: zweiSpaltig ? "flex-start" : "stretch" }}>
+        {FRAGEN_AKTIV ? (
         <View style={{ flex: zweiSpaltig ? 1 : undefined }}>
           <CrewBereich kopf={<DesktopAbschnitt titel="Deine Crew" link="Öffnen" onLink={() => router.push("/crew")} style={{ marginBottom: 14 }}>{null}</DesktopAbschnitt>} />
         </View>
+        ) : null}
         <DesktopAbschnitt titel="Spruch des Tages" style={{ flex: zweiSpaltig ? 1 : undefined }}>
           <ZitatKarte zeilen={d.zitat} style={{ height: 150 }} />
         </DesktopAbschnitt>

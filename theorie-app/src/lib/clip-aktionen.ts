@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import { auswahlBlatt } from "@/components/auswahl-blatt";
 import { dialog } from "@/components/dialog";
 
+import { blockierenFragen } from "./blockieren-fragen";
 import { clipLoeschen, clipMelden, dateiUrl, folgenSetzen, geteiltMelden, likeSetzen, useClipRechte, type ClipEintrag } from "./clips-server";
 import { useKonto } from "./konto";
 
@@ -112,8 +113,22 @@ export function useClipAktionen(liste: Liste) {
 
   const onMehr = useCallback(async (clip: ClipEintrag) => {
     const darfLoeschen = clip.autor === ich.current || inhaber.current;
-    const wahl = await auswahl(clip.titel, [{ text: "Melden" }, ...(darfLoeschen ? [{ text: "Clip löschen", gefahr: true }] : [])]);
-    if (wahl === 0) {
+    const fremd = clip.autor !== ich.current;
+    const wer = clip.autor_name || clip.autor_benutzername;
+    const optionen: { text: string; gefahr?: boolean; was: "melden" | "blockieren" | "loeschen" }[] = [
+      { text: "Melden", was: "melden" },
+      ...(fremd ? [{ text: `${wer} blockieren`, gefahr: true, was: "blockieren" as const }] : []),
+      ...(darfLoeschen ? [{ text: "Clip löschen", gefahr: true, was: "loeschen" as const }] : []),
+    ];
+    const i = await auswahl(clip.titel, optionen.map(({ text, gefahr }) => ({ text, gefahr })));
+    const was = i == null ? null : optionen[i]?.was;
+    if (was === "blockieren") {
+      if (!ich.current) {
+        anmeldenFragen("Blockieren");
+        return;
+      }
+      blockierenFragen(clip.autor, wer);
+    } else if (was === "melden") {
       if (!ich.current) {
         anmeldenFragen("Melden");
         return;
@@ -127,7 +142,7 @@ export function useClipAktionen(liste: Liste) {
       } catch (e) {
         dialog("Nicht gemeldet", (e as Error).message);
       }
-    } else if (wahl === 1 && darfLoeschen) {
+    } else if (was === "loeschen") {
       dialog("Clip löschen?", "Der Clip verschwindet für alle. Das lässt sich nicht rückgängig machen.", [
         { text: "Abbrechen", style: "cancel" },
         {

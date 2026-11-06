@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
+import { FRAGEN_AKTIV } from "./funktionen";
 
 const KENNUNG = "spur-tageserinnerung";
 /** Android braucht einen Kanal – erst danach fragt Android 13+ überhaupt nach der Erlaubnis. */
@@ -27,7 +28,7 @@ export async function erinnerungPlanen(an: boolean, stunde: number, minute: numb
     identifier: KENNUNG,
     content: {
       title: "Zeit für deine Theorie",
-      body: "Zehn Fragen, fünf Minuten – deine Serie wartet.",
+      body: FRAGEN_AKTIV ? "Zehn Fragen, fünf Minuten – deine Serie wartet." : "Ein kurzes Lernvideo, fünf Minuten – bleib dran.",
     },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: stunde, minute, channelId: KANAL },
   });

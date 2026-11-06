@@ -189,8 +189,8 @@ export function ModusKarte({
   akzent: string;
   bild: ReactNode;
   zahl?: number;
-  /** Stand als Balken unten (0–1). */
-  anteil: number;
+  /** Stand als Balken unten (0–1); ohne Wert kein Balken. */
+  anteil?: number;
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
@@ -223,9 +223,11 @@ export function ModusKarte({
           <Text style={{ ...schrift.text, fontSize: 13, color: f.text2 }} numberOfLines={1}>
             {unter}
           </Text>
-          <View style={{ height: 5, borderRadius: 3, marginTop: 7, backgroundColor: f.hell ? "rgba(20,23,27,0.08)" : "rgba(255,255,255,0.12)", overflow: "hidden" }}>
-            <View style={{ width: `${Math.max(anteil > 0 ? 4 : 0, anteil * 100)}%`, height: "100%", borderRadius: 3, backgroundColor: akzent }} />
-          </View>
+          {anteil != null ? (
+            <View style={{ height: 5, borderRadius: 3, marginTop: 7, backgroundColor: f.hell ? "rgba(20,23,27,0.08)" : "rgba(255,255,255,0.12)", overflow: "hidden" }}>
+              <View style={{ width: `${Math.max(anteil > 0 ? 4 : 0, anteil * 100)}%`, height: "100%", borderRadius: 3, backgroundColor: akzent }} />
+            </View>
+          ) : null}
         </View>
       </GlasKarte>
     </Pressable>
@@ -443,7 +445,14 @@ export function GrundstoffKarte({ anzahl, anteil, onPress, style }: { anzahl: nu
   );
 }
 
-export type ThemaPosterDaten = { id: ThemaId; anteil: number; anzahl: number; stufe: Exclude<Stufe, "alle"> };
+export type ThemaPosterDaten = {
+  id: ThemaId;
+  anteil: number;
+  anzahl: number;
+  stufe: Exclude<Stufe, "alle">;
+  /** Gesetzt = Poster ohne Fragen: zeigt die Zahl der Videos statt Stand und Stufe. */
+  videos?: number;
+};
 
 const STUFE_NAME: Record<Exclude<Stufe, "alle">, string> = { leicht: "Leicht", mittel: "Mittel", schwer: "Schwer" };
 
@@ -452,6 +461,8 @@ function ThemaPoster({ thema, breite, onPress }: { thema: ThemaPosterDaten; brei
   const f = useFarbwelt();
   const t = themaVon(thema.id);
   const prozent = Math.round(thema.anteil * 100);
+  const nurVideos = thema.videos != null;
+  const videoText = thema.videos ? (thema.videos === 1 ? "1 Video" : `${thema.videos} Videos`) : "Videos folgen";
   return (
     <Pressable
       onPress={() => {
@@ -459,7 +470,7 @@ function ThemaPoster({ thema, breite, onPress }: { thema: ThemaPosterDaten; brei
         onPress();
       }}
       accessibilityRole="button"
-      accessibilityLabel={`${t.titel}, ${thema.anzahl} Fragen, ${prozent} Prozent`}
+      accessibilityLabel={nurVideos ? `${t.titel}, ${videoText}` : `${t.titel}, ${thema.anzahl} Fragen, ${prozent} Prozent`}
       style={({ pressed }) => [{ width: breite, height: Math.round(breite * 1.22), borderRadius: 24, transform: [{ scale: pressed ? 0.97 : 1 }] }, f.hell ? leuchten("#3C2C18", 0.12, 12, 5) : null]}
     >
       <View style={{ flex: 1, borderRadius: 24, overflow: "hidden" }}>
@@ -469,21 +480,32 @@ function ThemaPoster({ thema, breite, onPress }: { thema: ThemaPosterDaten; brei
           <Glas klar style={{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" }}>
             <Icon name={t.icon as IconName} size={17} color="#FFFFFF" />
           </Glas>
-          <Glas klar style={{ height: 24, paddingHorizontal: 9, borderRadius: 12, justifyContent: "center" }}>
-            <Text style={{ ...schrift.textHalb, fontSize: 11, color: "rgba(255,255,255,0.92)" }}>{STUFE_NAME[thema.stufe]}</Text>
-          </Glas>
+          {nurVideos ? null : (
+            <Glas klar style={{ height: 24, paddingHorizontal: 9, borderRadius: 12, justifyContent: "center" }}>
+              <Text style={{ ...schrift.textHalb, fontSize: 11, color: "rgba(255,255,255,0.92)" }}>{STUFE_NAME[thema.stufe]}</Text>
+            </Glas>
+          )}
         </View>
         <View style={{ position: "absolute", left: 13, right: 13, bottom: 13, gap: 7 }}>
           <Text style={{ ...schrift.titelFett, fontSize: 16, lineHeight: 20, color: "#FFFFFF" }} numberOfLines={2}>
             {t.titel}
           </Text>
-          <Text style={{ ...schrift.textMittel, fontSize: 12, color: "rgba(255,255,255,0.72)", marginTop: -3 }}>{thema.anzahl} Fragen</Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <View style={{ flex: 1 }}>
-              <Balken anteil={thema.anteil} />
+          {nurVideos ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Icon name="play-circle" size={15} color="rgba(255,255,255,0.9)" />
+              <Text style={{ ...schrift.textHalb, fontSize: 12.5, color: "rgba(255,255,255,0.86)" }}>{videoText}</Text>
             </View>
-            <Text style={{ ...schrift.textHalb, fontSize: 12, color: prozent >= 90 ? "#7BE07F" : "rgba(255,255,255,0.9)", fontVariant: ["tabular-nums"] }}>{prozent}%</Text>
-          </View>
+          ) : (
+            <>
+              <Text style={{ ...schrift.textMittel, fontSize: 12, color: "rgba(255,255,255,0.72)", marginTop: -3 }}>{thema.anzahl} Fragen</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Balken anteil={thema.anteil} />
+                </View>
+                <Text style={{ ...schrift.textHalb, fontSize: 12, color: prozent >= 90 ? "#7BE07F" : "rgba(255,255,255,0.9)", fontVariant: ["tabular-nums"] }}>{prozent}%</Text>
+              </View>
+            </>
+          )}
         </View>
       </View>
     </Pressable>

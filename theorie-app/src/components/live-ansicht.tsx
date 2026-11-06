@@ -48,6 +48,7 @@ import { serverJetzt } from "@/lib/server-uhr";
 import { tafelAnwenden, tafelAusNachricht, type LiveTafel, type Strich } from "@/lib/live-tafel";
 import { useLiveXp } from "@/lib/live-xp";
 import { leuchten, schrift } from "@/lib/theme";
+import { blockierenFragen } from "@/lib/blockieren-fragen";
 
 // Das Live zum Zuschauen – als eigene Seite (Mitteilung „… ist jetzt live“)
 // und eingebettet in Clips (Kategorie „Live“). Ohne laufendes Live: Hinweis,
@@ -351,10 +352,12 @@ export function LiveAnsicht({
       }
       return;
     }
-    const wahl = await auswahlBlatt(`Nachricht von ${n.name}`, [{ text: "Melden", gefahr: true }]);
+    const wahl = await auswahlBlatt(`Nachricht von ${n.name}`, [{ text: "Melden", gefahr: true }, { text: `${n.name} blockieren`, gefahr: true }]);
     if (wahl === 0) {
       const problem = await liveMelden(n.id, "Live-Chat");
       hinweis.zeigen(problem ? { icon: "alert-circle", text: problem, farbe: LIVE_ROT } : { icon: "flag", text: "Danke, wir schauen uns das an" });
+    } else if (wahl === 1) {
+      blockierenFragen(n.user_id, n.name);
     }
   }
 

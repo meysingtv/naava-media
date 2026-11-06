@@ -20,6 +20,7 @@ import { useFenster } from "@/lib/fenster";
 import { zahlText } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
 import { farben, leuchten, mitDeckkraft, RAND, schrift, verlauf } from "@/lib/theme";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 const TEMPI = [30, 50, 70, 100, 130];
 const MAX_ANHALTEWEG = (130 / 10) * 3 + (130 / 10) ** 2; // Maßstab für die Balken
@@ -226,9 +227,11 @@ export default function Formeln() {
         </Raster>
       </ScrollView>
 
-      <AktionsLeiste unten={insets.bottom}>
-        <HauptKnopf titel="Zahlenfragen üben" icon="arrow-forward" onPress={() => router.push({ pathname: "/training", params: { modus: "zahl" } })} style={{ flex: 1 }} />
-      </AktionsLeiste>
+      {FRAGEN_AKTIV ? (
+        <AktionsLeiste unten={insets.bottom}>
+          <HauptKnopf titel="Zahlenfragen üben" icon="arrow-forward" onPress={() => router.push({ pathname: "/training", params: { modus: "zahl" } })} style={{ flex: 1 }} />
+        </AktionsLeiste>
+      ) : null}
     </Seite>
   );
 }

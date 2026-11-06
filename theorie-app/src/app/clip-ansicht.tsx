@@ -16,6 +16,7 @@ import { clipsVonLaden, type ClipEintrag } from "@/lib/clips-server";
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { schrift } from "@/lib/theme";
+import { useBlockiert } from "@/lib/blockieren";
 
 const SICHTBAR = { itemVisiblePercentThreshold: 70 };
 
@@ -60,7 +61,8 @@ export default function ClipAnsicht() {
     if (erstes?.item) setAktivId(erstes.item.id);
   }).current;
 
-  const liste = eintraege ?? [];
+  const blockiert = useBlockiert();
+  const liste = useMemo(() => (eintraege ?? []).filter((c) => !blockiert.has(c.autor)), [eintraege, blockiert]);
   const aktiv = aktivId ?? liste[0]?.id ?? null;
   const spielen = fokus && vordergrund;
   const unten = insets.bottom + 6;

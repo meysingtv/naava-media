@@ -23,6 +23,9 @@ import { tippen } from "@/lib/haptik";
 import { useClipRechte } from "@/lib/clips-server";
 import { STATUS_TEXT, useBewerbungen, useMeineBewerbung } from "@/lib/creator";
 import { erinnerungPlanen } from "@/lib/erinnerung";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
+import { kontoLoeschen } from "@/lib/konto-loeschen";
+import { useBlockiert } from "@/lib/blockieren";
 import { uhrzeit } from "@/lib/format";
 import { useKonto } from "@/lib/konto";
 import { liveAboSetzen, liveAboStatus } from "@/lib/live";
@@ -40,14 +43,13 @@ const ZEITEN: [number, number][] = [
 const ZIEL_STUFE: Record<number, string> = { 15: "Locker", 30: "Normal", 50: "Ehrgeizig", 80: "Intensiv" };
 
 const SUPPORT = process.env.EXPO_PUBLIC_SUPPORT_EMAIL;
-const DATENSCHUTZ = process.env.EXPO_PUBLIC_DATENSCHUTZ_URL;
-const IMPRESSUM = process.env.EXPO_PUBLIC_IMPRESSUM_URL;
-const AGB = process.env.EXPO_PUBLIC_AGB_URL;
 
 export default function Einstellungen() {
   const insets = useSafeAreaInsets();
   const { stand, setzen, zuruecksetzen } = useStand();
-  const { session, profil, gast, anzeigeName, profilSpeichern, passwortAendern, benutzernameFrei, benutzernameAendern, rolleSetzen } = useKonto();
+  const { session, profil, gast, anzeigeName, profilSpeichern, passwortAendern, benutzernameFrei, benutzernameAendern, rolleSetzen, abmelden } = useKonto();
+  const blockiert = useBlockiert();
+  const [loeschtKonto, setLoeschtKonto] = useState(false);
   const rechte = useClipRechte();
   const { liste: bewerbungen } = useBewerbungen(rechte.inhaber);
   const offeneBewerbungen = (bewerbungen ?? []).filter((b) => b.status === "offen").length;
@@ -153,8 +155,38 @@ export default function Einstellungen() {
     else setNameAngefasst(false);
   }
 
+  function kontoLoeschenFragen() {
+    if (rechte.inhaber) {
+      dialog("Inhaber-Konto", "Das Inhaber-Konto lässt sich nicht in der App löschen, sonst hätte die App keinen Inhaber mehr.");
+      return;
+    }
+    dialog(
+      "Konto endgültig löschen?",
+      "Dein Konto, dein Profil, deine Clips, Kommentare, Likes, Chat-Nachrichten und dein gespeicherter Lernstand werden sofort gelöscht. Das lässt sich nicht rückgängig machen.",
+      [
+        { text: "Abbrechen", style: "cancel" },
+        {
+          text: "Endgültig löschen",
+          style: "destructive",
+          onPress: async () => {
+            setLoeschtKonto(true);
+            const problem = await kontoLoeschen();
+            setLoeschtKonto(false);
+            if (problem) {
+              dialog("Nicht gelöscht", problem);
+              return;
+            }
+            zuruecksetzen();
+            await abmelden();
+            dialog("Konto gelöscht", "Dein Konto und deine Daten sind entfernt. Schade, dass du gehst!");
+          },
+        },
+      ],
+    );
+  }
+
   function zuruecksetzenFragen() {
-    dialog("Fortschritt zurücksetzen?", "Alle Antworten, Serien, Abzeichen und Simulationen auf diesem Gerät werden gelöscht. Das lässt sich nicht rückgängig machen.", [
+    dialog("Fortschritt zurücksetzen?", FRAGEN_AKTIV ? "Alle Antworten, Serien, Abzeichen und Simulationen auf diesem Gerät werden gelöscht. Das lässt sich nicht rückgängig machen." : "Dein gespeicherter Fortschritt auf diesem Gerät wird gelöscht. Das lässt sich nicht rückgängig machen.", [
       { text: "Abbrechen", style: "cancel" },
       { text: "Zurücksetzen", style: "destructive", onPress: zuruecksetzen },
     ]);
@@ -182,18 +214,21 @@ export default function Einstellungen() {
           </T>
           <GlasGruppe style={{ marginTop: abstand(4) }}>
             <Zeile icon="color-palette" iconFarbe="#9B5CFF" titel="App-Icon" unter="Dein Lenkrad für den Homescreen" wert={iconTitel} onPress={() => router.push("/app-icon")} />
-            <Zeile
-              icon="flash"
-              iconFarbe={farben.orange}
-              titel="XP, HP & Abzeichen einblenden"
-              unter={belohnungen ? "Beim Lernen und in den Ergebnissen sichtbar" : "Aus – keine Einblendungen beim Lernen"}
-              rechts={<Schalter wert={belohnungen} onWechsel={belohnungenSetzen} />}
-            />
+            {FRAGEN_AKTIV ? (
+              <Zeile
+                icon="flash"
+                iconFarbe={farben.orange}
+                titel="XP, HP & Abzeichen einblenden"
+                unter={belohnungen ? "Beim Lernen und in den Ergebnissen sichtbar" : "Aus – keine Einblendungen beim Lernen"}
+                rechts={<Schalter wert={belohnungen} onWechsel={belohnungenSetzen} />}
+              />
+            ) : null}
           </GlasGruppe>
         </View>
 
         {/* iPad: Tagesziel und Klasse nebeneinander statt gestreckt */}
         <View style={breit ? { flexDirection: "row", alignItems: "flex-start", gap: abstand(4) } : { gap: abstand(7) }}>
+          {FRAGEN_AKTIV ? (
           <View style={breit ? { flex: 1 } : null}>
             <Abschnitt titel="Tagesziel" klein />
             <WahlKarte titel={String(stand.tagesziel)} einheit="Fragen am Tag" unter={`${ZIEL_STUFE[stand.tagesziel] ?? "Eigenes Ziel"} · etwa ${Math.round(stand.tagesziel / 2)} Minuten`}>
@@ -203,6 +238,7 @@ export default function Einstellungen() {
               Mit 30 Fragen am Tag bist du in wenigen Wochen prüfungsreif.
             </T>
           </View>
+          ) : null}
 
           <View style={breit ? { flex: 1 } : null}>
             <Abschnitt titel="Führerscheinklasse" klein />
@@ -232,7 +268,7 @@ export default function Einstellungen() {
               ))}
             </View>
             <T v="klein" style={{ marginTop: abstand(2) }}>
-              Für die regionale Rangliste in der Liga.
+              {FRAGEN_AKTIV ? "Für die regionale Rangliste in der Liga." : "Freiwillig – erscheint in deinem Profil."}
             </T>
           </View>
         ) : null}
@@ -358,6 +394,15 @@ export default function Einstellungen() {
               <GlasGruppe>
                 <Zeile icon="mail" iconFarbe="#4DA3FF" titel={session.user.email ?? ""} unter="E-Mail" />
               </GlasGruppe>
+              <GlasGruppe>
+                <Zeile
+                  icon="ban-outline"
+                  iconFarbe="#7C838C"
+                  titel="Blockierte Personen"
+                  unter={blockiert.size ? `${blockiert.size} ${blockiert.size === 1 ? "Person" : "Personen"}` : "Niemand blockiert"}
+                  onPress={() => router.push("/blockiert")}
+                />
+              </GlasGruppe>
               <PasswortEingabe value={neuesPasswort} onChangeText={setNeuesPasswort} placeholder="Neues Passwort (mind. 8 Zeichen)" />
               {neuesPasswort.length > 0 ? (
                 <Knopf titel="Passwort ändern" klein art="sekundaer" laedt={aendertPasswort} deaktiviert={neuesPasswort.length < 8} onPress={passwortSpeichern} />
@@ -369,7 +414,7 @@ export default function Einstellungen() {
                 icon="person-add-outline"
                 iconFarbe={farben.orange}
                 titel="Konto erstellen"
-                unter={gast ? "Sichert deinen Fortschritt, schaltet Liga, Likes und Kommentare frei" : undefined}
+                unter={gast ? (FRAGEN_AKTIV ? "Sichert deinen Fortschritt, schaltet Liga, Likes und Kommentare frei" : "Schaltet Likes, Kommentare und dein Profilbild frei") : undefined}
                 onPress={() => router.push("/registrieren")}
               />
               <Zeile icon="log-in-outline" iconFarbe="#4DA3FF" titel="Ich habe schon ein Konto" onPress={() => router.push("/anmelden")} />
@@ -430,9 +475,9 @@ export default function Einstellungen() {
           <Abschnitt titel="Hilfe & Rechtliches" klein />
           <GlasGruppe>
             {SUPPORT ? <Zeile icon="help-buoy" iconFarbe="#4ED053" titel="Hilfe & Kontakt" onPress={() => Linking.openURL(`mailto:${SUPPORT}`)} /> : null}
-            {DATENSCHUTZ ? <Zeile icon="shield-checkmark" iconFarbe="#4DA3FF" titel="Datenschutz" onPress={() => Linking.openURL(DATENSCHUTZ)} /> : null}
-            {IMPRESSUM ? <Zeile icon="document-text" iconFarbe="#7C8BA1" titel="Impressum" onPress={() => Linking.openURL(IMPRESSUM)} /> : null}
-            {AGB ? <Zeile icon="reader" iconFarbe="#7C8BA1" titel="AGB" onPress={() => Linking.openURL(AGB)} /> : null}
+            <Zeile icon="shield-checkmark" iconFarbe="#4DA3FF" titel="Datenschutz" onPress={() => router.push("/datenschutz")} />
+            <Zeile icon="document-text" iconFarbe="#7C8BA1" titel="Impressum" onPress={() => router.push("/impressum")} />
+            <Zeile icon="reader" iconFarbe="#7C8BA1" titel="Nutzungsbedingungen" onPress={() => router.push("/nutzungsbedingungen")} />
             <Zeile
               icon="sparkles"
               iconFarbe={farben.orange}
@@ -443,7 +488,7 @@ export default function Einstellungen() {
                 setTimeout(tourStarten, 450);
               }}
             />
-            <Zeile icon="options" iconFarbe="#4DA3FF" titel="Einrichtung wiederholen" unter="Klasse, Prüfungstermin, Tagesziel, Darstellung" onPress={() => router.push("/einrichtung")} />
+            <Zeile icon="options" iconFarbe="#4DA3FF" titel="Einrichtung wiederholen" unter={FRAGEN_AKTIV ? "Klasse, Prüfungstermin, Tagesziel, Darstellung" : "Klasse, Prüfungstermin, Erinnerung, Darstellung"} onPress={() => router.push("/einrichtung")} />
             <Zeile icon="images" iconFarbe="#E0A100" titel="Bildnachweise" onPress={() => router.push("/bildnachweise")} />
           </GlasGruppe>
         </View>
@@ -451,13 +496,23 @@ export default function Einstellungen() {
         <View>
           <Abschnitt titel="Daten" klein />
           <GlasGruppe>
-            <Zeile icon="refresh-circle-outline" titel="Fortschritt zurücksetzen" unter="Antworten, Serien, Abzeichen" gefahr ohnePfeil onPress={zuruecksetzenFragen} />
+            <Zeile icon="refresh-circle-outline" titel="Fortschritt zurücksetzen" unter={FRAGEN_AKTIV ? "Antworten, Serien, Abzeichen" : "Gespeicherter Fortschritt auf diesem Gerät"} gefahr ohnePfeil onPress={zuruecksetzenFragen} />
+            {session ? (
+              <Zeile
+                icon="trash-outline"
+                titel={loeschtKonto ? "Konto wird gelöscht …" : "Konto löschen"}
+                unter="Konto und alle Daten endgültig entfernen"
+                gefahr
+                ohnePfeil
+                onPress={loeschtKonto ? undefined : kontoLoeschenFragen}
+              />
+            ) : null}
           </GlasGruppe>
         </View>
 
         <View style={{ alignItems: "center", gap: abstand(2), marginTop: abstand(2) }}>
-          <Logo groesse={24} />
-          <T v="klein">Version 1.0 · Beispielfragen, nicht der amtliche Katalog</T>
+          <Logo groesse={24} hell={darstellung === "hell"} />
+          <T v="klein">{FRAGEN_AKTIV ? "Version 1.0 · Beispielfragen, nicht der amtliche Katalog" : "Version 1.0"}</T>
         </View>
       </ScrollView>
     </Seite>

@@ -11,6 +11,8 @@ import { FOTOS } from "@/lib/fotos";
 import { useKonto } from "@/lib/konto";
 import { tippen } from "@/lib/haptik";
 import { abstand, farben, RAND, schrift } from "@/lib/theme";
+import { RechtsLinks } from "@/components/rechts-seite";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 export default function Willkommen() {
   const insets = useSafeAreaInsets();
@@ -42,7 +44,9 @@ export default function Willkommen() {
           </T>
           <T v="display">Deine Theorie.{"\n"}Klar geplant.</T>
           <T v="text" style={{ fontSize: 16, lineHeight: 24 }}>
-            Kurze Lerneinheiten, echte Prüfungslogik und ein klarer Überblick, wie weit du schon bist.
+            {FRAGEN_AKTIV
+              ? "Kurze Lerneinheiten, echte Prüfungslogik und ein klarer Überblick, wie weit du schon bist."
+              : "Alle Themen in kurzen Videos erklärt – dazu Verkehrszeichen, Formeln und die Schilder-Jagd."}
           </T>
 
           <View style={{ flex: 1, minHeight: abstand(6) }} />
@@ -80,6 +84,7 @@ export default function Willkommen() {
                   Erst mal ohne Konto umschauen
                 </T>
               </Pressable>
+              <RechtsLinks />
             </View>
           )}
         </View>

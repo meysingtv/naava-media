@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,6 +18,7 @@ import { useLeistenScroll } from "@/lib/leisten-scroll";
 import { countdownMoeglich, tageText, terminDatum } from "@/lib/pruefungstag";
 import { fortschritt, useStand } from "@/lib/stand";
 import { RAND, schrift } from "@/lib/theme";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 const REGELN: Regel[] = [
   { icon: "layers-outline", text: "Fragen aus allen Themen, gemischt" },
@@ -27,7 +28,12 @@ const REGELN: Regel[] = [
   { icon: "time-outline", text: "Nach 45 Minuten wird automatisch abgegeben" },
 ];
 
+/** Prüfung ist aus, bis die Lizenz für den Fragenkatalog da ist (lib/funktionen.ts). */
 export default function Pruefen() {
+  return FRAGEN_AKTIV ? <PruefenInhalt /> : <Redirect href="/lernen" />;
+}
+
+function PruefenInhalt() {
   const insets = useSafeAreaInsets();
   const { width } = useFenster();
   const inhaltUnten = useInhaltUnten();

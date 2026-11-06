@@ -32,6 +32,7 @@ import { TrophyIcon } from "phosphor-react-native/src/icons/Trophy";
 
 import { useLeistenHoehe } from "@/components/tab-leiste";
 import { useDarstellung } from "@/lib/darstellung";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
 import { tippen } from "@/lib/haptik";
 import { leisteAufklappen } from "@/lib/leisten-scroll";
 import { leuchten, schrift, verlauf } from "@/lib/theme";
@@ -45,7 +46,7 @@ type Ziel = "home-werte" | "home-start" | "home-schnell" | "home-fokus" | "tabs"
 type Tab = "/heute" | "/lernen" | "/pruefen";
 type Schritt = { ziel: Ziel | null; tab: Tab; titel: string; text: string; symbol: PhosphorIcon };
 
-const SCHRITTE: Schritt[] = [
+const MIT_FRAGEN: Schritt[] = [
   { ziel: "home-werte", tab: "/heute", titel: "Dein Stand auf einen Blick", text: "Prüfungsreife, Serie und Tagesziel. Tippe auf einen Wert, um mehr zu sehen.", symbol: ChartLineUpIcon },
   { ziel: "home-start", tab: "/heute", titel: "Ein Tipp – los geht's", text: "Die App sucht dir die Fragen aus, die dich gerade am meisten weiterbringen.", symbol: LightningIcon },
   { ziel: "home-schnell", tab: "/heute", titel: "Schnellzugriff", text: "Favoriten, Fehler üben, Karteikarten, Schilder-Jagd, Duell und Statistik – alles mit einem Tipp.", symbol: RocketIcon },
@@ -55,6 +56,17 @@ const SCHRITTE: Schritt[] = [
   { ziel: "pruefen-start", tab: "/pruefen", titel: "Echte Prüfung üben", text: "30 Fragen, 45 Minuten, Fehlerpunkte wie beim TÜV. Der Tacho zeigt dir, wie bereit du bist.", symbol: TrophyIcon },
   { ziel: null, tab: "/heute", titel: "Du bist startklar!", text: "Viel Erfolg beim Lernen. Die Tour findest du jederzeit wieder in den Einstellungen.", symbol: ConfettiIcon },
 ];
+
+/** Solange die Fragen aus sind (funktionen.ts): nur Videos und Lernhilfen. */
+const OHNE_FRAGEN: Schritt[] = [
+  { ziel: "home-start", tab: "/heute", titel: "Los geht's", text: "Alle Themen der Theorie in kurzen Videos erklärt – hier startest du.", symbol: LightningIcon },
+  { ziel: "home-schnell", tab: "/heute", titel: "Schnellzugriff", text: "Lernvideos, Kurz erklärt, Verkehrszeichen, Formeln, Schilder-Jagd und Clips – alles mit einem Tipp.", symbol: RocketIcon },
+  { ziel: "tabs", tab: "/heute", titel: "Alles in vier Tabs", text: "Home, Lernen, Clips mit Lives und Profil – hier unten wechselst du jederzeit.", symbol: HandTapIcon },
+  { ziel: "lernen-modi", tab: "/lernen", titel: "Lern so, wie du willst", text: "Schilder-Jagd mit der Kamera und Regeln in 30 Sekunden – darunter alle Themen als Videos.", symbol: SparkleIcon },
+  { ziel: null, tab: "/heute", titel: "Du bist startklar!", text: "Viel Erfolg beim Lernen. Die Tour findest du jederzeit wieder in den Einstellungen.", symbol: ConfettiIcon },
+];
+
+const SCHRITTE = FRAGEN_AKTIV ? MIT_FRAGEN : OHNE_FRAGEN;
 
 const GESEHEN = "spur-tour-v1";
 
