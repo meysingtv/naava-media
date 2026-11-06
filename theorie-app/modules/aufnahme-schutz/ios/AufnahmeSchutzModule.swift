@@ -14,6 +14,8 @@ public class AufnahmeSchutzModule: Module {
   private var fenster: UIWindow?
   private var timer: Timer?
   private var beobachter: NSObjectProtocol?
+  /// Seit wann keine Aufnahme mehr gemeldet wird (zum verzögerten Ausblenden).
+  private var freiSeit: Date?
 
   public func definition() -> ModuleDefinition {
     Name("AufnahmeSchutz")
@@ -53,6 +55,12 @@ public class AufnahmeSchutzModule: Module {
     }
   }
 
+  /// Ist die App wirklich vorn und aktiv? Beim Antippen der Aufnahme-Anzeige
+  /// in der Dynamic Island, im Kontrollzentrum usw. ist sie das nicht.
+  static func appAktiv() -> Bool {
+    return UIApplication.shared.applicationState == .active
+  }
+
   static func wirdAufgenommen() -> Bool {
     // Bewusst nur isCaptured (seit iOS 11): neuere APIs sind je nach SDK
     // unterschiedlich verfügbar und können den Build scheitern lassen.
@@ -70,7 +78,7 @@ public class AufnahmeSchutzModule: Module {
       }
     }
     if timer == nil {
-      let t = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
+      let t = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
         self?.pruefen()
       }
       RunLoop.main.add(t, forMode: .common)
@@ -93,10 +101,33 @@ public class AufnahmeSchutzModule: Module {
       zuletzt = laeuft
       sendEvent("onAufnahme", ["aktiv": laeuft])
     }
-    if schutzAn && laeuft {
-      zeigen()
-    } else {
+    if !schutzAn {
+      freiSeit = nil
       verbergen()
+      return
+    }
+    if laeuft {
+      freiSeit = nil
+      zeigen()
+      return
+    }
+    // Keine Aufnahme gemeldet. Nicht sofort ausblenden: Tippt man auf die
+    // Aufnahme-Anzeige in der Dynamic Island, meldet iOS kurz „keine
+    // Aufnahme“, obwohl sie weiterläuft. Erst ausblenden, wenn die App wieder
+    // aktiv ist und es 1,5 Sekunden so bleibt.
+    guard fenster != nil else { return }
+    if !AufnahmeSchutzModule.appAktiv() {
+      freiSeit = nil
+      return
+    }
+    let jetzt = Date()
+    if let seit = freiSeit {
+      if jetzt.timeIntervalSince(seit) >= 1.5 {
+        freiSeit = nil
+        verbergen()
+      }
+    } else {
+      freiSeit = jetzt
     }
   }
 
