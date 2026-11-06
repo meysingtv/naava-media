@@ -70,17 +70,28 @@ export function BildschirmSchutz() {
   const frei = inhaber && inhaberDarf;
 
   useEffect(() => {
+    // Alles abgesichert: Ein Fehler hier darf die App nie beenden.
+    const sicher = (aufruf: () => unknown) => {
+      try {
+        const r = aufruf();
+        if (r && typeof (r as Promise<unknown>).catch === "function") (r as Promise<unknown>).catch(() => {});
+      } catch {
+        // Sperre dann eben aus
+      }
+    };
     if (Platform.OS === "android") {
       // FLAG_SECURE: Aufnahmen und Screenshots bleiben schwarz
-      if (frei) ScreenCapture.allowScreenCaptureAsync(SCHLUESSEL).catch(() => {});
-      else ScreenCapture.preventScreenCaptureAsync(SCHLUESSEL).catch(() => {});
+      sicher(() => (frei ? ScreenCapture.allowScreenCaptureAsync(SCHLUESSEL) : ScreenCapture.preventScreenCaptureAsync(SCHLUESSEL)));
     } else if (Platform.OS === "ios") {
       // Nicht preventScreenCaptureAsync: Das hängt die Fensterebene in ein
       // Passwortfeld um – auf neuen iOS-Versionen wirkungslos und ein
       // Absturzrisiko beim Start. Stattdessen das eigene Modul (Unschärfe).
-      nativ?.setzen(!frei).catch(() => {});
-      if (frei) ScreenCapture.disableAppSwitcherProtectionAsync().catch(() => {});
-      else ScreenCapture.enableAppSwitcherProtectionAsync(0.9).catch(() => {});
+      // Kurz nach dem Start, damit es nicht mit dem Hochfahren kollidiert.
+      const t = setTimeout(() => {
+        sicher(() => (typeof nativ?.setzen === "function" ? nativ.setzen(!frei) : undefined));
+        sicher(() => (frei ? ScreenCapture.disableAppSwitcherProtectionAsync() : ScreenCapture.enableAppSwitcherProtectionAsync(0.9)));
+      }, 1500);
+      return () => clearTimeout(t);
     }
   }, [frei]);
 
