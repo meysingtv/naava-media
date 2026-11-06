@@ -520,6 +520,15 @@ eingebaute Animationen). Verkehrszeichen, Formeln, Kurz erklärt,
 Schilder-Jagd und Clips bleiben. Nichts ist gelöscht: auf `true` stellen und
 neu bauen, dann ist alles wieder da.
 
+## Sperre gegen Bildschirmaufnahmen
+
+`src/components/bildschirm-schutz.tsx` (Modul `expo-screen-capture`) sperrt in
+der ganzen App Bildschirmaufnahmen und Screenshots – nur für das
+Inhaber-Konto nicht. Android: Aufnahme und Screenshot bleiben schwarz. iOS:
+schwarz während einer Aufnahme, Screenshots leer, in der App-Übersicht
+verschwommen. Im Browser geht das technisch nicht; abfilmen mit einem zweiten
+Handy lässt sich nie verhindern. Braucht einen neuen nativen Build.
+
 ## Konto löschen, Blockieren, Rechtliches
 
 - **SQL:** `supabase/update-konto.sql` einmal im SQL-Editor ausführen

@@ -11,6 +11,7 @@ import { Archivo_600SemiBold, Archivo_800ExtraBold, Archivo_800ExtraBold_Italic,
 import { MarckScript_400Regular } from "@expo-google-fonts/marck-script";
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 
+import { BildschirmSchutz } from "@/components/bildschirm-schutz";
 import { AuswahlBlattHost } from "@/components/auswahl-blatt";
 import { BossTrefferAnzeige } from "@/components/crew";
 import { DialogHost } from "@/components/dialog";
@@ -209,6 +210,7 @@ function Navigation() {
       <LiveBruecke />
       <AuswahlBlattHost />
       <TourOverlay />
+      <BildschirmSchutz />
     </View>
   );
 }
