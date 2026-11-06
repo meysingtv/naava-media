@@ -14,7 +14,12 @@ fi
 # unbemerkt wieder die alte Version auf dem iPhone.
 rm -f FahrschulPro.ipa
 
-npm install
+echo "Code-Stand: $(git log --oneline -1 2>/dev/null || echo unbekannt)"
+
+# npm ci statt npm install: verändert package-lock.json nicht – sonst blockiert
+# die geänderte Datei beim nächsten „git pull“ alle neuen Änderungen.
+npm ci || npm install
+git checkout -- package-lock.json 2>/dev/null || true
 npx expo prebuild -p ios --clean
 
 cd ios
