@@ -10,6 +10,10 @@ import { AktionsLeiste, FrageKopf, GlasRund, HauptKnopf, KopfPille, NebenKnopf }
 import { Seite } from "@/components/seite";
 import { dialog } from "@/components/dialog";
 import { Lader } from "@/components/lader";
+import { NutzerBild, ProfilBild } from "@/components/profilbild";
+import { Chip as WebChip, Knopf as WebKnopf, TOENE } from "@/components/web/bunt";
+import { DuellBuehneWeb, DuellCodeWeb, DuellEndeWeb, DuellHinweisWeb, DuellRundeWeb, OffenerGegner } from "@/components/web/duell-web";
+import { useDesktop } from "@/lib/fenster";
 import { useDarstellung } from "@/lib/darstellung";
 import { antwortRichtig, frageVon } from "@/lib/fragen";
 import { erfolg, fehler, stoss } from "@/lib/haptik";
@@ -44,6 +48,8 @@ export default function OnlineDuellSeite() {
   const reihenfolge = useAntwortReihenfolge();
   const gesperrtRef = useRef(gesperrt);
   gesperrtRef.current = gesperrt;
+  // Im Browser am PC: Vollbild-Fassung mit Tastatur (web/duell-web.tsx).
+  const desktop = useDesktop();
 
   useEffect(() => {
     if (!id) return;
@@ -130,6 +136,102 @@ export default function OnlineDuellSeite() {
 
   useZurueckTaste(schliessen);
 
+  function losGehts() {
+    stoss();
+    start.current = Date.now();
+    setRunde(0);
+    setRichtig([]);
+    setPhase("runde");
+  }
+
+  if (desktop) {
+    if (!session)
+      return (
+        <DuellHinweisWeb icon="person-add" titel="Online-Duelle brauchen ein Konto" text="Mit einem kostenlosen Konto spielst du gegen Freunde und in der Rangliste. Dein Lernstand bleibt dabei erhalten." onSchliessen={() => router.back()}>
+          <WebKnopf titel="Ich habe schon ein Konto" art="rand" ton="blau" groesse="gross" onPress={() => router.push("/anmelden")} />
+          <WebKnopf titel="Konto erstellen" icon="person-add" ton="gruen" groesse="gross" onPress={() => router.push("/registrieren")} />
+        </DuellHinweisWeb>
+      );
+    if (phase === "laden" || phase === "senden") return <DuellHinweisWeb text={phase === "senden" ? "Ergebnis wird gespeichert …" : "Duell wird geladen …"} onSchliessen={() => router.back()} />;
+    const gegnerWeb = duell ? sicht(duell, ich).gegnerName : null;
+    const gegnerBild = (g: number) => (gegnerWeb ? <NutzerBild pfad={null} name={gegnerWeb} farbe={TOENE.blau.farbe} groesse={g} rand={0} /> : <OffenerGegner groesse={g} />);
+    if (phase === "start" && duell)
+      return (
+        <DuellBuehneWeb
+          ich={{ name: "Du", unter: anzeigeName, bild: <ProfilBild name={anzeigeName} groesse={112} rand={0} /> }}
+          gegner={{ name: gegnerWeb ?? "Offen", unter: gegnerWeb ? "dein Gegner" : "noch kein Gegner", bild: gegnerBild(112) }}
+          etikett={duell.art === "rangliste" ? "Rangliste-Duell" : `Freundes-Duell · ${duell.code}`}
+          text={`${fragen.length} Fragen, je ${ONLINE_SEKUNDEN} Sekunden. Bei Gleichstand gewinnt, wer schneller war.${gegnerWeb ? "" : " Du spielst zuerst – dein Gegner spielt dieselben Fragen später."}`}
+          onSchliessen={() => router.back()}
+          onStart={losGehts}
+        />
+      );
+    if (phase === "ende") {
+      const d = ergebnis;
+      const s = d ? sicht(duell ? { ...d, p1: duell.p1, p2: duell.p2 } : d, ich) : null;
+      const fertig = d?.status === "fertig";
+      const offenerCode = d && d.art === "freund" && !d.spieler2 ? d.code : null;
+      const ton = !d ? TOENE.rot : fertig ? (s?.gewonnen ? TOENE.gruen : s?.verloren ? TOENE.rot : TOENE.blau) : TOENE.orange;
+      return (
+        <DuellEndeWeb
+          icon={!d ? "alert" : fertig ? (s?.gewonnen ? "trophy" : s?.verloren ? "flag" : "git-compare") : "hourglass"}
+          ton={ton}
+          titel={!d ? "Hoppla." : fertig ? (s?.gewonnen ? "Sieg!" : s?.verloren ? "Knapp daneben." : "Unentschieden.") : "Vorgelegt!"}
+          stand={d && s ? `${s.meine ?? 0} : ${fertig ? (s.seine ?? 0) : "?"}` : undefined}
+          unter={
+            !d
+              ? (meldung ?? "Das hat nicht geklappt.")
+              : fertig
+                ? `Du gegen ${s?.gegnerName ?? "deinen Gegner"}`
+                : offenerCode
+                  ? "Gib den Code an deinen Freund weiter. Sobald er gespielt hat, siehst du das Ergebnis unter „Deine Duelle“."
+                  : "Wir suchen dir einen Gegner. Das Ergebnis siehst du unter „Deine Duelle“."
+          }
+          chips={fertig && s?.elo != null ? <WebChip icon="trending-up" text={`Elo ${s.elo >= 0 ? "+" : ""}${s.elo}`} ton={s.elo >= 0 ? TOENE.gruen : TOENE.rot} /> : undefined}
+          runden={richtig.length ? richtig.map((r, i) => ({ frage: fragen[i], ich: r })) : undefined}
+          extra={offenerCode ? <DuellCodeWeb code={offenerCode} text={`Duell in Fahrschul Pro: Gib den Code ${offenerCode} unter Liga → Duell ein.`} /> : null}
+          neben={{ titel: "Zurück zur Liga", onPress: () => router.back() }}
+          onSchliessen={() => router.back()}
+        />
+      );
+    }
+    const frage = frageVon(fragen[runde]);
+    if (!frage) return null;
+    const punkte = richtig.filter(Boolean).length;
+    const meins = gesperrt ? (richtig[runde] ?? null) : null;
+    return (
+      <DuellRundeWeb
+        titel={`Frage ${runde + 1} von ${fragen.length}`}
+        runde={runde}
+        anzahl={fragen.length}
+        ergebnisse={richtig}
+        zeit={zeit}
+        sekunden={ONLINE_SEKUNDEN}
+        ich={{ name: "Du", bild: <ProfilBild name={anzeigeName} groesse={48} rand={0} /> }}
+        ichStatus={meins === null ? (gesperrt ? "abgegeben" : "am Zug") : meins ? "richtig" : "falsch"}
+        ichTon={meins === null ? TOENE.orange : meins ? TOENE.gruen : TOENE.rot}
+        gegner={{ name: gegnerWeb ?? "Offen", bild: gegnerBild(48) }}
+        gegnerStatus={gegnerWeb ? "gleiche Fragen" : "spielt später"}
+        gegnerTon={{ farbe: "#8A8F96", kante: "#8A8F96", hell: "#F0F1F2" }}
+        stand={String(punkte)}
+        standUnter="richtig"
+        frage={frage}
+        reihenfolge={reihenfolge(frage)}
+        auswahl={auswahl}
+        onAuswahl={(a) => {
+          if (!gesperrt) setAuswahl(a);
+        }}
+        gesperrt={gesperrt}
+        aufgedeckt={gesperrt}
+        richtig={meins}
+        nachricht={meins === null ? undefined : runde + 1 < fragen.length ? "Gleich kommt die nächste Frage." : "Das war die letzte Frage."}
+        knopf={gesperrt ? (runde + 1 < fragen.length ? "Nächste Frage …" : "Ergebnis …") : "Antwort abgeben"}
+        onAbgeben={einloggen}
+        onSchliessen={schliessen}
+      />
+    );
+  }
+
   // ------------------------------------------------------------------ Laden / Senden
   if (phase === "laden" || phase === "senden") {
     return (
@@ -181,13 +283,7 @@ export default function OnlineDuellSeite() {
           <HauptKnopf
             titel="Los geht's"
             icon="play"
-            onPress={() => {
-              stoss();
-              start.current = Date.now();
-              setRunde(0);
-              setRichtig([]);
-              setPhase("runde");
-            }}
+            onPress={losGehts}
             style={{ flex: 1 }}
           />
         </AktionsLeiste>

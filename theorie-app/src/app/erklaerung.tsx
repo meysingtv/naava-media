@@ -5,7 +5,8 @@ import { useEvent } from "expo";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useFenster } from "@/lib/fenster";
+import { useDesktop, useFenster } from "@/lib/fenster";
+import { ErklaerungWeb } from "@/components/web/video-web";
 import { ErklaerAnimationSpieler } from "@/components/erklaer-animation";
 import { FrageKopf, GlasRund, KopfPille } from "@/components/frage-rahmen";
 import { Icon } from "@/components/icon";
@@ -116,6 +117,11 @@ function Inhalt() {
 }
 
 export default function Erklaerung() {
+  // Im Browser am PC eine eigene Fassung (web/video-web.tsx).
+  return useDesktop() ? <ErklaerungWeb /> : <ErklaerungHandy />;
+}
+
+function ErklaerungHandy() {
   return (
     <Seite>
       <Inhalt />

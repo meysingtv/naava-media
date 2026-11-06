@@ -6,7 +6,9 @@ import { Icon } from "@/components/icon";
 import { AktionsLeiste, HauptKnopf, KopfPille } from "@/components/frage-rahmen";
 import { FotoKopf, Seite } from "@/components/seite";
 import { Chip, kartenFlaeche, T } from "@/components/ui";
+import { PremiumWeb } from "@/components/web/premium-web";
 import { useDarstellung } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
 import { FOTOS } from "@/lib/fotos";
 import { dialog } from "@/components/dialog";
 import { tippen } from "@/lib/haptik";
@@ -27,6 +29,10 @@ const PLAENE = [
 ];
 
 export default function Premium() {
+  return useDesktop() ? <PremiumWeb /> : <PremiumHandy />;
+}
+
+function PremiumHandy() {
   const insets = useSafeAreaInsets();
   const { farbwelt: f } = useDarstellung();
   const [plan, setPlan] = useState("sechs");

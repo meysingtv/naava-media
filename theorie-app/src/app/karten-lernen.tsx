@@ -8,8 +8,10 @@ import { AktionsLeiste, FortschrittBalken, FrageKopf, GlasRund, HauptKnopf, Kopf
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { FlipKarte } from "@/components/karteikarte";
 import { Seite } from "@/components/seite";
+import { KartenErgebnisWeb, KartenLeerWeb, KartenLernenWeb } from "@/components/web/karten-lernen-web";
 import { kartenFlaeche, kopfOben, T } from "@/components/ui";
 import { useDarstellung } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
 import { FOTOS } from "@/lib/fotos";
 import { erfolg, tippen } from "@/lib/haptik";
 import { karteInhalt, lernListe, stapelIds, stapelTitel, type LernAuswahl, type StapelId } from "@/lib/karteikarten";
@@ -35,6 +37,8 @@ export default function KartenLernen() {
   const { stand, karteBewerten } = useStand();
   const { belohnungen, farbwelt: f } = useDarstellung();
   const hinweis = useHinweis();
+  // Am PC eine eigene Vollbild-Fassung – die Logik bleibt hier.
+  const desktop = useDesktop();
 
   const [schlange, setSchlange] = useState<string[]>(() => lernListe(stand, auswahl, alle));
   const [pos, setPos] = useState(0);
@@ -100,6 +104,29 @@ export default function KartenLernen() {
   if (schlange.length === 0) {
     const stapelLeer = auswahl !== "heute" && stapelIds(stand, auswahl as StapelId).length === 0;
     const keineKarten = auswahl === "heute" && stand.karteikarten.karten.length === 0 && Object.keys(stand.karteikarten.faecher).length === 0;
+    if (desktop) {
+      return (
+        <KartenLeerWeb
+          icon={keineKarten || stapelLeer ? "albums" : "checkmark-done"}
+          titel={keineKarten || stapelLeer ? "Noch keine Karten." : "Alles wiederholt."}
+          text={
+            keineKarten
+              ? "Klick beim Lernen unter einer Frage auf „Karteikarte“ – oder fang gleich mit den Verkehrszeichen an."
+              : stapelLeer
+                ? "In diesem Stapel liegen gerade keine Karten."
+                : "Gerade ist keine Karte dran. Die nächsten kommen, sobald ihre Pause vorbei ist – oder geh den Stapel einmal komplett durch."
+          }
+          aktion={
+            keineKarten
+              ? { titel: "Verkehrszeichen lernen", icon: "arrow-forward", onPress: () => router.replace({ pathname: "/karten-lernen", params: { stapel: "zeichen" } }) }
+              : !stapelLeer && auswahl !== "heute" && !alle
+                ? { titel: "Alle Karten durchgehen", icon: "refresh", onPress: () => router.replace({ pathname: "/karten-lernen", params: { stapel: auswahl, alle: "1" } }) }
+                : undefined
+          }
+          onZurueck={() => router.back()}
+        />
+      );
+    }
     return (
       <Seite>
         <View style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom + 12 }}>
@@ -134,6 +161,9 @@ export default function KartenLernen() {
     const quote = gesamt ? ergebnis.gewusst / gesamt : 0;
     const rest = alle ? 0 : lernListe(stand, auswahl, false).length;
     const ueberschrift = quote >= 0.9 ? "Sitzt richtig gut." : quote >= 0.6 ? "Gute Runde." : "Dranbleiben lohnt sich.";
+    if (desktop) {
+      return <KartenErgebnisWeb gewusst={ergebnis.gewusst} nochmal={ergebnis.nochmal} xp={belohnungen && ergebnis.xp > 0 ? ergebnis.xp : undefined} rest={rest} onFertig={() => router.back()} onWeiter={rest > 0 ? neueRunde : undefined} />;
+    }
     return (
       <Seite>
         <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
@@ -173,6 +203,29 @@ export default function KartenLernen() {
   const fach = stand.karteikarten.faecher[id]?.fach;
   const faellig = karteFaellig(stand, id);
   const naechstesFach = Math.min(KARTEN_ABSTAENDE.length - 1, (fach ?? 0) + 1);
+
+  if (desktop) {
+    return (
+      <KartenLernenWeb
+        inhalt={inhalt}
+        fach={fach ?? null}
+        nummer={pos + 1}
+        anzahl={schlange.length}
+        titel={alle ? `${titel} · alle` : titel}
+        umgedreht={umgedreht}
+        gesehen={gesehen}
+        xp={belohnungen ? ergebnis.xp : 0}
+        textNochmal={tageText(0)}
+        textGewusst={faellig ? tageText(KARTEN_ABSTAENDE[naechstesFach]) : "Bleibt wie geplant"}
+        onUmdrehen={() => {
+          setUmgedreht((u) => !u);
+          setGesehen(true);
+        }}
+        onBewerten={bewerten}
+        onSchliessen={() => router.back()}
+      />
+    );
+  }
 
   // ------------------------------------------------------------------ Karte
   return (

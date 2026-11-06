@@ -6,8 +6,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AktionsLeiste, HauptKnopf, NebenKnopf } from "@/components/frage-rahmen";
 import { FotoKopf, Seite } from "@/components/seite";
 import { Chip, kartenFlaeche, Knopf, T } from "@/components/ui";
+import { ZeichenWeb } from "@/components/web/zeichen-web";
 import { Verkehrszeichen, ZEICHEN_INFO, type ZeichenInfo } from "@/components/zeichen";
 import { useDarstellung } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
 import { FOTOS } from "@/lib/fotos";
 import { tippen } from "@/lib/haptik";
 import { RAND, schrift } from "@/lib/theme";
@@ -19,8 +21,12 @@ const GRUPPEN: { id: "alle" | ZeichenInfo["gruppe"]; titel: string }[] = [
   { id: "richt", titel: "Richtzeichen" },
 ];
 
-/** Alle Verkehrszeichen als Raster – ein Tipp zeigt die Bedeutung. */
+/** Alle Verkehrszeichen als Raster – ein Tipp zeigt die Bedeutung. Am PC eine eigene Fassung. */
 export default function Zeichen() {
+  return useDesktop() ? <ZeichenWeb /> : <ZeichenHandy />;
+}
+
+function ZeichenHandy() {
   const insets = useSafeAreaInsets();
   const { farbwelt: f } = useDarstellung();
   const [gruppe, setGruppe] = useState<(typeof GRUPPEN)[number]["id"]>("alle");

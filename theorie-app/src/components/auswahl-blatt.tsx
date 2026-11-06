@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Animated, Easing, Modal, PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Animated, Easing, Modal, PanResponder, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/icon";
+import { B, n, type Zustand } from "@/components/web/bunt";
+import { tastenSperre, useTasten } from "@/components/web/frage-web";
 import { useHelleSeite } from "@/lib/darstellung";
+import { istDesktop } from "@/lib/fenster";
 import { schrift } from "@/lib/theme";
 
 type Option = { text: string; gefahr?: boolean };
@@ -13,7 +17,7 @@ let zeigen: ((a: Anfrage) => void) | null = null;
 /**
  * Auswahlmenü als Blatt von unten (auch für Android, wo ein Dialog höchstens
  * drei Knöpfe zeigt). Liefert den gewählten Eintrag oder null, wenn man
- * daneben tippt oder das Blatt nach unten wischt.
+ * daneben tippt oder das Blatt nach unten wischt. Am PC eine mittige Karte.
  */
 export function auswahlBlatt(titel: string, optionen: Option[]): Promise<number | null> {
   return new Promise((fertig) => {
@@ -44,6 +48,7 @@ export function AuswahlBlattHost() {
   const gedrueckt = hell ? "rgba(20,23,27,0.05)" : "rgba(255,255,255,0.06)";
   const text = hell ? "#14171B" : "#F2F3F5";
   const rot = hell ? "#E5392C" : "#FF5A4F";
+  const desktop = istDesktop(useWindowDimensions().width);
 
   useEffect(() => {
     zeigen = (a) => {
@@ -82,6 +87,49 @@ export function AuswahlBlattHost() {
       },
     }),
   ).current;
+
+  // Am PC: Tasten gehören dem Menü, Esc schließt.
+  useEffect(() => {
+    if (!desktop) return;
+    if (anfrage) tastenSperre.an = true;
+    else {
+      const t = setTimeout(() => (tastenSperre.an = false), 0);
+      return () => clearTimeout(t);
+    }
+  }, [anfrage, desktop]);
+  useTasten(
+    (e) => {
+      if (desktop && anfrage && e.key === "Escape") fertig(null);
+    },
+    { immer: true },
+  );
+
+  if (desktop) {
+    return (
+      <Modal visible={anfrage != null} transparent animationType="fade" onRequestClose={() => fertig(null)}>
+        <Pressable onPress={() => fertig(null)} style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24, backgroundColor: "rgba(10,12,15,0.4)" }}>
+          {anfrage ? (
+            <Pressable onPress={() => {}} style={{ width: "100%", maxWidth: 400, paddingVertical: 10, borderRadius: 20, backgroundColor: B.flaeche, borderWidth: 1.5, borderColor: B.linie, borderBottomWidth: 3, borderBottomColor: B.kante, overflow: "hidden" }}>
+              {anfrage.titel ? (
+                <Text numberOfLines={2} style={{ ...n.fett, fontSize: 14, color: B.text3, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8 }}>
+                  {anfrage.titel}
+                </Text>
+              ) : null}
+              {anfrage.optionen.map((o, i) => (
+                <Pressable key={`${i}-${o.text}`} onPress={() => fertig(i)} accessibilityRole="button" style={(z: Zustand) => ({ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 20, backgroundColor: z.hovered ? B.hover : "transparent" })}>
+                  <Text style={{ flex: 1, ...n.fett, fontSize: 16, color: o.gefahr ? B.rot : B.text }}>{o.text}</Text>
+                </Pressable>
+              ))}
+              <Pressable onPress={() => fertig(null)} accessibilityRole="button" style={(z: Zustand) => ({ minHeight: 48, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 20, marginTop: 4, borderTopWidth: 1.5, borderTopColor: B.ton, backgroundColor: z.hovered ? B.hover : "transparent" })}>
+                <Icon name="close" size={17} color={B.text3} />
+                <Text style={{ ...n.fett, fontSize: 15, color: B.text2 }}>Abbrechen</Text>
+              </Pressable>
+            </Pressable>
+          ) : null}
+        </Pressable>
+      </Modal>
+    );
+  }
 
   return (
     <Modal supportedOrientations={["portrait", "landscape"]} visible={anfrage != null} transparent animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={() => fertig(null)}>

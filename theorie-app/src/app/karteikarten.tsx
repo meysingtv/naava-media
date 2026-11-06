@@ -8,7 +8,9 @@ import { Kopfzeile, StartKnopf } from "@/components/home";
 import { KartenStapelBild, StapelSymbol } from "@/components/karteikarten-karte";
 import { FotoKopf, Seite, WerteReihe } from "@/components/seite";
 import { Gruppe, kartenFlaeche, Knopf, KopfTaste, T } from "@/components/ui";
+import { KarteikartenWeb } from "@/components/web/karteikarten-web";
 import { useDarstellung } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
 import { FOTOS } from "@/lib/fotos";
 import { tippen } from "@/lib/haptik";
 import { heuteDran, kartenZahlen, naechsteRunde, stapelListe, type Stapel } from "@/lib/karteikarten";
@@ -55,8 +57,12 @@ function StapelZeile({ stapel }: { stapel: Stapel }) {
   );
 }
 
-/** Übersicht: heute fällige Karten, alle Stapel, eigene Karten schreiben. */
+/** Übersicht: heute fällige Karten, alle Stapel, eigene Karten schreiben. Am PC eine eigene Fassung. */
 export default function Karteikarten() {
+  return useDesktop() ? <KarteikartenWeb /> : <KarteikartenHandy />;
+}
+
+function KarteikartenHandy() {
   const insets = useSafeAreaInsets();
   const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();

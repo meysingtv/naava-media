@@ -83,6 +83,9 @@ export function GlasGrund({ ab, dezent }: { ab?: number; dezent?: boolean }) {
   const [inhaltHoehe, setInhaltHoehe] = useState(0);
   const s = f.hell ? 0.75 : 1;
 
+  // Am PC kein Glas-Look: ruhiger, einfarbiger Grund.
+  if (desktop) return null;
+
   if (ab === undefined) {
     const flecken: Fleck[] = [
       { id: "o", cx: width * 0.95, cy: height * 0.12, rx: width * 0.8, ry: height * 0.34, farbe: LICHT.orange, a: 0.3 * s },

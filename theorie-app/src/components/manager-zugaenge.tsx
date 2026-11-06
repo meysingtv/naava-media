@@ -5,40 +5,36 @@ import * as Clipboard from "expo-clipboard";
 import { dialog } from "@/components/dialog";
 import { Icon } from "@/components/icon";
 import {
+  Abschnitt,
+  etikett,
+  KlassenSchild,
+  schild,
   Auswahl,
-  BLAU,
+  Balken,
   datumText,
   Feld,
   Fenster,
   Hinweis,
+  IconTaste,
+  MAvatar,
   MEingabe,
   mFlaeche,
-  MKarte,
   MKnopf,
-  RolleMarke,
-  rotVon,
-  SchliessenTaste,
+  Reiter,
+  rolleText,
   SeitenBlatt,
   StatusPlakette,
+  statusText,
+  M,
   wannText,
+  zahl,
+  zahlSchrift,
   type Zustand,
 } from "@/components/manager-teile";
-import { NutzerBild } from "@/components/profilbild";
+import { n as nf } from "@/components/web/bunt";
 import { Schalter } from "@/components/schalter";
-import { useFarbwelt } from "@/lib/darstellung";
 import { HAUPT_KLASSEN } from "@/lib/klassen";
-import {
-  passwortVorschlag,
-  ROLLE_TEXT,
-  zugangAendern,
-  zugangAnlegen,
-  zugangLoeschen,
-  zugangStatus,
-  type Aenderung,
-  type ManagerNutzer,
-  type Rolle,
-} from "@/lib/manager";
-import { mitDeckkraft, schrift } from "@/lib/theme";
+import { passwortVorschlag, zugangAendern, zugangAnlegen, zugangLoeschen, zugangStatus, type Aenderung, type ManagerNutzer, type Rolle } from "@/lib/manager";
 
 // Zugänge im Manager: Liste als Tabelle mit Suche und Filtern, Details zum
 // Bearbeiten in einem Blatt von rechts und ein Fenster zum Anlegen.
@@ -54,12 +50,17 @@ export function nameVon(n: ManagerNutzer): string {
   return n.name || n.email.split("@")[0] || "Ohne Namen";
 }
 
+const ROLLEN: { id: Rolle; titel: string }[] = [
+  { id: "schueler", titel: "Fahrschüler" },
+  { id: "fahrlehrer", titel: "Fahrlehrer" },
+];
+
 // ---------------------------------------------------------------------------
 // Liste
 // ---------------------------------------------------------------------------
 
-/** Spalten der Tabelle: Name und Fahrlehrer teilen sich den Rest, die übrigen sind fest. */
-const SPALTEN = { name: 2.6, lehrer: 1.4, rolle: 128, klasse: 58, status: 168, aktiv: 112, stand: 150 } as const;
+/** Spalten der Tabelle: Zahl unter 10 = Anteil am Rest, sonst feste Breite. */
+const SPALTEN = { name: 2.4, rolle: 110, lehrer: 1.3, klasse: 64, status: 150, aktiv: 116, stand: 160 } as const;
 
 export function ZugangListe({
   nutzer,
@@ -78,14 +79,13 @@ export function ZugangListe({
   onWaehlen: (n: ManagerNutzer) => void;
   onNeu: () => void;
 }) {
-  const f = useFarbwelt();
-  const [suche, setSuche] = useState("");
+    const [suche, setSuche] = useState("");
   // Schmale Fenster: Klasse und „Zuletzt aktiv“ ausblenden, damit nichts übereinanderläuft.
   const [breite, setBreite] = useState(1000);
   const breit = breite >= 900;
   const lehrerVon = useMemo(() => new Map(nutzer.filter((n) => n.rolle === "fahrlehrer").map((n) => [n.id, nameVon(n)])), [nutzer]);
 
-  const zahl = (fi: ListenFilter) =>
+  const anzahl = (fi: ListenFilter) =>
     fi === "alle" ? nutzer.length : fi === "pausiert" || fi === "gesperrt" ? nutzer.filter((n) => n.status === fi).length : nutzer.filter((n) => n.rolle === fi).length;
 
   const sichtbar = useMemo(() => {
@@ -97,118 +97,129 @@ export function ZugangListe({
       .sort((a, b) => Number(b.inhaber) - Number(a.inhaber) || nameVon(a).localeCompare(nameVon(b), "de"));
   }, [nutzer, filter, fahrlehrerFilter, suche]);
 
-  /** Breite einer Spalte: Zahl unter 10 = Anteil am Rest, sonst feste Breite. */
   const spalte = (w: number) => (w < 10 ? { flex: w, minWidth: 0 } : { width: w });
   const kopf = (titel: string, w: number) => (
-    <Text style={{ ...spalte(w), ...schrift.textHalb, fontSize: 12, letterSpacing: 0.6, textTransform: "uppercase", color: f.text3 }} numberOfLines={1}>
+    <Text style={{ ...spalte(w), ...etikett }} numberOfLines={1}>
       {titel}
     </Text>
   );
 
   return (
-    <View style={{ gap: 16 }}>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
-        <View style={{ flexGrow: 1, flexBasis: 280, maxWidth: 420 }}>
-          <MEingabe icon="search" placeholder="Name oder E-Mail suchen" value={suche} onChangeText={setSuche} autoCapitalize="none" />
-        </View>
-        <Auswahl<ListenFilter>
+    <View onLayout={(e) => setBreite(e.nativeEvent.layout.width)} style={[mFlaeche(), { overflow: "hidden" }]}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: 16, rowGap: 8, paddingHorizontal: 16, paddingTop: 4, borderBottomWidth: 2, borderBottomColor: M.kante }}>
+        <Reiter<ListenFilter>
           wert={filter}
           onWechsel={onFilter}
           optionen={[
-            { id: "alle", titel: `Alle · ${zahl("alle")}` },
-            { id: "schueler", titel: `Fahrschüler · ${zahl("schueler")}` },
-            { id: "fahrlehrer", titel: `Fahrlehrer · ${zahl("fahrlehrer")}` },
-            { id: "pausiert", titel: `Pausiert · ${zahl("pausiert")}` },
-            { id: "gesperrt", titel: `Gesperrt · ${zahl("gesperrt")}` },
+            { id: "alle", titel: "Alle", zahl: anzahl("alle") },
+            { id: "schueler", titel: "Fahrschüler", zahl: anzahl("schueler") },
+            { id: "fahrlehrer", titel: "Fahrlehrer", zahl: anzahl("fahrlehrer") },
+            { id: "pausiert", titel: "Pausiert", zahl: anzahl("pausiert") },
+            { id: "gesperrt", titel: "Gesperrt", zahl: anzahl("gesperrt") },
           ]}
         />
+        <View style={{ width: 280, maxWidth: "100%", paddingVertical: 6 }}>
+          <MEingabe icon="search" placeholder="Name oder E-Mail" value={suche} onChangeText={setSuche} autoCapitalize="none" />
+        </View>
       </View>
 
       {fahrlehrerFilter ? (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Text style={{ ...schrift.textMittel, fontSize: 14, color: f.text2 }}>
-            Schüler von <Text style={{ ...schrift.textFett, color: f.text }}>{lehrerVon.get(fahrlehrerFilter) ?? "Fahrlehrer"}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, height: 40, borderBottomWidth: 1, borderBottomColor: M.linie, backgroundColor: M.flaeche2 }}>
+          <Text style={{ flex: 1, ...nf.text, fontSize: 13.5, color: M.text2 }}>
+            Schüler von <Text style={{ ...nf.fett, color: M.text }}>{lehrerVon.get(fahrlehrerFilter) ?? "Fahrlehrer"}</Text>
           </Text>
           <MKnopf titel="Filter aufheben" icon="close" art="leise" onPress={() => onFahrlehrerFilter(null)} />
         </View>
       ) : null}
 
-      <View onLayout={(e) => setBreite(e.nativeEvent.layout.width)} style={[{ borderRadius: 22, overflow: "hidden" }, mFlaeche(f)]}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 20, height: 44, borderBottomWidth: 1, borderBottomColor: f.linie, backgroundColor: f.hell ? "#FBFAF7" : "rgba(255,255,255,0.02)" }}>
-          {kopf("Name", SPALTEN.name)}
-          {kopf("Rolle", SPALTEN.rolle)}
-          {kopf("Fahrlehrer", SPALTEN.lehrer)}
-          {breit ? kopf("Klasse", SPALTEN.klasse) : null}
-          {kopf("Status", SPALTEN.status)}
-          {breit ? kopf("Zuletzt aktiv", SPALTEN.aktiv) : null}
-          {kopf("Lernstand", SPALTEN.stand)}
-          <View style={{ width: 20 }} />
-        </View>
-
-        {sichtbar.length === 0 ? (
-          <View style={{ alignItems: "center", paddingVertical: 48, gap: 12 }}>
-            <Icon name="people-outline" size={34} color={f.text3} />
-            <Text style={{ ...schrift.textHalb, fontSize: 15, color: f.text2 }}>{nutzer.length ? "Keine Treffer" : "Noch keine Zugänge"}</Text>
-            {nutzer.length ? null : <MKnopf titel="Ersten Zugang anlegen" icon="person-add" onPress={onNeu} />}
-          </View>
-        ) : (
-          sichtbar.map((n, i) => (
-            <Pressable
-              key={n.id}
-              onPress={() => onWaehlen(n)}
-              accessibilityRole="button"
-              accessibilityLabel={`${nameVon(n)} bearbeiten`}
-              style={(z: Zustand) => ({
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 14,
-                paddingHorizontal: 20,
-                paddingVertical: 12,
-                borderTopWidth: i > 0 ? 1 : 0,
-                borderTopColor: f.linie,
-                backgroundColor: z.hovered ? (f.hell ? "#FAF7F2" : "rgba(255,255,255,0.035)") : "transparent",
-              })}
-            >
-              <View style={{ ...spalte(SPALTEN.name), flexDirection: "row", alignItems: "center", gap: 12 }}>
-                <NutzerBild pfad={n.bild_pfad} name={nameVon(n)} farbe={n.avatar_farbe ?? undefined} groesse={38} />
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={{ ...schrift.textHalb, fontSize: 14.5, color: f.text }} numberOfLines={1}>
-                    {nameVon(n)}
-                    {n.ich ? <Text style={{ ...schrift.textMittel, color: f.text3 }}> (du)</Text> : null}
-                  </Text>
-                  <Text style={{ ...schrift.text, fontSize: 12.5, color: f.text3 }} numberOfLines={1}>
-                    {n.email}
-                  </Text>
-                </View>
-              </View>
-              <View style={spalte(SPALTEN.rolle)}>
-                <RolleMarke rolle={n.rolle} inhaber={n.inhaber} />
-              </View>
-              <Text style={{ ...spalte(SPALTEN.lehrer), ...schrift.textMittel, fontSize: 13.5, color: n.fahrlehrer_id ? f.text : f.text3 }} numberOfLines={1}>
-                {n.fahrlehrer_id ? (lehrerVon.get(n.fahrlehrer_id) ?? "–") : "–"}
-              </Text>
-              {breit ? <Text style={{ ...spalte(SPALTEN.klasse), ...schrift.textHalb, fontSize: 13.5, color: f.text2 }}>{n.klasse}</Text> : null}
-              <View style={spalte(SPALTEN.status)}>
-                <StatusPlakette status={n.status} bis={n.pausiert_bis} />
-              </View>
-              {breit ? (
-                <Text style={{ ...spalte(SPALTEN.aktiv), ...schrift.textMittel, fontSize: 13, color: f.text2 }} numberOfLines={1}>
-                  {wannText(n.zuletzt_aktiv)}
-                </Text>
-              ) : null}
-              <View style={{ ...spalte(SPALTEN.stand), gap: 5 }}>
-                <View style={{ height: 6, borderRadius: 3, backgroundColor: f.hell ? "rgba(20,23,27,0.07)" : "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-                  <View style={{ width: `${Math.round(anteil(n) * 100)}%`, height: "100%", borderRadius: 3, backgroundColor: anteil(n) >= 0.75 ? f.gruen : f.orange }} />
-                </View>
-                <Text style={{ ...schrift.textMittel, fontSize: 11.5, color: f.text3 }} numberOfLines={1}>
-                  {n.fragen_gesamt ? `${Math.round(anteil(n) * 100)} % · ${n.fragen_gesamt} Fragen` : "noch nichts gelernt"}
-                </Text>
-              </View>
-              <Icon name="chevron-forward" size={16} color={f.text3} />
-            </Pressable>
-          ))
-        )}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 16, paddingHorizontal: 16, height: 36, borderBottomWidth: 1, borderBottomColor: M.linie, backgroundColor: M.flaeche2 }}>
+        {kopf("Name", SPALTEN.name)}
+        {kopf("Rolle", SPALTEN.rolle)}
+        {kopf("Fahrlehrer", SPALTEN.lehrer)}
+        {breit ? kopf("Klasse", SPALTEN.klasse) : null}
+        {kopf("Status", SPALTEN.status)}
+        {breit ? kopf("Zuletzt aktiv", SPALTEN.aktiv) : null}
+        {kopf("Lernstand", SPALTEN.stand)}
       </View>
+
+      {sichtbar.length === 0 ? (
+        <View style={{ alignItems: "flex-start", paddingHorizontal: 16, paddingVertical: 28, gap: 10 }}>
+          <Text style={{ ...nf.halb, fontSize: 14.5, color: M.text }}>{nutzer.length ? "Keine Treffer" : "Noch keine Zugänge"}</Text>
+          <Text style={{ ...nf.text, fontSize: 14, color: M.text3 }}>{nutzer.length ? "Anderer Filter oder anderer Suchbegriff?" : "Leg den ersten Zugang für einen Fahrschüler oder Fahrlehrer an."}</Text>
+          {nutzer.length ? null : <MKnopf titel="Zugang anlegen" icon="add" onPress={onNeu} />}
+        </View>
+      ) : (
+        sichtbar.map((n, i) => (
+          <Pressable
+            key={n.id}
+            onPress={() => onWaehlen(n)}
+            accessibilityRole="button"
+            accessibilityLabel={`${nameVon(n)} bearbeiten`}
+            style={(z: Zustand) => ({
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 16,
+              paddingHorizontal: 16,
+              height: 56,
+              borderTopWidth: i > 0 ? 1 : 0,
+              borderTopColor: M.linie,
+              backgroundColor: z.hovered ? M.hover : "transparent",
+            })}
+          >
+            <View style={{ ...spalte(SPALTEN.name), flexDirection: "row", alignItems: "center", gap: 11 }}>
+              <MAvatar pfad={n.bild_pfad} name={nameVon(n)} />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={{ ...nf.halb, fontSize: 14.5, color: M.text }} numberOfLines={1}>
+                  {nameVon(n)}
+                  {n.ich ? <Text style={{ ...nf.text, color: M.text3 }}> · du</Text> : null}
+                </Text>
+                <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }} numberOfLines={1}>
+                  {n.email}
+                </Text>
+              </View>
+            </View>
+            <Text style={{ ...spalte(SPALTEN.rolle), ...nf.text, fontSize: 14, color: n.inhaber ? M.orange : M.text2 }} numberOfLines={1}>
+              {rolleText(n.rolle, n.inhaber)}
+            </Text>
+            <Text style={{ ...spalte(SPALTEN.lehrer), ...nf.text, fontSize: 14, color: n.fahrlehrer_id ? M.text : M.text3 }} numberOfLines={1}>
+              {n.fahrlehrer_id ? (lehrerVon.get(n.fahrlehrer_id) ?? "–") : "–"}
+            </Text>
+            {breit ? (
+              <View style={spalte(SPALTEN.klasse)}>
+                <KlassenSchild klasse={n.klasse} />
+              </View>
+            ) : null}
+            <View style={spalte(SPALTEN.status)}>
+              <StatusPlakette status={n.status} bis={n.pausiert_bis} />
+            </View>
+            {breit ? (
+              <Text style={{ ...spalte(SPALTEN.aktiv), ...nf.text, fontSize: 13.5, color: n.zuletzt_aktiv ? M.text2 : M.text3 }} numberOfLines={1}>
+                {wannText(n.zuletzt_aktiv)}
+              </Text>
+            ) : null}
+            <View style={{ ...spalte(SPALTEN.stand), flexDirection: "row", alignItems: "center", gap: 10 }}>
+              {n.fragen_gesamt ? (
+                <>
+                  <Balken anteil={anteil(n)} farbe={anteil(n) >= 0.75 ? M.gruen : M.orange} breite={56} hoehe={5} />
+                  <Text style={{ ...zahlSchrift(14), color: M.text, width: 40 }}>{Math.round(anteil(n) * 100)}%</Text>
+                  <Text style={{ ...nf.text, fontSize: 12.5, color: M.text3, fontVariant: ["tabular-nums"] }} numberOfLines={1}>
+                    {zahl(n.fragen_gesamt)}
+                  </Text>
+                </>
+              ) : (
+                <Text style={{ ...nf.text, fontSize: 13.5, color: M.text3 }}>–</Text>
+              )}
+            </View>
+          </Pressable>
+        ))
+      )}
+      {sichtbar.length ? (
+        <View style={{ paddingHorizontal: 16, height: 38, justifyContent: "center", borderTopWidth: 1, borderTopColor: M.linie, backgroundColor: M.flaeche2 }}>
+          <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>
+            {sichtbar.length === nutzer.length ? `${sichtbar.length} Zugänge` : `${sichtbar.length} von ${nutzer.length} Zugängen`} · Lernstand = Anteil richtig, dahinter beantwortete Fragen
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -223,34 +234,45 @@ function KlassenWahl({ wert, onWechsel }: { wert: string; onWechsel: (k: string)
 }
 
 function LehrerWahl({ wert, onWechsel, fahrlehrer }: { wert: string | null; onWechsel: (id: string | null) => void; fahrlehrer: ManagerNutzer[] }) {
-  const f = useFarbwelt();
-  if (!fahrlehrer.length) return <Text style={{ ...schrift.text, fontSize: 13.5, color: f.text3 }}>Noch keine Fahrlehrer angelegt.</Text>;
+    if (!fahrlehrer.length) return <Text style={{ ...nf.text, fontSize: 14, color: M.text3 }}>Noch keine Fahrlehrer angelegt.</Text>;
   return (
     <Auswahl
       wert={wert ?? "keiner"}
       onWechsel={(id) => onWechsel(id === "keiner" ? null : id)}
-      optionen={[{ id: "keiner", titel: "Keiner" }, ...fahrlehrer.map((l) => ({ id: l.id, titel: nameVon(l), icon: "school" as const }))]}
+      optionen={[{ id: "keiner", titel: "Keiner" }, ...fahrlehrer.map((l) => ({ id: l.id, titel: nameVon(l) }))]}
     />
   );
 }
 
-function PasswortFeld({ wert, onWechsel }: { wert: string; onWechsel: (p: string) => void }) {
-  const f = useFarbwelt();
-  return (
+function PasswortFeld({ wert, onWechsel, platzhalter = "mindestens 8 Zeichen" }: { wert: string; onWechsel: (p: string) => void; platzhalter?: string }) {
+    return (
     <MEingabe
-      icon="key-outline"
       value={wert}
       onChangeText={onWechsel}
       autoCapitalize="none"
       autoCorrect={false}
-      placeholder="mindestens 8 Zeichen"
+      placeholder={platzhalter}
+      style={{ fontVariant: ["tabular-nums"] }}
       rechts={
-        <Pressable onPress={() => onWechsel(passwortVorschlag())} accessibilityRole="button" style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 5, height: 30, paddingHorizontal: 10, borderRadius: 15, backgroundColor: z.hovered ? f.orangeSoft : "transparent" })}>
-          <Icon name="sparkles" size={14} color={f.orange} />
-          <Text style={{ ...schrift.textHalb, fontSize: 13, color: f.orange }}>Erzeugen</Text>
+        <Pressable onPress={() => onWechsel(passwortVorschlag())} accessibilityRole="button" style={(z: Zustand) => ({ height: 26, paddingHorizontal: 8, marginRight: -4, borderRadius: 6, justifyContent: "center", backgroundColor: z.hovered ? M.hover : "transparent" })}>
+          <Text style={{ ...nf.halb, fontSize: 13, color: M.text2 }}>Vorschlagen</Text>
         </Pressable>
       }
     />
+  );
+}
+
+function SchalterZeile({ titel, unter, wert, onWechsel, aus }: { titel: string; unter?: string; wert: boolean; onWechsel: (w: boolean) => void; aus?: boolean }) {
+    return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 14, opacity: aus ? 0.55 : 1 }}>
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={{ ...nf.halb, fontSize: 14, color: M.text }}>{titel}</Text>
+        {unter ? <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>{unter}</Text> : null}
+      </View>
+      <View pointerEvents={aus ? "none" : "auto"}>
+        <Schalter wert={wert} onWechsel={onWechsel} farbe={M.orange} />
+      </View>
+    </View>
   );
 }
 
@@ -275,8 +297,7 @@ export function AnlegenFenster({
   onSchliessen: () => void;
   onAngelegt: () => void;
 }) {
-  const f = useFarbwelt();
-  const [z, setZ] = useState<Neu>(LEER);
+    const [z, setZ] = useState<Neu>(LEER);
   const [laeuft, setLaeuft] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
   const [fertig, setFertig] = useState<{ email: string; passwort: string; name: string } | null>(null);
@@ -318,66 +339,79 @@ export function AnlegenFenster({
 
   if (fertig) {
     return (
-      <Fenster offen={offen} onSchliessen={onSchliessen} titel="Zugang angelegt" unter={`${fertig.name} kann sich jetzt in der App anmelden.`} breite={500}>
-        <View style={{ borderRadius: 18, padding: 18, gap: 12, backgroundColor: f.hell ? "#FFFFFF" : "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: f.linie }}>
+      <Fenster
+        offen={offen}
+        onSchliessen={onSchliessen}
+        titel="Zugang angelegt"
+        unter={`${fertig.name} kann sich jetzt in der App anmelden.`}
+        breite={460}
+        fuss={
+          <>
+            <MKnopf
+              titel="Noch einen anlegen"
+              art="leise"
+              onPress={() => {
+                setZ({ ...LEER(), fahrlehrer_id: z.fahrlehrer_id, rolle: z.rolle, klasse: z.klasse });
+                setFertig(null);
+                setKopiert(false);
+              }}
+            />
+            <MKnopf titel={kopiert ? "Kopiert" : "Zugangsdaten kopieren"} icon={kopiert ? "checkmark" : "copy-outline"} onPress={kopieren} />
+          </>
+        }
+      >
+        <View style={[mFlaeche(), { backgroundColor: M.flaeche2 }]}>
           {[
             ["E-Mail", fertig.email],
             ["Passwort", fertig.passwort],
-          ].map(([k, w]) => (
-            <View key={k} style={{ gap: 3 }}>
-              <Text style={{ ...schrift.textHalb, fontSize: 12, letterSpacing: 0.6, textTransform: "uppercase", color: f.text3 }}>{k}</Text>
-              <Text selectable style={{ ...schrift.textHalb, fontSize: 17, color: f.text, fontVariant: ["tabular-nums"] }}>
+          ].map(([k, w], i) => (
+            <View key={k} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, height: 44, borderTopWidth: i ? 1 : 0, borderTopColor: M.linie }}>
+              <Text style={{ width: 72, ...nf.text, fontSize: 13.5, color: M.text3 }}>{k}</Text>
+              <Text selectable style={{ flex: 1, ...nf.halb, fontSize: 15, color: M.text, fontVariant: ["tabular-nums"] }}>
                 {w}
               </Text>
             </View>
           ))}
         </View>
-        <Hinweis>Gib die Zugangsdaten persönlich weiter. Das Passwort lässt sich später in der App unter Einstellungen ändern.</Hinweis>
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          <MKnopf titel={kopiert ? "Kopiert" : "Kopieren"} icon={kopiert ? "checkmark" : "copy-outline"} art="sekundaer" onPress={kopieren} style={{ flex: 1 }} />
-          <MKnopf
-            titel="Noch einen anlegen"
-            icon="person-add"
-            onPress={() => {
-              setZ({ ...LEER(), fahrlehrer_id: z.fahrlehrer_id, rolle: z.rolle, klasse: z.klasse });
-              setFertig(null);
-              setKopiert(false);
-            }}
-            style={{ flex: 1 }}
-          />
-        </View>
+        <Text style={{ ...nf.text, fontSize: 13.5, lineHeight: 18, color: M.text3 }}>Gib die Zugangsdaten persönlich weiter. Das Passwort lässt sich später in der App unter Einstellungen ändern.</Text>
       </Fenster>
     );
   }
 
   return (
-    <Fenster offen={offen} onSchliessen={onSchliessen} titel="Zugang anlegen" unter="Mit E-Mail und Passwort – die Adresse gilt sofort als bestätigt.">
-      <View style={{ flexDirection: "row", gap: 14 }}>
+    <Fenster
+      offen={offen}
+      onSchliessen={onSchliessen}
+      titel="Zugang anlegen"
+      unter="Mit E-Mail und Passwort – die Adresse gilt sofort als bestätigt."
+      fuss={
+        <>
+          <MKnopf titel="Abbrechen" art="leise" onPress={onSchliessen} />
+          <MKnopf titel="Zugang anlegen" laedt={laeuft} onPress={anlegen} />
+        </>
+      }
+    >
+      <View style={{ flexDirection: "row", gap: 12 }}>
         <Feld titel="Name" style={{ flex: 1 }}>
-          <MEingabe icon="person-outline" placeholder="Vor- und Nachname" value={z.name} onChangeText={(t) => setzen("name", t)} maxLength={40} autoFocus />
+          <MEingabe placeholder="Vor- und Nachname" value={z.name} onChangeText={(t) => setzen("name", t)} maxLength={40} autoFocus />
         </Feld>
         <Feld titel="E-Mail" style={{ flex: 1.2 }}>
-          <MEingabe icon="mail-outline" placeholder="name@beispiel.de" value={z.email} onChangeText={(t) => setzen("email", t)} autoCapitalize="none" keyboardType="email-address" autoCorrect={false} />
+          <MEingabe placeholder="name@beispiel.de" value={z.email} onChangeText={(t) => setzen("email", t)} autoCapitalize="none" keyboardType="email-address" autoCorrect={false} />
         </Feld>
       </View>
       <Feld titel="Passwort" hinweis="Vorgeschlagen ist ein gut lesbares Passwort – du kannst auch ein eigenes eintippen.">
         <PasswortFeld wert={z.passwort} onWechsel={(p) => setzen("passwort", p)} />
       </Feld>
-      <Feld titel="Rolle">
-        <Auswahl<Rolle>
-          wert={z.rolle}
-          onWechsel={(r) => setzen("rolle", r)}
-          optionen={[
-            { id: "schueler", titel: "Fahrschüler", icon: "person" },
-            { id: "fahrlehrer", titel: "Fahrlehrer", icon: "school" },
-          ]}
-        />
-      </Feld>
-      <Feld titel="Führerscheinklasse">
-        <KlassenWahl wert={z.klasse} onWechsel={(k) => setzen("klasse", k)} />
-      </Feld>
+      <View style={{ flexDirection: "row", gap: 24, flexWrap: "wrap" }}>
+        <Feld titel="Rolle">
+          <Auswahl<Rolle> wert={z.rolle} onWechsel={(r) => setzen("rolle", r)} optionen={ROLLEN} />
+        </Feld>
+        <Feld titel="Führerscheinklasse" style={{ flex: 1, minWidth: 220 }}>
+          <KlassenWahl wert={z.klasse} onWechsel={(k) => setzen("klasse", k)} />
+        </Feld>
+      </View>
       {z.rolle === "schueler" ? (
-        <Feld titel="Fahrlehrer" hinweis="Zu welchem Fahrlehrer gehört der Fahrschüler?">
+        <Feld titel="Fahrlehrer">
           <LehrerWahl wert={z.fahrlehrer_id} onWechsel={(id) => setzen("fahrlehrer_id", id)} fahrlehrer={fahrlehrer} />
         </Feld>
       ) : null}
@@ -386,26 +420,7 @@ export function AnlegenFenster({
         <MEingabe mehrzeilig placeholder="z. B. Theoriekurs März, Prüfung geplant im Mai" value={z.notiz} onChangeText={(t) => setzen("notiz", t)} maxLength={500} />
       </Feld>
       {fehler ? <Hinweis art="fehler">{fehler}</Hinweis> : null}
-      <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10 }}>
-        <MKnopf titel="Abbrechen" art="leise" onPress={onSchliessen} />
-        <MKnopf titel="Zugang anlegen" icon="person-add" laedt={laeuft} onPress={anlegen} />
-      </View>
     </Fenster>
-  );
-}
-
-function SchalterZeile({ titel, unter, wert, onWechsel, aus }: { titel: string; unter?: string; wert: boolean; onWechsel: (w: boolean) => void; aus?: boolean }) {
-  const f = useFarbwelt();
-  return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: 16, backgroundColor: f.hell ? "#FFFFFF" : "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: f.linie, opacity: aus ? 0.6 : 1 }}>
-      <View style={{ flex: 1, gap: 2 }}>
-        <Text style={{ ...schrift.textHalb, fontSize: 14.5, color: f.text }}>{titel}</Text>
-        {unter ? <Text style={{ ...schrift.text, fontSize: 12.5, color: f.text3 }}>{unter}</Text> : null}
-      </View>
-      <View pointerEvents={aus ? "none" : "auto"}>
-        <Schalter wert={wert} onWechsel={onWechsel} />
-      </View>
-    </View>
   );
 }
 
@@ -421,9 +436,7 @@ const PAUSE_TAGE = [
 ] as const;
 
 export function ZugangBlatt({ nutzer, alle, onSchliessen, onGeaendert }: { nutzer: ManagerNutzer | null; alle: ManagerNutzer[]; onSchliessen: () => void; onGeaendert: () => Promise<void> }) {
-  const f = useFarbwelt();
-  const rot = rotVon(f);
-  const n = nutzer;
+    const n = nutzer;
   const [form, setForm] = useState({ name: "", benutzername: "", email: "", rolle: "schueler" as Rolle, klasse: "B", fahrlehrer_id: null as string | null, notiz: "", darf_clips: false });
   const [passwort, setPasswort] = useState("");
   const [pause, setPause] = useState<string>("7");
@@ -472,6 +485,10 @@ export function ZugangBlatt({ nutzer, alle, onSchliessen, onGeaendert }: { nutze
 
   const sichern = () => ausfuehren("sichern", () => zugangAendern(n.id, aenderung), "Gespeichert.");
 
+  const verwerfen = () => {
+    setForm({ name: n.name, benutzername: n.benutzername, email: n.email, rolle: n.rolle, klasse: n.klasse, fahrlehrer_id: n.fahrlehrer_id, notiz: n.notiz, darf_clips: n.darf_clips });
+  };
+
   const pausieren = () => {
     const tage = Number(pause);
     ausfuehren("status", () => zugangStatus(n.id, "pausiert", tage || undefined), tage ? `Pausiert für ${PAUSE_TAGE.find((p) => p.id === pause)?.titel}.` : "Pausiert, bis du die Pause aufhebst.");
@@ -511,42 +528,41 @@ export function ZugangBlatt({ nutzer, alle, onSchliessen, onGeaendert }: { nutze
     ausfuehren("passwort", () => zugangAendern(n.id, { passwort }), `Neues Passwort gesetzt: ${passwort}`);
   };
 
-  const abschnitt = (titel: string) => <Text style={{ ...schrift.textHalb, fontSize: 12, letterSpacing: 0.8, textTransform: "uppercase", color: f.text3, marginTop: 6 }}>{titel}</Text>;
+  const anbieter = n.anbieter === "email" ? "E-Mail" : n.anbieter === "apple" ? "Apple" : n.anbieter === "google" ? "Google" : n.anbieter;
 
   return (
     <SeitenBlatt offen={!!nutzer} onSchliessen={onSchliessen}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 24, paddingTop: 22, paddingBottom: 18, borderBottomWidth: 1, borderBottomColor: f.linie }}>
-        <NutzerBild pfad={n.bild_pfad} name={nameVon(n)} farbe={n.avatar_farbe ?? undefined} groesse={52} />
-        <View style={{ flex: 1, gap: 6 }}>
-          <Text style={{ ...schrift.titel, fontSize: 20, letterSpacing: -0.3, color: f.text }} numberOfLines={1}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingLeft: 20, paddingRight: 12, height: 64, borderBottomWidth: 1, borderBottomColor: M.linie }}>
+        <MAvatar pfad={n.bild_pfad} name={nameVon(n)} groesse={36} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={{ ...schild(17), color: M.text }} numberOfLines={1}>
             {nameVon(n)}
           </Text>
-          <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
-            <RolleMarke rolle={n.rolle} inhaber={n.inhaber} />
-            <StatusPlakette status={n.status} bis={n.pausiert_bis} />
-          </View>
+          <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }} numberOfLines={1}>
+            {rolleText(n.rolle, n.inhaber)} · {statusText(n.status, n.pausiert_bis)}
+          </Text>
         </View>
-        <SchliessenTaste onPress={onSchliessen} />
+        <IconTaste icon="close" label="Schließen" onPress={onSchliessen} />
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 24, gap: 16, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, gap: 14, paddingBottom: 32 }}>
         {meldung ? <Hinweis art={meldung.art}>{meldung.text}</Hinweis> : null}
 
-        <View style={{ flexDirection: "row", gap: 10 }}>
+        <View style={[mFlaeche(), { flexDirection: "row" }]}>
           {[
-            { wert: n.fragen_gesamt, titel: "Fragen" },
+            { wert: zahl(n.fragen_gesamt), titel: "Fragen" },
             { wert: n.fragen_gesamt ? `${Math.round(anteil(n) * 100)} %` : "–", titel: "richtig" },
-            { wert: n.xp, titel: "XP" },
-            { wert: n.serie, titel: "Tage Serie" },
-          ].map((w) => (
-            <View key={w.titel} style={{ flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 14, backgroundColor: f.hell ? "#FFFFFF" : "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: f.linie }}>
-              <Text style={{ ...schrift.titel, fontSize: 18, color: f.text, fontVariant: ["tabular-nums"] }}>{w.wert}</Text>
-              <Text style={{ ...schrift.textMittel, fontSize: 11.5, color: f.text3 }}>{w.titel}</Text>
+            { wert: zahl(n.xp), titel: "XP" },
+            { wert: zahl(n.serie), titel: "Tage Serie" },
+          ].map((w, i) => (
+            <View key={w.titel} style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 10, gap: 2, borderLeftWidth: i ? 1 : 0, borderLeftColor: M.linie }}>
+              <Text style={{ ...zahlSchrift(22), color: M.text }}>{w.wert}</Text>
+              <Text style={etikett}>{w.titel}</Text>
             </View>
           ))}
         </View>
 
-        {abschnitt("Konto")}
+        <Abschnitt titel="Konto" />
         <Feld titel="Name">
           <MEingabe value={form.name} onChangeText={(t) => setForm({ ...form, name: t })} maxLength={40} />
         </Feld>
@@ -558,18 +574,11 @@ export function ZugangBlatt({ nutzer, alle, onSchliessen, onGeaendert }: { nutze
             <MEingabe value={form.email} onChangeText={(t) => setForm({ ...form, email: t })} autoCapitalize="none" keyboardType="email-address" editable={n.anbieter === "email"} />
           </Feld>
         </View>
-        {n.anbieter !== "email" ? <Text style={{ ...schrift.text, fontSize: 12.5, color: f.text3 }}>Meldet sich mit {n.anbieter === "apple" ? "Apple" : n.anbieter === "google" ? "Google" : n.anbieter} an – die E-Mail kommt von dort.</Text> : null}
+        {n.anbieter !== "email" ? <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>Meldet sich mit {anbieter} an – die E-Mail kommt von dort.</Text> : null}
 
-        {abschnitt("Zugehörigkeit")}
+        <Abschnitt titel="Zugehörigkeit" />
         <Feld titel="Rolle">
-          <Auswahl<Rolle>
-            wert={form.rolle}
-            onWechsel={(r) => setForm({ ...form, rolle: r })}
-            optionen={[
-              { id: "schueler", titel: "Fahrschüler", icon: "person" },
-              { id: "fahrlehrer", titel: "Fahrlehrer", icon: "school" },
-            ]}
-          />
+          <Auswahl<Rolle> wert={form.rolle} onWechsel={(r) => setForm({ ...form, rolle: r })} optionen={ROLLEN} />
         </Feld>
         <Feld titel="Führerscheinklasse">
           <KlassenWahl wert={form.klasse} onWechsel={(k) => setForm({ ...form, klasse: k })} />
@@ -581,15 +590,9 @@ export function ZugangBlatt({ nutzer, alle, onSchliessen, onGeaendert }: { nutze
         ) : (
           <Feld titel={`Fahrschüler (${schueler.length})`}>
             {schueler.length ? (
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-                {schueler.map((s) => (
-                  <View key={s.id} style={{ height: 30, paddingHorizontal: 11, borderRadius: 15, justifyContent: "center", backgroundColor: mitDeckkraft(BLAU, f.hell ? 0.08 : 0.14) }}>
-                    <Text style={{ ...schrift.textHalb, fontSize: 13, color: f.text }}>{nameVon(s)}</Text>
-                  </View>
-                ))}
-              </View>
+              <Text style={{ ...nf.text, fontSize: 14, lineHeight: 20, color: M.text }}>{schueler.map(nameVon).join(", ")}</Text>
             ) : (
-              <Text style={{ ...schrift.text, fontSize: 13.5, color: f.text3 }}>Noch keine Fahrschüler zugeordnet.</Text>
+              <Text style={{ ...nf.text, fontSize: 14, color: M.text3 }}>Noch keine Fahrschüler zugeordnet.</Text>
             )}
           </Feld>
         )}
@@ -597,95 +600,67 @@ export function ZugangBlatt({ nutzer, alle, onSchliessen, onGeaendert }: { nutze
         <Feld titel="Notiz (nur für dich)">
           <MEingabe mehrzeilig value={form.notiz} onChangeText={(t) => setForm({ ...form, notiz: t })} maxLength={500} placeholder="z. B. Theoriekurs März" />
         </Feld>
-        <MKnopf titel="Änderungen speichern" icon="checkmark" deaktiviert={!geaendert} laedt={laeuft === "sichern"} onPress={sichern} />
 
-        {abschnitt("Passwort")}
-        <PasswortFeld wert={passwort} onWechsel={setPasswort} />
-        <MKnopf titel="Neues Passwort setzen" icon="key" art="sekundaer" deaktiviert={!passwort} laedt={laeuft === "passwort"} onPress={passwortSetzen} />
+        <Abschnitt titel="Passwort" />
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <PasswortFeld wert={passwort} onWechsel={setPasswort} platzhalter="Neues Passwort" />
+          </View>
+          <MKnopf titel="Setzen" art="sekundaer" deaktiviert={!passwort} laedt={laeuft === "passwort"} onPress={passwortSetzen} />
+        </View>
 
-        {abschnitt("Zugang")}
+        <Abschnitt titel="Zugang" />
         {geschuetzt ? (
-          <Hinweis>{n.ich ? "Das ist dein eigenes Konto – das kannst du hier nicht pausieren, sperren oder löschen." : "Inhaber-Konten lassen sich nicht pausieren, sperren oder löschen."}</Hinweis>
+          <Text style={{ ...nf.text, fontSize: 14, lineHeight: 19, color: M.text3 }}>{n.ich ? "Das ist dein eigenes Konto – das kannst du hier nicht pausieren, sperren oder löschen." : "Inhaber-Konten lassen sich nicht pausieren, sperren oder löschen."}</Text>
         ) : n.status === "aktiv" ? (
-          <View style={{ gap: 12, padding: 16, borderRadius: 18, borderWidth: 1, borderColor: f.linie, backgroundColor: f.hell ? "#FFFFFF" : "rgba(255,255,255,0.03)" }}>
-            <Text style={{ ...schrift.textHalb, fontSize: 14.5, color: f.text }}>Pausieren</Text>
-            <Text style={{ ...schrift.text, fontSize: 13, lineHeight: 18, color: f.text3 }}>Der Lernstand bleibt, anmelden geht erst nach der Pause wieder – z. B. bei offener Rechnung oder Kurs-Pause.</Text>
+          <View style={{ gap: 10 }}>
+            <Text style={{ ...nf.text, fontSize: 13.5, lineHeight: 18, color: M.text3 }}>Beim Pausieren bleibt der Lernstand, anmelden geht erst danach wieder – z. B. bei offener Rechnung oder Kurs-Pause.</Text>
             <Auswahl wert={pause} onWechsel={setPause} optionen={PAUSE_TAGE.map((p) => ({ id: p.id, titel: p.titel }))} />
-            <View style={{ flexDirection: "row", gap: 10 }}>
-              <MKnopf titel="Pausieren" icon="pause" art="sekundaer" laedt={laeuft === "status"} onPress={pausieren} style={{ flex: 1 }} />
-              <MKnopf titel="Sperren" icon="ban" art="gefahr" onPress={sperren} style={{ flex: 1 }} />
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <MKnopf titel="Pausieren" icon="pause" art="sekundaer" laedt={laeuft === "status"} onPress={pausieren} />
+              <MKnopf titel="Sperren" icon="ban" art="gefahr" onPress={sperren} />
             </View>
           </View>
         ) : (
           <View style={{ gap: 10 }}>
-            <Hinweis art="fehler">
-              {n.status === "gesperrt" ? "Dieser Zugang ist gesperrt." : n.pausiert_bis ? `Pausiert bis ${datumText(n.pausiert_bis)}.` : "Pausiert, bis du die Pause aufhebst."}
-            </Hinweis>
-            <MKnopf titel={n.status === "gesperrt" ? "Zugang wieder freigeben" : "Pause aufheben"} icon="play" laedt={laeuft === "status"} onPress={freigeben} />
-            {n.status === "pausiert" ? <MKnopf titel="Stattdessen sperren" icon="ban" art="gefahr" onPress={sperren} /> : null}
+            <Text style={{ ...nf.text, fontSize: 14, color: M.text }}>{n.status === "gesperrt" ? "Dieser Zugang ist gesperrt." : n.pausiert_bis ? `Pausiert bis ${datumText(n.pausiert_bis)}.` : "Pausiert, bis du die Pause aufhebst."}</Text>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <MKnopf titel={n.status === "gesperrt" ? "Wieder freigeben" : "Pause aufheben"} icon="play" art="sekundaer" laedt={laeuft === "status"} onPress={freigeben} />
+              {n.status === "pausiert" ? <MKnopf titel="Stattdessen sperren" icon="ban" art="gefahr" onPress={sperren} /> : null}
+            </View>
           </View>
         )}
 
-        {abschnitt("Info")}
-        <View style={{ gap: 8 }}>
+        <Abschnitt titel="Info" />
+        <View>
           {[
             ["Angelegt", datumText(n.erstellt_am)],
             ["Zuletzt angemeldet", wannText(n.zuletzt_aktiv)],
-            ["Anmeldung über", n.anbieter === "email" ? "E-Mail & Passwort" : n.anbieter === "apple" ? "Apple" : n.anbieter === "google" ? "Google" : n.anbieter],
+            ["Anmeldung über", anbieter],
             ["E-Mail bestätigt", n.bestaetigt ? "Ja" : "Nein"],
-            ["Rolle", n.inhaber ? "Inhaber" : ROLLE_TEXT[n.rolle]],
           ].map(([k, w]) => (
-            <View key={k} style={{ flexDirection: "row", justifyContent: "space-between", gap: 10 }}>
-              <Text style={{ ...schrift.text, fontSize: 13.5, color: f.text3 }}>{k}</Text>
-              <Text style={{ ...schrift.textHalb, fontSize: 13.5, color: f.text }}>{w}</Text>
+            <View key={k} style={{ flexDirection: "row", justifyContent: "space-between", gap: 10, height: 30, alignItems: "center" }}>
+              <Text style={{ ...nf.text, fontSize: 13.5, color: M.text3 }}>{k}</Text>
+              <Text style={{ ...nf.text, fontSize: 13.5, color: M.text }}>{w}</Text>
             </View>
           ))}
         </View>
 
         {geschuetzt ? null : (
-          <Pressable
-            onPress={loeschen}
-            disabled={laeuft === "loeschen"}
-            style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 44, marginTop: 10, borderRadius: 22, borderWidth: 1, borderColor: mitDeckkraft(rot, 0.4), backgroundColor: z.hovered ? mitDeckkraft(rot, 0.08) : "transparent" })}
-          >
-            <Icon name="trash-outline" size={16} color={rot} />
-            <Text style={{ ...schrift.textHalb, fontSize: 14.5, color: rot }}>{laeuft === "loeschen" ? "Wird gelöscht …" : "Konto löschen"}</Text>
+          <Pressable onPress={loeschen} disabled={laeuft === "loeschen"} style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "flex-start", height: 32, paddingHorizontal: 8, marginLeft: -8, marginTop: 4, borderRadius: 7, backgroundColor: z.hovered ? M.hover : "transparent" })}>
+            <Icon name="trash-outline" size={15} color={M.rot} />
+            <Text style={{ ...nf.halb, fontSize: 14, color: M.rot }}>{laeuft === "loeschen" ? "Wird gelöscht …" : "Konto löschen"}</Text>
           </Pressable>
         )}
       </ScrollView>
-    </SeitenBlatt>
-  );
-}
 
-/** Kleine Liste für die Übersicht: Fahrlehrer mit Anzahl ihrer Fahrschüler. */
-export function LehrerUebersicht({ nutzer, onWaehlen }: { nutzer: ManagerNutzer[]; onWaehlen: (id: string) => void }) {
-  const f = useFarbwelt();
-  const lehrer = nutzer.filter((n) => n.rolle === "fahrlehrer");
-  return (
-    <MKarte titel="Fahrlehrer" style={{ flex: 1, minWidth: 300 }}>
-      {lehrer.length === 0 ? (
-        <Text style={{ ...schrift.text, fontSize: 13.5, color: f.text3 }}>Noch keine Fahrlehrer. Leg einen Zugang mit der Rolle „Fahrlehrer“ an.</Text>
-      ) : (
-        <View style={{ gap: 4 }}>
-          {lehrer.map((l) => {
-            const anzahl = nutzer.filter((s) => s.fahrlehrer_id === l.id).length;
-            return (
-              <Pressable
-                key={l.id}
-                onPress={() => onWaehlen(l.id)}
-                style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 12, padding: 8, borderRadius: 14, backgroundColor: z.hovered ? (f.hell ? "#FAF7F2" : "rgba(255,255,255,0.04)") : "transparent" })}
-              >
-                <NutzerBild pfad={l.bild_pfad} name={nameVon(l)} farbe={l.avatar_farbe ?? undefined} groesse={34} />
-                <Text style={{ flex: 1, ...schrift.textHalb, fontSize: 14, color: f.text }} numberOfLines={1}>
-                  {nameVon(l)}
-                </Text>
-                <Text style={{ ...schrift.textMittel, fontSize: 13, color: f.text3 }}>{anzahl === 1 ? "1 Schüler" : `${anzahl} Schüler`}</Text>
-                <Icon name="chevron-forward" size={15} color={f.text3} />
-              </Pressable>
-            );
-          })}
+      {geaendert ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 20, height: 56, borderTopWidth: 1, borderTopColor: M.linie, backgroundColor: M.flaeche2 }}>
+          <Text style={{ flex: 1, ...nf.text, fontSize: 13.5, color: M.text2 }}>Ungespeicherte Änderungen</Text>
+          <MKnopf titel="Verwerfen" art="leise" onPress={verwerfen} />
+          <MKnopf titel="Speichern" laedt={laeuft === "sichern"} onPress={sichern} />
         </View>
-      )}
-    </MKarte>
+      ) : null}
+    </SeitenBlatt>
   );
 }

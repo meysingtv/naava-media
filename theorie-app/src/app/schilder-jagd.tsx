@@ -13,7 +13,8 @@ import { ShieldWarningIcon } from "phosphor-react-native/src/icons/ShieldWarning
 import { TargetIcon } from "phosphor-react-native/src/icons/Target";
 import { TrophyIcon } from "phosphor-react-native/src/icons/Trophy";
 
-import { useFenster } from "@/lib/fenster";
+import { useDesktop, useFenster } from "@/lib/fenster";
+import { SchilderJagdWeb } from "@/components/web/schilder-jagd-web";
 import { GlasGrund, GlasKarte } from "@/components/glas-flaeche";
 import { GrossKopf, Seite } from "@/components/seite";
 import { Knopf, Segment, T } from "@/components/ui";
@@ -44,6 +45,11 @@ function infoVon(key: ZeichenKey): ZeichenInfo | undefined {
 }
 
 export default function SchilderJagd() {
+  // Im Browser am PC eine eigene Fassung (web/schilder-jagd-web.tsx).
+  return useDesktop() ? <SchilderJagdWeb /> : <SchilderJagdHandy />;
+}
+
+function SchilderJagdHandy() {
   const insets = useSafeAreaInsets();
   const { width } = useFenster();
   const { stand } = useStand();

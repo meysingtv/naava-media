@@ -7,6 +7,8 @@ import { dialog } from "@/components/dialog";
 import { Icon } from "@/components/icon";
 import { FotoKopf, Seite } from "@/components/seite";
 import { Eingabe, Knopf, T } from "@/components/ui";
+import { CrewBeitretenWeb } from "@/components/web/crew-web";
+import { useDesktop } from "@/lib/fenster";
 import { codeFormatieren, useCrew } from "@/lib/crew";
 import { useDarstellung } from "@/lib/darstellung";
 import { FOTOS } from "@/lib/fotos";
@@ -21,6 +23,8 @@ export default function CrewBeitreten() {
   const { moeglich, daten, beitreten } = useCrew();
   const [code, setCode] = useState(codeFormatieren(params.crew ?? ""));
   const [laeuft, setLaeuft] = useState(false);
+  // Im Browser am PC: eigene Fassung (web/crew-web.tsx).
+  const desktop = useDesktop();
   const vollstaendig = code.replace("-", "").length === 8;
   const schonDrin = Boolean(daten?.crew);
 
@@ -39,6 +43,8 @@ export default function CrewBeitreten() {
     erfolg();
     router.replace("/crew");
   }
+
+  if (desktop) return <CrewBeitretenWeb code={code} onCode={(t) => setCode(codeFormatieren(t))} laeuft={laeuft} onBeitreten={los} moeglich={moeglich} schonDrin={daten?.crew ?? null} />;
 
   return (
     <Seite>

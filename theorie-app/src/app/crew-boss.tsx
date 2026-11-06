@@ -16,6 +16,8 @@ import { Icon } from "@/components/icon";
 import { NutzerBild } from "@/components/profilbild";
 import { Seite } from "@/components/seite";
 import { Gruppe, kartenFlaeche, Kopf, kopfOben, KopfTaste, zurueck, type IconName } from "@/components/ui";
+import { CrewBossWeb } from "@/components/web/crew-boss-web";
+import { useDesktop } from "@/lib/fenster";
 import { bossVon, HEILUNG_FALSCH, SCHADEN_RICHTIG, useCrew, XP_TRUHE, type CrewBoss, type CrewEreignis, type CrewMitglied } from "@/lib/crew";
 import { useDarstellung, useFarbwelt } from "@/lib/darstellung";
 import { themaFoto } from "@/lib/fotos";
@@ -472,7 +474,9 @@ function Ueberschrift({ titel, rechts }: { titel: string; rechts?: ReactNode }) 
 export default function CrewBoss() {
   const insets = useSafeAreaInsets();
   const { farbwelt: f, belohnungen } = useDarstellung();
-  const { daten, laedt, neuLaden, belohnungenAbholen } = useCrew();
+  const { daten, laedt, neuLaden, belohnungenAbholen, moeglich } = useCrew();
+  // Im Browser am PC: eigene Fassung (web/crew-boss-web.tsx).
+  const desktop = useDesktop();
 
   useFocusEffect(
     useCallback(() => {
@@ -487,6 +491,30 @@ export default function CrewBoss() {
   useEffect(() => {
     if (daten && !daten.crew) router.replace("/crew");
   }, [daten]);
+
+  async function abholen() {
+    const xp = await belohnungenAbholen();
+    if (xp > 0) {
+      erfolg();
+      dialog("Belohnung abgeholt!", belohnungen ? `+${xp} XP und das Abzeichen „Bossbezwinger“ gehören dir.` : "Das Abzeichen „Bossbezwinger“ gehört dir.");
+    }
+  }
+
+  if (desktop) {
+    const kampf = boss && daten ? schadenListe(daten.mitglieder ?? [], daten.ereignisse ?? [], new Date(`${boss.woche}T00:00:00`).getTime()) : null;
+    return (
+      <CrewBossWeb
+        daten={daten}
+        moeglich={moeglich}
+        kampf={kampf}
+        kalenderwoche={boss ? kalenderwoche(boss.woche) : 0}
+        rest={boss ? restZeit(boss.bis) : ""}
+        belohnungen={belohnungen}
+        onAbholen={abholen}
+      />
+    );
+  }
+
   if (!boss || !daten?.crew)
     return (
       <Seite>
@@ -502,14 +530,6 @@ export default function CrewBoss() {
   const geschafft = boss.hp_max > 0 ? Math.round(((boss.hp_max - boss.hp) / boss.hp_max) * 100) : 0;
   const truhen = daten.belohnungen ?? 0;
   const ichId = daten.mitglieder?.find((m) => m.ich)?.id;
-
-  async function abholen() {
-    const xp = await belohnungenAbholen();
-    if (xp > 0) {
-      erfolg();
-      dialog("Belohnung abgeholt!", belohnungen ? `+${xp} XP und das Abzeichen „Bossbezwinger“ gehören dir.` : "Das Abzeichen „Bossbezwinger“ gehört dir.");
-    }
-  }
 
   return (
     <Seite>

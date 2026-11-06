@@ -18,69 +18,15 @@ import { Kopfzeile } from "@/components/home";
 import { GlasGrund, GlasKarte } from "@/components/glas-flaeche";
 import { GrossKopf, Seite } from "@/components/seite";
 import { KopfTaste, Segment } from "@/components/ui";
-import { useFenster } from "@/lib/fenster";
+import { StatistikWeb } from "@/components/web/statistik-web";
+import { useDesktop, useFenster } from "@/lib/fenster";
 import { useDarstellung, useFarbwelt } from "@/lib/darstellung";
 import { themaFoto } from "@/lib/fotos";
 import { THEMEN, themaVon, type ThemaId } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
-import { auswertung, fortschritt, lernzeitText, serieAktuell, tagKey, useStand, wochenStart, type Stand, type Zeitraum } from "@/lib/stand";
+import { auswertung, fortschritt, lernzeitText, serieAktuell, useStand, type Zeitraum } from "@/lib/stand";
+import { aktivitaet, ampelVon, quote, REIF, type Ampel, type Saeule } from "@/lib/statistik";
 import { leuchten, mitDeckkraft, RAND, schrift, verlauf } from "@/lib/theme";
-
-/** Ab diesem Anteil sicherer Fragen gilt man als prüfungsreif. */
-const REIF = 0.9;
-
-const MONATE = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
-
-type Saeule = { label: string; wert: number };
-
-function tagVerschoben(basis: Date, tage: number): Date {
-  const d = new Date(basis);
-  d.setDate(d.getDate() + tage);
-  return d;
-}
-
-/** Beantwortete Fragen als Säulen: Woche = Tage, Monat = Wochen, Gesamt = Monate. */
-function aktivitaet(s: Stand, zeitraum: Zeitraum): Saeule[] {
-  const antworten = (d: Date) => s.antwortenTage[tagKey(d)] ?? 0;
-  if (zeitraum === "woche") {
-    const start = wochenStart();
-    return ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((label, i) => ({ label, wert: antworten(tagVerschoben(start, i)) }));
-  }
-  if (zeitraum === "monat") {
-    const start = wochenStart();
-    return [3, 2, 1, 0].map((zurueck) => {
-      const montag = tagVerschoben(start, -7 * zurueck);
-      let summe = 0;
-      for (let i = 0; i < 7; i++) summe += antworten(tagVerschoben(montag, i));
-      return { label: zurueck === 0 ? "Diese" : `−${zurueck} W`, wert: summe };
-    });
-  }
-  const heute = new Date();
-  return [5, 4, 3, 2, 1, 0].map((zurueck) => {
-    const m = new Date(heute.getFullYear(), heute.getMonth() - zurueck, 1);
-    let summe = 0;
-    for (const [tag, n] of Object.entries(s.antwortenTage)) {
-      const [j, mo] = tag.split("-").map(Number);
-      if (j === m.getFullYear() && mo === m.getMonth() + 1) summe += n;
-    }
-    return { label: MONATE[m.getMonth()], wert: summe };
-  });
-}
-
-/** Erfolgsquote über einen Tagesbereich (0 = heute). */
-function quote(s: Stand, vonTagen: number, bisTagen: number): number | null {
-  let r = 0;
-  let f = 0;
-  for (let i = vonTagen; i < bisTagen; i++) {
-    const t = s.themaTage[tagKey(tagVerschoben(new Date(), -i))];
-    if (!t) continue;
-    for (const [rr, ff] of Object.values(t)) {
-      r += rr ?? 0;
-      f += ff ?? 0;
-    }
-  }
-  return r + f > 0 ? r / (r + f) : null;
-}
 
 /** Kleine Kennzahl: Icon im getönten Kreis, Zahl, Label. */
 function Kennzahl({ symbol: S, farbe, wert, label, wertFarbe }: { symbol: PhosphorIcon; farbe: string; wert: string; label: string; wertFarbe?: string }) {
@@ -156,16 +102,11 @@ function PruefungsreifeKarte({ anteil, richtig, gesamt, tagesziel }: { anteil: n
   );
 }
 
-type Ampel = "sitzt" | "fast" | "ueben";
 const AMPEL: Record<Ampel, { titel: string; farbe: string; symbol: PhosphorIcon; text: string }> = {
   sitzt: { titel: "Sitzt", farbe: "#4ED053", symbol: CheckCircleIcon, text: "75 % und mehr richtig" },
   fast: { titel: "Fast", farbe: "#FFB400", symbol: TargetIcon, text: "Noch etwas Übung" },
   ueben: { titel: "Üben", farbe: "#FF4A3D", symbol: BarbellIcon, text: "Hier lohnt sich Training" },
 };
-
-function ampelVon(quote: number): Ampel {
-  return quote >= 0.75 ? "sitzt" : quote >= 0.4 ? "fast" : "ueben";
-}
 
 /** Ein Thema als weiche Zeile: Foto, Titel, Balken in Ampelfarbe, Prozent. */
 function ThemaZeile({ thema, quote, geuebt }: { thema: ThemaId; quote: number; geuebt: boolean }) {
@@ -265,6 +206,10 @@ function Diagramm({ saeulen }: { saeulen: Saeule[] }) {
 }
 
 export default function MeinFortschritt() {
+  return useDesktop() ? <StatistikWeb /> : <MeinFortschrittHandy />;
+}
+
+function MeinFortschrittHandy() {
   const insets = useSafeAreaInsets();
   const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();

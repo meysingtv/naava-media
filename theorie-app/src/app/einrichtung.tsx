@@ -24,9 +24,11 @@ import { GlasGrund, GlasKarte } from "@/components/glas-flaeche";
 import { Schalter } from "@/components/schalter";
 import { Seite } from "@/components/seite";
 import { tourStarten } from "@/components/tour";
+import { EinrichtungWeb } from "@/components/web/einrichtung-web";
 import { useDarstellung, useFarbwelt, type Darstellung, type Farbwelt } from "@/lib/darstellung";
 import { einrichtungErledigt } from "@/lib/einrichtung";
 import { erinnerungPlanen } from "@/lib/erinnerung";
+import { useDesktop } from "@/lib/fenster";
 import { erfolg, tippen } from "@/lib/haptik";
 import { HAUPT_KLASSEN, KLASSEN } from "@/lib/klassen";
 import { useKonto } from "@/lib/konto";
@@ -569,6 +571,8 @@ function Inhalt() {
   const blende = useRef(new Animated.Value(1)).current;
   const liste = useRef<ScrollView>(null);
   const vorname = (anzeigeName ?? "").trim().split(/\s+/)[0] ?? "";
+  // Im Browser am PC: breite Karte mit Schritt-Anzeige (web/einrichtung-web.tsx).
+  const desktop = useDesktop();
 
   // Empfohlen ist immer „Normal“.
   const empfohlen = 30;
@@ -630,6 +634,40 @@ function Inhalt() {
     const d = new Date(iso);
     return `${TAGE_KURZ[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}., ${zwei(stunde)}:00`;
   })();
+
+  if (desktop) {
+    return (
+      <EinrichtungWeb
+        schritt={schritt}
+        onSchritt={setSchritt}
+        klasse={klasse}
+        onKlasse={setKlasse}
+        termin={termin}
+        keinTermin={keinTermin}
+        stunde={stunde}
+        onTermin={(d) => {
+          setTermin(d);
+          setKeinTermin(false);
+        }}
+        onKein={setKeinTermin}
+        onStunde={setStunde}
+        uhrzeiten={UHRZEITEN}
+        ziele={ZIELE}
+        ziel={tagesziel}
+        empfohlen={empfohlen}
+        onZiel={setZiel}
+        erinnerung={erinnerung}
+        onErinnerung={setErinnerung}
+        darstellung={darstellung}
+        onDarstellung={darstellungSetzen}
+        vorname={vorname}
+        terminText={terminText}
+        // Die App-Tour zeigt auf Stellen der Handy-Ansicht – am PC ohne Tour.
+        onFertig={() => abschliessen(false)}
+        onSpaeter={ueberspringen}
+      />
+    );
+  }
 
   const weiterTitel = ["Weiter", termin || keinTermin ? "Weiter" : "Datum wählen", "Weiter", "Fertig", zurueck ? "Weiter" : "Tour starten"][schritt];
   const weiterAus = schritt === 1 && !termin && !keinTermin;

@@ -1,13 +1,17 @@
 import type { ReactNode } from "react";
-import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { Platform, StyleSheet, useWindowDimensions, View, type StyleProp, type ViewStyle } from "react-native";
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { LinearGradient } from "expo-linear-gradient";
+
+import { B } from "@/components/web/bunt";
+import { istDesktop } from "@/lib/fenster";
 
 /**
  * Liquid Glass wie in iOS 26/27. Ohne Liquid Glass (Android, ältere iPhones,
  * Web) nachgebaut: durchscheinende Fläche mit Glanz von oben und heller
  * Lichtkante. Bewusst ohne Unschärfe – das Glas liegt über Video und Kamera,
  * und die kann die Android-Unschärfe nicht erfassen (das Glas würde schwarz).
+ * Im Browser am PC gibt es kein Glas: dort eine feste, ruhige Fläche.
  */
 export function Glas({
   style,
@@ -42,6 +46,26 @@ export function Glas({
       >
         {children}
       </GlassView>
+    );
+  }
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- Plattform ändert sich zur Laufzeit nicht
+  const desktop = istDesktop(useWindowDimensions().width);
+  if (desktop) {
+    return (
+      <View
+        pointerEvents={pointerEvents}
+        style={[
+          {
+            overflow: "hidden",
+            backgroundColor: toenung ?? (hell ? B.flaeche : "rgba(16,18,22,0.78)"),
+            borderWidth: 1,
+            borderColor: hell ? B.linie : "rgba(255,255,255,0.12)",
+          },
+          style,
+        ]}
+      >
+        {children}
+      </View>
     );
   }
   const radius = Number(StyleSheet.flatten(style)?.borderRadius ?? 0);

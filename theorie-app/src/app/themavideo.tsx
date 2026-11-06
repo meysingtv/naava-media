@@ -8,6 +8,8 @@ import { FrageKopf, GlasRund, KopfPille } from "@/components/frage-rahmen";
 import { Icon } from "@/components/icon";
 import { Lader } from "@/components/lader";
 import { Seite } from "@/components/seite";
+import { ThemavideoWeb } from "@/components/web/video-web";
+import { useDesktop } from "@/lib/fenster";
 import { kopfOben } from "@/components/ui";
 import { themaFoto } from "@/lib/fotos";
 import { themaVon, type ThemaId } from "@/lib/fragen";
@@ -43,6 +45,11 @@ function Spieler({ url }: { url: string }) {
 }
 
 export default function ThemavideoSeite() {
+  // Im Browser am PC eine eigene Fassung (web/video-web.tsx).
+  return useDesktop() ? <ThemavideoWeb /> : <ThemavideoHandy />;
+}
+
+function ThemavideoHandy() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { geladen, videos } = useThemenvideos();

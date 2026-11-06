@@ -3,12 +3,11 @@ import { Pressable, Text, View } from "react-native";
 
 import { dialog } from "@/components/dialog";
 import { Icon } from "@/components/icon";
-import { Auswahl, Drehung, Fenster, Hinweis, MEingabe, mFlaeche, MKarte, MKnopf, rotVon, type Zustand } from "@/components/manager-teile";
-import { useFarbwelt } from "@/lib/darstellung";
+import { Drehung, Fenster, Hinweis, IconTaste, MEingabe, mFlaeche, MKnopf, Reiter, Tafel, M, type Zustand } from "@/components/manager-teile";
+import { n as nf } from "@/components/web/bunt";
 import { erklaervideoHochladenDatei, erklaervideoLoeschen, erklaervideoUrl, useErklaervideos } from "@/lib/erklaervideos";
 import { FRAGEN, THEMEN, themaVon, type ThemaId } from "@/lib/fragen";
 import { themavideoHochladen, themavideoLoeschen, themavideoUmbenennen, themavideoUrl, themavideoVerschieben, useThemenvideos, type Themavideo } from "@/lib/themenvideos";
-import { mitDeckkraft, schrift } from "@/lib/theme";
 import { videoDauer, videoPruefen } from "@/lib/web-hochladen";
 
 // Videos im Manager (nur im Browser): Videos zu ganzen Themen – mehrere je
@@ -66,17 +65,13 @@ function dauerText(s: number | null): string {
 }
 
 /** Vorschaubild: erstes Bild des Videos. */
-function Vorschau({ url, breite = 168, onPress }: { url: string; breite?: number; onPress?: () => void }) {
-  const f = useFarbwelt();
+function Vorschau({ url, breite = 160, onPress }: { url: string; breite?: number; onPress?: () => void }) {
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel="Video ansehen" style={(z: Zustand) => ({ width: breite, height: (breite * 9) / 16, borderRadius: 12, overflow: "hidden", backgroundColor: "#0B0E12", opacity: z.hovered ? 0.88 : 1 })}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel="Video ansehen" style={(z: Zustand) => ({ width: breite, height: (breite * 9) / 16, borderRadius: 6, overflow: "hidden", backgroundColor: "#0B0E12", opacity: z.hovered ? 0.85 : 1 })}>
       <video src={`${url}#t=0.4`} preload="metadata" muted playsInline style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
-      <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
-        <View style={{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.45)", borderWidth: 1, borderColor: "rgba(255,255,255,0.4)" }}>
-          <Icon name="play" size={16} color="#FFFFFF" />
-        </View>
+      <View style={{ position: "absolute", left: 6, bottom: 6, width: 22, height: 22, borderRadius: 5, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.55)" }}>
+        <Icon name="play" size={11} color="#FFFFFF" />
       </View>
-      <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 2, backgroundColor: mitDeckkraft(f.orange, 0.8) }} />
     </Pressable>
   );
 }
@@ -84,15 +79,14 @@ function Vorschau({ url, breite = 168, onPress }: { url: string; breite?: number
 function Abspielen({ url, titel, onSchliessen }: { url: string | null; titel: string; onSchliessen: () => void }) {
   return (
     <Fenster offen={!!url} onSchliessen={onSchliessen} titel={titel} breite={860}>
-      {url ? <video src={url} controls autoPlay playsInline style={{ width: "100%", maxHeight: "70vh", borderRadius: 16, background: "#000" }} /> : null}
+      {url ? <video src={url} controls autoPlay playsInline style={{ width: "100%", maxHeight: "70vh", borderRadius: 8, background: "#000" }} /> : null}
     </Fenster>
   );
 }
 
 /** Fläche zum Ablegen oder Auswählen eines Videos. */
-function Ablage({ onDatei, klein }: { onDatei: (d: File) => void; klein?: boolean }) {
-  const f = useFarbwelt();
-  const { ref, drueber } = useAblage(onDatei);
+function Ablage({ onDatei }: { onDatei: (d: File) => void }) {
+    const { ref, drueber } = useAblage(onDatei);
   return (
     <Pressable
       ref={ref}
@@ -101,40 +95,40 @@ function Ablage({ onDatei, klein }: { onDatei: (d: File) => void; klein?: boolea
         if (d) onDatei(d);
       }}
       style={(z: Zustand) => ({
+        flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        paddingVertical: klein ? 18 : 30,
-        borderRadius: 18,
-        borderWidth: 1.5,
+        gap: 12,
+        paddingHorizontal: 16,
+        height: 64,
+        borderRadius: 8,
+        borderWidth: 1,
         borderStyle: "dashed",
-        borderColor: drueber || z.hovered ? f.orange : f.hell ? "rgba(20,23,27,0.18)" : "rgba(255,255,255,0.18)",
-        backgroundColor: drueber ? f.orangeSoft : z.hovered ? (f.hell ? "#FFFBF6" : "rgba(252,91,14,0.05)") : f.hell ? "#FBFAF7" : "rgba(255,255,255,0.02)",
+        borderColor: drueber ? M.orange : z.hovered ? M.text3 : M.linieStark,
+        backgroundColor: drueber ? M.orangeSoft : z.hovered ? M.hover : M.flaeche2,
       })}
     >
-      <View style={{ width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center", backgroundColor: f.orangeSoft }}>
-        <Icon name="cloud-upload-outline" size={22} color={f.orange} />
+      <Icon name="cloud-upload-outline" size={18} color={drueber ? M.orange : M.text2} />
+      <View style={{ flex: 1 }}>
+        <Text style={{ ...nf.halb, fontSize: 14, color: M.text }}>{drueber ? "Loslassen zum Hochladen" : "Video hierher ziehen oder klicken"}</Text>
+        <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>MP4 oder MOV · bis 50 MB · Hochformat oder 16:9</Text>
       </View>
-      <Text style={{ ...schrift.textHalb, fontSize: 14.5, color: f.text }}>{drueber ? "Loslassen zum Hochladen" : "Video hierher ziehen oder klicken"}</Text>
-      <Text style={{ ...schrift.text, fontSize: 12.5, color: f.text3 }}>MP4 oder MOV · bis 50 MB · am besten Hochformat oder 16:9</Text>
     </Pressable>
   );
 }
 
 function Fortschritt({ anteil, text, onAbbrechen }: { anteil: number; text: string; onAbbrechen?: () => void }) {
-  const f = useFarbwelt();
-  return (
+    return (
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <Drehung farbe={f.orange} />
-        <Text style={{ flex: 1, ...schrift.textHalb, fontSize: 13.5, color: f.text }} numberOfLines={1}>
+        <Drehung farbe={M.text2} groesse={14} />
+        <Text style={{ flex: 1, ...nf.text, fontSize: 14, color: M.text }} numberOfLines={1}>
           {text}
         </Text>
-        <Text style={{ ...schrift.textHalb, fontSize: 13.5, color: f.text2, fontVariant: ["tabular-nums"] }}>{Math.round(anteil * 100)} %</Text>
+        <Text style={{ ...nf.halb, fontSize: 14, color: M.text2, fontVariant: ["tabular-nums"] }}>{Math.round(anteil * 100)} %</Text>
         {onAbbrechen ? <MKnopf titel="Abbrechen" art="leise" onPress={onAbbrechen} /> : null}
       </View>
-      <View style={{ height: 6, borderRadius: 3, backgroundColor: f.hell ? "rgba(20,23,27,0.07)" : "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-        <View style={{ width: `${Math.round(anteil * 100)}%`, height: "100%", backgroundColor: f.orange, borderRadius: 3 }} />
+      <View style={{ height: 4, borderRadius: 2, backgroundColor: M.flaeche2, overflow: "hidden" }}>
+        <View style={{ width: `${Math.round(anteil * 100)}%`, height: "100%", backgroundColor: M.orange }} />
       </View>
     </View>
   );
@@ -147,8 +141,7 @@ function Fortschritt({ anteil, text, onAbbrechen }: { anteil: number; text: stri
 type Upload = { datei: File; titel: string; dauer: number | null; anteil: number; laeuft: boolean };
 
 function ThemenVideos() {
-  const f = useFarbwelt();
-  const { videos } = useThemenvideos();
+    const { videos } = useThemenvideos();
   const [thema, setThema] = useState<ThemaId>(THEMEN[0].id);
   const [upload, setUpload] = useState<Upload | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
@@ -156,7 +149,7 @@ function ThemenVideos() {
   const [umbenennen, setUmbenennen] = useState<{ id: string; titel: string } | null>(null);
   const abbruch = useRef<{ aktuell: (() => void) | null }>({ aktuell: null });
 
-  const zahl = (id: string) => videos.filter((v) => v.thema_id === id).length;
+  const anzahl = (id: string) => videos.filter((v) => v.thema_id === id).length;
   const liste = videos.filter((v) => v.thema_id === thema);
   const t = themaVon(thema);
 
@@ -207,10 +200,10 @@ function ThemenVideos() {
 
   return (
     <View style={{ flexDirection: "row", gap: 20, alignItems: "flex-start" }}>
-      <View style={[{ width: 260, borderRadius: 22, padding: 8 }, mFlaeche(f)]}>
+      <View style={[mFlaeche(), { width: 250, paddingVertical: 6, overflow: "hidden" }]}>
         {THEMEN.map((th) => {
           const aktiv = th.id === thema;
-          const n = zahl(th.id);
+          const n = anzahl(th.id);
           return (
             <Pressable
               key={th.id}
@@ -219,109 +212,81 @@ function ThemenVideos() {
                 setUpload(null);
                 setFehler(null);
               }}
-              style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 11, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, backgroundColor: aktiv ? f.orangeSoft : z.hovered ? (f.hell ? "#FAF7F2" : "rgba(255,255,255,0.04)") : "transparent" })}
+              style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, height: 36, backgroundColor: aktiv ? M.orangeSoft : z.hovered ? M.hover : "transparent" })}
             >
-              <Icon name={th.icon} size={18} color={aktiv ? f.orange : f.text2} />
-              <Text style={{ flex: 1, ...schrift.textHalb, fontSize: 14, color: aktiv ? f.orange : f.text }} numberOfLines={1}>
+              <Icon name={th.icon} size={15} color={aktiv ? M.orange : M.text3} />
+              <Text style={{ flex: 1, ...(aktiv ? nf.fett : nf.text), fontSize: 14, color: aktiv ? M.text : M.text2 }} numberOfLines={1}>
                 {th.titel}
               </Text>
-              {n ? (
-                <View style={{ minWidth: 22, height: 22, paddingHorizontal: 6, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: aktiv ? f.orange : f.hell ? "rgba(20,23,27,0.07)" : "rgba(255,255,255,0.1)" }}>
-                  <Text style={{ ...schrift.textFett, fontSize: 11.5, color: aktiv ? "#FFFFFF" : f.text2 }}>{n}</Text>
-                </View>
-              ) : null}
+              <Text style={{ ...nf.halb, fontSize: 12.5, color: n ? M.text2 : M.text3, fontVariant: ["tabular-nums"] }}>{n || "–"}</Text>
             </Pressable>
           );
         })}
       </View>
 
-      <MKarte style={{ flex: 1, gap: 18 }}>
-        <View style={{ gap: 4 }}>
-          <Text style={{ ...schrift.titel, fontSize: 22, letterSpacing: -0.4, color: f.text }}>{t.titel}</Text>
-          <Text style={{ ...schrift.text, fontSize: 14, color: f.text3 }}>{t.kurz} · erscheint auf der Themenseite in der App</Text>
+      <Tafel titel={t.titel} rechts={<Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>erscheint auf der Themenseite</Text>} style={{ flex: 1, minWidth: 0 }} innen={false}>
+        <View style={{ padding: 16, gap: 12, borderBottomWidth: liste.length ? 1 : 0, borderBottomColor: M.linie }}>
+          {upload ? (
+            <View style={{ gap: 12 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <Icon name="film-outline" size={16} color={M.text2} />
+                <Text style={{ flex: 1, ...nf.halb, fontSize: 14, color: M.text }} numberOfLines={1}>
+                  {upload.datei.name}
+                </Text>
+                <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>
+                  {Math.round(upload.datei.size / 1024 / 1024)} MB{upload.dauer ? ` · ${dauerText(upload.dauer)}` : ""}
+                </Text>
+              </View>
+              {upload.laeuft ? (
+                <Fortschritt anteil={upload.anteil} text="Wird hochgeladen …" onAbbrechen={() => abbruch.current.aktuell?.()} />
+              ) : (
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <View style={{ flex: 1 }}>
+                    <MEingabe placeholder="Titel, z. B. „Rechts vor links in 2 Minuten“" value={upload.titel} onChangeText={(titel) => setUpload({ ...upload, titel })} maxLength={80} />
+                  </View>
+                  <MKnopf titel="Verwerfen" art="leise" onPress={() => setUpload(null)} />
+                  <MKnopf titel="Hochladen" onPress={hochladen} />
+                </View>
+              )}
+            </View>
+          ) : (
+            <Ablage onDatei={datei} />
+          )}
+          {fehler ? <Hinweis art="fehler">{fehler}</Hinweis> : null}
+          {liste.length === 0 && !upload ? <Text style={{ ...nf.text, fontSize: 14, color: M.text3 }}>Noch keine Videos zu diesem Thema.</Text> : null}
         </View>
 
-        {upload ? (
-          <View style={{ gap: 14, padding: 16, borderRadius: 18, borderWidth: 1, borderColor: f.linie, backgroundColor: f.hell ? "#FBFAF7" : "rgba(255,255,255,0.03)" }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-              <Icon name="film-outline" size={18} color={f.orange} />
-              <Text style={{ flex: 1, ...schrift.textHalb, fontSize: 14, color: f.text }} numberOfLines={1}>
-                {upload.datei.name}
-              </Text>
-              <Text style={{ ...schrift.textMittel, fontSize: 13, color: f.text3 }}>
-                {Math.round(upload.datei.size / 1024 / 1024)} MB{upload.dauer ? ` · ${dauerText(upload.dauer)}` : ""}
-              </Text>
+        {liste.map((v, i) => (
+          <View key={v.id} style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, paddingVertical: 10, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: M.linie }}>
+            <Text style={{ width: 16, ...nf.halb, fontSize: 13, color: M.text3, fontVariant: ["tabular-nums"] }}>{i + 1}</Text>
+            <Vorschau url={themavideoUrl(v.pfad)} breite={128} onPress={() => setAnsehen(v)} />
+            <View style={{ flex: 1, gap: 3 }}>
+              {umbenennen?.id === v.id ? (
+                <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+                  <View style={{ flex: 1 }}>
+                    <MEingabe value={umbenennen.titel} onChangeText={(titel) => setUmbenennen({ id: v.id, titel })} maxLength={80} autoFocus onSubmitEditing={umbenennenSichern} />
+                  </View>
+                  <MKnopf titel="Abbrechen" art="leise" onPress={() => setUmbenennen(null)} />
+                  <MKnopf titel="Sichern" onPress={umbenennenSichern} />
+                </View>
+              ) : (
+                <Text style={{ ...nf.halb, fontSize: 14.5, color: M.text }} numberOfLines={2}>
+                  {v.titel}
+                </Text>
+              )}
+              <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>{[dauerText(v.dauer), new Date(v.erstellt_am).toLocaleDateString("de-DE")].filter(Boolean).join(" · ")}</Text>
             </View>
-            {upload.laeuft ? (
-              <Fortschritt anteil={upload.anteil} text="Wird hochgeladen …" onAbbrechen={() => abbruch.current.aktuell?.()} />
-            ) : (
-              <>
-                <MEingabe placeholder="Titel, z. B. „Rechts vor links in 2 Minuten“" value={upload.titel} onChangeText={(titel) => setUpload({ ...upload, titel })} maxLength={80} />
-                <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10 }}>
-                  <MKnopf titel="Verwerfen" art="leise" onPress={() => setUpload(null)} />
-                  <MKnopf titel="Hochladen" icon="cloud-upload" onPress={hochladen} />
-                </View>
-              </>
-            )}
+            <View style={{ flexDirection: "row", gap: 2 }}>
+              <IconTaste icon="chevron-up" label="Nach oben" aus={i === 0} onPress={() => themavideoVerschieben(v.id, -1).catch((e) => setFehler(String(e?.message ?? e)))} />
+              <IconTaste icon="chevron-down" label="Nach unten" aus={i === liste.length - 1} onPress={() => themavideoVerschieben(v.id, 1).catch((e) => setFehler(String(e?.message ?? e)))} />
+              <IconTaste icon="create-outline" label="Umbenennen" onPress={() => setUmbenennen({ id: v.id, titel: v.titel })} />
+              <IconTaste icon="trash-outline" label="Löschen" gefahr onPress={() => loeschen(v)} />
+            </View>
           </View>
-        ) : (
-          <Ablage onDatei={datei} />
-        )}
-        {fehler ? <Hinweis art="fehler">{fehler}</Hinweis> : null}
-
-        {liste.length === 0 ? (
-          <Text style={{ ...schrift.text, fontSize: 14, color: f.text3, textAlign: "center", paddingVertical: 8 }}>Noch keine Videos zu diesem Thema.</Text>
-        ) : (
-          <View style={{ gap: 4 }}>
-            {liste.map((v, i) => (
-              <View key={v.id} style={{ flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 10, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: f.linie }}>
-                <Vorschau url={themavideoUrl(v.pfad)} onPress={() => setAnsehen(v)} />
-                <View style={{ flex: 1, gap: 4 }}>
-                  {umbenennen?.id === v.id ? (
-                    <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-                      <View style={{ flex: 1 }}>
-                        <MEingabe value={umbenennen.titel} onChangeText={(titel) => setUmbenennen({ id: v.id, titel })} maxLength={80} autoFocus onSubmitEditing={umbenennenSichern} />
-                      </View>
-                      <MKnopf titel="Sichern" onPress={umbenennenSichern} />
-                    </View>
-                  ) : (
-                    <Text style={{ ...schrift.textHalb, fontSize: 15.5, color: f.text }} numberOfLines={2}>
-                      {v.titel}
-                    </Text>
-                  )}
-                  <Text style={{ ...schrift.text, fontSize: 12.5, color: f.text3 }}>
-                    {[dauerText(v.dauer), new Date(v.erstellt_am).toLocaleDateString("de-DE")].filter(Boolean).join(" · ")}
-                  </Text>
-                </View>
-                <View style={{ flexDirection: "row", gap: 2 }}>
-                  <IconTaste icon="chevron-up" label="Nach oben" aus={i === 0} onPress={() => themavideoVerschieben(v.id, -1).catch((e) => setFehler(String(e?.message ?? e)))} />
-                  <IconTaste icon="chevron-down" label="Nach unten" aus={i === liste.length - 1} onPress={() => themavideoVerschieben(v.id, 1).catch((e) => setFehler(String(e?.message ?? e)))} />
-                  <IconTaste icon="create-outline" label="Umbenennen" onPress={() => setUmbenennen({ id: v.id, titel: v.titel })} />
-                  <IconTaste icon="trash-outline" label="Löschen" gefahr onPress={() => loeschen(v)} />
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-      </MKarte>
+        ))}
+      </Tafel>
       <Abspielen url={ansehen ? themavideoUrl(ansehen.pfad) : null} titel={ansehen?.titel ?? ""} onSchliessen={() => setAnsehen(null)} />
     </View>
-  );
-}
-
-function IconTaste({ icon, label, onPress, gefahr, aus }: { icon: "chevron-up" | "chevron-down" | "create-outline" | "trash-outline" | "play" | "swap-horizontal"; label: string; onPress: () => void; gefahr?: boolean; aus?: boolean }) {
-  const f = useFarbwelt();
-  const c = gefahr ? rotVon(f) : f.text2;
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={aus}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={(z: Zustand) => ({ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", opacity: aus ? 0.3 : 1, backgroundColor: z.hovered && !aus ? (gefahr ? mitDeckkraft(c, 0.1) : f.hell ? "rgba(20,23,27,0.06)" : "rgba(255,255,255,0.08)") : "transparent" })}
-    >
-      <Icon name={icon} size={17} color={c} />
-    </Pressable>
   );
 }
 
@@ -330,8 +295,7 @@ function IconTaste({ icon, label, onPress, gefahr, aus }: { icon: "chevron-up" |
 // ---------------------------------------------------------------------------
 
 function FragenVideos() {
-  const f = useFarbwelt();
-  const { videos } = useErklaervideos();
+    const { videos } = useErklaervideos();
   const [suche, setSuche] = useState("");
   const [nur, setNur] = useState<"alle" | "mit" | "ohne">("alle");
   const [laeuft, setLaeuft] = useState<{ frage: string; anteil: number } | null>(null);
@@ -368,79 +332,78 @@ function FragenVideos() {
     ]);
 
   return (
-    <MKarte style={{ gap: 16 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-        <View style={{ flexGrow: 1, flexBasis: 280, maxWidth: 440 }}>
-          <MEingabe icon="search" placeholder="Frage, Thema oder Nummer (z. B. v12) suchen" value={suche} onChangeText={setSuche} autoCapitalize="none" />
-        </View>
-        <Auswahl
+    <View style={[mFlaeche(), { overflow: "hidden" }]}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: 16, rowGap: 8, paddingHorizontal: 16, paddingTop: 4, borderBottomWidth: 1, borderBottomColor: M.linie }}>
+        <Reiter
           wert={nur}
           onWechsel={setNur}
           optionen={[
-            { id: "alle", titel: `Alle · ${FRAGEN.length}` },
-            { id: "mit", titel: `Mit Video · ${mitVideo}` },
-            { id: "ohne", titel: `Ohne Video · ${FRAGEN.length - mitVideo}` },
+            { id: "alle", titel: "Alle Fragen", zahl: FRAGEN.length },
+            { id: "mit", titel: "Mit Video", zahl: mitVideo },
+            { id: "ohne", titel: "Ohne Video", zahl: FRAGEN.length - mitVideo },
           ]}
         />
+        <View style={{ width: 320, maxWidth: "100%", paddingVertical: 6 }}>
+          <MEingabe icon="search" placeholder="Frage, Thema oder Nummer (z. B. v12)" value={suche} onChangeText={setSuche} autoCapitalize="none" />
+        </View>
       </View>
-      <Text style={{ ...schrift.text, fontSize: 13.5, color: f.text3 }}>Ein Video je Frage – beim Lernen erscheint es neben der KI-Hilfe. Ein neues Video ersetzt das alte.</Text>
-      {fehler ? <Hinweis art="fehler">{fehler}</Hinweis> : null}
-      {laeuft ? <Fortschritt anteil={laeuft.anteil} text={`Video zu ${laeuft.frage} wird hochgeladen …`} onAbbrechen={() => abbruch.current.aktuell?.()} /> : null}
+      {fehler || laeuft ? (
+        <View style={{ padding: 16, gap: 12, borderBottomWidth: 1, borderBottomColor: M.linie }}>
+          {fehler ? <Hinweis art="fehler">{fehler}</Hinweis> : null}
+          {laeuft ? <Fortschritt anteil={laeuft.anteil} text={`Video zu ${laeuft.frage} wird hochgeladen …`} onAbbrechen={() => abbruch.current.aktuell?.()} /> : null}
+        </View>
+      ) : null}
 
-      <View>
-        {treffer.slice(0, 80).map((q, i) => {
-          const v = videos[q.id];
-          return (
-            <View key={q.id} style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 12, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: f.linie }}>
-              {v ? (
-                <Vorschau url={erklaervideoUrl(v.pfad)} breite={112} onPress={() => setAnsehen(q.id)} />
-              ) : (
-                <View style={{ width: 112, height: 63, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: f.hell ? "#F3EFE8" : "rgba(255,255,255,0.04)" }}>
-                  <Icon name="videocam-off-outline" size={18} color={f.text3} />
-                </View>
-              )}
-              <View style={{ flex: 1, gap: 4 }}>
-                <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-                  <View style={{ height: 22, paddingHorizontal: 8, borderRadius: 6, justifyContent: "center", backgroundColor: f.hell ? "rgba(20,23,27,0.06)" : "rgba(255,255,255,0.08)" }}>
-                    <Text style={{ ...schrift.textFett, fontSize: 11.5, color: f.text2 }}>{q.id}</Text>
-                  </View>
-                  <Text style={{ ...schrift.textMittel, fontSize: 12.5, color: f.text3 }}>{themaVon(q.thema).titel}</Text>
-                </View>
-                <Text style={{ ...schrift.textHalb, fontSize: 14, lineHeight: 19, color: f.text }} numberOfLines={2}>
-                  {q.text}
-                </Text>
-              </View>
+      {treffer.slice(0, 80).map((q, i) => {
+        const v = videos[q.id];
+        return (
+          <View key={q.id} style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, paddingVertical: 10, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: M.linie }}>
+            <Text style={{ width: 44, ...nf.halb, fontSize: 13, color: M.text2, fontVariant: ["tabular-nums"] }}>{q.id}</Text>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={{ ...nf.text, fontSize: 14, lineHeight: 19, color: M.text }} numberOfLines={2}>
+                {q.text}
+              </Text>
+              <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>{themaVon(q.thema).titel}</Text>
+            </View>
+            {v ? <Vorschau url={erklaervideoUrl(v.pfad)} breite={96} onPress={() => setAnsehen(q.id)} /> : <Text style={{ width: 96, textAlign: "center", ...nf.text, fontSize: 13, color: M.text3 }}>kein Video</Text>}
+            <View style={{ width: 132, flexDirection: "row", justifyContent: "flex-end", alignItems: "center", gap: 2 }}>
               {laeuft?.frage === q.id ? (
-                <Drehung farbe={f.orange} />
+                <Drehung farbe={M.text2} groesse={14} />
               ) : (
-                <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
-                  <MKnopf titel={v ? "Ersetzen" : "Hochladen"} icon={v ? "swap-horizontal" : "cloud-upload-outline"} art="sekundaer" deaktiviert={!!laeuft} onPress={() => hochladen(q.id)} />
+                <>
+                  <MKnopf titel={v ? "Ersetzen" : "Hochladen"} art={v ? "leise" : "sekundaer"} deaktiviert={!!laeuft} onPress={() => hochladen(q.id)} />
                   {v ? <IconTaste icon="trash-outline" label="Löschen" gefahr onPress={() => loeschen(q.id)} /> : null}
-                </View>
+                </>
               )}
             </View>
-          );
-        })}
-        {treffer.length > 80 ? <Text style={{ ...schrift.text, fontSize: 13, color: f.text3, textAlign: "center", paddingTop: 12 }}>{treffer.length - 80} weitere – such genauer, um sie zu sehen.</Text> : null}
-        {treffer.length === 0 ? <Text style={{ ...schrift.text, fontSize: 14, color: f.text3, textAlign: "center", paddingVertical: 20 }}>Keine Fragen gefunden.</Text> : null}
+          </View>
+        );
+      })}
+      <View style={{ paddingHorizontal: 16, minHeight: 38, paddingVertical: 10, justifyContent: "center", borderTopWidth: 1, borderTopColor: M.linie, backgroundColor: M.flaeche2 }}>
+        <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>
+          {treffer.length === 0 ? "Keine Fragen gefunden." : treffer.length > 80 ? `80 von ${treffer.length} – such genauer, um die übrigen zu sehen.` : `${treffer.length} Fragen`} · Ein Video je Frage, es erscheint beim Lernen neben der KI-Hilfe. Ein neues ersetzt das alte.
+        </Text>
       </View>
       <Abspielen url={ansehen && videos[ansehen] ? erklaervideoUrl(videos[ansehen].pfad) : null} titel={ansehen ? `Erklärvideo zu ${ansehen}` : ""} onSchliessen={() => setAnsehen(null)} />
-    </MKarte>
+    </View>
   );
 }
 
 export function VideoVerwaltung() {
-  const [art, setArt] = useState<"themen" | "fragen">("themen");
+    const [art, setArt] = useState<"themen" | "fragen">("themen");
+  const zahlen = useVideoZahlen();
   return (
-    <View style={{ gap: 18 }}>
-      <Auswahl
-        wert={art}
-        onWechsel={setArt}
-        optionen={[
-          { id: "themen", titel: "Videos zu Themen", icon: "albums-outline" },
-          { id: "fragen", titel: "Erklärvideos zu Fragen", icon: "help-circle-outline" },
-        ]}
-      />
+    <View style={{ gap: 16 }}>
+      <View style={{ borderBottomWidth: 1, borderBottomColor: M.linie }}>
+        <Reiter
+          wert={art}
+          onWechsel={setArt}
+          optionen={[
+            { id: "themen", titel: "Videos zu Themen", zahl: zahlen.themen },
+            { id: "fragen", titel: "Erklärvideos zu Fragen", zahl: zahlen.fragen },
+          ]}
+        />
+      </View>
       {art === "themen" ? <ThemenVideos /> : <FragenVideos />}
     </View>
   );
@@ -452,4 +415,3 @@ export function useVideoZahlen(): { themen: number; fragen: number } {
   const { videos: fragen } = useErklaervideos();
   return { themen: themen.length, fragen: Object.keys(fragen).length };
 }
-

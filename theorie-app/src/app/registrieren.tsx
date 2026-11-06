@@ -3,12 +3,12 @@ import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { SPALTE_MAX } from "@/lib/fenster";
-import { AuswahlFeld, AuthRahmen, Feld, FeldHinweis, PasswortFeld, Wechsel, type Auswahl } from "@/components/auth-rahmen";
+import { SPALTE_MAX, useDesktop } from "@/lib/fenster";
+import { AuswahlFeld, AuthRahmen, CodeSchritt, Feld, FeldHinweis, Wechsel, type Auswahl } from "@/components/auth-rahmen";
 import { Icon } from "@/components/icon";
-import { Oder, SozialAnmeldung } from "@/components/sozial-anmeldung";
+import { RegistrierenWeb } from "@/components/web/auth-web";
 import { Knopf, T } from "@/components/ui";
-import { useKonto, type Rolle } from "@/lib/konto";
+import { useCodeAblauf, useKonto, type Rolle } from "@/lib/konto";
 import { tippen } from "@/lib/haptik";
 import { useStand } from "@/lib/stand";
 import { serverVerbunden } from "@/lib/supabase";
@@ -97,7 +97,7 @@ function VorwahlWahl({ offen, land, onWahl, onSchliessen }: { offen: boolean; la
 }
 
 export default function Registrieren() {
-  const { registrieren, benutzernameFrei, gast, session } = useKonto();
+  const { benutzernameFrei, gast, session } = useKonto();
   // Kam man aus dem Gastmodus (z. B. von den Clips), geht es danach dorthin zurück.
   const [ausGastmodus] = useState(gast);
   const [fertig, setFertig] = useState(false);
@@ -124,11 +124,10 @@ export default function Registrieren() {
   const [geburt, setGeburt] = useState("");
   const [klasse, setKlasse] = useState("B");
   const [email, setEmail] = useState("");
-  const [passwort, setPasswort] = useState("");
-  const [passwort2, setPasswort2] = useState("");
-  const [fehler, setFehler] = useState<string | null>(null);
-  const [laedt, setLaedt] = useState(false);
-  const [bestaetigen, setBestaetigen] = useState(false);
+  // Nach dem Absenden: Code aus der E-Mail eingeben – erst dann entsteht das Konto.
+  const ablauf = useCodeAblauf();
+  // Im Browser am PC: zweigeteilte Fassung (web/auth-web.tsx).
+  const desktop = useDesktop();
 
   // Benutzername aus dem Vornamen vorschlagen, bis man ihn selbst ändert.
   useEffect(() => {
@@ -156,7 +155,6 @@ export default function Registrieren() {
   const telefonOk = telefonZiffern.length === 0 || (telefonZiffern.length >= 6 && telefonZiffern.length <= 14);
   const geburtIso = datumLesen(geburt);
   const geburtOk = geburt.length === 0 || geburtIso != null;
-  const passwortGleich = passwort2.length > 0 && passwort === passwort2;
   const allesOk =
     vorname.trim().length >= 2 &&
     nachname.trim().length >= 1 &&
@@ -164,45 +162,67 @@ export default function Registrieren() {
     frei !== false &&
     telefonOk &&
     geburtOk &&
-    /\S+@\S+\.\S+/.test(email.trim()) &&
-    passwort.length >= 8 &&
-    passwortGleich;
+    /\S+@\S+\.\S+/.test(email.trim());
 
-  async function absenden() {
-    setFehler(null);
-    setLaedt(true);
-    const r = await registrieren({
+  function absenden() {
+    if (!allesOk || ablauf.laedt) return;
+    ablauf.senden(email, {
       rolle,
       vorname,
       nachname,
       benutzername: benutzer,
       telefon: telefonZiffern ? `${land.vorwahl}${telefonZiffern}` : null,
       geburtsdatum: geburtIso,
-      email,
-      passwort,
       klasse,
       bundesland: null,
     });
-    setLaedt(false);
-    if (r.fehler) {
-      setFehler(r.fehler);
-      return;
-    }
+  }
+
+  function angemeldet() {
     setzen({ klasse });
-    if (r.bestaetigen) {
-      setBestaetigen(true);
-      return;
-    }
     setFertig(true);
   }
 
-  if (bestaetigen) {
+  if (desktop) {
     return (
-      <AuthRahmen titel="Fast geschafft." unter={`Wir haben dir eine E-Mail an ${email.trim()} geschickt. Bestätige deine Adresse und melde dich danach an – mit deiner E-Mail oder @${benutzer}.`}>
-        <Knopf titel="Zur Anmeldung" icon="arrow-forward" onPress={() => router.replace("/anmelden")} style={{ marginTop: abstand(2) }} />
-      </AuthRahmen>
+      <RegistrierenWeb
+        rollen={ROLLEN}
+        rolle={rolle}
+        onRolle={setRolle}
+        vorname={vorname}
+        onVorname={setVorname}
+        nachname={nachname}
+        onNachname={setNachname}
+        benutzer={benutzer}
+        onBenutzer={(t) => {
+          setBenutzerAngepasst(true);
+          setBenutzer(t.toLowerCase().replace(/[^a-z0-9_.]/g, "").slice(0, 20));
+        }}
+        benutzerGueltig={benutzerGueltig}
+        frei={frei}
+        laender={LAENDER}
+        land={land}
+        onLand={(l) => setLand(l as Land)}
+        telefon={telefon}
+        onTelefon={(t) => setTelefon(t.replace(/[^\d ]/g, "").slice(0, 18))}
+        telefonOk={telefonOk}
+        geburt={geburt}
+        onGeburt={(t) => setGeburt(datumFormatieren(t))}
+        geburtOk={geburtOk}
+        klassen={KLASSEN}
+        klasse={klasse}
+        onKlasse={setKlasse}
+        email={email}
+        onEmail={setEmail}
+        ablauf={ablauf}
+        allesOk={allesOk}
+        onAbsenden={absenden}
+        onAngemeldet={angemeldet}
+      />
     );
   }
+
+  if (ablauf.gesendetAn) return <CodeSchritt ablauf={ablauf} onAngemeldet={angemeldet} />;
 
   return (
     <AuthRahmen titel="Konto erstellen" unter="Beginne deine Reise zum Führerschein.">
@@ -305,36 +325,20 @@ export default function Registrieren() {
           keyboardType="email-address"
           textContentType="emailAddress"
           autoComplete="email"
+          returnKeyType="go"
+          onSubmitEditing={absenden}
         />
-        {/* Kein iOS-„Starkes Passwort“: iOS trägt sonst unbemerkt ein Zufallspasswort in
-            beide Felder ein, das ohne verknüpfte Domain nirgends gespeichert wird – danach
-            passt das eigene Passwort beim Anmelden nicht. „oneTimeCode“ schaltet das ab. */}
-        <PasswortFeld label="Passwort" value={passwort} onChangeText={setPasswort} placeholder="Mindestens 8 Zeichen" textContentType="oneTimeCode" autoComplete="off" />
-        <PasswortFeld
-          label="Passwort bestätigen"
-          value={passwort2}
-          onChangeText={setPasswort2}
-          placeholder="Noch einmal eingeben"
-          textContentType="oneTimeCode"
-          autoComplete="off"
-          fehler={passwort2.length > 0 && !passwortGleich}
-        />
-        {passwort2.length > 0 ? (
-          <FeldHinweis farbe={passwortGleich ? farben.gruen : farben.rot} text={passwortGleich ? "Die Passwörter stimmen überein." : "Die Passwörter sind nicht gleich."} />
-        ) : null}
+        <FeldHinweis text="Hierhin schicken wir dir einen Code – ein Passwort brauchst du nicht." />
       </View>
 
-      {fehler ? (
+      {ablauf.fehler ? (
         <T v="klein" farbe={farben.rot} style={{ ...schrift.textHalb }}>
-          {fehler}
+          {ablauf.fehler}
         </T>
       ) : null}
 
-      <Knopf titel="Registrieren" icon="arrow-forward" laedt={laedt} deaktiviert={!allesOk} onPress={absenden} style={{ marginTop: abstand(2) }} />
+      <Knopf titel="Code senden" icon="arrow-forward" laedt={ablauf.laedt} deaktiviert={!allesOk} onPress={absenden} style={{ marginTop: abstand(2) }} />
       <Wechsel frage="Bereits ein Konto?" aktion="Anmelden" onPress={() => router.replace("/anmelden")} />
-
-      <Oder />
-      <SozialAnmeldung rolle={rolle} onAngemeldet={() => setFertig(true)} onFehler={setFehler} />
 
       <VorwahlWahl
         offen={vorwahlOffen}

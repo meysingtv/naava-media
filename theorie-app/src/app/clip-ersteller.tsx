@@ -13,8 +13,10 @@ import { Lader } from "@/components/lader";
 import { NutzerBild } from "@/components/profilbild";
 import { GrossKopf, Seite } from "@/components/seite";
 import { Abschnitt, Eingabe, Knopf, T } from "@/components/ui";
+import { ClipErstellerWeb } from "@/components/web/creator-web";
 import { erstellerEntfernen, erstellerHinzufuegen, erstellerListe, useClipRechte, vorZeit, type Ersteller } from "@/lib/clips-server";
 import { useFarbwelt } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
 import { erfolg, tippen } from "@/lib/haptik";
 import { abstand, mitDeckkraft, RAND, schrift } from "@/lib/theme";
 
@@ -27,6 +29,8 @@ function Inhalt() {
   const [fehler, setFehler] = useState<string | null>(null);
   const [kennung, setKennung] = useState("");
   const [speichert, setSpeichert] = useState(false);
+  // Im Browser am PC: eigene Fassung über die volle Breite (web/creator-web.tsx).
+  const desktop = useDesktop();
   const inhalt = { paddingHorizontal: RAND, paddingTop: abstand(4), paddingBottom: insets.bottom + abstand(10) };
 
   const laden = useCallback(async () => {
@@ -74,6 +78,22 @@ function Inhalt() {
         },
       },
     ]);
+  }
+
+  if (desktop) {
+    return (
+      <ClipErstellerWeb
+        inhaber={rechte.inhaber}
+        liste={liste}
+        fehler={fehler}
+        onNeuLaden={laden}
+        kennung={kennung}
+        onKennung={setKennung}
+        speichert={speichert}
+        onHinzufuegen={hinzufuegen}
+        onEntfernen={entfernen}
+      />
+    );
   }
 
   if (!rechte.inhaber) {
@@ -168,9 +188,10 @@ function Inhalt() {
 }
 
 export default function ClipErsteller() {
+  const desktop = useDesktop();
   return (
     <Seite>
-      <GlasGrund />
+      {desktop ? null : <GlasGrund />}
       <Inhalt />
     </Seite>
   );

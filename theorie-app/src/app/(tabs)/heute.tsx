@@ -5,7 +5,8 @@ import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useFenster } from "@/lib/fenster";
+import { useDesktop, useFenster } from "@/lib/fenster";
+import { HomeWeb } from "@/components/web/home-web";
 import { CrewBereich } from "@/components/crew";
 import { FokusKarte, GRUSS, Handschrift, HeldWerte, heldHoehe, KinoHeld, Kopfzeile, PruefungKarte, Schnellstart, StartKnopf, tageszeit, ThemenKarussell, ZitatKarte } from "@/components/home";
 import { Icon } from "@/components/icon";
@@ -30,6 +31,11 @@ const ZITATE: [string, string][] = [
 ];
 
 export default function Home() {
+  // Im Browser am PC eine eigene Fassung (web/home-web.tsx).
+  return useDesktop() ? <HomeWeb /> : <HomeHandy />;
+}
+
+function HomeHandy() {
   const insets = useSafeAreaInsets();
   const { width } = useFenster();
   const inhaltUnten = useInhaltUnten();

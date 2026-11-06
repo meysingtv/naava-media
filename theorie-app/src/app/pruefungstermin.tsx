@@ -9,6 +9,8 @@ import { AktionsLeiste, HauptKnopf, NebenKnopf } from "@/components/frage-rahmen
 import { FotoKopf, Seite } from "@/components/seite";
 import { Gruppe, kartenFlaeche, T, Zeile } from "@/components/ui";
 import { useDarstellung } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
+import { PruefungsterminWeb } from "@/components/web/pruefungstermin-web";
 import { FOTOS } from "@/lib/fotos";
 import { datumLang, uhrzeit } from "@/lib/format";
 import { erfolg } from "@/lib/haptik";
@@ -26,6 +28,11 @@ function vorschlag(): Date {
 
 /** Termin der Theorieprüfung eintragen – für Countdown und Erinnerung am Prüfungstag. */
 export default function Pruefungstermin() {
+  // Im Browser am PC eine eigene Fassung mit Kalender zum Anklicken (web/pruefungstermin-web.tsx).
+  return useDesktop() ? <PruefungsterminWeb /> : <PruefungsterminHandy />;
+}
+
+function PruefungsterminHandy() {
   const insets = useSafeAreaInsets();
   const { farbwelt: f } = useDarstellung();
   const rot = f.hell ? "#E5392C" : "#FF5A4E";

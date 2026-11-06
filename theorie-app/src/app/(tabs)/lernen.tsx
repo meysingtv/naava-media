@@ -38,6 +38,8 @@ import { useLeistenScroll } from "@/lib/leisten-scroll";
 import { ALBUM } from "@/lib/schilder-jagd";
 import { fehlerIds, fortschritt, gemerktIds, schwierigeIds, useStand } from "@/lib/stand";
 import { RAND, schrift } from "@/lib/theme";
+import { useDesktop } from "@/lib/fenster";
+import { LernenWeb } from "@/components/web/lernen-web";
 
 /** Schwierigkeit eines Themas nach den Fehlerpunkten seiner Fragen (2–5). */
 function stufeVon(thema: ThemaId): Exclude<Stufe, "alle"> {
@@ -52,6 +54,11 @@ function stufeVon(thema: ThemaId): Exclude<Stufe, "alle"> {
 const VORSCHLAEGE = ["Kreisverkehr", "Rettungsgasse", "Promille", "Überholen", "Schulbus", "Reifen", "Bahnübergang", "Anhalteweg"];
 
 export default function Lernen() {
+  // Im Browser am PC eine eigene Fassung (web/lernen-web.tsx).
+  return useDesktop() ? <LernenWeb /> : <LernenHandy />;
+}
+
+function LernenHandy() {
   const insets = useSafeAreaInsets();
   const inhaltUnten = useInhaltUnten();
   const leistenScroll = useLeistenScroll();

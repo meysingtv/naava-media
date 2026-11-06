@@ -153,11 +153,13 @@ type Props = {
   onMehr: (clip: ClipEintrag) => void;
   /** Tippen auf Name oder Profilbild – ohne Angabe nicht antippbar. */
   onProfil?: (clip: ClipEintrag) => void;
+  /** Nur Video und Fortschritt – Ersteller und Aktionen stehen daneben (PC). */
+  nurVideo?: boolean;
 };
 
 const RAND_SEITE = 16;
 
-function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eigen, onLike, onFolgen, onKommentare, onTeilen, onMehr, onProfil }: Props) {
+function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eigen, onLike, onFolgen, onKommentare, onTeilen, onMehr, onProfil, nurVideo }: Props) {
   const quelle = useMemo(() => ({ uri: dateiUrl(clip.video_pfad), useCaching: true }), [clip.video_pfad]);
   const player = useVideoPlayer(quelle, (p) => {
     p.loop = true;
@@ -313,7 +315,13 @@ function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eig
         <Funke key={f.id} x={f.x} y={f.y} onFertig={() => setFunken((alle) => alle.filter((x) => x.id !== f.id))} />
       ))}
 
-      {/* Unten: Ersteller, Titel, Beschreibung, Aktionen, Fortschritt */}
+      {/* Am PC nur der Fortschritt – Ersteller und Aktionen stehen neben dem Video */}
+      {nurVideo ? (
+        <View pointerEvents="none" style={{ position: "absolute", left: RAND_SEITE, right: RAND_SEITE, bottom: unten + 12 }}>
+          {aktiv ? <Fortschritt player={player} breite={breite - RAND_SEITE * 2} /> : null}
+        </View>
+      ) : (
+      // Unten: Ersteller, Titel, Beschreibung, Aktionen, Fortschritt
       <View pointerEvents="box-none" style={{ position: "absolute", left: RAND_SEITE, right: RAND_SEITE, bottom: unten + 12, gap: 8 }}>
         <View pointerEvents="box-none" style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Pressable
@@ -424,6 +432,7 @@ function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eig
 
         {aktiv ? <Fortschritt player={player} breite={breite - RAND_SEITE * 2} /> : <View style={{ height: 3 }} />}
       </View>
+      )}
     </View>
   );
 }

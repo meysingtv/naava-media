@@ -4,11 +4,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon } from "@/components/icon";
 import { GrossKopf, Seite } from "@/components/seite";
 import { kartenFlaeche, T } from "@/components/ui";
+import { BildnachweiseWeb } from "@/components/web/bildnachweise-web";
 import { useDarstellung } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
 import { FOTOS, LIZENZ_LINK, NACHWEISE } from "@/lib/fotos";
 import { abstand, RAND } from "@/lib/theme";
 
 export default function Bildnachweise() {
+  return useDesktop() ? <BildnachweiseWeb /> : <BildnachweiseHandy />;
+}
+
+function BildnachweiseHandy() {
   const insets = useSafeAreaInsets();
   const { farbwelt: f } = useDarstellung();
   return (

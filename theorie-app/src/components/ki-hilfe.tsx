@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, LinearGradient as SvgVerlauf, Path, Stop } from "react-native-svg";
 
-import { SPALTE_MAX } from "@/lib/fenster";
+import { istDesktop, SPALTE_MAX } from "@/lib/fenster";
 import { HauptKnopf } from "@/components/frage-rahmen";
 import { Glas } from "@/components/glas";
 import { DekoSvg } from "@/components/grafik";
@@ -13,6 +13,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { useFarbwelt } from "@/lib/darstellung";
 import { erfolg, tippen } from "@/lib/haptik";
 import { kiAntwort, kiBewerten, NACHFRAGEN, NICHT_VERSTANDEN, type KiKontext, type KiNachricht } from "@/lib/ki-hilfe";
+import { KiPanelWeb } from "@/components/web/ki-web";
 import { leuchten, mitDeckkraft, RAND, schrift, verlauf } from "@/lib/theme";
 
 // KI-Hilfe als Sprechblase aus Glas: Sie zeigt auf den KI-Knopf, hat einen
@@ -453,6 +454,30 @@ export function KiBlase({ kontext, anker, onSchliessen }: { kontext: KiKontext; 
     erfolg();
     setBewertet((b) => ({ ...b, [antwort.id]: gut }));
     kiBewerten(kontext.frage.id, gut, antwort.text);
+  }
+
+  // Im Browser am PC: Chat als Seitenleiste von rechts (web/ki-web.tsx).
+  if (istDesktop(width)) {
+    return (
+      <KiPanelWeb
+        offen={anker != null}
+        frage={kontext.frage}
+        nachrichten={nachrichten}
+        laedt={laedt}
+        tippt={tippt}
+        onTippFertig={() => setTippt(null)}
+        text={text}
+        onText={setText}
+        onSenden={(t, art) => senden(t, art, false)}
+        bewertet={bewertet}
+        onBewerten={bewerten}
+        onNeu={() => {
+          setNachrichten([]);
+          setTippt(null);
+        }}
+        onSchliessen={onSchliessen}
+      />
+    );
   }
 
   // Lage: über dem Knopf (unten auf dem Bildschirm) oder darunter; mit Tastatur direkt darüber.

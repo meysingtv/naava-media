@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { SFSymbol } from "expo-symbols";
 
 import { AufklappMenue } from "@/components/aufklapp-menue";
+import { dialog } from "@/components/dialog";
 import { ClipSeite } from "@/components/clip-seite";
 import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
@@ -23,7 +24,8 @@ import { beiNeuenClips, feedLaden, useClipRechte, type ClipEintrag, type FeedArt
 import { useDarfLive } from "@/lib/creator";
 import { tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
-import { istTablet } from "@/lib/fenster";
+import { istTablet, useDesktop } from "@/lib/fenster";
+import { ClipsWeb } from "@/components/web/clips-web";
 import { useLive } from "@/lib/live";
 import { serverVerbunden } from "@/lib/supabase";
 import { farben, schrift } from "@/lib/theme";
@@ -131,6 +133,8 @@ export default function Clips() {
   const liveRechte = useDarfLive();
   const { alle } = useLive();
   const ich = session?.user.id ?? null;
+  // Im Browser am PC: eigene Fassung mit Video in der Mitte (web/clips-web.tsx).
+  const desktop = useDesktop();
 
   const [art, setArt] = useState<FeedArt>("entdecken");
   const [liveAn, setLiveAn] = useState(false);
@@ -348,6 +352,52 @@ export default function Clips() {
   }, [art]);
 
   const kommentarClip = kommentarId ? (feed.eintraege.find((c) => c.id === kommentarId) ?? null) : null;
+
+  if (desktop) {
+    return (
+      <View style={{ flex: 1 }}>
+        <ClipsWeb
+          kategorie={liveAn ? "live" : art}
+          lives={alle}
+          eintraege={feed.eintraege}
+          laedt={feed.laedt}
+          fehler={feed.fehler}
+          geladen={feed.geladen}
+          verbunden={serverVerbunden}
+          ich={ich}
+          darfErstellen={rechte.ersteller || darfLiveJetzt}
+          darfHochladen={rechte.ersteller}
+          stumm={stumm}
+          spielen={spielen && !kommentarId}
+          aktionen={aktionen}
+          onStumm={() => setStumm((x) => !x)}
+          onWechsel={wechseln}
+          onMehrLaden={() => laden(art, false)}
+          onNeuLaden={() => laden(art, true)}
+          onErstellen={() =>
+            darfLiveJetzt && rechte.ersteller
+              ? dialog("Was möchtest du erstellen?", undefined, [
+                  { text: "Live gehen", onPress: () => router.push("/live-senden") },
+                  { text: "Clip hochladen", onPress: () => router.push("/clip-hochladen") },
+                  { text: "Abbrechen", style: "cancel" },
+                ])
+              : erstellen()
+          }
+          onKommentare={onKommentare}
+        />
+        <KommentarBlatt
+          clip={kommentarClip}
+          angemeldet={Boolean(ich)}
+          onSchliessen={() => setKommentarId(null)}
+          onAnzahl={(id, n) => eintragAendern(id, (c) => ({ kommentare: Math.max(0, c.kommentare + n) }))}
+          onAnmelden={() => {
+            setKommentarId(null);
+            router.push("/anmelden");
+          }}
+        />
+      </View>
+    );
+  }
 
   let inhalt: ReactNode;
   if (liveAn && alle.length > 1 && masse) {

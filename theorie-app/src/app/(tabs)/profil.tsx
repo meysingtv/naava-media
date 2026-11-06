@@ -5,7 +5,9 @@ import { useIsFocused } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useFenster } from "@/lib/fenster";
+import { useDesktop, useFenster } from "@/lib/fenster";
+import { useProfilAktionen } from "@/lib/profil-aktionen";
+import { ProfilWeb } from "@/components/web/profil-web";
 import { dialog } from "@/components/dialog";
 import { Glas } from "@/components/glas";
 import { GlasGrund } from "@/components/glas-flaeche";
@@ -24,7 +26,6 @@ import { tippen } from "@/lib/haptik";
 import { heuteDran, kartenZahlen } from "@/lib/karteikarten";
 import { useKonto } from "@/lib/konto";
 import { useLeistenScroll } from "@/lib/leisten-scroll";
-import { profilbildEntfernen, profilbildHochladen, profilbildServerEntfernen, profilbildWaehlen, useProfilbild } from "@/lib/profilbild";
 import { tageBis, terminDatum } from "@/lib/pruefungstag";
 import { ligaVon } from "@/lib/rangliste";
 import { ALBUM } from "@/lib/schilder-jagd";
@@ -34,6 +35,11 @@ import { leuchten, RAND, schrift, verlauf } from "@/lib/theme";
 const MONATE_KURZ = ["Jan.", "Feb.", "März", "Apr.", "Mai", "Juni", "Juli", "Aug.", "Sep.", "Okt.", "Nov.", "Dez."];
 
 export default function Profil() {
+  // Im Browser am PC eine eigene Fassung (web/profil-web.tsx).
+  return useDesktop() ? <ProfilWeb /> : <ProfilHandy />;
+}
+
+function ProfilHandy() {
   const insets = useSafeAreaInsets();
   const { width } = useFenster();
   const inhaltUnten = useInhaltUnten();
@@ -42,10 +48,7 @@ export default function Profil() {
   const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();
   const { daten: crewDaten } = useCrew();
-  const { profil, gast, anzeigeName, abmelden, session, profilNeuLaden } = useKonto();
-  const bild = useProfilbild();
-
-  const hatBild = Boolean(bild || profil?.bild_pfad);
+  const { profil, gast, anzeigeName, session } = useKonto();
   const freigeschaltet = ERFOLGE.filter((e) => stand.erfolge[e.id]).length;
   const gemerkteClips = CLIPS.filter((c) => stand.clips.gemerkt.includes(c.id)).length;
   const schilderGefunden = ALBUM.filter((k) => stand.schilder[k]).length;
@@ -80,49 +83,7 @@ export default function Profil() {
         : "Prüfungsreif – jetzt fehlt nur die Prüfung"
       : `Noch ${Math.max(1, Math.ceil((0.9 - reife) * 100))} % bis prüfungsreif`;
 
-  async function fotoWaehlen() {
-    const ok = await profilbildWaehlen();
-    if (!ok || !session) return;
-    try {
-      // Auch auf den Server, damit andere es bei Clips und Kommentaren sehen.
-      await profilbildHochladen(profil?.bild_pfad ?? null);
-      await profilNeuLaden();
-    } catch {
-      dialog("Profilbild", "Das Bild ist auf deinem Handy gespeichert, konnte aber gerade nicht hochgeladen werden. Versuch es gleich noch einmal.");
-    }
-  }
-
-  async function fotoEntfernen() {
-    await profilbildEntfernen();
-    if (!session) return;
-    await profilbildServerEntfernen(profil?.bild_pfad ?? null);
-    await profilNeuLaden();
-  }
-
-  function bildAendern() {
-    const optionen: { text: string; onPress?: () => void; style?: "cancel" | "destructive" }[] = [{ text: "Foto auswählen", onPress: () => fotoWaehlen() }];
-    if (hatBild) optionen.push({ text: "Foto entfernen", style: "destructive", onPress: () => fotoEntfernen() });
-    optionen.push({ text: "Abbrechen", style: "cancel" });
-    dialog("Profilbild", undefined, optionen);
-  }
-
-  function abmeldenFragen() {
-    dialog(
-      gast ? "Gastmodus beenden?" : "Abmelden?",
-      gast ? "Dein Fortschritt bleibt auf diesem Gerät gespeichert." : "Dein Fortschritt ist in deinem Konto gesichert.",
-      [
-        { text: "Abbrechen", style: "cancel" },
-        { text: gast ? "Beenden" : "Abmelden", style: "destructive", onPress: () => abmelden() },
-      ],
-    );
-  }
-
-  function abzeichenZeigen(id: string) {
-    const e = ERFOLGE.find((x) => x.id === id);
-    if (!e) return;
-    const wann = stand.erfolge[e.id];
-    dialog(e.titel, wann ? `${e.text}\nFreigeschaltet am ${wann.split("-").reverse().join(".")}.` : e.text);
-  }
+  const { bildAendern, abmeldenFragen, abzeichenZeigen } = useProfilAktionen();
 
   // Auf dem iPad nicht höher als auf einem großen iPhone
   const heldHoehe = Math.round(Math.min(width, 440) * 1.22);

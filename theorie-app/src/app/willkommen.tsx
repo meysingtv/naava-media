@@ -4,15 +4,21 @@ import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useFenster } from "@/lib/fenster";
+import { useDesktop, useFenster } from "@/lib/fenster";
 import { Eingabe, Knopf, T } from "@/components/ui";
 import { Logo } from "@/components/grafik";
+import { WillkommenWeb } from "@/components/web/auth-web";
 import { FOTOS } from "@/lib/fotos";
 import { useKonto } from "@/lib/konto";
 import { tippen } from "@/lib/haptik";
 import { abstand, farben, RAND, schrift } from "@/lib/theme";
 
+/** Im Browser am PC: zweigeteilte Fassung (web/auth-web.tsx). */
 export default function Willkommen() {
+  return useDesktop() ? <WillkommenWeb /> : <WillkommenHandy />;
+}
+
+function WillkommenHandy() {
   const insets = useSafeAreaInsets();
   const { width } = useFenster();
   const { alsGast } = useKonto();

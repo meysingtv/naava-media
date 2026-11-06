@@ -12,7 +12,8 @@ import { TrophyIcon } from "phosphor-react-native/src/icons/Trophy";
 import { GlasGrund, GlasKarte } from "@/components/glas-flaeche";
 import { GrossKopf, Seite } from "@/components/seite";
 import { useDarstellung } from "@/lib/darstellung";
-import { useFenster } from "@/lib/fenster";
+import { useDesktop, useFenster } from "@/lib/fenster";
+import { KalenderWeb } from "@/components/web/kalender-web";
 import { tippen } from "@/lib/haptik";
 import { serieAktuell, tagKey, useStand, wochenStart } from "@/lib/stand";
 import { leuchten, mitDeckkraft, RAND, schrift, verlauf } from "@/lib/theme";
@@ -114,6 +115,11 @@ function laengsteSerie(tage: string[]): number {
 
 /** Lernkalender: Kennzahlen, Monatskalender mit Lerntagen und die letzten 12 Wochen. */
 export default function Kalender() {
+  // Im Browser am PC eine eigene Fassung (web/kalender-web.tsx).
+  return useDesktop() ? <KalenderWeb /> : <KalenderHandy />;
+}
+
+function KalenderHandy() {
   const insets = useSafeAreaInsets();
   const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();

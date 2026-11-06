@@ -12,6 +12,8 @@ import { NutzerBild } from "@/components/profilbild";
 import { Kopfzeile } from "@/components/home";
 import { FotoKopf, Seite } from "@/components/seite";
 import { Balken, Eingabe, Gruppe, kartenFlaeche, Knopf, KopfTaste, Segment, T } from "@/components/ui";
+import { CrewWeb } from "@/components/web/crew-web";
+import { useDesktop } from "@/lib/fenster";
 import { CREW_MAX, crewLink, heuteGeschafft, useCrew, type CrewMitglied } from "@/lib/crew";
 import { useDarstellung, useFarbwelt } from "@/lib/darstellung";
 import { FOTOS } from "@/lib/fotos";
@@ -106,8 +108,13 @@ function Gruenden() {
   );
 }
 
-/** Meine Crew: Flamme, Mitglieder, Einladen (Link, QR-Code, Code) und was los war. */
+/** Meine Crew – am PC eigene Fassung (web/crew-web.tsx). */
 export default function CrewSeite() {
+  return useDesktop() ? <CrewWeb /> : <CrewHandy />;
+}
+
+/** Meine Crew: Flamme, Mitglieder, Einladen (Link, QR-Code, Code) und was los war. */
+function CrewHandy() {
   // Die Seite legt die Farbwelt erst fest – daher hier aus der Darstellung lesen
   const { farbwelt: f } = useDarstellung();
   const insets = useSafeAreaInsets();
