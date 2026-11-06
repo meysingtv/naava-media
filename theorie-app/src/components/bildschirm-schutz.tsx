@@ -14,8 +14,8 @@ import { useClipRechte } from "@/lib/clips-server";
  * Android: FLAG_SECURE über expo-screen-capture – Aufnahmen und Screenshots
  * bleiben schwarz, die App-Übersicht ist leer.
  * iOS: Das eigene Modul modules/aufnahme-schutz legt bei einer Aufnahme (oder
- * Bildschirmspiegelung) ein verschwommenes Fenster über die ganze App – das
- * landet so auch in der Aufnahme. Dazu expo-screen-capture nur für die
+ * Bildschirmspiegelung) eine undurchsichtige Fläche über die ganze App – das
+ * landet so auch in der Aufnahme. Sie geht erst über „Weiter“ weg. Dazu expo-screen-capture nur für die
  * verschwommene App-Übersicht. Screenshots lassen sich auf iOS nicht sperren.
  * Im Browser lässt sich das nicht verhindern. Braucht einen neuen nativen Build.
  */

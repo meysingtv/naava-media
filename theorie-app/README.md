@@ -526,9 +526,12 @@ neu bauen, dann ist alles wieder da.
 Bildschirmaufnahmen und Screenshots – nur für das Inhaber-Konto nicht (zum
 Testen unter Einstellungen → „Bildschirmaufnahmen erlauben“ ausschalten).
 Android (`expo-screen-capture`): Aufnahme und Screenshot bleiben schwarz.
-iOS: Das eigene Modul `modules/aufnahme-schutz` legt bei einer Aufnahme ein
-verschwommenes Fenster über die ganze App (auch über Modals), die
-App-Übersicht ist verschwommen. Screenshots lassen sich auf iOS nicht sperren
+iOS: Das eigene Modul `modules/aufnahme-schutz` legt bei einer Aufnahme eine
+undurchsichtige Fläche über die ganze App (auch über Modals). Sie geht nicht
+von selbst weg – iOS meldet bei offenem Aufnahme-Menü an der Dynamic Island
+fälschlich „keine Aufnahme“ –, sondern erst über „Weiter“ (mit kurzer
+Nachprüfung) oder nach Rückkehr aus dem Hintergrund. Die App-Übersicht ist
+verschwommen. Screenshots lassen sich auf iOS nicht sperren
 (der Trick von expo-screen-capture dafür ist auf iOS bewusst aus – er wirkt
 auf neuen Versionen nicht und kann den Start abstürzen lassen). Im Browser geht das technisch nicht; abfilmen mit einem zweiten
 Handy lässt sich nie verhindern. Braucht einen neuen nativen Build.

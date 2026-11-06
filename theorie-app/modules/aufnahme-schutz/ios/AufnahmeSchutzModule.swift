@@ -1,21 +1,32 @@
 import ExpoModulesCore
 import UIKit
 
-/// Sperre gegen Bildschirmaufnahmen auf dem iPhone: Läuft eine Aufnahme (oder
-/// wird der Bildschirm gespiegelt), liegt ein eigenes Fenster mit starker
-/// Unschärfe über der ganzen App – auch über Modals und Vollbild-Seiten. Das
-/// Fenster ist Teil der Aufnahme, dort ist also nur die Unschärfe zu sehen.
+/// Sperre gegen Bildschirmaufnahmen auf dem iPhone: Sobald eine Aufnahme (oder
+/// Bildschirmspiegelung) erkannt wird, liegt ein eigenes, undurchsichtiges
+/// Fenster über der ganzen App – auch über Modals und Vollbild-Seiten. Das
+/// Fenster ist Teil der Aufnahme, dort ist also nur diese Fläche zu sehen.
 ///
-/// Erkennung über `UIScreen.isCaptured`. Zusätzlich zur Mitteilung von iOS
-/// wird jede Sekunde nachgesehen, damit nichts verpasst wird.
+/// Wichtig: Öffnet man während der Aufnahme das Menü an der Dynamic Island,
+/// meldet iOS „keine Aufnahme“, obwohl sie weiterläuft. Die Fläche geht
+/// deshalb nie von selbst weg: Ist keine Aufnahme mehr gemeldet, erscheint ein
+/// „Weiter“-Knopf. Ein Tippen bei offenem Menü schließt nur das Menü (dann
+/// meldet iOS wieder „Aufnahme“). Kam die App aus dem Hintergrund zurück und
+/// läuft nichts, verschwindet die Fläche ohne Tippen.
+///
+/// Erkennung über `UIScreen.isCaptured` – per Mitteilung und alle 0,3 s.
 public class AufnahmeSchutzModule: Module {
   private var schutzAn = false
   private var zuletzt = false
   private var fenster: UIWindow?
+  private var titelText: UILabel?
+  private var hinweisText: UILabel?
+  private var weiterKnopf: UIButton?
   private var timer: Timer?
-  private var beobachter: NSObjectProtocol?
-  /// Seit wann keine Aufnahme mehr gemeldet wird (zum verzögerten Ausblenden).
-  private var freiSeit: Date?
+  private var beobachter: [NSObjectProtocol] = []
+  /// War die App seit dem Einblenden im Hintergrund? Dann darf die Fläche ohne Tippen weg.
+  private var warImHintergrund = false
+  /// Nach „Weiter“ wird kurz gewartet, ob die Aufnahme nicht doch noch läuft.
+  private var weiterPruefung = false
 
   public func definition() -> ModuleDefinition {
     Name("AufnahmeSchutz")
@@ -55,8 +66,6 @@ public class AufnahmeSchutzModule: Module {
     }
   }
 
-  /// Ist die App wirklich vorn und aktiv? Beim Antippen der Aufnahme-Anzeige
-  /// in der Dynamic Island, im Kontrollzentrum usw. ist sie das nicht.
   static func appAktiv() -> Bool {
     return UIApplication.shared.applicationState == .active
   }
@@ -68,17 +77,22 @@ public class AufnahmeSchutzModule: Module {
   }
 
   private func beobachten() {
-    if beobachter == nil {
-      beobachter = NotificationCenter.default.addObserver(
-        forName: UIScreen.capturedDidChangeNotification,
-        object: nil,
-        queue: .main
-      ) { [weak self] _ in
+    if beobachter.isEmpty {
+      let zentrale = NotificationCenter.default
+      beobachter.append(zentrale.addObserver(forName: UIScreen.capturedDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
         self?.pruefen()
-      }
+      })
+      beobachter.append(zentrale.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { [weak self] _ in
+        if self?.fenster != nil {
+          self?.warImHintergrund = true
+        }
+      })
+      beobachter.append(zentrale.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+        self?.pruefen()
+      })
     }
     if timer == nil {
-      let t = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
+      let t = Timer(timeInterval: 0.3, repeats: true) { [weak self] _ in
         self?.pruefen()
       }
       RunLoop.main.add(t, forMode: .common)
@@ -87,10 +101,10 @@ public class AufnahmeSchutzModule: Module {
   }
 
   private func aufhoeren() {
-    if let b = beobachter {
+    for b in beobachter {
       NotificationCenter.default.removeObserver(b)
-      beobachter = nil
     }
+    beobachter.removeAll()
     timer?.invalidate()
     timer = nil
   }
@@ -102,32 +116,60 @@ public class AufnahmeSchutzModule: Module {
       sendEvent("onAufnahme", ["aktiv": laeuft])
     }
     if !schutzAn {
-      freiSeit = nil
       verbergen()
       return
     }
     if laeuft {
-      freiSeit = nil
       zeigen()
+      hinweisSetzen(aufnahmeLaeuft: true)
       return
     }
-    // Keine Aufnahme gemeldet. Nicht sofort ausblenden: Tippt man auf die
-    // Aufnahme-Anzeige in der Dynamic Island, meldet iOS kurz „keine
-    // Aufnahme“, obwohl sie weiterläuft. Erst ausblenden, wenn die App wieder
-    // aktiv ist und es 1,5 Sekunden so bleibt.
+    // Keine Aufnahme gemeldet – die Fläche bleibt trotzdem (siehe oben).
     guard fenster != nil else { return }
-    if !AufnahmeSchutzModule.appAktiv() {
-      freiSeit = nil
+    if warImHintergrund && AufnahmeSchutzModule.appAktiv() {
+      verbergen()
       return
     }
-    let jetzt = Date()
-    if let seit = freiSeit {
-      if jetzt.timeIntervalSince(seit) >= 1.5 {
-        freiSeit = nil
-        verbergen()
+    if !weiterPruefung {
+      hinweisSetzen(aufnahmeLaeuft: false)
+    }
+  }
+
+  /// „Weiter“ getippt. Ein Tippen bei offenem Menü an der Dynamic Island geht
+  /// auch an die App und schließt das Menü – danach meldet iOS wieder
+  /// „Aufnahme“. Darum erst 1,5 s abwarten und dann nochmal prüfen.
+  private func weiterGetippt() {
+    if weiterPruefung { return }
+    if AufnahmeSchutzModule.wirdAufgenommen() {
+      hinweisSetzen(aufnahmeLaeuft: true)
+      return
+    }
+    weiterPruefung = true
+    titelText?.text = "Einen Moment …"
+    hinweisText?.text = "Wir prüfen, ob die Aufnahme wirklich beendet ist."
+    weiterKnopf?.isHidden = true
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+      guard let selbst = self else { return }
+      selbst.weiterPruefung = false
+      if selbst.fenster == nil { return }
+      let laeuft = AufnahmeSchutzModule.wirdAufgenommen()
+      if !laeuft && AufnahmeSchutzModule.appAktiv() {
+        selbst.verbergen()
+      } else {
+        selbst.hinweisSetzen(aufnahmeLaeuft: laeuft)
       }
+    }
+  }
+
+  private func hinweisSetzen(aufnahmeLaeuft: Bool) {
+    if aufnahmeLaeuft {
+      titelText?.text = "Bildschirmaufnahme nicht erlaubt"
+      hinweisText?.text = "Beende die Aufnahme, dann geht es weiter."
+      weiterKnopf?.isHidden = true
     } else {
-      freiSeit = jetzt
+      titelText?.text = "Aufnahme beendet?"
+      hinweisText?.text = "Tippe auf „Weiter“, um zur App zurückzukehren."
+      weiterKnopf?.isHidden = false
     }
   }
 
@@ -138,42 +180,43 @@ public class AufnahmeSchutzModule: Module {
 
     let neu = UIWindow(windowScene: szene)
     neu.windowLevel = UIWindow.Level(rawValue: UIWindow.Level.alert.rawValue + 50)
-    neu.backgroundColor = .clear
+    // Komplett undurchsichtig: In der Aufnahme ist nichts von der App zu sehen.
+    neu.backgroundColor = UIColor(red: 7 / 255, green: 9 / 255, blue: 12 / 255, alpha: 1)
 
     let inhalt = UIViewController()
-    inhalt.view.backgroundColor = .clear
-
-    let unschaerfe = UIVisualEffectView(effect: UIBlurEffect(style: .systemThickMaterialDark))
-    unschaerfe.frame = inhalt.view.bounds
-    unschaerfe.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-    inhalt.view.addSubview(unschaerfe)
-
-    let abdunkeln = UIView(frame: inhalt.view.bounds)
-    abdunkeln.backgroundColor = UIColor(white: 0, alpha: 0.35)
-    abdunkeln.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-    inhalt.view.addSubview(abdunkeln)
+    inhalt.view.backgroundColor = UIColor(red: 7 / 255, green: 9 / 255, blue: 12 / 255, alpha: 1)
 
     let symbol = UIImageView(image: UIImage(systemName: "eye.slash.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 34, weight: .semibold)))
     symbol.tintColor = .white
 
     let titel = UILabel()
-    titel.text = "Bildschirmaufnahme nicht erlaubt"
     titel.font = .systemFont(ofSize: 20, weight: .bold)
     titel.textColor = .white
     titel.textAlignment = .center
     titel.numberOfLines = 0
 
     let text = UILabel()
-    text.text = "Beende die Aufnahme, dann geht es weiter."
     text.font = .systemFont(ofSize: 15, weight: .medium)
     text.textColor = UIColor(white: 1, alpha: 0.8)
     text.textAlignment = .center
     text.numberOfLines = 0
 
-    let stapel = UIStackView(arrangedSubviews: [symbol, titel, text])
+    var aussehen = UIButton.Configuration.filled()
+    aussehen.title = "Weiter"
+    aussehen.baseBackgroundColor = UIColor(red: 252 / 255, green: 91 / 255, blue: 14 / 255, alpha: 1)
+    aussehen.baseForegroundColor = .white
+    aussehen.cornerStyle = .capsule
+    aussehen.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 32, bottom: 12, trailing: 32)
+    let knopf = UIButton(configuration: aussehen, primaryAction: UIAction { [weak self] _ in
+      self?.weiterGetippt()
+    })
+    knopf.isHidden = true
+
+    let stapel = UIStackView(arrangedSubviews: [symbol, titel, text, knopf])
     stapel.axis = .vertical
     stapel.alignment = .center
-    stapel.spacing = 10
+    stapel.spacing = 12
+    stapel.setCustomSpacing(22, after: text)
     stapel.translatesAutoresizingMaskIntoConstraints = false
     inhalt.view.addSubview(stapel)
     NSLayoutConstraint.activate([
@@ -186,6 +229,10 @@ public class AufnahmeSchutzModule: Module {
     neu.rootViewController = inhalt
     neu.isHidden = false
     fenster = neu
+    titelText = titel
+    hinweisText = text
+    weiterKnopf = knopf
+    warImHintergrund = false
   }
 
   private func verbergen() {
@@ -193,5 +240,10 @@ public class AufnahmeSchutzModule: Module {
     alt.isHidden = true
     alt.rootViewController = nil
     fenster = nil
+    titelText = nil
+    hinweisText = nil
+    weiterKnopf = nil
+    warImHintergrund = false
+    weiterPruefung = false
   }
 }
