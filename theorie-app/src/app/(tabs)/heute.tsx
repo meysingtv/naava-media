@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDesktop } from "@/lib/fenster";
 import { HomeWeb } from "@/components/web/home-web";
 import { tageszeit } from "@/components/home";
-import { AKZENT, FotoZeile, hellesFoto, HilfenRaster, RegelKarte, StartAbschnitt, startFarben, StartKopf, TagesKarte, TerminKarte, ThemenReihe, WerteReihe, type Hilfe, type Wert } from "@/components/start";
+import { AKZENT, FotoZeile, HeldKarte, hellesFoto, HilfenRaster, RegelKarte, StartAbschnitt, startFarben, StartKopf, StartSchein, TerminKarte, ThemenReihe, WerteKarte, type Hilfe, type Wert } from "@/components/start";
 import { useInhaltUnten } from "@/components/tab-leiste";
 import { TourZiel, useTourBlatt } from "@/components/tour";
 import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
@@ -29,10 +29,9 @@ export default function Home() {
 }
 
 /**
- * Startseite am Handy – durchgehend hell: Begrüßung, Hauptkarte (Thema des
- * Tages bzw. Weiterlernen) mit hellem Foto, drei Werte, Prüfungstermin als
- * zarte orange Karte, Lernhilfen, Regel des Tages und alle Themen. Text steht
- * immer auf Weiß, Fotos werden nicht abgedunkelt.
+ * Startseite am Handy (hell und dunkel): Begrüßung, kräftige orange Karte mit
+ * dem Thema des Tages (bzw. Weiterlernen), Werte, Prüfungstermin mit
+ * Kalenderblatt, Lernhilfen als Fotokacheln, Regel des Tages und alle Themen.
  */
 function HomeHandy() {
   const insets = useSafeAreaInsets();
@@ -85,13 +84,13 @@ function HomeHandy() {
 
   const werte: Wert[] = FRAGEN_AKTIV
     ? [
-        { icon: "flame", farbe: c.orange, wert: String(serie), label: serie === 1 ? "Tag Serie" : "Tage Serie", onPress: () => router.push("/statistik") },
+        { icon: "flame", farbe: AKZENT.orange, wert: String(serie), label: serie === 1 ? "Tag Serie" : "Tage Serie", onPress: () => router.push("/statistik") },
         { icon: "trending-up", farbe: AKZENT.blau, wert: `${Math.round(gesamt.anteil * 100)} %`, label: "Prüfungsreif", onPress: () => router.push("/statistik") },
         { icon: "star", farbe: AKZENT.gelb, wert: `${Math.min(heute, 999)}/${stand.tagesziel}`, label: "Heute", onPress: () => router.push({ pathname: "/training", params: { modus: "smart" } }) },
       ]
     : [
         { icon: "camera", farbe: AKZENT.gruen, wert: `${schilder}/${ALBUM.length}`, label: "Schilder", onPress: () => router.push("/schilder-jagd") },
-        { icon: "play", farbe: c.orange, wert: String(videosGesamt), label: videosGesamt === 1 ? "Video" : "Videos", onPress: () => router.navigate("/lernen") },
+        { icon: "play", farbe: AKZENT.orange, wert: String(videosGesamt), label: videosGesamt === 1 ? "Video" : "Videos", onPress: () => router.navigate("/lernen") },
         { icon: "bulb", farbe: AKZENT.gelb, wert: String(CLIPS.length), label: "Regeln", onPress: () => router.push("/kurz-erklaert") },
       ];
 
@@ -120,17 +119,21 @@ function HomeHandy() {
   });
 
   const videoText = tagesVideos.length === 1 ? "1 Video" : tagesVideos.length ? `${tagesVideos.length} Videos` : null;
-  const terminTitel = kommend === null ? "Dein Prüfungstermin" : kommend === 0 ? "Heute ist Prüfung!" : kommend === 1 ? "Morgen ist Prüfung" : `Noch ${kommend} Tage`;
+  const terminTitel = kommend === null ? "Prüfungstermin" : kommend === 0 ? "Heute ist Prüfung!" : kommend === 1 ? "Morgen ist Prüfung" : `Noch ${kommend} Tage`;
   const terminUnter =
     termin && kommend !== null
       ? `Prüfung am ${termin.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" })}`
       : "Trag den Termin ein, wir zählen mit.";
+  const terminMonat = termin ? termin.toLocaleDateString("de-DE", { month: "short" }).replace(".", "").toUpperCase() : "TERMIN";
+  const terminTag = termin ? String(termin.getDate()) : "?";
 
   return (
     <FarbweltBereich farbwelt={f}>
       {fokus ? <StatusBar style={c.hell ? "dark" : "light"} /> : null}
       <View style={{ flex: 1, backgroundColor: c.grund }}>
         <ScrollView {...leistenScroll} {...tourBlatt} contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: inhaltUnten + 20 }} showsVerticalScrollIndicator={false}>
+          <StartSchein hoehe={insets.top + 320} />
+
           <StartKopf
             gruss={GRUSS_KURZ[tageszeit(jetzt.getHours())]}
             name={vorname}
@@ -140,9 +143,9 @@ function HomeHandy() {
             onProfil={() => router.navigate("/profil")}
           />
 
-          <TourZiel id="home-start" style={{ marginTop: 22 }}>
+          <TourZiel id="home-start" style={{ marginTop: 20 }}>
             {FRAGEN_AKTIV ? (
-              <TagesKarte
+              <HeldKarte
                 foto={hellesFoto(fokusThema.id)}
                 etikett={`Fokus: ${themaVon(fokusThema.id).titel}`}
                 titel={heute > 0 ? "Weiter geht's" : "Bereit für heute?"}
@@ -152,22 +155,22 @@ function HomeHandy() {
                 onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
               />
             ) : (
-              <TagesKarte
+              <HeldKarte
                 foto={hellesFoto(tagesThema)}
                 etikett="Thema des Tages"
                 titel={themaVon(tagesThema).titel}
-                unter={videoText ? `${videoText}${minuten > 0 ? ` · ca. ${minuten} Min.` : ""} · ${themaVon(tagesThema).kurz}` : themaVon(tagesThema).kurz}
-                knopf={tagesVideos.length ? "Videos ansehen" : "Zum Thema"}
+                unter={videoText ? `${videoText}${minuten > 0 ? ` · ca. ${minuten} Min.` : ""}` : themaVon(tagesThema).kurz}
+                knopf={tagesVideos.length ? "Jetzt ansehen" : "Zum Thema"}
                 onPress={() => zumThema(tagesThema)}
               />
             )}
           </TourZiel>
 
-          <TourZiel id="home-werte" style={{ marginTop: 14 }}>
-            <WerteReihe werte={werte} />
+          <TourZiel id="home-werte" style={{ marginTop: 16 }}>
+            <WerteKarte werte={werte} />
           </TourZiel>
 
-          <TerminKarte titel={terminTitel} unter={terminUnter} knopf={termin ? "Ändern" : "Eintragen"} onPress={zumTermin} style={{ marginTop: 14 }} />
+          <TerminKarte monat={terminMonat} tag={terminTag} titel={terminTitel} unter={terminUnter} knopf={termin ? "Ändern" : "Eintragen"} onPress={zumTermin} style={{ marginTop: 16 }} />
 
           <StartAbschnitt titel={FRAGEN_AKTIV ? "Üben" : "Lernhilfen"} style={{ marginTop: 32 }} />
           <TourZiel id="home-schnell">
@@ -199,5 +202,5 @@ const GRUSS_KURZ: Record<ReturnType<typeof tageszeit>, string> = {
   morgen: "Guten Morgen,",
   tag: "Hallo,",
   abend: "Guten Abend,",
-  nacht: "Schön, dass du da bist,",
+  nacht: "Hallo,",
 };
