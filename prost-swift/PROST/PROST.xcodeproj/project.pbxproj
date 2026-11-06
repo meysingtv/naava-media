@@ -1,0 +1,109 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0000000000000000000F42A6 /* PROSTApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000F4251 /* PROSTApp.swift */; };
+		0000000000000000000F42B7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000F4262 /* ContentView.swift */; };
+		0000000000000000000F42C8 /* Screens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000F4273 /* Screens.swift */; };
+		0000000000000000000F42D9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0000000000000000000F4284 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0000000000000000000F4251 /* PROSTApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PROSTApp.swift; sourceTree = "<group>"; };
+		0000000000000000000F4262 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		0000000000000000000F4273 /* Screens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Screens.swift; sourceTree = "<group>"; };
+		0000000000000000000F4284 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		0000000000000000000F4295 /* PROST.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PROST.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0000000000000000000F432E /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0000000000000000000F42EA = {isa = PBXGroup; children = (0000000000000000000F42FB /* PROST */, 0000000000000000000F430C /* Products */); sourceTree = "<group>"; };
+		0000000000000000000F42FB /* PROST */ = {isa = PBXGroup; children = (0000000000000000000F4251 /* PROSTApp.swift */, 0000000000000000000F4262 /* ContentView.swift */, 0000000000000000000F4273 /* Screens.swift */, 0000000000000000000F4284 /* Assets.xcassets */); path = PROST; sourceTree = "<group>"; };
+		0000000000000000000F430C /* Products */ = {isa = PBXGroup; children = (0000000000000000000F4295 /* PROST.app */); name = Products; sourceTree = "<group>"; };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0000000000000000000F4350 /* PROST */ = {isa = PBXNativeTarget; buildConfigurationList = 0000000000000000000F4383 /* Build configuration list for PBXNativeTarget "PROST" */; buildPhases = (0000000000000000000F431D /* Sources */, 0000000000000000000F432E /* Frameworks */, 0000000000000000000F433F /* Resources */); buildRules = (); dependencies = (); name = PROST; productName = PROST; productReference = 0000000000000000000F4295 /* PROST.app */; productType = "com.apple.product-type.application"; };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0000000000000000000F4361 /* Project object */ = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1500; LastUpgradeCheck = 1500; TargetAttributes = {0000000000000000000F4350 = {CreatedOnToolsVersion = 15.0; }; }; }; buildConfigurationList = 0000000000000000000F4372 /* Build configuration list for PBXProject "PROST" */; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = 0000000000000000000F42EA; productRefGroup = 0000000000000000000F430C /* Products */; projectDirPath = ""; projectRoot = ""; targets = (0000000000000000000F4350 /* PROST */); };
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0000000000000000000F433F /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (0000000000000000000F42D9 /* Assets.xcassets in Resources */); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0000000000000000000F431D /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (0000000000000000000F42A6 /* PROSTApp.swift in Sources */, 0000000000000000000F42B7 /* ContentView.swift in Sources */, 0000000000000000000F42C8 /* Screens.swift in Sources */); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		0000000000000000000F4394 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone"; }; name = Debug; };
+		0000000000000000000F43A5 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule; }; name = Release; };
+		0000000000000000000F43B6 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks");
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.leon.prost;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
+		0000000000000000000F43C7 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks");
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.leon.prost;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0000000000000000000F4372 /* Build configuration list for PBXProject "PROST" */ = {isa = XCConfigurationList; buildConfigurations = (0000000000000000000F4394 /* Debug */, 0000000000000000000F43A5 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		0000000000000000000F4383 /* Build configuration list for PBXNativeTarget "PROST" */ = {isa = XCConfigurationList; buildConfigurations = (0000000000000000000F43B6 /* Debug */, 0000000000000000000F43C7 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+	};
+	rootObject = 0000000000000000000F4361 /* Project object */;
+}
