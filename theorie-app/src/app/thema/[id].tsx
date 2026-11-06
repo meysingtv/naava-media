@@ -11,6 +11,8 @@ import { Icon } from "@/components/icon";
 import { FotoKopf, Seite, StandKarte } from "@/components/seite";
 import { Knopf } from "@/components/ui";
 import { useDarstellung } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
+import { ThemaWeb } from "@/components/web/thema-web";
 import { fragenZuThema, themaVon, type ThemaId } from "@/lib/fragen";
 import { themaFoto } from "@/lib/fotos";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
@@ -108,6 +110,11 @@ function ThemaNurVideos() {
 
 function ThemaMitFragen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  // Im Browser am PC eine eigene Fassung (web/thema-web.tsx).
+  return useDesktop() ? <ThemaWeb id={themaVon(id as ThemaId).id} /> : <ThemaHandy id={id} />;
+}
+
+function ThemaHandy({ id }: { id: string }) {
   const insets = useSafeAreaInsets();
   const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();

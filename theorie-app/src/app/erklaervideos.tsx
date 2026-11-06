@@ -12,6 +12,8 @@ import { GrossKopf, Seite } from "@/components/seite";
 import { Chip, Eingabe, Gruppe, kartenFlaeche, Knopf, T, Zeile } from "@/components/ui";
 import { useClipRechte } from "@/lib/clips-server";
 import { useFarbwelt } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
+import { ErklaervideosWeb } from "@/components/web/erklaervideos-web";
 import { animationFuer } from "@/lib/erklaer-animationen";
 import { erklaervideoHochladen, erklaervideoLoeschen, erklaervideosLaden, useErklaervideos } from "@/lib/erklaervideos";
 import { FRAGEN, themaVon, type Frage } from "@/lib/fragen";
@@ -245,6 +247,11 @@ function Inhalt() {
 }
 
 export default function Erklaervideos() {
+  // Im Browser am PC eine eigene Fassung mit Hochladen per Datei-Dialog (web/erklaervideos-web.tsx).
+  return useDesktop() ? <ErklaervideosWeb /> : <ErklaervideosHandy />;
+}
+
+function ErklaervideosHandy() {
   return (
     <Seite>
       <Inhalt />

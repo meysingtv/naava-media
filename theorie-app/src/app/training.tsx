@@ -4,7 +4,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useFenster } from "@/lib/fenster";
+import { useDesktop, useFenster } from "@/lib/fenster";
+import { TrainingErgebnisWeb, TrainingLeerWeb, TrainingWeb } from "@/components/web/training-web";
 import { kopfOben } from "@/components/ui";
 import { AllesRichtig, ErgebnisHeld, ErgebnisRing, ErgebnisWerte, FehlerKarte, LeerZustand, type Ton } from "@/components/auswertung";
 import { FrageAktionen } from "@/components/frage-aktionen";
@@ -61,6 +62,8 @@ export default function Training() {
   const params = useLocalSearchParams<Params>();
   const insets = useSafeAreaInsets();
   const { width } = useFenster();
+  // Im Browser am PC: Vollbild-Fassung mit Tastatur (web/training-web.tsx).
+  const desktop = useDesktop();
   const { farbwelt: f, belohnungen } = useDarstellung();
   const { stand, antwort, merken, trainingFertig } = useStand();
   const { videos } = useErklaervideos();
@@ -136,6 +139,7 @@ export default function Training() {
         : params.modus === "gemerkt"
           ? "Du hast noch keine Favoriten. Tippe beim Lernen oben rechts auf das Herz."
           : "Hier gibt es gerade keine Fragen.";
+    if (desktop) return <TrainingLeerWeb icon={erledigt ? "checkmark-done" : "heart-outline"} titel={erledigt ? "Alles erledigt." : "Noch leer."} text={text} onZurueck={() => router.back()} />;
     return (
       <FarbweltBereich farbwelt={f}>
         <StatusBar style={f.hell ? "dark" : "light"} />
@@ -160,6 +164,22 @@ export default function Training() {
     const ton: Ton = quote >= 0.8 ? "gruen" : quote >= 0.5 ? "orange" : "rot";
     const bild = params.modus === "thema" && params.thema ? themaFoto(params.thema as ThemaId) : FOTOS.tagesziel;
     const gruen = f.hell ? "#23A548" : "#4ED053";
+
+    if (desktop) {
+      return (
+        <TrainingErgebnisWeb
+          ergebnisse={ergebnisse}
+          xp={belohnungen ? xpSumme : undefined}
+          zeit={dauer(dauerSek)}
+          serie={serie}
+          heute={heute}
+          ziel={stand.tagesziel}
+          zielJetzt={zielJetzt}
+          onFertig={() => router.back()}
+          onFehler={() => router.replace({ pathname: "/training", params: { modus: "fehler" } })}
+        />
+      );
+    }
 
     return (
       <FarbweltBereich farbwelt={f}>
@@ -225,6 +245,36 @@ export default function Training() {
   const rund = erklaerbar && width < 390 ? 50 : 56;
 
   // ------------------------------------------------------------------ Frage
+  if (desktop) {
+    return (
+      <TrainingWeb
+        frage={frage}
+        nummer={index + 1}
+        anzahl={ids.length}
+        ergebnisse={ergebnisse}
+        auswahl={auswahl}
+        onAuswahl={setAuswahl}
+        eingabe={eingabe}
+        onEingabe={setEingabe}
+        aufgedeckt={aufgedeckt}
+        reihenfolge={reihenfolge(frage)}
+        xp={belohnungen ? letzteXp : undefined}
+        gemerkt={gemerkt}
+        letzte={letzte}
+        erklaerbar={erklaerbar}
+        erklaerVideo={erklaerVideo}
+        kiAnker={kiAnker}
+        onKi={setKiAnker}
+        onPruefen={pruefen}
+        onWeiter={weiter}
+        onSchliessen={schliessen}
+        onMerken={() => merken(frage.id)}
+        onErklaerung={() => router.push({ pathname: "/erklaerung", params: { frage: frage.id } })}
+        onMelden={() => frageMelden(frage.id)}
+      />
+    );
+  }
+
   return (
     <FarbweltBereich farbwelt={f}>
       <StatusBar style={f.hell ? "dark" : "light"} />

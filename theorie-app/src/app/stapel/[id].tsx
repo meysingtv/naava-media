@@ -11,7 +11,9 @@ import { Seite } from "@/components/seite";
 import { kartenFlaeche, Knopf, Kopf, KopfTaste, T } from "@/components/ui";
 import { Verkehrszeichen } from "@/components/zeichen";
 import { dialog } from "@/components/dialog";
+import { StapelWeb } from "@/components/web/karteikarten-web";
 import { useDarstellung, useFarbwelt } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
 import { istZeichen, themaVon, type ZeichenKey } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
 import { GRUPPE_TITEL, istEingebaut, karteInhalt, naechsteText, stapelInfo, vorneText, type KartenInhalt, type StapelId } from "@/lib/karteikarten";
@@ -74,7 +76,12 @@ function Faecher({ ids, faecher }: { ids: string[]; faecher: Record<string, { fa
   );
 }
 
+/** Ein Stapel – am PC eine eigene Fassung. */
 export default function StapelAnsicht() {
+  return useDesktop() ? <StapelWeb /> : <StapelHandy />;
+}
+
+function StapelHandy() {
   const { id: roh } = useLocalSearchParams<{ id: string }>();
   const id = (roh && GUELTIG.test(roh) ? roh : "eigen") as StapelId;
   const insets = useSafeAreaInsets();

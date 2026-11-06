@@ -5,7 +5,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Lader } from "@/components/lader";
 import { FotoKopf, Seite } from "@/components/seite";
 import { Avatar, Karte, kartenFlaeche, T } from "@/components/ui";
+import { EloWeb } from "@/components/web/elo-web";
 import { useDarstellung } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
 import { FOTOS } from "@/lib/fotos";
 import { useKonto } from "@/lib/konto";
 import { eloRanglisteLaden, type EloEintrag } from "@/lib/online-duell";
@@ -17,6 +19,10 @@ const PODEST_HELL = [farben.orange, "#8E97A3", "#B07A48"];
 
 /** Top 100 der Rangliste-Duelle nach Elo. */
 export default function EloRangliste() {
+  return useDesktop() ? <EloWeb /> : <EloHandy />;
+}
+
+function EloHandy() {
   const insets = useSafeAreaInsets();
   const { farbwelt: f } = useDarstellung();
   const { session, profil } = useKonto();

@@ -8,6 +8,10 @@ import { Avatar, Chip, kartenFlaeche, kopfOben, T } from "@/components/ui";
 import { FrageAnsicht, useAntwortReihenfolge } from "@/components/frage-ansicht";
 import { AktionsLeiste, FrageKopf, GlasRund, HauptKnopf, KopfPille, NebenKnopf } from "@/components/frage-rahmen";
 import { Seite } from "@/components/seite";
+import { NutzerBild, ProfilBild } from "@/components/profilbild";
+import { Chip as WebChip, TOENE } from "@/components/web/bunt";
+import { DuellBuehneWeb, DuellEndeWeb, DuellRundeWeb } from "@/components/web/duell-web";
+import { useDesktop } from "@/lib/fenster";
 import { dialog } from "@/components/dialog";
 import { DUELL_RUNDEN, DUELL_SEKUNDEN, gegnerVon } from "@/lib/duell";
 import { antwortRichtig, frageVon, FRAGEN } from "@/lib/fragen";
@@ -62,6 +66,10 @@ export default function Duell() {
   const [aufgedeckt, setAufgedeckt] = useState(false);
   const [punkte, setPunkte] = useState({ ich: 0, bot: 0 });
   const [ende, setEnde] = useState<Ende | null>(null);
+  // Ergebnis je Runde – zeigt die PC-Fassung oben und in der Auswertung.
+  const [verlauf, setVerlauf] = useState<{ ich: boolean; bot: boolean }[]>([]);
+  // Im Browser am PC: Vollbild-Fassung mit Tastatur (web/duell-web.tsx).
+  const desktop = useDesktop();
 
   const zeit = useRef(new Animated.Value(1)).current;
   const intro = useRef(new Animated.Value(0)).current;
@@ -122,6 +130,7 @@ export default function Duell() {
     else fehler();
     const neu = { ich: punkte.ich + (meins ? 1 : 0), bot: punkte.bot + (bot ? 1 : 0) };
     setPunkte(neu);
+    setVerlauf((v) => [...v, { ich: meins, bot }]);
     const t = setTimeout(() => {
       if (runde + 1 < fragen.length) {
         setRunde(runde + 1);
@@ -148,6 +157,81 @@ export default function Duell() {
   }
 
   useZurueckTaste(schliessen);
+
+  if (desktop) {
+    const ichSpieler = { name: ichName, bild: <ProfilBild name={anzeigeName} groesse={phase === "intro" ? 112 : 48} rand={0} /> };
+    const gegnerSpieler = { name: gegner.name, bild: <NutzerBild pfad={null} name={gegner.name} farbe={gegner.farbe} groesse={phase === "intro" ? 112 : 48} rand={0} /> };
+    if (phase === "intro")
+      return (
+        <DuellBuehneWeb
+          ich={{ ...ichSpieler, unter: "Du" }}
+          gegner={{ ...gegnerSpieler, unter: `${gegner.titel} · Rating ${gegner.rating}` }}
+          etikett="Duell"
+          text={`${fragen.length} Fragen · je ${DUELL_SEKUNDEN} Sekunden. Wer mehr richtig hat, gewinnt.`}
+          einblenden={intro}
+          onSchliessen={() => router.back()}
+        />
+      );
+    if (phase === "ende" && ende) {
+      const sieg = ende.ergebnis === "sieg";
+      const remis = ende.ergebnis === "remis";
+      return (
+        <DuellEndeWeb
+          icon={sieg ? "trophy" : remis ? "git-compare" : "flag"}
+          ton={sieg ? TOENE.gruen : remis ? TOENE.blau : TOENE.rot}
+          titel={sieg ? "Sieg!" : remis ? "Unentschieden." : "Knapp daneben."}
+          stand={`${punkte.ich} : ${punkte.bot}`}
+          unter={`${ichName} gegen ${gegner.name}`}
+          chips={
+            <>
+              {belohnungen ? <WebChip icon="flash" text={`+${ende.xp} XP`} ton={TOENE.gelb} /> : null}
+              <WebChip icon="trending-up" text={`Rating ${ende.rating >= 0 ? "+" : ""}${ende.rating}`} ton={ende.rating >= 0 ? TOENE.gruen : TOENE.rot} />
+            </>
+          }
+          runden={verlauf.map((v, i) => ({ frage: fragen[i], ich: v.ich, gegner: v.bot }))}
+          gegnerName={gegner.name}
+          neben={{ titel: "Zur Liga", onPress: () => router.back() }}
+          haupt={{ titel: "Revanche", icon: "refresh", onPress: () => router.replace({ pathname: "/duell", params: { gegner: gegner.id } }) }}
+          onSchliessen={() => router.back()}
+        />
+      );
+    }
+    const frage = frageVon(fragen[runde]);
+    if (!frage) return null;
+    const gesperrt = meins !== null;
+    const letzte = runde + 1 >= fragen.length;
+    return (
+      <DuellRundeWeb
+        titel={`Runde ${runde + 1} von ${fragen.length}`}
+        runde={runde}
+        anzahl={fragen.length}
+        ergebnisse={verlauf.map((v) => v.ich)}
+        zeit={zeit}
+        sekunden={DUELL_SEKUNDEN}
+        ich={ichSpieler}
+        ichStatus={aufgedeckt ? (meins ? "richtig" : "falsch") : gesperrt ? "abgegeben" : "am Zug"}
+        ichTon={aufgedeckt ? (meins ? TOENE.gruen : TOENE.rot) : gesperrt ? TOENE.blau : TOENE.orange}
+        gegner={gegnerSpieler}
+        gegnerStatus={aufgedeckt ? (bot ? "richtig" : "falsch") : bot !== null ? "hat geantwortet" : "denkt nach …"}
+        gegnerTon={aufgedeckt ? (bot ? TOENE.gruen : TOENE.rot) : bot !== null ? TOENE.blau : { farbe: "#8A8F96", kante: "#8A8F96", hell: "#F0F1F2" }}
+        stand={`${punkte.ich} : ${punkte.bot}`}
+        standUnter="Punkte"
+        frage={frage}
+        reihenfolge={reihenfolge(frage)}
+        auswahl={auswahl}
+        onAuswahl={(a) => {
+          if (!gesperrt) setAuswahl(a);
+        }}
+        gesperrt={gesperrt}
+        aufgedeckt={aufgedeckt}
+        richtig={aufgedeckt ? meins : null}
+        nachricht={aufgedeckt ? `${gegner.name} lag ${bot === meins ? "auch " : ""}${bot ? "richtig" : "falsch"}.` : gesperrt ? `Warte auf ${gegner.name} …` : undefined}
+        knopf={aufgedeckt ? (letzte ? "Auswertung …" : "Nächste Runde …") : gesperrt ? "Abgegeben" : "Antwort abgeben"}
+        onAbgeben={abgeben}
+        onSchliessen={schliessen}
+      />
+    );
+  }
 
   // ------------------------------------------------------------------ Intro
   if (phase === "intro") {

@@ -14,8 +14,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFenster } from "@/lib/fenster";
 import { Logo } from "@/components/grafik";
 import { Icon, type IconName } from "@/components/icon";
-import { T, zurueck } from "@/components/ui";
+import { Knopf, T, zurueck } from "@/components/ui";
 import { tippen } from "@/lib/haptik";
+import { CODE_LAENGE, type CodeAblauf } from "@/lib/konto";
 import { abstand, farben, RAND, schrift } from "@/lib/theme";
 
 /** Dunkler Grund mit leuchtenden Straßen oben links und unten rechts. */
@@ -190,53 +191,110 @@ export function Feld({ label, icon, links, fehler, ...props }: TextInputProps & 
   );
 }
 
-/** Passwortfeld mit Auge zum Anzeigen. */
-export function PasswortFeld({ label, fehler, ...props }: TextInputProps & { label: string; fehler?: boolean }) {
-  const [sichtbar, setSichtbar] = useState(false);
+/**
+ * Code aus der E-Mail: eine Kachel je Ziffer. Darüber liegt ein fast
+ * unsichtbares Eingabefeld – so schlagen iOS und Android den Code aus der
+ * Mail über der Tastatur vor, und Einfügen klappt auch.
+ */
+export function CodeFeld({ wert, onWechsel, onVoll, fehler }: { wert: string; onWechsel: (c: string) => void; onVoll: (c: string) => void; fehler?: boolean }) {
   const [fokus, setFokus] = useState(false);
-  const eingabe = useRef<TextInput>(null);
   return (
-    <FeldHuelle
-      label={label}
-      fokus={fokus}
-      fehler={fehler}
-      onPress={() => eingabe.current?.focus()}
-      rechts={
-        <Pressable
-          onPress={() => setSichtbar((v) => !v)}
-          hitSlop={8}
-          accessibilityLabel={sichtbar ? "Passwort verbergen" : "Passwort anzeigen"}
-          style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
-        >
-          <Icon name={sichtbar ? "eye-outline" : "eye-off-outline"} size={20} color={fokus ? farben.orange : farben.text3} />
-        </Pressable>
-      }
-    >
+    <View>
+      <View style={{ flexDirection: "row", gap: abstand(2) }}>
+        {Array.from({ length: CODE_LAENGE }, (_, i) => {
+          const aktiv = fokus && (i === wert.length || (i === CODE_LAENGE - 1 && wert.length === CODE_LAENGE));
+          return (
+            <View
+              key={i}
+              style={{
+                flex: 1,
+                height: 62,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: fehler ? farben.rot : aktiv ? farben.orange : GLAS.rand,
+                backgroundColor: aktiv ? GLAS.flaecheFokus : GLAS.flaeche,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text style={{ ...schrift.titelFett, fontSize: 26, color: farben.text }}>{wert[i] ?? ""}</Text>
+            </View>
+          );
+        })}
+      </View>
       <TextInput
-        ref={eingabe}
-        placeholderTextColor={farben.text4}
-        selectionColor={farben.orange}
-        cursorColor={farben.orange}
-        selectionHandleColor={farben.orange}
+        value={wert}
+        onChangeText={(t) => {
+          const z = t.replace(/\D/g, "").slice(0, CODE_LAENGE);
+          onWechsel(z);
+          if (z.length === CODE_LAENGE) onVoll(z);
+        }}
+        onFocus={() => setFokus(true)}
+        onBlur={() => setFokus(false)}
+        keyboardType="number-pad"
         keyboardAppearance="dark"
-        autoCapitalize="none"
-        autoCorrect={false}
-        spellCheck={false}
-        textContentType="password"
-        autoComplete="password"
-        {...props}
-        secureTextEntry={!sichtbar}
-        onFocus={(e) => {
-          setFokus(true);
-          props.onFocus?.(e);
-        }}
-        onBlur={(e) => {
-          setFokus(false);
-          props.onBlur?.(e);
-        }}
-        style={[EINGABE, props.style]}
+        textContentType="oneTimeCode"
+        autoComplete="one-time-code"
+        autoFocus
+        caretHidden
+        accessibilityLabel={`${CODE_LAENGE}-stelliger Code aus der E-Mail`}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, opacity: 0.02, color: "transparent" }}
       />
-    </FeldHuelle>
+    </View>
+  );
+}
+
+/**
+ * Zweiter Schritt von Anmelden und Registrieren: Code aus der E-Mail
+ * eingeben. Zurück führt wieder zur Eingabe der Adresse.
+ */
+export function CodeSchritt({ ablauf, onAngemeldet }: { ablauf: CodeAblauf; onAngemeldet: () => void }) {
+  async function los(c?: string) {
+    if (await ablauf.pruefen(c)) onAngemeldet();
+  }
+  return (
+    <AuthRahmen titel="Code eingeben" unter={`Wir haben dir einen ${CODE_LAENGE}-stelligen Code an ${ablauf.gesendetAn} geschickt.`} onZurueck={ablauf.andereAdresse}>
+      <View style={{ marginTop: abstand(2) }}>
+        <CodeFeld wert={ablauf.code} onWechsel={ablauf.setCode} onVoll={los} fehler={Boolean(ablauf.fehler)} />
+      </View>
+
+      {ablauf.fehler ? (
+        <T v="klein" farbe={farben.rot} style={{ ...schrift.textHalb }}>
+          {ablauf.fehler}
+        </T>
+      ) : null}
+
+      <Knopf titel="Bestätigen" icon="arrow-forward" laedt={ablauf.laedt} deaktiviert={ablauf.code.length < CODE_LAENGE} onPress={() => los()} style={{ marginTop: abstand(1) }} />
+
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: abstand(1) }}>
+        <Pressable
+          onPress={() => {
+            tippen();
+            ablauf.nochmalSenden();
+          }}
+          disabled={ablauf.warten > 0 || ablauf.laedt}
+          hitSlop={8}
+        >
+          <T v="textStark" farbe={ablauf.warten > 0 ? farben.text3 : farben.orange} style={{ fontSize: 14.5 }}>
+            {ablauf.warten > 0 ? `Neuer Code in ${ablauf.warten} s` : "Code erneut senden"}
+          </T>
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            tippen();
+            ablauf.andereAdresse();
+          }}
+          hitSlop={8}
+        >
+          <T v="textStark" farbe={farben.orange} style={{ fontSize: 14.5 }}>
+            Andere E-Mail
+          </T>
+        </Pressable>
+      </View>
+      <T v="klein" farbe={farben.text3}>
+        Nichts angekommen? Schau auch im Spam-Ordner nach. Der Code gilt eine Stunde.
+      </T>
+    </AuthRahmen>
   );
 }
 

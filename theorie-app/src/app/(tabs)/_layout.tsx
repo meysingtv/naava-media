@@ -50,7 +50,7 @@ export default function TabsLayout() {
 }
 
 function AndroidTabs() {
-  // Im Browser am PC navigiert die Leiste oben (web-leiste.tsx) – unten keine Leiste.
+  // Im Browser am PC navigiert die Seitenleiste links (web/rahmen.tsx) – unten keine Leiste.
   const desktop = useDesktop();
   return (
     <Tabs tabBar={(props) => (desktop ? null : <TabLeiste {...props} />)} screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: farben.grund } }}>

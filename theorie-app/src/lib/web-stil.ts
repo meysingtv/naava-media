@@ -10,6 +10,7 @@ if (istBrowser) {
   const stil = document.createElement("style");
   stil.textContent = `
     input, textarea, select { outline: none !important; }
+    [aria-modal="true"], [aria-modal="true"]:focus, [role="dialog"]:focus { outline: none !important; }
     body { overscroll-behavior: none; }
     ::-webkit-scrollbar { width: 10px; height: 10px; }
     ::-webkit-scrollbar-track { background: transparent; }

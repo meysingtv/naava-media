@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { KeyboardAvoidingView, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Pressable, ScrollView, Text, TextInput, View, type TextStyle } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -10,7 +10,9 @@ import { Seite } from "@/components/seite";
 import { Kopf, KopfTaste, T } from "@/components/ui";
 import { Verkehrszeichen, ZEICHEN_INFO } from "@/components/zeichen";
 import { dialog } from "@/components/dialog";
+import { KarteBearbeitenWeb } from "@/components/web/karte-bearbeiten-web";
 import { useDarstellung, useFarbwelt } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
 import type { ZeichenKey } from "@/lib/fragen";
 import { erfolg, tippen } from "@/lib/haptik";
 import { useStand } from "@/lib/stand";
@@ -72,15 +74,19 @@ function Feld({
             lineHeight: 22,
             color: f.text,
           },
-          f.hell ? leuchten("#3C2C18", 0.05, 8, 2) : null,
+          f.hell ? (leuchten("#3C2C18", 0.05, 8, 2) as TextStyle) : null,
         ]}
       />
     </View>
   );
 }
 
-/** Eigene Karteikarte schreiben oder ändern – optional mit Verkehrszeichen vorn. */
+/** Eigene Karteikarte schreiben oder ändern – optional mit Verkehrszeichen vorn. Am PC eine eigene Fassung. */
 export default function KarteBearbeiten() {
+  return useDesktop() ? <KarteBearbeitenWeb /> : <KarteBearbeitenHandy />;
+}
+
+function KarteBearbeitenHandy() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const insets = useSafeAreaInsets();
   const { farbwelt: f } = useDarstellung();

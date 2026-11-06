@@ -9,6 +9,8 @@ import { FrageKopf, GlasRund, KopfPille } from "@/components/frage-rahmen";
 import { Icon } from "@/components/icon";
 import { Lader } from "@/components/lader";
 import { Seite } from "@/components/seite";
+import { ThemavideoWeb } from "@/components/web/video-web";
+import { useDesktop } from "@/lib/fenster";
 import { kopfOben } from "@/components/ui";
 import { ANIMATION_TITEL, animationZuLage } from "@/lib/erklaer-animationen";
 import { erklaervideoUrl, useErklaervideos } from "@/lib/erklaervideos";
@@ -48,6 +50,11 @@ function Spieler({ url }: { url: string }) {
 }
 
 export default function ThemavideoSeite() {
+  // Im Browser am PC eine eigene Fassung (web/video-web.tsx).
+  return useDesktop() ? <ThemavideoWeb /> : <ThemavideoHandy />;
+}
+
+function ThemavideoHandy() {
   const params = useLocalSearchParams<{ id?: string; frage?: string; lage?: string }>();
   const insets = useSafeAreaInsets();
   const { width } = useFenster();

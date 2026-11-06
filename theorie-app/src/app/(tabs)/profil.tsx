@@ -6,7 +6,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useDesktop, useFenster } from "@/lib/fenster";
-import { DesktopAbschnitt, DesktopKopf, DesktopSeite, DKarte, KopfRund, LUECKE, useDesktopBreite } from "@/components/desktop";
+import { useProfilAktionen } from "@/lib/profil-aktionen";
+import { ProfilWeb } from "@/components/web/profil-web";
 import { dialog } from "@/components/dialog";
 import { Glas } from "@/components/glas";
 import { GlasGrund } from "@/components/glas-flaeche";
@@ -26,7 +27,6 @@ import { tippen } from "@/lib/haptik";
 import { heuteDran, kartenZahlen } from "@/lib/karteikarten";
 import { useKonto } from "@/lib/konto";
 import { useLeistenScroll } from "@/lib/leisten-scroll";
-import { profilbildEntfernen, profilbildHochladen, profilbildServerEntfernen, profilbildWaehlen, useProfilbild } from "@/lib/profilbild";
 import { tageBis, terminDatum } from "@/lib/pruefungstag";
 import { ligaVon } from "@/lib/rangliste";
 import { ALBUM } from "@/lib/schilder-jagd";
@@ -36,6 +36,11 @@ import { leuchten, RAND, schrift, verlauf } from "@/lib/theme";
 const MONATE_KURZ = ["Jan.", "Feb.", "März", "Apr.", "Mai", "Juni", "Juli", "Aug.", "Sep.", "Okt.", "Nov.", "Dez."];
 
 export default function Profil() {
+  // Im Browser am PC eine eigene Fassung (web/profil-web.tsx).
+  return useDesktop() ? <ProfilWeb /> : <ProfilHandy />;
+}
+
+function ProfilHandy() {
   const insets = useSafeAreaInsets();
   const { width } = useFenster();
   const inhaltUnten = useInhaltUnten();
@@ -44,12 +49,7 @@ export default function Profil() {
   const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();
   const { daten: crewDaten } = useCrew();
-  const { profil, gast, anzeigeName, abmelden, session, profilNeuLaden } = useKonto();
-  const bild = useProfilbild();
-  const desktop = useDesktop();
-  const desktopBreite = useDesktopBreite();
-
-  const hatBild = Boolean(bild || profil?.bild_pfad);
+  const { profil, gast, anzeigeName, session } = useKonto();
   const freigeschaltet = ERFOLGE.filter((e) => stand.erfolge[e.id]).length;
   const gemerkteClips = CLIPS.filter((c) => stand.clips.gemerkt.includes(c.id)).length;
   const schilderGefunden = ALBUM.filter((k) => stand.schilder[k]).length;
@@ -84,49 +84,7 @@ export default function Profil() {
         : "Prüfungsreif – jetzt fehlt nur die Prüfung"
       : `Noch ${Math.max(1, Math.ceil((0.9 - reife) * 100))} % bis prüfungsreif`;
 
-  async function fotoWaehlen() {
-    const ok = await profilbildWaehlen();
-    if (!ok || !session) return;
-    try {
-      // Auch auf den Server, damit andere es bei Clips und Kommentaren sehen.
-      await profilbildHochladen(profil?.bild_pfad ?? null);
-      await profilNeuLaden();
-    } catch {
-      dialog("Profilbild", "Das Bild ist auf deinem Handy gespeichert, konnte aber gerade nicht hochgeladen werden. Versuch es gleich noch einmal.");
-    }
-  }
-
-  async function fotoEntfernen() {
-    await profilbildEntfernen();
-    if (!session) return;
-    await profilbildServerEntfernen(profil?.bild_pfad ?? null);
-    await profilNeuLaden();
-  }
-
-  function bildAendern() {
-    const optionen: { text: string; onPress?: () => void; style?: "cancel" | "destructive" }[] = [{ text: "Foto auswählen", onPress: () => fotoWaehlen() }];
-    if (hatBild) optionen.push({ text: "Foto entfernen", style: "destructive", onPress: () => fotoEntfernen() });
-    optionen.push({ text: "Abbrechen", style: "cancel" });
-    dialog("Profilbild", undefined, optionen);
-  }
-
-  function abmeldenFragen() {
-    dialog(
-      gast ? "Gastmodus beenden?" : "Abmelden?",
-      gast ? "Dein Fortschritt bleibt auf diesem Gerät gespeichert." : "Dein Fortschritt ist in deinem Konto gesichert.",
-      [
-        { text: "Abbrechen", style: "cancel" },
-        { text: gast ? "Beenden" : "Abmelden", style: "destructive", onPress: () => abmelden() },
-      ],
-    );
-  }
-
-  function abzeichenZeigen(id: string) {
-    const e = ERFOLGE.find((x) => x.id === id);
-    if (!e) return;
-    const wann = stand.erfolge[e.id];
-    dialog(e.titel, wann ? `${e.text}\nFreigeschaltet am ${wann.split("-").reverse().join(".")}.` : e.text);
-  }
+  const { bildAendern, abmeldenFragen, abzeichenZeigen } = useProfilAktionen();
 
   // Auf dem iPad nicht höher als auf einem großen iPhone
   const heldHoehe = Math.round(Math.min(width, 440) * 1.22);
@@ -187,8 +145,6 @@ export default function Profil() {
   );
   const zahlenRaster = (
     <ZahlenRaster
-      spalten={desktop ? 4 : undefined}
-      ohneRand={desktop}
       onPress={() => router.push("/statistik")}
       zahlen={[
         { icon: "time", sf: "clock.fill", farbe: "#4DA3FF", label: "Lernzeit", wert: lernzeitText(gesamtZahlen.sekunden), mini: { art: "balken", werte: letzteTage.map((t) => stand.zeitTage[t] ?? 0) }, unter: "Letzte 7 Tage" },
@@ -276,88 +232,6 @@ export default function Profil() {
       <MenueZeile icon="log-out-outline" farbe="#FF4A3D" titel={gast ? "Gastmodus beenden" : "Abmelden"} gefahr onPress={abmeldenFragen} />
     </MenueGruppe>
   );
-
-  // Am PC: links die Profilkarte mit Werten und Konto, rechts Weg, Abzeichen, Liga, Zahlen und mehr.
-  if (desktop) {
-    const zwei = desktopBreite >= 1100;
-    const links = zwei ? 400 : desktopBreite;
-    const rechts = zwei ? desktopBreite - links - LUECKE : desktopBreite;
-    const haelfte = Math.ceil(mehrZeilen.length / 2);
-    return (
-      <FarbweltBereich farbwelt={f}>
-        <DesktopSeite>
-          <DesktopKopf titel="Profil" unter={FRAGEN_AKTIV ? "Dein Weg zum Führerschein, Abzeichen und Zahlen." : "Dein Konto, Schilder-Jagd und Lernhilfen."} rechts={<KopfRund icon="settings-outline" label="Einstellungen" onPress={() => router.push("/einstellungen")} />} />
-          <View style={{ flexDirection: zwei ? "row" : "column", gap: LUECKE, alignItems: "flex-start" }}>
-            <View style={{ width: links, gap: 24 }}>
-              <DKarte style={{ padding: 0, overflow: "hidden" }}>
-                <View style={{ height: 150 }}>
-                  <Image source={f.hell ? FOTOS.heldProfilHell : FOTOS.heldProfilDunkel} resizeMode="cover" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} />
-                  <LinearGradient colors={["rgba(0,0,0,0)", f.hell ? "rgba(255,255,255,0.9)" : "rgba(13,19,23,0.95)"]} locations={[0.35, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
-                </View>
-                <View style={{ alignItems: "center", marginTop: -70, paddingHorizontal: 20, paddingBottom: 22 }}>
-                  <ProfilRing onPress={bildAendern}>
-                    <ProfilBild name={anzeigeName} groesse={112} rand={0} />
-                  </ProfilRing>
-                  <Text style={{ ...schrift.titel, fontSize: 28, lineHeight: 34, color: f.text, marginTop: 14, letterSpacing: -0.3 }} numberOfLines={1}>
-                    {anzeigeName}
-                  </Text>
-                  <Text style={{ ...schrift.textMittel, fontSize: 14.5, color: f.text2, marginTop: 2 }} numberOfLines={1}>
-                    {unterzeile}
-                  </Text>
-                  {FRAGEN_AKTIV ? (
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 7, height: 32, paddingHorizontal: 13, borderRadius: 16, marginTop: 12, backgroundColor: f.hell ? "#F4F1EC" : "rgba(255,255,255,0.07)" }}>
-                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: liga.farbe }} />
-                      <Text style={{ ...schrift.textHalb, fontSize: 13, color: f.text }}>{liga.name}</Text>
-                    </View>
-                  ) : null}
-                  <GlasLeiste
-                    hell={f.hell}
-                    style={{ alignSelf: "stretch", marginTop: 20 }}
-                    werte={
-                      FRAGEN_AKTIV
-                        ? [
-                            { icon: "star", farbe: "#FFC857", wert: tausender(stand.xp), label: "Punkte", onPress: () => router.push("/liga") },
-                            { icon: "flame", farbe: "#FF8A2A", wert: `${serie}`, label: serie === 1 ? "Tag Serie" : "Tage Serie", onPress: () => router.push("/statistik") },
-                            { icon: "ribbon", farbe: "#FFB45C", wert: `${freigeschaltet}/${ERFOLGE.length}`, label: "Abzeichen", onPress: () => router.push("/statistik") },
-                          ]
-                        : werteOhneFragen
-                    }
-                  />
-                </View>
-              </DKarte>
-              {!session ? gastKarte : null}
-              <DesktopAbschnitt titel="Konto">
-                <View style={{ marginHorizontal: -RAND }}>{kontoGruppe}</View>
-              </DesktopAbschnitt>
-            </View>
-
-            <View style={{ width: rechts, gap: 32 }}>
-              {FRAGEN_AKTIV ? (
-                <>
-                  <Fuehrerscheinweg meilensteine={meilensteine} anteil={reife} zeile={wegZeile} zwischen={zwischen} breite={rechts} onPress={() => router.push("/statistik")} />
-                  <DesktopAbschnitt titel="Abzeichen" link={`${freigeschaltet} von ${ERFOLGE.length}`}>
-                    <DKarte>
-                      <Medaillen umbrechen medaillen={ERFOLGE.map((e) => ({ id: e.id, titel: e.titel, icon: e.icon, erreicht: Boolean(stand.erfolge[e.id]) }))} onPress={abzeichenZeigen} />
-                    </DKarte>
-                  </DesktopAbschnitt>
-                  <DesktopAbschnitt titel="Deine Zahlen" link="Statistik" onLink={() => router.push("/statistik")}>
-                    {zahlenRaster}
-                  </DesktopAbschnitt>
-                  <DesktopAbschnitt titel="Liga & Duelle">{ligaKarte}</DesktopAbschnitt>
-                </>
-              ) : null}
-              <DesktopAbschnitt titel={FRAGEN_AKTIV ? "Mehr" : "Lernhilfen"}>
-                <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
-                  <MenueGruppe style={{ flex: 1, marginHorizontal: 0 }}>{mehrZeilen.slice(0, haelfte)}</MenueGruppe>
-                  <MenueGruppe style={{ flex: 1, marginHorizontal: 0 }}>{mehrZeilen.slice(haelfte)}</MenueGruppe>
-                </View>
-              </DesktopAbschnitt>
-            </View>
-          </View>
-        </DesktopSeite>
-      </FarbweltBereich>
-    );
-  }
 
   return (
     <FarbweltBereich farbwelt={f}>

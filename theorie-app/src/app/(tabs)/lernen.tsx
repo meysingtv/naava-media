@@ -5,7 +5,6 @@ import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { DesktopAbschnitt, DesktopKopf, DesktopSeite, KopfRund, LUECKE, useDesktopBreite, type Zustand } from "@/components/desktop";
 import { Glas } from "@/components/glas";
 import { GlasGrund } from "@/components/glas-flaeche";
 import { Kopfzeile, StartKnopf } from "@/components/home";
@@ -42,6 +41,7 @@ import { useLeistenScroll } from "@/lib/leisten-scroll";
 import { ALBUM } from "@/lib/schilder-jagd";
 import { fehlerIds, fortschritt, gemerktIds, schwierigeIds, useStand } from "@/lib/stand";
 import { RAND, schrift } from "@/lib/theme";
+import { LernenWeb } from "@/components/web/lernen-web";
 
 /** Schwierigkeit eines Themas nach den Fehlerpunkten seiner Fragen (2–5). */
 function stufeVon(thema: ThemaId): Exclude<Stufe, "alle"> {
@@ -56,6 +56,9 @@ function stufeVon(thema: ThemaId): Exclude<Stufe, "alle"> {
 const VORSCHLAEGE = ["Kreisverkehr", "Rettungsgasse", "Promille", "Überholen", "Schulbus", "Reifen", "Bahnübergang", "Anhalteweg"];
 
 export default function Lernen() {
+  // Im Browser am PC eine eigene Fassung (web/lernen-web.tsx).
+  const desktop = useDesktop();
+  if (desktop) return <LernenWeb />;
   return FRAGEN_AKTIV ? <LernenMitFragen /> : <LernenNurVideos />;
 }
 
@@ -73,8 +76,6 @@ function LernenNurVideos() {
   const { stand } = useStand();
   const { zuThema } = useLernvideos();
   const [kopfHoehe, setKopfHoehe] = useState(0);
-  const desktop = useDesktop();
-  const desktopBreite = useDesktopBreite();
 
   const gefunden = ALBUM.filter((k) => stand.schilder[k]);
   const letztesSchild: ZeichenKey = [...gefunden].sort((a, b) => (stand.schilder[b] ?? "").localeCompare(stand.schilder[a] ?? ""))[0] ?? "z206";
@@ -100,43 +101,6 @@ function LernenNurVideos() {
   const zeichen: Modus = { titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", akzent: "#4DA3FF", icon: "warning", bild: <Verkehrszeichen zeichen="z205" groesse={27} />, onPress: () => router.push("/zeichen") };
   const formeln: Modus = { titel: "Formeln", unter: "Anhalteweg & Co.", akzent: "#E0A100", icon: "calculator", sf: "function", onPress: () => router.push("/formeln") };
   const clips: Modus = { titel: "Clips", unter: "Kurze Videos aus der Community", akzent: "#9B7BFF", icon: "film", onPress: () => router.push("/clips") };
-
-  if (desktop) {
-    const zwei = desktopBreite >= 1100;
-    const spalten = desktopBreite >= 1150 ? 6 : desktopBreite >= 760 ? 4 : 3;
-    return (
-      <FarbweltBereich farbwelt={f}>
-        <DesktopSeite>
-          <DesktopKopf ueber={unterText} titel="Lernen" unter="Alle Themen der Theorie in kurzen Videos erklärt – such dir eins aus." />
-
-          <View style={{ flexDirection: zwei ? "row" : "column", gap: LUECKE }}>
-            <View style={{ flex: zwei ? 1.6 : undefined, borderRadius: 30, overflow: "hidden" }}>
-              <Themenwand breite={zwei ? Math.floor(((desktopBreite - LUECKE) * 1.6) / 2.6) : desktopBreite}>
-                <View style={{ minHeight: 360, padding: 30, justifyContent: "flex-end", gap: 10 }}>
-                  <Text style={{ ...schrift.titel, fontSize: 30, letterSpacing: -0.4, color: kopfText }}>Lernvideos</Text>
-                  <Text style={{ ...schrift.textMittel, fontSize: 16, lineHeight: 22, maxWidth: 520, color: f.hell ? "rgba(20,23,27,0.7)" : "rgba(255,255,255,0.8)" }}>
-                    Vorfahrt, Abstand, Verkehrszeichen und mehr – jedes Thema kurz und einfach erklärt.
-                  </Text>
-                </View>
-              </Themenwand>
-            </View>
-            <View style={{ flex: zwei ? 1 : undefined, gap: LUECKE }}>
-              <View style={{ flex: 1, flexDirection: "row" }}>{schilderJagd}</View>
-              <View style={{ flex: 1, flexDirection: "row" }}>{kurzErklaert}</View>
-            </View>
-          </View>
-
-          <DesktopAbschnitt titel="Lernhilfen">
-            <ModusRaster modi={[zeichen, formeln, clips]} spalten={3} style={{ paddingHorizontal: 0 }} />
-          </DesktopAbschnitt>
-
-          <DesktopAbschnitt titel="Alle Themen" link={`${THEMEN.length} Themen`}>
-            <ThemenRaster themen={themen} breite={desktopBreite} spalten={spalten} onThema={zumThema} />
-          </DesktopAbschnitt>
-        </DesktopSeite>
-      </FarbweltBereich>
-    );
-  }
 
   return (
     <FarbweltBereich farbwelt={f}>
@@ -179,8 +143,6 @@ function LernenMitFragen() {
   const [stufe, setStufe] = useState<Stufe>("alle");
   const [suche, setSuche] = useState<string | null>(null);
   const [kopfHoehe, setKopfHoehe] = useState(0);
-  const desktop = useDesktop();
-  const desktopBreite = useDesktopBreite();
 
   const treffer = useMemo(() => {
     const q = (suche ?? "").trim().toLowerCase();
@@ -291,68 +253,6 @@ function LernenMitFragen() {
       onPress={() => router.push("/schilder-jagd")}
     />
   );
-
-  // Am PC: Stand und Start in der Fotowand, daneben die zwei großen Modi; Themen als breites Raster.
-  if (desktop) {
-    const zwei = desktopBreite >= 1100;
-    const spalten = desktopBreite >= 1150 ? 6 : desktopBreite >= 760 ? 4 : 3;
-    return (
-      <FarbweltBereich farbwelt={f}>
-        <DesktopSeite>
-          <DesktopKopf
-            ueber={`${THEMEN.length} Themen · ${FRAGEN.length} Fragen · Klasse ${stand.klasse}`}
-            titel="Lernen"
-            unter="Such dir ein Thema aus – oder lass dir die Fragen geben, die dich jetzt weiterbringen."
-            rechts={
-              <>
-                <Pressable
-                  onPress={() => setSuche("")}
-                  accessibilityRole="search"
-                  style={(z: Zustand) => ({ width: 340, height: 44, borderRadius: 22, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16, backgroundColor: f.hell ? "#FFFFFF" : f.flaeche, borderWidth: 1, borderColor: z.hovered ? f.orangeLinie : f.linieStark })}
-                >
-                  <Icon name="search" size={17} color={f.text3} />
-                  <Text style={{ ...schrift.textMittel, fontSize: 15, color: f.text3 }}>Frage oder Thema suchen</Text>
-                </Pressable>
-                <KopfRund icon="stats-chart" label="Mein Fortschritt" onPress={() => router.push("/statistik")} />
-              </>
-            }
-          />
-
-          <View style={{ flexDirection: zwei ? "row" : "column", gap: LUECKE }}>
-            <View style={{ flex: zwei ? 1.6 : undefined, borderRadius: 30, overflow: "hidden" }}>
-              <Themenwand breite={zwei ? Math.floor(((desktopBreite - LUECKE) * 1.6) / 2.6) : desktopBreite}>
-                <View style={{ minHeight: 360, padding: 30, justifyContent: "space-between", gap: 18 }}>
-                  <Text style={{ ...schrift.titel, fontSize: 28, letterSpacing: -0.4, color: kopfText }}>Dein Lernstand</Text>
-                  <View style={{ gap: 18 }}>
-                    <LernStand sicher={gesamt.richtig} fehler={fehler} neu={neu} onPress={() => router.push("/statistik")} />
-                    <StartKnopf titel="Smart lernen" unter="Die Fragen, die dich jetzt weiterbringen" onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })} />
-                  </View>
-                </View>
-              </Themenwand>
-            </View>
-            <View style={{ flex: zwei ? 1 : undefined, gap: LUECKE }}>
-              <View style={{ flex: 1, flexDirection: "row" }}>{karteikarten}</View>
-              <View style={{ flex: 1, flexDirection: "row" }}>{schilderJagd}</View>
-            </View>
-          </View>
-
-          <DesktopAbschnitt titel="Lernmodi">
-            <ModusRaster modi={modi} spalten={desktopBreite >= 1150 ? 6 : 3} style={{ paddingHorizontal: 0 }} />
-          </DesktopAbschnitt>
-
-          <DesktopAbschnitt titel="Alle Themen" link={`${THEMEN.length} Themen`}>
-            <StufenFilter wert={stufe} onWechsel={setStufe} style={{ marginHorizontal: -RAND }} />
-            {stufe === "alle" ? <GrundstoffKarte anzahl={FRAGEN.length} anteil={gesamt.anteil} onPress={() => router.push({ pathname: "/training", params: { modus: "alle" } })} /> : null}
-            {themen.length > 0 ? (
-              <ThemenRaster themen={themen} breite={desktopBreite} spalten={spalten} onThema={(id) => router.push({ pathname: "/thema/[id]", params: { id } })} />
-            ) : (
-              <SuchHinweis icon="layers-outline" titel="Keine Themen" text="In dieser Stufe gibt es gerade keine Themen." />
-            )}
-          </DesktopAbschnitt>
-        </DesktopSeite>
-      </FarbweltBereich>
-    );
-  }
 
   return (
     <FarbweltBereich farbwelt={f}>

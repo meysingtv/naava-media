@@ -8,7 +8,9 @@ import { FrageZeile, LeerHinweis } from "@/components/frage-liste";
 import { StartKnopf } from "@/components/home";
 import { GrossKopf, Seite } from "@/components/seite";
 import { Segment } from "@/components/ui";
+import { FavoritenWeb } from "@/components/web/favoriten-web";
 import { useDarstellung } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
 import { frageVon, type Frage } from "@/lib/fragen";
 import { gemerktIds, schwierigeIds, useStand } from "@/lib/stand";
 import { RAND, schrift } from "@/lib/theme";
@@ -17,6 +19,10 @@ type Ansicht = "favoriten" | "fehler";
 
 /** Gemerkte Fragen und Fragen, die noch nicht sitzen. */
 export default function Favoriten() {
+  return useDesktop() ? <FavoritenWeb /> : <FavoritenHandy />;
+}
+
+function FavoritenHandy() {
   const insets = useSafeAreaInsets();
   const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();

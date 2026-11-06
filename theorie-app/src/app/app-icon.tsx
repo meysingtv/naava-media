@@ -7,9 +7,10 @@ import { InfoIcon } from "phosphor-react-native/src/icons/Info";
 import { dialog } from "@/components/dialog";
 import { GlasGrund, GlasKarte } from "@/components/glas-flaeche";
 import { GrossKopf, Seite } from "@/components/seite";
+import { AppIconWeb } from "@/components/web/app-icon-web";
 import { aktivesIcon, APP_ICONS, iconSetzen, iconWechselMoeglich, type AppIcon } from "@/lib/app-icon";
 import { useFarbwelt } from "@/lib/darstellung";
-import { useFenster } from "@/lib/fenster";
+import { useDesktop, useFenster } from "@/lib/fenster";
 import { erfolg, tippen } from "@/lib/haptik";
 import { leuchten, RAND, schrift } from "@/lib/theme";
 
@@ -112,6 +113,10 @@ function Inhalt() {
 }
 
 export default function AppIconSeite() {
+  return useDesktop() ? <AppIconWeb /> : <AppIconHandy />;
+}
+
+function AppIconHandy() {
   return (
     <Seite>
       <Inhalt />

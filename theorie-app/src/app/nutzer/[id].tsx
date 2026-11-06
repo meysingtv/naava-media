@@ -4,7 +4,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useFenster } from "@/lib/fenster";
+import { useDesktop, useFenster } from "@/lib/fenster";
+import { NutzerWeb } from "@/components/web/nutzer-web";
 import { dialog } from "@/components/dialog";
 import { Icon } from "@/components/icon";
 import { Lader } from "@/components/lader";
@@ -32,8 +33,13 @@ function Zahl({ wert, label }: { wert: number; label: string }) {
   );
 }
 
-/** Profil eines Erstellers: Kopf mit Zahlen, Folgen-Knopf und alle Clips als Raster. */
+/** Profil eines Erstellers – am PC eigene Fassung (web/nutzer-web.tsx). */
 export default function NutzerProfil() {
+  return useDesktop() ? <NutzerWeb /> : <NutzerHandy />;
+}
+
+/** Profil eines Erstellers: Kopf mit Zahlen, Folgen-Knopf und alle Clips als Raster. */
+function NutzerHandy() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { width } = useFenster();

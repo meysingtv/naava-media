@@ -39,14 +39,12 @@ Ohne Server läuft die App im Gastmodus – der Lernstand bleibt auf dem Gerät.
 2. Im SQL-Editor `supabase/schema.sql` ausführen (bei Updates einfach erneut –
    das Skript ist wiederholbar).
 3. `.env.example` nach `.env` kopieren und URL + anon key eintragen.
-4. Authentication → Sign In / Providers → Email → „Confirm email“ **ausschalten**:
-   Nach der Registrierung ist man sofort angemeldet, ohne Bestätigungs-Mail.
-   `schema.sql` (Abschnitt 15) bestätigt neue Konten ohnehin automatisch. Weil
-   die Adresse dabei nie geprüft wird, gibt es Inhaber-Rechte über die E-Mail nur
-   für Konten von vor der Umstellung oder mit Google/Apple-Anmeldung.
-5. Authentication → URL Configuration → Redirect URLs: `spur://**` eintragen.
-   Dann öffnen die Links aus der Passwort-Mail direkt die App (auf dem iPhone)
-   und melden an.
+4. Anmelden und Registrieren laufen ohne Passwort mit einem Code per E-Mail.
+   Einrichtung (eigener Mail-Versand, `{{ .Token }}` in den Mail-Vorlagen,
+   Code-Länge 6): siehe `docs/login-einrichten.md`.
+5. Inhaber-Rechte über die E-Mail gibt es für Konten ohne Passwort (nur per
+   Code erreichbar, also Adresse bewiesen) und für Konten von vor der
+   Umstellung – `schema.sql` Abschnitt 15 und 27.
 
 ## Start-Animation
 
@@ -181,7 +179,7 @@ Ansehen geht für alle, Liken, Kommentieren und Folgen mit Konto.
 - Inhaber ist, wer mit einer E-Mail aus der Tabelle `lern_inhaber` angemeldet
   ist. Eingetragen ist `leon.scheulen@gmail.com`. Das bestehende Konto mit
   dieser Adresse ist Inhaber; ein neues Konto mit einer Inhaber-Adresse nur,
-  wenn es sich mit Google/Apple anmeldet (Adresse geprüft). Dann erscheint im
+  wenn es per Code angemeldet ist (Adresse geprüft). Dann erscheint im
   Clips-Reiter oben links das „+“ zum Hochladen.
 - Andere freischalten: Einstellungen → Clips → „Clip-Ersteller verwalten“,
   Benutzername oder E-Mail eingeben.
@@ -255,13 +253,16 @@ Einrichten:
 
 ## Web-Panel & Manager
 
-Die App läuft auch im Browser. Am PC (Windows, Mac) mit eigenem Desktop-Design
-über den ganzen Bildschirm: links eine Seitenleiste (bei kleineren Fenstern nur
-Symbole, unten Hell/Dunkel und das Profil), Home als Dashboard mit großem Foto,
-„Heute“-Karte, Schnellstart-Kacheln und Themenraster, Lernen, Prüfung und
-Profil mehrspaltig, Clips als Hochkant-Feed in der Mitte. Unterseiten zeigen
-ihr Titelfoto als große Karte. Gleiche Farben, Fotos und Bausteine wie in der
-App; auf schmalen Fenstern sieht sie aus wie auf dem Handy.
+Die App läuft auch im Browser. Am PC (Windows, Mac, ab 1000 px Breite) hat
+jede Seite eine eigene, ruhige Fassung über die volle Breite
+(`src/components/web/`, Bausteine in `web/bunt.tsx`): links eine Seitenleiste
+statt der Tab-Leiste, Inhalte in Spalten und Rastern. Training, Prüfung,
+Duelle und Karteikarten laufen im Vollbild und mit Tastatur (1–6 bzw. A–F
+wählt, Enter prüft bzw. geht weiter, Leertaste dreht eine Karte um, Esc
+schließt). Clips laufen als schmaler Feed in der Mitte; Kamera- und
+Live-Seiten (Schild-Scanner, Live senden, Clip hochladen) bleiben im Handy-Look
+in einer mittigen Spalte. Auf schmalen Fenstern sieht alles aus wie auf dem
+Handy.
 
 ```
 cd theorie-app
@@ -305,9 +306,6 @@ Einrichten (einmal):
    → Inhalt von `supabase/functions/manager/index.ts` einfügen → Deploy.
    Secrets braucht sie keine – den Dienstschlüssel stellt Supabase selbst
    bereit, er kommt nie in die App oder in den Browser.
-3. Für Google/Apple-Anmeldung im Browser: Authentication → URL Configuration
-   → Redirect URLs zusätzlich `http://localhost:8080/**` eintragen. E-Mail und
-   Passwort gehen ohne.
 
 ## Live-Stream in Clips
 

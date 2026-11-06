@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, KeyboardAvoidingView, Modal, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { SPALTE_MAX } from "@/lib/fenster";
+import { istDesktop, SPALTE_MAX } from "@/lib/fenster";
+import { B } from "@/components/web/bunt";
 import { Icon } from "@/components/icon";
 import { NutzerBild } from "@/components/profilbild";
 import { dialog } from "@/components/dialog";
@@ -27,6 +28,45 @@ import { stoss, tippen } from "@/lib/haptik";
 import { farben, schrift } from "@/lib/theme";
 
 const BLATT = "#121518";
+
+/** Farben des Blatts: am Handy immer dunkel wie über dem Video, am PC passend zu hell/dunkel. */
+function kFarben(desktop: boolean) {
+  if (!desktop)
+    return {
+      blatt: BLATT,
+      text: "#FFFFFF",
+      text2: "#D3D7DC",
+      text3: farben.text3,
+      text4: farben.text4,
+      linie: "rgba(255,255,255,0.06)",
+      feld: "rgba(255,255,255,0.08)",
+      chip: "rgba(255,255,255,0.07)",
+      chipAktiv: "rgba(255,255,255,0.14)",
+      menue: "#1F2429",
+      menueRand: "rgba(255,255,255,0.08)",
+      strich: "rgba(255,255,255,0.2)",
+      ton: "rgba(255,255,255,0.04)",
+      griff: "rgba(255,255,255,0.18)",
+      gedrueckt: "rgba(255,255,255,0.1)",
+    };
+  return {
+    blatt: B.flaeche,
+    text: B.text,
+    text2: B.text2,
+    text3: B.text3,
+    text4: B.text3,
+    linie: B.linie,
+    feld: B.ton,
+    chip: B.ton,
+    chipAktiv: B.hover2,
+    menue: B.flaeche,
+    menueRand: B.linie,
+    strich: B.linie,
+    ton: B.ton,
+    griff: B.linie,
+    gedrueckt: B.hover,
+  };
+}
 /** Ab so vielen Antworten erst auf Tippen aufklappen. */
 const ANTWORTEN_OFFEN_BIS = 2;
 
@@ -58,16 +98,17 @@ function Zeile({
     .filter(([, n]) => n > 0)
     .sort((a, b) => b[1] - a[1]);
   const bild = antwort ? 26 : 34;
+  const c = kFarben(istDesktop(useWindowDimensions().width));
 
   return (
     <View style={{ paddingLeft: antwort ? 16 + 34 + 11 : 16, paddingRight: 12, paddingVertical: antwort ? 6 : 9 }}>
       <Pressable onLongPress={() => onLoeschen(k)} delayLongPress={350} style={{ flexDirection: "row", gap: antwort ? 9 : 11 }}>
         <NutzerBild pfad={k.autor_bild} name={nameVon(k)} farbe={k.autor_farbe} groesse={bild} rand={1} />
         <View style={{ flex: 1, gap: 3 }}>
-          <Text style={{ ...schrift.textMittel, fontSize: 13, color: farben.text3 }}>
+          <Text style={{ ...schrift.textMittel, fontSize: 13, color: c.text3 }}>
             {nameVon(k)} · {vorZeit(k.erstellt_am)}
           </Text>
-          <Text style={{ ...schrift.text, fontSize: 15, lineHeight: 20, color: "#FFFFFF" }}>{k.inhalt}</Text>
+          <Text style={{ ...schrift.text, fontSize: 15, lineHeight: 20, color: c.text }}>{k.inhalt}</Text>
 
           {/* Reaktionen, Emoji hinzufügen, Antworten */}
           <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
@@ -86,13 +127,13 @@ function Zeile({
                     height: 26,
                     paddingHorizontal: 8,
                     borderRadius: 13,
-                    backgroundColor: meins ? "rgba(252,91,14,0.2)" : "rgba(255,255,255,0.07)",
+                    backgroundColor: meins ? "rgba(252,91,14,0.2)" : c.chip,
                     borderWidth: 1,
                     borderColor: meins ? "rgba(252,91,14,0.6)" : "transparent",
                   }}
                 >
                   <Text style={{ fontSize: 13 }}>{emoji}</Text>
-                  <Text style={{ ...schrift.textHalb, fontSize: 12.5, color: meins ? farben.orangeHell : "#D3D7DC" }}>{n}</Text>
+                  <Text style={{ ...schrift.textHalb, fontSize: 12.5, color: meins ? farben.orangeHell : c.text2 }}>{n}</Text>
                 </Pressable>
               );
             })}
@@ -100,18 +141,18 @@ function Zeile({
               onPress={() => onAuswahl(k)}
               hitSlop={6}
               accessibilityLabel="Mit Emoji reagieren"
-              style={{ height: 26, paddingHorizontal: 7, borderRadius: 13, flexDirection: "row", alignItems: "center", gap: 2, backgroundColor: auswahlOffen ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.07)" }}
+              style={{ height: 26, paddingHorizontal: 7, borderRadius: 13, flexDirection: "row", alignItems: "center", gap: 2, backgroundColor: auswahlOffen ? c.chipAktiv : c.chip }}
             >
-              <Icon name="happy-outline" sf="face.smiling" size={15} color="#D3D7DC" />
-              <Icon name="add" sf="plus" size={10} color="#D3D7DC" weight="bold" />
+              <Icon name="happy-outline" sf="face.smiling" size={15} color={c.text2} />
+              <Icon name="add" sf="plus" size={10} color={c.text2} weight="bold" />
             </Pressable>
             <Pressable onPress={() => onAntworten(k)} hitSlop={8} accessibilityLabel={`${nameVon(k)} antworten`} style={{ paddingHorizontal: 6, height: 26, justifyContent: "center" }}>
-              <Text style={{ ...schrift.textHalb, fontSize: 13, color: farben.text3 }}>Antworten</Text>
+              <Text style={{ ...schrift.textHalb, fontSize: 13, color: c.text3 }}>Antworten</Text>
             </Pressable>
           </View>
 
           {auswahlOffen ? (
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", gap: 2, marginTop: 6, padding: 4, borderRadius: 22, backgroundColor: "#1F2429", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" }}>
+            <View style={{ flexDirection: "row", alignSelf: "flex-start", gap: 2, marginTop: 6, padding: 4, borderRadius: 22, backgroundColor: c.menue, borderWidth: 1, borderColor: c.menueRand }}>
               {REAKTIONEN.map((emoji) => (
                 <Pressable
                   key={emoji}
@@ -123,7 +164,7 @@ function Zeile({
                     borderRadius: 18,
                     alignItems: "center",
                     justifyContent: "center",
-                    backgroundColor: k.meine_reaktion === emoji ? "rgba(252,91,14,0.25)" : pressed ? "rgba(255,255,255,0.1)" : "transparent",
+                    backgroundColor: k.meine_reaktion === emoji ? "rgba(252,91,14,0.25)" : pressed ? c.gedrueckt : "transparent",
                     transform: [{ scale: pressed ? 1.2 : 1 }],
                   })}
                 >
@@ -136,8 +177,8 @@ function Zeile({
 
         {/* Herz rechts */}
         <Pressable onPress={() => onLike(k)} hitSlop={8} accessibilityLabel={k.gemocht ? "Gefällt mir nicht mehr" : "Gefällt mir"} style={{ width: 34, alignItems: "center", paddingTop: 16, gap: 2 }}>
-          <Icon name={k.gemocht ? "heart" : "heart-outline"} sf={k.gemocht ? "heart.fill" : "heart"} size={17} color={k.gemocht ? farben.orange : farben.text3} />
-          {k.likes > 0 ? <Text style={{ ...schrift.textMittel, fontSize: 11.5, color: farben.text3 }}>{kurzeZahl(k.likes)}</Text> : null}
+          <Icon name={k.gemocht ? "heart" : "heart-outline"} sf={k.gemocht ? "heart.fill" : "heart"} size={17} color={k.gemocht ? farben.orange : c.text3} />
+          {k.likes > 0 ? <Text style={{ ...schrift.textMittel, fontSize: 11.5, color: c.text3 }}>{kurzeZahl(k.likes)}</Text> : null}
         </Pressable>
       </Pressable>
     </View>
@@ -163,7 +204,10 @@ export function KommentarBlatt({
   onAnmelden: () => void;
 }) {
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  // Am PC: Seitenleiste von rechts statt Blatt von unten.
+  const desktop = istDesktop(width);
+  const c = kFarben(desktop);
   const [liste, setListe] = useState<Kommentar[] | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
   const [text, setText] = useState("");
@@ -337,32 +381,32 @@ export function KommentarBlatt({
   };
 
   return (
-    <Modal supportedOrientations={["portrait", "landscape"]} visible={clip != null} transparent animationType="slide" onRequestClose={onSchliessen} statusBarTranslucent>
-      <View style={{ flex: 1, justifyContent: "flex-end" }}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onSchliessen} accessibilityLabel="Kommentare schließen" />
-        <KeyboardAvoidingView behavior="padding" style={{ width: "100%", maxWidth: SPALTE_MAX, alignSelf: "center" }}>
-          <View style={{ height: Math.round(height * 0.68), backgroundColor: BLATT, borderTopLeftRadius: 18, borderTopRightRadius: 18, overflow: "hidden" }}>
+    <Modal supportedOrientations={["portrait", "landscape"]} visible={clip != null} transparent animationType={desktop ? "fade" : "slide"} onRequestClose={onSchliessen} statusBarTranslucent>
+      <View style={desktop ? { flex: 1, flexDirection: "row", justifyContent: "flex-end" } : { flex: 1, justifyContent: "flex-end" }}>
+        <Pressable style={[StyleSheet.absoluteFill, desktop ? { backgroundColor: "rgba(10,12,15,0.32)" } : null]} onPress={onSchliessen} accessibilityLabel="Kommentare schließen" />
+        <KeyboardAvoidingView behavior="padding" style={desktop ? { width: 460, maxWidth: "100%", height: "100%" } : { width: "100%", maxWidth: SPALTE_MAX, alignSelf: "center" }}>
+          <View style={desktop ? { flex: 1, backgroundColor: c.blatt, borderLeftWidth: 1.5, borderLeftColor: c.linie, overflow: "hidden" } : { height: Math.round(height * 0.68), backgroundColor: c.blatt, borderTopLeftRadius: 18, borderTopRightRadius: 18, overflow: "hidden" }}>
             {/* Kopf */}
-            <View style={{ height: 50, alignItems: "center", justifyContent: "center", borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.06)" }}>
-              <View style={{ position: "absolute", top: 6, width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.18)" }} />
-              <Text style={{ ...schrift.textHalb, fontSize: 14.5, color: "#FFFFFF" }}>
+            <View style={{ height: desktop ? 64 : 50, alignItems: "center", justifyContent: "center", borderBottomWidth: 1, borderBottomColor: c.linie }}>
+              {desktop ? null : <View style={{ position: "absolute", top: 6, width: 36, height: 4, borderRadius: 2, backgroundColor: c.griff }} />}
+              <Text style={{ ...schrift.textHalb, fontSize: desktop ? 16 : 14.5, color: c.text }}>
                 {anzahl === 1 ? "1 Kommentar" : `${kurzeZahl(anzahl)} Kommentare`}
               </Text>
-              <Pressable onPress={onSchliessen} hitSlop={10} accessibilityLabel="Schließen" style={{ position: "absolute", right: 14, top: 13 }}>
-                <Icon name="close" size={22} color="#D3D7DC" />
+              <Pressable onPress={onSchliessen} hitSlop={10} accessibilityLabel="Schließen" style={{ position: "absolute", right: 14, top: desktop ? 20 : 13 }}>
+                <Icon name="close" size={22} color={c.text2} />
               </Pressable>
             </View>
 
             {/* Liste */}
             {liste == null ? (
               <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                {fehler ? <Text style={{ ...schrift.text, fontSize: 14, color: farben.text3, paddingHorizontal: 24, textAlign: "center" }}>{fehler}</Text> : <Lader color="#FFFFFF" />}
+                {fehler ? <Text style={{ ...schrift.text, fontSize: 14, color: c.text3, paddingHorizontal: 24, textAlign: "center" }}>{fehler}</Text> : <Lader color={c.text} />}
               </View>
             ) : oben.length === 0 ? (
               <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 32 }}>
-                <Icon name="chatbubble-ellipses" sf="ellipsis.bubble" size={36} color={farben.text4} />
-                <Text style={{ ...schrift.textHalb, fontSize: 16, color: "#FFFFFF" }}>Noch keine Kommentare</Text>
-                <Text style={{ ...schrift.text, fontSize: 14, color: farben.text3, textAlign: "center" }}>Schreib den ersten – Fragen zum Clip sind auch willkommen.</Text>
+                <Icon name="chatbubble-ellipses" sf="ellipsis.bubble" size={36} color={c.text4} />
+                <Text style={{ ...schrift.textHalb, fontSize: 16, color: c.text }}>Noch keine Kommentare</Text>
+                <Text style={{ ...schrift.text, fontSize: 14, color: c.text3, textAlign: "center" }}>Schreib den ersten – Fragen zum Clip sind auch willkommen.</Text>
               </View>
             ) : (
               <FlatList
@@ -391,11 +435,11 @@ export function KommentarBlatt({
                           hitSlop={6}
                           style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingLeft: 16 + 34 + 11, paddingVertical: 6 }}
                         >
-                          <View style={{ width: 22, height: 1, backgroundColor: "rgba(255,255,255,0.2)" }} />
-                          <Text style={{ ...schrift.textHalb, fontSize: 13, color: farben.text3 }}>
+                          <View style={{ width: 22, height: 1, backgroundColor: c.strich }} />
+                          <Text style={{ ...schrift.textHalb, fontSize: 13, color: c.text3 }}>
                             {aufgeklappt.has(k.id) ? "Antworten ausblenden" : `${liste_.length} Antworten ansehen`}
                           </Text>
-                          <Icon name={aufgeklappt.has(k.id) ? "chevron-up" : "chevron-down"} sf={aufgeklappt.has(k.id) ? "chevron.up" : "chevron.down"} size={12} color={farben.text3} />
+                          <Icon name={aufgeklappt.has(k.id) ? "chevron-up" : "chevron-down"} sf={aufgeklappt.has(k.id) ? "chevron.up" : "chevron.down"} size={12} color={c.text3} />
                         </Pressable>
                       ) : null}
                     </View>
@@ -406,42 +450,42 @@ export function KommentarBlatt({
 
             {/* Antwort-Hinweis */}
             {antwortAn ? (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: "rgba(255,255,255,0.04)", borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.06)" }}>
-                <Icon name="arrow-undo" sf="arrowshape.turn.up.left.fill" size={13} color={farben.text3} />
-                <Text numberOfLines={1} style={{ ...schrift.textMittel, fontSize: 13, color: farben.text3, flex: 1 }}>
-                  Antwort an <Text style={{ color: "#FFFFFF" }}>{nameVon(antwortAn)}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: c.ton, borderTopWidth: 1, borderTopColor: c.linie }}>
+                <Icon name="arrow-undo" sf="arrowshape.turn.up.left.fill" size={13} color={c.text3} />
+                <Text numberOfLines={1} style={{ ...schrift.textMittel, fontSize: 13, color: c.text3, flex: 1 }}>
+                  Antwort an <Text style={{ color: c.text }}>{nameVon(antwortAn)}</Text>
                 </Text>
                 <Pressable onPress={() => setAntwortAn(null)} hitSlop={10} accessibilityLabel="Antwort abbrechen">
-                  <Icon name="close" size={16} color={farben.text3} />
+                  <Icon name="close" size={16} color={c.text3} />
                 </Pressable>
               </View>
             ) : null}
 
             {/* Eingabe */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingTop: 8, paddingBottom: Math.max(insets.bottom, 10), borderTopWidth: antwortAn ? 0 : 1, borderTopColor: "rgba(255,255,255,0.06)" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingTop: 8, paddingBottom: Math.max(insets.bottom, 10), borderTopWidth: antwortAn ? 0 : 1, borderTopColor: c.linie }}>
               {angemeldet ? (
                 <>
-                  <View style={{ flex: 1, minHeight: 42, borderRadius: 21, backgroundColor: "rgba(255,255,255,0.08)", paddingHorizontal: 16, justifyContent: "center" }}>
+                  <View style={{ flex: 1, minHeight: 42, borderRadius: 21, backgroundColor: c.feld, paddingHorizontal: 16, justifyContent: "center" }}>
                     <TextInput
                       ref={eingabe}
                       value={text}
                       onChangeText={setText}
                       placeholder={antwortAn ? `${nameVon(antwortAn)} antworten …` : "Kommentar hinzufügen …"}
-                      placeholderTextColor={farben.text4}
+                      placeholderTextColor={c.text4}
                       selectionColor={farben.orange}
                       cursorColor={farben.orange}
                       selectionHandleColor={farben.orange}
                       keyboardAppearance="dark"
                       maxLength={500}
                       multiline
-                      style={{ ...schrift.text, fontSize: 15, color: "#FFFFFF", maxHeight: 96, paddingVertical: 10 }}
+                      style={{ ...schrift.text, fontSize: 15, color: c.text, maxHeight: 96, paddingVertical: 10, outlineWidth: 0 }}
                     />
                   </View>
                   <Pressable
                     onPress={senden}
                     disabled={!text.trim() || sendet}
                     accessibilityLabel="Senden"
-                    style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: text.trim() ? farben.orange : "rgba(255,255,255,0.1)" }}
+                    style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: text.trim() ? farben.orange : c.chipAktiv }}
                   >
                     {sendet ? <Lader color="#FFFFFF" size="small" /> : <Icon name="arrow-up" sf="arrow.up" size={20} color="#FFFFFF" weight="bold" />}
                   </Pressable>
@@ -452,9 +496,9 @@ export function KommentarBlatt({
                     tippen();
                     onAnmelden();
                   }}
-                  style={{ flex: 1, height: 44, borderRadius: 22, backgroundColor: "rgba(255,255,255,0.08)", alignItems: "center", justifyContent: "center" }}
+                  style={{ flex: 1, height: 44, borderRadius: 22, backgroundColor: c.feld, alignItems: "center", justifyContent: "center" }}
                 >
-                  <Text style={{ ...schrift.textHalb, fontSize: 15, color: "#FFFFFF" }}>Zum Kommentieren anmelden</Text>
+                  <Text style={{ ...schrift.textHalb, fontSize: 15, color: c.text }}>Zum Kommentieren anmelden</Text>
                 </Pressable>
               )}
             </View>

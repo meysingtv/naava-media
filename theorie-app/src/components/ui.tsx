@@ -602,43 +602,6 @@ export function Eingabe({ icon, fehler, ...props }: TextInputProps & { icon?: Ic
   );
 }
 
-/**
- * Passwortfeld mit Auge zum Anzeigen – ohne Autokorrektur und automatische
- * Großschreibung, damit Registrierung und Anmeldung exakt gleich tippen.
- */
-export function PasswortEingabe({ fehler, ...props }: TextInputProps & { fehler?: boolean }) {
-  const f = useFarbwelt();
-  const [sichtbar, setSichtbar] = useState(false);
-  return (
-    <View style={[feldStil(f, fehler), { paddingLeft: abstand(4), paddingRight: abstand(1.5) }]}>
-      <Icon name="lock-closed-outline" size={19} color={f.text3} />
-      <TextInput
-        placeholderTextColor={f.hell ? "#A3A8AF" : farben.text4}
-        selectionColor={f.orange}
-        cursorColor={f.orange}
-        selectionHandleColor={f.orange}
-        keyboardAppearance={f.hell ? "light" : "dark"}
-        autoCapitalize="none"
-        autoCorrect={false}
-        spellCheck={false}
-        textContentType="password"
-        autoComplete="password"
-        {...props}
-        secureTextEntry={!sichtbar}
-        style={[{ flex: 1, minWidth: 0, ...schrift.textMittel, fontSize: 16, color: f.text, height: "100%" }, props.style]}
-      />
-      <Pressable
-        onPress={() => setSichtbar((v) => !v)}
-        hitSlop={8}
-        accessibilityLabel={sichtbar ? "Passwort verbergen" : "Passwort anzeigen"}
-        style={{ width: 38, height: 38, alignItems: "center", justifyContent: "center" }}
-      >
-        <Icon name={sichtbar ? "eye-off-outline" : "eye-outline"} size={20} color={f.text3} />
-      </Pressable>
-    </View>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Seitenrahmen
 // ---------------------------------------------------------------------------

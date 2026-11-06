@@ -17,10 +17,12 @@ import { GlasGrund, GlasGruppe, GlasKarte } from "@/components/glas-flaeche";
 import { Lader } from "@/components/lader";
 import { GrossKopf, Seite } from "@/components/seite";
 import { Abschnitt, Knopf, T } from "@/components/ui";
+import { CreatorDetailLeerWeb, CreatorDetailWeb } from "@/components/web/creator-web";
 import { NutzerBild } from "@/components/profilbild";
 import { useClipRechte, vorZeit } from "@/lib/clips-server";
 import { creatorEntscheiden, creatorEntziehen, useBewerbungen } from "@/lib/creator";
 import { useFarbwelt } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
 import { erfolg } from "@/lib/haptik";
 import { liveSofortBeenden } from "@/lib/live";
 import { abstand, farben, leuchten, mitDeckkraft, RAND, schrift } from "@/lib/theme";
@@ -41,10 +43,13 @@ function Inhalt() {
   const { liste } = useBewerbungen(rechte.inhaber);
   const [notiz, setNotiz] = useState("");
   const [laeuft, setLaeuft] = useState<string | null>(null);
+  // Im Browser am PC: eigene Fassung über die volle Breite (web/creator-web.tsx).
+  const desktop = useDesktop();
   const b = liste?.find((x) => x.id === id) ?? null;
   const inhalt = { paddingHorizontal: RAND, paddingTop: abstand(2), paddingBottom: insets.bottom + abstand(10) };
 
   if (!rechte.inhaber || !liste || !b) {
+    if (desktop) return <CreatorDetailLeerWeb art={!rechte.inhaber ? "rechte" : liste ? "weg" : "laedt"} />;
     return (
       <>
         <GrossKopf titel="Bewerbung" />
@@ -120,6 +125,22 @@ function Inhalt() {
         { text: "Abbrechen", style: "cancel" },
         { text: "Entziehen", style: "destructive", onPress: () => ausfuehren("entziehen", () => creatorEntziehen(bew.user_id, notiz), "Zugang entzogen.") },
       ],
+    );
+  }
+
+  if (desktop) {
+    return (
+      <CreatorDetailWeb
+        bewerbung={bew}
+        notiz={notiz}
+        onNotiz={setNotiz}
+        laeuft={laeuft}
+        onAnnehmen={annehmen}
+        onAblehnen={ablehnen}
+        onLiveBeenden={liveBeenden}
+        onEntziehen={entziehen}
+        onOeffnen={oeffnen}
+      />
     );
   }
 
@@ -241,9 +262,10 @@ function Inhalt() {
 }
 
 export default function CreatorDetail() {
+  const desktop = useDesktop();
   return (
     <Seite>
-      <GlasGrund />
+      {desktop ? null : <GlasGrund />}
       <Inhalt />
     </Seite>
   );

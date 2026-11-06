@@ -1,198 +1,46 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { Linking, Platform, Pressable, ScrollView, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GrossKopf, Seite } from "@/components/seite";
-import { Abschnitt, Chip, Eingabe, Knopf, PasswortEingabe, Segment, T, Zeile } from "@/components/ui";
+import { Abschnitt, Chip, Eingabe, Knopf, Segment, T, Zeile } from "@/components/ui";
 import { Logo } from "@/components/grafik";
-import { dialog } from "@/components/dialog";
 import { GlasGrund, GlasGruppe, GlasKarte } from "@/components/glas-flaeche";
 import { Icon, type IconName } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { Schalter } from "@/components/schalter";
 import { tourStarten } from "@/components/tour";
-import { useInhaberAufnahme } from "@/components/bildschirm-schutz";
-import { APP_ICONS, aktivesIcon } from "@/lib/app-icon";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
-import { useDarstellung, useFarbwelt } from "@/lib/darstellung";
-import { useFenster } from "@/lib/fenster";
+import { useFarbwelt } from "@/lib/darstellung";
+import { useDesktop, useFenster } from "@/lib/fenster";
+import { EinstellungenWeb } from "@/components/web/einstellungen-web";
+import { useEinstellungen, ZEITEN, ZIEL_STUFE, ZIELE } from "@/lib/einstellungen-aktionen";
 import { KLASSEN } from "@/lib/klassen";
 import { tippen } from "@/lib/haptik";
-import { useClipRechte } from "@/lib/clips-server";
-import { STATUS_TEXT, useBewerbungen, useMeineBewerbung } from "@/lib/creator";
-import { erinnerungPlanen } from "@/lib/erinnerung";
+import { STATUS_TEXT } from "@/lib/creator";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
-import { kontoLoeschen } from "@/lib/konto-loeschen";
-import { useBlockiert } from "@/lib/blockieren";
 import { uhrzeit } from "@/lib/format";
-import { useKonto } from "@/lib/konto";
-import { liveAboSetzen, liveAboStatus } from "@/lib/live";
-import { useStand } from "@/lib/stand";
 import { abstand, farben, leuchten, RAND, schrift, verlauf } from "@/lib/theme";
-
-const ZIELE = [15, 30, 50, 80];
-const ZEITEN: [number, number][] = [
-  [7, 0],
-  [12, 30],
-  [17, 0],
-  [19, 0],
-  [21, 0],
-];
-const ZIEL_STUFE: Record<number, string> = { 15: "Locker", 30: "Normal", 50: "Ehrgeizig", 80: "Intensiv" };
 
 const SUPPORT = process.env.EXPO_PUBLIC_SUPPORT_EMAIL;
 
 export default function Einstellungen() {
+  // Im Browser am PC eine eigene Fassung (web/einstellungen-web.tsx) – mit denselben Aktionen.
+  return useDesktop() ? <EinstellungenWeb /> : <EinstellungenHandy />;
+}
+
+function EinstellungenHandy() {
   const insets = useSafeAreaInsets();
-  const { stand, setzen, zuruecksetzen } = useStand();
-  const { session, profil, gast, anzeigeName, profilSpeichern, passwortAendern, benutzernameFrei, benutzernameAendern, rolleSetzen, abmelden } = useKonto();
-  const blockiert = useBlockiert();
-  const [aufnahmeErlaubt, aufnahmeSetzen] = useInhaberAufnahme();
-  const [loeschtKonto, setLoeschtKonto] = useState(false);
-  const rechte = useClipRechte();
-  const { liste: bewerbungen } = useBewerbungen(rechte.inhaber);
-  const offeneBewerbungen = (bewerbungen ?? []).filter((b) => b.status === "offen").length;
-  // Beim Zurückkommen von der Icon-Seite neu lesen
-  const fokus = useIsFocused();
-  const iconTitel = fokus ? (APP_ICONS.find((i) => i.id === aktivesIcon())?.titel ?? "Standard") : "";
-  const { bewerbung: meineBewerbung } = useMeineBewerbung();
-  const { darstellung, setzen: darstellungSetzen, belohnungen, belohnungenSetzen } = useDarstellung();
-  const [name, setName] = useState(anzeigeName);
-  const [nameAngefasst, setNameAngefasst] = useState(false);
-  const [speichert, setSpeichert] = useState(false);
-  const [benutzer, setBenutzer] = useState(profil?.benutzername ?? "");
-  const [benutzerAngefasst, setBenutzerAngefasst] = useState(false);
-  const [frei, setFrei] = useState<boolean | null>(null);
-  const [speichertBenutzer, setSpeichertBenutzer] = useState(false);
-
-  // Werte übernehmen, sobald das Profil geladen ist (solange nichts getippt wurde).
-  useEffect(() => {
-    if (!nameAngefasst) setName(anzeigeName);
-  }, [anzeigeName, nameAngefasst]);
-  useEffect(() => {
-    if (!benutzerAngefasst) setBenutzer(profil?.benutzername ?? "");
-  }, [profil?.benutzername, benutzerAngefasst]);
-
-  const benutzerGueltig = /^[a-z0-9_.]{3,20}$/.test(benutzer);
-  const benutzerGeaendert = Boolean(profil) && benutzer !== profil?.benutzername;
-
-  // Verfügbarkeit prüfen, kurz nachdem man aufgehört hat zu tippen.
-  useEffect(() => {
-    setFrei(null);
-    if (!benutzerGeaendert || !benutzerGueltig) return;
-    const t = setTimeout(async () => setFrei(await benutzernameFrei(benutzer)), 450);
-    return () => clearTimeout(t);
-  }, [benutzer, benutzerGeaendert, benutzerGueltig, benutzernameFrei]);
-
-  async function benutzerSpeichern() {
-    setSpeichertBenutzer(true);
-    const f = await benutzernameAendern(benutzer);
-    setSpeichertBenutzer(false);
-    if (f) dialog("Nicht gespeichert", f);
-    else {
-      setBenutzerAngefasst(false);
-      dialog("Gespeichert", `Du heißt jetzt @${benutzer}.`);
-    }
-  }
-  const [neuesPasswort, setNeuesPasswort] = useState("");
-  const [aendertPasswort, setAendertPasswort] = useState(false);
-  const [liveAbo, setLiveAbo] = useState(false);
+  const e = useEinstellungen();
+  const { stand, setzen, rechte, offeneBewerbungen, meineBewerbung, iconTitel, name, speichert, nameSpeichern, benutzer, benutzerGueltig, benutzerGeaendert, frei, speichertBenutzer, benutzerSpeichern } = e;
+  const { liveAbo, liveAboAendern, erinnerungAendern, klasseAendern, zuruecksetzenFragen } = e;
+  const { blockiert, aufnahmeErlaubt, aufnahmeSetzen, loeschtKonto, kontoLoeschenFragen } = e;
+  const { session, profil, gast, anzeigeName } = e.konto;
+  const { darstellung, setzen: darstellungSetzen, belohnungen, belohnungenSetzen } = e.darstellung;
   const { width } = useFenster();
   const breit = width >= 700;
-
-  useEffect(() => {
-    if (session) liveAboStatus().then(setLiveAbo);
-  }, [session]);
-
-  async function liveAboAendern(an: boolean) {
-    setLiveAbo(an);
-    try {
-      const ergebnis = await liveAboSetzen(an);
-      if (ergebnis === "keine_erlaubnis") {
-        setLiveAbo(false);
-        dialog("Mitteilungen sind aus", "Erlaube Mitteilungen für Fahrschul Pro in den iPhone-Einstellungen, dann sagen wir dir Bescheid, wenn ein Live startet.");
-        return;
-      }
-      setLiveAbo(ergebnis);
-    } catch (e) {
-      setLiveAbo(!an);
-      dialog("Nicht gespeichert", (e as Error).message);
-    }
-  }
-
-  async function passwortSpeichern() {
-    setAendertPasswort(true);
-    const f = await passwortAendern(neuesPasswort);
-    setAendertPasswort(false);
-    if (f) dialog("Nicht geändert", f);
-    else {
-      setNeuesPasswort("");
-      dialog("Passwort geändert", "Ab jetzt meldest du dich mit dem neuen Passwort an.");
-    }
-  }
-
-  async function erinnerungAendern(an: boolean, stunde = stand.erinnerung.stunde, minute = stand.erinnerung.minute) {
-    const ok = await erinnerungPlanen(an, stunde, minute);
-    if (!ok) {
-      dialog("Mitteilungen sind aus", "Erlaube Mitteilungen für Fahrschul Pro in den iPhone-Einstellungen, dann klappt die Erinnerung.");
-      setzen({ erinnerung: { an: false, stunde, minute } });
-      return;
-    }
-    setzen({ erinnerung: { an, stunde, minute } });
-  }
-
-  async function klasseAendern(k: string) {
-    setzen({ klasse: k });
-    if (session) await profilSpeichern({ klasse: k });
-  }
-
-  async function nameSpeichern() {
-    setSpeichert(true);
-    const f = await profilSpeichern({ name: name.trim() });
-    setSpeichert(false);
-    if (f) dialog("Nicht gespeichert", f);
-    else setNameAngefasst(false);
-  }
-
-  function kontoLoeschenFragen() {
-    if (rechte.inhaber) {
-      dialog("Inhaber-Konto", "Das Inhaber-Konto lässt sich nicht in der App löschen, sonst hätte die App keinen Inhaber mehr.");
-      return;
-    }
-    dialog(
-      "Konto endgültig löschen?",
-      "Dein Konto, dein Profil, deine Clips, Kommentare, Likes, Chat-Nachrichten und dein gespeicherter Lernstand werden sofort gelöscht. Das lässt sich nicht rückgängig machen.",
-      [
-        { text: "Abbrechen", style: "cancel" },
-        {
-          text: "Endgültig löschen",
-          style: "destructive",
-          onPress: async () => {
-            setLoeschtKonto(true);
-            const problem = await kontoLoeschen();
-            setLoeschtKonto(false);
-            if (problem) {
-              dialog("Nicht gelöscht", problem);
-              return;
-            }
-            zuruecksetzen();
-            await abmelden();
-            dialog("Konto gelöscht", "Dein Konto und deine Daten sind entfernt. Schade, dass du gehst!");
-          },
-        },
-      ],
-    );
-  }
-
-  function zuruecksetzenFragen() {
-    dialog("Fortschritt zurücksetzen?", FRAGEN_AKTIV ? "Alle Antworten, Serien, Abzeichen und Simulationen auf diesem Gerät werden gelöscht. Das lässt sich nicht rückgängig machen." : "Dein gespeicherter Fortschritt auf diesem Gerät wird gelöscht. Das lässt sich nicht rückgängig machen.", [
-      { text: "Abbrechen", style: "cancel" },
-      { text: "Zurücksetzen", style: "destructive", onPress: zuruecksetzen },
-    ]);
-  }
 
   return (
     <Seite>
@@ -262,10 +110,7 @@ export default function Einstellungen() {
                   key={b}
                   text={b}
                   aktiv={profil?.bundesland === b}
-                  onPress={async () => {
-                    const f = await profilSpeichern({ bundesland: profil?.bundesland === b ? null : b });
-                    if (f) dialog("Nicht gespeichert", f);
-                  }}
+                  onPress={() => e.bundeslandWaehlen(b)}
                 />
               ))}
             </View>
@@ -328,11 +173,7 @@ export default function Einstellungen() {
                       key={id}
                       text={titel}
                       aktiv={profil.rolle === id}
-                      onPress={async () => {
-                        if (profil.rolle === id) return;
-                        const f = await rolleSetzen(id);
-                        if (f) dialog("Nicht gespeichert", f);
-                      }}
+                      onPress={() => e.rolleWaehlen(id)}
                     />
                   ))}
                 </View>
@@ -343,10 +184,7 @@ export default function Einstellungen() {
             <Eingabe
               icon="person-outline"
               value={name}
-              onChangeText={(t) => {
-                setNameAngefasst(true);
-                setName(t);
-              }}
+              onChangeText={e.nameTippen}
               placeholder="Dein Name"
               autoCapitalize="words"
               maxLength={40}
@@ -361,10 +199,7 @@ export default function Einstellungen() {
                 <Eingabe
                   icon="at"
                   value={benutzer}
-                  onChangeText={(t) => {
-                    setBenutzerAngefasst(true);
-                    setBenutzer(t.toLowerCase().replace(/[^a-z0-9_.]/g, "").slice(0, 20));
-                  }}
+                  onChangeText={e.benutzerTippen}
                   placeholder="benutzername"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -394,7 +229,7 @@ export default function Einstellungen() {
           {session ? (
             <View style={{ gap: abstand(3) }}>
               <GlasGruppe>
-                <Zeile icon="mail" iconFarbe="#4DA3FF" titel={session.user.email ?? ""} unter="E-Mail" />
+                <Zeile icon="mail" iconFarbe="#4DA3FF" titel={session.user.email ?? ""} unter="E-Mail · Anmelden mit Code" />
               </GlasGruppe>
               <GlasGruppe>
                 <Zeile
@@ -405,10 +240,6 @@ export default function Einstellungen() {
                   onPress={() => router.push("/blockiert")}
                 />
               </GlasGruppe>
-              <PasswortEingabe value={neuesPasswort} onChangeText={setNeuesPasswort} placeholder="Neues Passwort (mind. 8 Zeichen)" />
-              {neuesPasswort.length > 0 ? (
-                <Knopf titel="Passwort ändern" klein art="sekundaer" laedt={aendertPasswort} deaktiviert={neuesPasswort.length < 8} onPress={passwortSpeichern} />
-              ) : null}
             </View>
           ) : (
             <GlasGruppe>

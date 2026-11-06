@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, Text, useWindowDimensions, View } from "react-native";
-import { router, Stack, usePathname } from "expo-router";
+import { Animated, Text, View } from "react-native";
+import { Stack, usePathname } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import * as SplashScreen from "expo-splash-screen";
 import * as Notifications from "expo-notifications";
@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Archivo_600SemiBold, Archivo_800ExtraBold, Archivo_800ExtraBold_Italic, useFonts } from "@expo-google-fonts/archivo";
 import { MarckScript_400Regular } from "@expo-google-fonts/marck-script";
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
+import { Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold, Nunito_900Black } from "@expo-google-fonts/nunito";
 
 import { BildschirmSchutz } from "@/components/bildschirm-schutz";
 import { AuswahlBlattHost } from "@/components/auswahl-blatt";
@@ -18,12 +19,13 @@ import { DialogHost } from "@/components/dialog";
 import { StartAnimation } from "@/components/start-animation";
 import { Icon } from "@/components/icon";
 import { TourOverlay } from "@/components/tour";
-import { WebLeiste } from "@/components/web-leiste";
+import { webFarbenSetzen, B } from "@/components/web/bunt";
+import { WebSeitenleiste } from "@/components/web/rahmen";
 import { erfolgVon } from "@/lib/erfolge";
 import { erfolg } from "@/lib/haptik";
 import { CrewProvider } from "@/lib/crew";
-import { DarstellungBruecke, DarstellungProvider, istHelleSeite, TAG, useDarstellung } from "@/lib/darstellung";
-import { desktopAufteilung, useDesktop, zeigtSeitenleiste } from "@/lib/fenster";
+import { DarstellungBruecke, DarstellungProvider, FarbweltBereich, istHelleSeite, NACHT, TAG, useDarstellung } from "@/lib/darstellung";
+import { breiteSpalte, hatWebFassung, useDesktop, zeigtWebLeiste } from "@/lib/fenster";
 import { KontoProvider, useKonto } from "@/lib/konto";
 import { LiveBruecke } from "@/lib/live-bruecke";
 import { StandProvider, useStand } from "@/lib/stand";
@@ -45,6 +47,8 @@ function ErfolgHinweis() {
   const { neueErfolge, erfolgeGesehen } = useStand();
   const { darstellung, belohnungen } = useDarstellung();
   const hell = istHelleSeite(darstellung, usePathname());
+  // Am PC schlicht: feste Fläche, kein Verlauf, kein Leuchten.
+  const desktop = useDesktop();
   const insets = useSafeAreaInsets();
   const [aktuell, setAktuell] = useState<string | null>(null);
   const y = useRef(new Animated.Value(-140)).current;
@@ -86,19 +90,25 @@ function ErfolgHinweis() {
           paddingLeft: 7,
           paddingRight: 18,
           borderRadius: 27,
-          backgroundColor: hell ? "#FFFFFF" : "#1A2128",
-          borderWidth: 1,
-          borderColor: hell ? "rgba(242,84,10,0.22)" : "rgba(252,91,14,0.42)",
+          backgroundColor: desktop ? B.flaeche : hell ? "#FFFFFF" : "#1A2128",
+          borderWidth: desktop ? 1.5 : 1,
+          borderColor: desktop ? B.linie : hell ? "rgba(242,84,10,0.22)" : "rgba(252,91,14,0.42)",
         },
-        hell ? leuchten("#3C2C18", 0.16, 18, 6) : leuchten("#000000", 0.55, 18, 6),
+        desktop ? null : hell ? leuchten("#3C2C18", 0.16, 18, 6) : leuchten("#000000", 0.55, 18, 6),
       ]}
     >
-      <LinearGradient colors={verlauf.knopf} style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}>
-        <Icon name={e.icon} size={19} color="#FFFFFF" />
-      </LinearGradient>
+      {desktop ? (
+        <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: B.orange }}>
+          <Icon name={e.icon} size={19} color="#FFFFFF" />
+        </View>
+      ) : (
+        <LinearGradient colors={verlauf.knopf} style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}>
+          <Icon name={e.icon} size={19} color="#FFFFFF" />
+        </LinearGradient>
+      )}
       <View style={{ flexShrink: 1 }}>
-        <Text style={{ ...schrift.textFett, fontSize: 10.5, letterSpacing: 1, color: hell ? "#F2540A" : farben.orange }}>ABZEICHEN FREIGESCHALTET</Text>
-        <Text style={{ ...schrift.textHalb, fontSize: 15, color: hell ? "#14171B" : "#FFFFFF" }} numberOfLines={1}>
+        <Text style={{ ...schrift.textFett, fontSize: 10.5, letterSpacing: 1, color: desktop ? B.orangeKante : hell ? "#F2540A" : farben.orange }}>{desktop ? "Abzeichen freigeschaltet" : "ABZEICHEN FREIGESCHALTET"}</Text>
+        <Text style={{ ...schrift.textHalb, fontSize: 15, color: desktop ? B.text : hell ? "#14171B" : "#FFFFFF" }} numberOfLines={1}>
           {e.titel}
         </Text>
       </View>
@@ -107,17 +117,19 @@ function ErfolgHinweis() {
 }
 
 function Navigation() {
-  const { drin, laedt, session, passwortNeuFaellig } = useKonto();
+  const { drin, laedt } = useKonto();
   const { bereit } = useStand();
   const { darstellung, belohnungen, bereit: darstellungBereit } = useDarstellung();
   const fertig = !laedt && bereit && darstellungBereit;
-  // Browser am PC: Leiste oben, Inhalt in einer mittigen Spalte, daneben der Grund der Seite.
+  // Browser am PC: Seitenleiste links. Seiten mit eigener PC-Fassung nutzen die
+  // ganze Breite daneben (weißer Grund), die übrigen eine mittige Spalte.
   const desktop = useDesktop();
   const pfad = usePathname();
-  const { width: fensterBreite } = useWindowDimensions();
-  const aufteilung = desktopAufteilung(fensterBreite, pfad);
-  const leiste = desktop && drin && zeigtSeitenleiste(pfad);
-  const grund = desktop && istHelleSeite(darstellung, pfad) ? TAG.grund : farben.grund;
+  const leiste = desktop && drin && zeigtWebLeiste(pfad);
+  // PC-Fassung hell oder dunkel wie in den Einstellungen – vor dem Zeichnen setzen.
+  const webDunkel = desktop && darstellung === "dunkel";
+  webFarbenSetzen(webDunkel);
+  const grund = !desktop ? farben.grund : hatWebFassung(pfad) ? B.grund : istHelleSeite(darstellung, pfad) ? TAG.grund : farben.grund;
 
   useEffect(() => {
     seitenTitelSetzen(pfad);
@@ -127,25 +139,22 @@ function Navigation() {
     if (fertig) SplashScreen.hideAsync().catch(() => {});
   }, [fertig]);
 
-  // Über den Link „Passwort zurücksetzen“ gekommen → neues Passwort festlegen.
-  useEffect(() => {
-    if (fertig && session && passwortNeuFaellig) router.push("/passwort-neu");
-  }, [fertig, session, passwortNeuFaellig]);
-
   if (!fertig) return <View style={{ flex: 1, backgroundColor: farben.grund }} />;
 
   return (
-    <View style={{ flex: 1, flexDirection: desktop ? "row" : "column", backgroundColor: grund }}>
-      {leiste ? <WebLeiste breite={aufteilung.leiste} /> : null}
-      <View style={desktop ? { flex: 1, alignItems: "center" } : { flex: 1 }}>
-      <View style={desktop ? { flex: 1, width: "100%", maxWidth: aufteilung.inhalt, overflow: "hidden" } : { flex: 1 }}>
+    // Beim Umschalten hell/dunkel wird die PC-Ansicht neu aufgebaut (key), damit
+    // alle Bausteine die neuen Farben lesen. Gemeinsame Bausteine (Fragebild,
+    // Dialoge, KI-Hilfe) bekommen am PC die passende Farbwelt.
+    <FarbweltBereich farbwelt={!desktop || webDunkel ? NACHT : TAG}>
+    <View key={desktop ? (webDunkel ? "web-dunkel" : "web-hell") : "handy"} style={{ flex: 1, flexDirection: leiste ? "row" : "column", backgroundColor: grund }}>
+      {leiste ? <WebSeitenleiste /> : null}
+      <View style={{ flex: 1 }}>
+      <View style={desktop ? { flex: 1, width: "100%", maxWidth: breiteSpalte(pfad), alignSelf: "center", overflow: "hidden" } : { flex: 1 }}>
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: farben.grund }, animation: "slide_from_right" }}>
         <Stack.Screen name="index" options={{ animation: "none" }} />
         {/* Registrieren und Anmelden gehen auch aus dem Gastmodus heraus */}
         <Stack.Screen name="registrieren" />
         <Stack.Screen name="anmelden" />
-        <Stack.Screen name="auth-callback" options={{ animation: "none" }} />
-        <Stack.Screen name="passwort-neu" options={{ animation: "slide_from_bottom", gestureEnabled: false }} />
         {/* Rechtstexte – auch ohne Anmeldung erreichbar (Willkommen, Registrieren, Browser) */}
         <Stack.Screen name="impressum" />
         <Stack.Screen name="datenschutz" />
@@ -212,6 +221,7 @@ function Navigation() {
       <TourOverlay />
       <BildschirmSchutz />
     </View>
+    </FarbweltBereich>
   );
 }
 
@@ -226,6 +236,11 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
     Inter_800ExtraBold,
+    // Schrift der PC-Fassung im Browser (web/…)
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    Nunito_900Black,
   });
 
   if (!schriftenGeladen) return null;

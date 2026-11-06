@@ -4,12 +4,17 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from "react-native-reanimated";
 
+import { B, Knopf, n } from "@/components/web/bunt";
+import { tastenSperre, useTasten } from "@/components/web/frage-web";
 import { useHelleSeite } from "@/lib/darstellung";
+import { istDesktop } from "@/lib/fenster";
 import { farben, schrift } from "@/lib/theme";
 
 // Rückfragen und Hinweise („Training beenden?“ …). Auf dem iPhone der echte
 // iOS-Dialog. Auf Android derselbe Look wie unter iOS 26: Glaskarte mit
 // linksbündigem Text und Kapsel-Knöpfen – statt des grauen Android-Dialogs.
+// Im Browser am PC eine ruhige Karte im Stil der PC-Fassung (ohne Glas),
+// Enter wählt den Hauptknopf, Esc bricht ab.
 
 /** Farben wie die iOS-Systemfarben – dunkel und hell. */
 const IOS_BLAU = "#0A84FF";
@@ -94,6 +99,64 @@ export function DialogHost() {
   const nebeneinander = knoepfe.length <= 2;
   // Hervorgehoben (blau gefüllt) ist der Hauptknopf: der letzte normale Knopf.
   const haupt = [...knoepfe].reverse().find((k) => k.style !== "cancel" && k.style !== "destructive");
+  const desktop = istDesktop(width);
+
+  // Solange ein Dialog offen ist, hören die Seiten darunter nicht auf Tasten.
+  // Erst nach dem Tastendruck freigeben, damit dasselbe Esc/Enter nicht auch die Seite trifft.
+  useEffect(() => {
+    if (aktuell) tastenSperre.an = true;
+    else {
+      const t = setTimeout(() => (tastenSperre.an = false), 0);
+      return () => clearTimeout(t);
+    }
+  }, [aktuell]);
+
+  useTasten(
+    (e) => {
+      if (!desktop || !aktuell) return;
+      if (e.key === "Escape") zurueck();
+      else if (e.key === "Enter") {
+        // Nur der Hauptknopf (oder ein einzelner Knopf) – nie versehentlich „Löschen“ oder „Beenden“.
+        e.preventDefault();
+        const ziel = haupt ?? (knoepfe.length === 1 ? knoepfe[0] : null);
+        if (ziel) schliessen(ziel);
+      }
+    },
+    { immer: true },
+  );
+
+  if (desktop) {
+    return (
+      <Modal visible={aktuell != null} transparent animationType="fade" onRequestClose={zurueck}>
+        <Pressable onPress={zurueck} style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24, backgroundColor: "rgba(10,12,15,0.4)" }}>
+          {aktuell ? (
+            <Pressable onPress={() => {}} accessibilityRole="alert" style={{ width: "100%", maxWidth: 440, padding: 26, gap: 8, borderRadius: 22, backgroundColor: B.flaeche, borderWidth: 1.5, borderColor: B.linie, borderBottomWidth: 3, borderBottomColor: B.kante }}>
+              <Text style={{ ...n.schwarz, fontSize: 21, lineHeight: 27, color: B.text }}>{aktuell.titel}</Text>
+              {aktuell.text ? <Text style={{ ...n.halb, fontSize: 15.5, lineHeight: 22, color: B.text2 }}>{aktuell.text}</Text> : null}
+              <View style={{ marginTop: 16, gap: 10, flexDirection: nebeneinander ? "row" : "column" }}>
+                {knoepfe.map((k, i) => {
+                  const gefahr = k.style === "destructive";
+                  const abbrechen = k.style === "cancel";
+                  const istHaupt = k === haupt || (knoepfe.length === 1 && !abbrechen);
+                  return (
+                    <Knopf
+                      key={`${i}-${k.text}`}
+                      titel={k.text ?? "OK"}
+                      ton={gefahr ? "rot" : istHaupt ? "orange" : "blau"}
+                      art={gefahr || istHaupt ? "voll" : "rand"}
+                      onPress={() => schliessen(k)}
+                      style={nebeneinander ? { flex: 1 } : undefined}
+                    />
+                  );
+                })}
+              </View>
+              {knoepfe.length > 1 ? <Text style={{ ...n.halb, fontSize: 12.5, color: B.text3, marginTop: 4 }}>{haupt ? "Enter bestätigt · Esc bricht ab" : "Esc bricht ab"}</Text> : null}
+            </Pressable>
+          ) : null}
+        </Pressable>
+      </Modal>
+    );
+  }
 
   return (
     <Modal supportedOrientations={["portrait", "landscape"]} visible={aktuell != null} transparent animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={zurueck}>

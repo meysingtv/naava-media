@@ -17,7 +17,6 @@ gibt es nur da, wo Android etwas nicht hat oder anders macht:
 | Glas-Knöpfe über Video/Kamera | Liquid Glass | Glas mit Glanz und Lichtkante (ohne Unschärfe – die erfasst auf Android kein Video) |
 | Vibration | Taptic Engine | feine Android-System-Haptik statt Vibrationsmotor |
 | Clip-Upload | Picker rechnet auf 720p um | App rechnet selbst auf 720p um (Fortschrittsanzeige), danach 50-MB-Prüfung; in Expo Go ohne Umrechnung |
-| Mit Apple anmelden | Apple-Fenster auf dem iPhone | über die Apple-Seite im Browser (Einrichtung siehe unten) |
 | Zurück | Wischen vom Rand | Zurück-Taste/-Geste – bei Training, Prüfung und Duell mit Rückfrage wie der Schließen-Knopf |
 
 ## Auf einem Android-Handy testen
@@ -47,27 +46,9 @@ müssen dafür bei Expo unter Project → Environment variables stehen.
 4. Bundle hochladen (oder `npx eas-cli submit -p android`), zuerst in den
    internen Test, dann in die Produktion.
 
-## Mit Apple anmelden auf Android
-
-Auf Android läuft die Apple-Anmeldung über den Browser. Dafür braucht Supabase
-zusätzlich die Web-Variante:
-
-1. Apple Developer → Identifiers → **Services ID** anlegen (z. B. `de.spur.theorie.web`),
-   „Sign in with Apple“ aktivieren, als Return-URL
-   `https://<dein-projekt>.supabase.co/auth/v1/callback` eintragen.
-2. Apple Developer → Keys → Schlüssel mit „Sign in with Apple“ anlegen und herunterladen.
-3. Supabase → Authentication → Providers → Apple: Services ID bei **Client IDs**
-   zusätzlich eintragen (Komma-getrennt nach `de.spur.theorie`) und das
-   **Secret** aus dem Schlüssel erzeugen (Supabase hat dafür ein Werkzeug in der Doku).
-   Das Secret läuft nach 6 Monaten ab und muss dann erneuert werden.
-
-Ohne diese Einrichtung zeigt der Apple-Knopf auf Android „Diese Anmeldung ist
-auf dem Server noch nicht eingeschaltet“.
-
 ## Rechte der Android-App
 
 Kamera (Schilder-Jagd), Mitteilungen (Lern-Erinnerung), Internet. Nicht
 enthalten bzw. gesperrt: Mikrofon, „Über anderen Apps einblenden“, Speicher
 schreiben. Die App ist vom Android-Backup ausgenommen, und keine Seite der App
-lässt sich von fremden Apps direkt starten (außer dem normalen Start und den
-Anmelde-Links).
+lässt sich von fremden Apps direkt starten (außer dem normalen Start).

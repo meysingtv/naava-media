@@ -4,7 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useFenster } from "@/lib/fenster";
+import { useDesktop, useFenster } from "@/lib/fenster";
+import { KurzErklaertWeb } from "@/components/web/kurz-erklaert-web";
 import { Icon } from "@/components/icon";
 import { Seite } from "@/components/seite";
 import { Chip, kartenFlaeche, Knopf, KopfTaste, Plakette, T, zurueck } from "@/components/ui";
@@ -166,7 +167,12 @@ function ClipKarte({ clip, index, anzahl, hoehe, aktiv }: { clip: Clip; index: n
   );
 }
 
+/** Kurz erklärt – am PC eine eigene Fassung. */
 export default function KurzErklaert() {
+  return useDesktop() ? <KurzErklaertWeb /> : <KurzErklaertHandy />;
+}
+
+function KurzErklaertHandy() {
   const insets = useSafeAreaInsets();
   const { stand } = useStand();
   const [ansicht, setAnsicht] = useState<"alle" | "gemerkt">("alle");

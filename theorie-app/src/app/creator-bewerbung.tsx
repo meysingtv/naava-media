@@ -25,9 +25,11 @@ import { Lader } from "@/components/lader";
 import { Schalter } from "@/components/schalter";
 import { GrossKopf, Seite } from "@/components/seite";
 import { Abschnitt, Knopf, T, Zeile } from "@/components/ui";
+import { CreatorBewerbungWeb } from "@/components/web/creator-web";
 import { useClipRechte, vorZeit } from "@/lib/clips-server";
 import { creatorBewerben, creatorZurueckziehen, STATUS_TEXT, useMeineBewerbung, type BewerbungDaten, type CreatorStatus } from "@/lib/creator";
 import { useFarbwelt, type Farbwelt } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
 import { erfolg, tippen } from "@/lib/haptik";
 import { useKonto } from "@/lib/konto";
 import { farben, mitDeckkraft, RAND, schrift } from "@/lib/theme";
@@ -231,6 +233,8 @@ function Inhalt() {
   const [alterText, setAlterText] = useState("");
   const [regelnOk, setRegelnOk] = useState(false);
   const [sendet, setSendet] = useState(false);
+  // Im Browser am PC: eigene Fassung über die volle Breite (web/creator-web.tsx).
+  const desktop = useDesktop();
 
   useEffect(() => {
     if (!daten.name && anzeigeName) setDaten((d) => ({ ...d, name: anzeigeName }));
@@ -285,6 +289,28 @@ function Inhalt() {
         },
       },
     ]);
+  }
+
+  if (desktop) {
+    const st = bewerbung?.status;
+    const art = !session ? "gast" : rechte.inhaber ? "inhaber" : !geladen ? "laedt" : !formular && bewerbung && st && st !== "zurueckgezogen" ? "status" : "formular";
+    return (
+      <CreatorBewerbungWeb
+        art={art}
+        bewerbung={bewerbung}
+        daten={daten}
+        setze={setze}
+        alterText={alterText}
+        onAlter={setAlterText}
+        regelnOk={regelnOk}
+        onRegeln={setRegelnOk}
+        fehlen={fehlen}
+        sendet={sendet}
+        onAbsenden={absenden}
+        onZurueckziehen={zurueckziehen}
+        onNeu={() => setFormular(true)}
+      />
+    );
   }
 
   if (!session) {

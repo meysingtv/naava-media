@@ -1,10 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AppState, Platform } from "react-native";
+import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as AppleAuthentication from "expo-apple-authentication";
-import * as Crypto from "expo-crypto";
-import * as Linking from "expo-linking";
-import * as WebBrowser from "expo-web-browser";
 import type { Session } from "@supabase/supabase-js";
 
 import { dialog } from "@/components/dialog";
@@ -36,7 +32,8 @@ export type Profil = {
 
 export type Rolle = "schueler" | "fahrlehrer";
 
-type Registrierung = {
+/** Angaben für ein neues Konto – gespeichert, sobald der Code aus der E-Mail stimmt. */
+export type Registrierung = {
   rolle: Rolle;
   vorname: string;
   nachname: string;
@@ -44,14 +41,17 @@ type Registrierung = {
   telefon: string | null;
   /** ISO-Datum (JJJJ-MM-TT) oder null. */
   geburtsdatum: string | null;
-  email: string;
-  passwort: string;
   klasse: string;
   bundesland: string | null;
 };
 
-/** Ergebnis von „Mit Google/Apple anmelden“. */
-export type SozialErgebnis = { fehler?: string; abgebrochen?: boolean };
+/**
+ * Stellen des Codes aus der E-Mail. Muss zu Supabase → Authentication →
+ * Providers → Email → „Email OTP Length“ passen.
+ */
+export const CODE_LAENGE = 6;
+/** So lange wartet „Code erneut senden“ (Supabase lässt pro Adresse nur eine Mail je Minute zu). */
+const NEU_SENDEN_SEKUNDEN = 60;
 
 type KontoKontext = {
   laedt: boolean;
@@ -60,31 +60,23 @@ type KontoKontext = {
   gast: boolean;
   drin: boolean;
   anzeigeName: string;
-  registrieren: (d: Registrierung) => Promise<{ fehler?: string; bestaetigen?: boolean }>;
-  /** Anmelden mit E-Mail oder Benutzername. */
-  anmelden: (kennung: string, passwort: string) => Promise<string | null>;
-  mitGoogle: (rolle?: Rolle) => Promise<SozialErgebnis>;
-  mitApple: (rolle?: Rolle) => Promise<SozialErgebnis>;
+  /**
+   * Schickt einen Anmelde-Code an die E-Mail. Mit `neu` entsteht dabei ein
+   * Konto (Registrieren), ohne nur für schon vorhandene Konten (Anmelden).
+   */
+  codeSenden: (email: string, neu?: Registrierung) => Promise<string | null>;
+  /** Code aus der E-Mail einlösen – danach ist man angemeldet. */
+  codePruefen: (email: string, code: string) => Promise<string | null>;
   rolleSetzen: (rolle: Rolle) => Promise<string | null>;
-  passwortVergessen: (email: string) => Promise<string | null>;
-  passwortAendern: (neu: string) => Promise<string | null>;
   abmelden: () => Promise<void>;
   alsGast: (name: string) => Promise<void>;
   profilSpeichern: (teil: { name?: string; klasse?: string; bundesland?: string | null }) => Promise<string | null>;
   benutzernameFrei: (name: string) => Promise<boolean | null>;
   benutzernameAendern: (neu: string) => Promise<string | null>;
   profilNeuLaden: () => Promise<void>;
-  /** Über den Link „Passwort zurücksetzen“ angemeldet – neues Passwort fällig. */
-  passwortNeuFaellig: boolean;
-  passwortNeuErledigt: () => void;
 };
 
 const GAST = "spur-gast";
-/**
- * Links aus Bestätigungs- und Passwort-Mails öffnen die App. In Supabase unter
- * Authentication → URL Configuration → Redirect URLs „spur://**“ eintragen.
- */
-const APP_LINK = "spur://";
 const Kontext = createContext<KontoKontext | null>(null);
 
 function email(roh: string): string {
@@ -92,47 +84,15 @@ function email(roh: string): string {
 }
 
 function fehlerText(meldung: string): string {
-  if (/already registered|already exists/i.test(meldung)) return "Diese E-Mail ist schon registriert. Melde dich einfach an.";
-  if (/invalid login credentials/i.test(meldung)) return "E-Mail oder Passwort stimmt nicht. Tippe auf das Auge, um dein Passwort zu prüfen.";
-  if (/email not confirmed/i.test(meldung)) return "Bitte bestätige zuerst deine E-Mail-Adresse.";
-  if (/password/i.test(meldung) && /(short|least|characters)/i.test(meldung)) return "Das Passwort braucht mindestens 8 Zeichen.";
-  if (/valid email|invalid email/i.test(meldung)) return "Bitte gib eine gültige E-Mail-Adresse ein.";
+  if (/signups not allowed|user not found/i.test(meldung)) return "Zu dieser E-Mail gibt es noch kein Konto. Registriere dich zuerst.";
+  if (/token has expired|invalid token|otp.*(expired|invalid)|expired or is invalid/i.test(meldung)) return "Der Code stimmt nicht oder ist abgelaufen. Prüf die Ziffern oder lass dir einen neuen schicken.";
+  if (/valid email|invalid email|unable to validate email/i.test(meldung)) return "Bitte gib eine gültige E-Mail-Adresse ein.";
   if (/network|fetch/i.test(meldung)) return "Keine Verbindung. Bitte prüfe dein Internet.";
-  if (/rate limit/i.test(meldung)) return "Zu viele Versuche. Bitte warte kurz.";
+  if (/rate limit|security purposes|only request this after/i.test(meldung)) return "Zu viele Versuche. Bitte warte kurz und versuch es dann noch einmal.";
   if (/user is banned|banned/i.test(meldung)) return "Dein Zugang ist pausiert oder gesperrt. Wende dich bei Fragen an deine Fahrschule.";
-  if (/provider is not enabled|unsupported provider/i.test(meldung)) return "Diese Anmeldung ist auf dem Server noch nicht eingeschaltet.";
   if (/lern_profil_name_laenge/.test(meldung)) return "Der Name darf höchstens 40 Zeichen lang sein.";
   if (/lern_profil_bundesland_gueltig/.test(meldung)) return "Bitte wähle ein Bundesland aus der Liste.";
-  if (/code verifier/i.test(meldung))
-    return "Öffne den Link bitte auf dem Handy, auf dem du ihn angefordert hast. War es die Bestätigungs-Mail, ist deine Adresse trotzdem bestätigt – melde dich einfach an.";
   return meldung;
-}
-
-/** Parameter eines Rückkehr-Links – aus „?…“ und „#…“ zusammen. */
-function linkParameter(url: string): URLSearchParams {
-  const frage = url.indexOf("?");
-  const raute = url.indexOf("#");
-  const abfrage = frage >= 0 ? url.slice(frage + 1, raute > frage ? raute : undefined) : "";
-  const anker = raute >= 0 ? url.slice(raute + 1) : "";
-  const p = new URLSearchParams(abfrage);
-  new URLSearchParams(anker).forEach((wert, name) => p.set(name, wert));
-  return p;
-}
-
-/**
- * Einmal-Code aus einem Rückkehr-Link einlösen (PKCE). Das klappt nur mit
- * dem Geheimnis, das diese App beim Start der Anmeldung gespeichert hat –
- * fremde oder abgefangene Links melden niemanden an. null = kein Anmelde-Link.
- */
-async function codeEinloesen(url: string): Promise<{ fehler: string | null } | null> {
-  const p = linkParameter(url);
-  const fehler = p.get("error_description");
-  if (fehler) return { fehler: fehler.replace(/\+/g, " ") };
-  const code = p.get("code");
-  if (!code) return null;
-  const flowId = p.get("sb_flow_id");
-  const { error } = await supabase.auth.exchangeCodeForSession(code, flowId ? { flowId } : undefined);
-  return { fehler: error ? fehlerText(error.message) : null };
 }
 
 export function KontoProvider({ children }: { children: ReactNode }) {
@@ -140,9 +100,6 @@ export function KontoProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profil, setProfil] = useState<Profil | null>(null);
   const [gastName, setGastName] = useState<string | null>(null);
-  const [passwortNeuFaellig, setPasswortNeuFaellig] = useState(false);
-  /** Läuft gerade eine Anmeldung im Browser? Dann löst imBrowser() den Rückkehr-Link ein. */
-  const imBrowserAktiv = useRef(false);
 
   const profilLaden = useCallback(async (s: Session | null) => {
     if (!s) {
@@ -184,11 +141,9 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     })();
 
     const { data: abo } = serverVerbunden
-      ? supabase.auth.onAuthStateChange((ereignis, s) => {
+      ? supabase.auth.onAuthStateChange((_ereignis, s) => {
           setSession(s);
           profilLaden(s);
-          // Über den Link „Passwort zurücksetzen“ angemeldet → neues Passwort fällig.
-          if (ereignis === "PASSWORD_RECOVERY") setPasswortNeuFaellig(true);
         })
       : { data: null };
     return () => {
@@ -197,143 +152,39 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     };
   }, [profilLaden]);
 
-  const registrieren = useCallback(async (d: Registrierung) => {
-    if (!serverVerbunden) return { fehler: "Die App ist noch mit keinem Server verbunden. Du kannst sie vorerst ohne Konto nutzen." };
-    const { data, error } = await supabase.auth.signUp({
-      email: email(d.email),
-      password: d.passwort,
-      options: {
-        emailRedirectTo: APP_LINK,
-        // Telefon, Nachname und Geburtsdatum bleiben privat im Konto (nicht im öffentlichen Profil).
-        data: {
-          name: d.vorname.trim(),
-          nachname: d.nachname.trim(),
-          benutzername: d.benutzername.trim().toLowerCase(),
-          rolle: d.rolle,
-          telefon: d.telefon,
-          geburtsdatum: d.geburtsdatum,
-          klasse: d.klasse,
-          bundesland: d.bundesland,
-        },
-      },
+  const codeSenden = useCallback(async (adresse: string, neu?: Registrierung) => {
+    if (!serverVerbunden) return "Die App ist noch mit keinem Server verbunden.";
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email(adresse),
+      options: neu
+        ? {
+            shouldCreateUser: true,
+            // Telefon, Nachname und Geburtsdatum bleiben privat im Konto (nicht im öffentlichen Profil).
+            // Gibt es die Adresse schon, bleibt das Konto, wie es ist – man wird einfach angemeldet.
+            data: {
+              name: neu.vorname.trim(),
+              nachname: neu.nachname.trim(),
+              benutzername: neu.benutzername.trim().toLowerCase(),
+              rolle: neu.rolle,
+              telefon: neu.telefon,
+              geburtsdatum: neu.geburtsdatum,
+              klasse: neu.klasse,
+              bundesland: neu.bundesland,
+            },
+          }
+        : { shouldCreateUser: false },
     });
-    if (error) return { fehler: fehlerText(error.message) };
-    // Supabase meldet ein schon vorhandenes Konto nicht als Fehler, sondern mit leerer Identitätsliste.
-    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
-      return { fehler: "Mit dieser E-Mail gibt es schon ein Konto. Melde dich an – oder setz dein Passwort über „Passwort vergessen?“ zurück." };
-    }
-    if (!data.session) {
-      // Ohne E-Mail-Bestätigung gleich anmelden. Klappt das nicht, verlangt der
-      // Server noch eine Bestätigung (Supabase: „Confirm email“ ist noch an).
-      const { error: anmeldeFehler } = await supabase.auth.signInWithPassword({ email: email(d.email), password: d.passwort });
-      if (anmeldeFehler) return { bestaetigen: true };
-    }
-    await AsyncStorage.removeItem(GAST).catch(() => {});
-    setGastName(null);
-    return {};
+    return error ? fehlerText(error.message) : null;
   }, []);
 
-  const anmelden = useCallback(async (kennung: string, passwort: string) => {
+  const codePruefen = useCallback(async (adresse: string, code: string) => {
     if (!serverVerbunden) return "Die App ist noch mit keinem Server verbunden.";
-    let adresse = kennung.trim();
-    if (!adresse.includes("@") || adresse.startsWith("@")) {
-      // Benutzername: Der Server gibt die E-Mail nur heraus, wenn das Passwort stimmt.
-      const { data, error } = await supabase.rpc("lern_anmelde_email", { p_benutzername: adresse, p_passwort: passwort });
-      if (error) {
-        if (/lern_anmelde_email|schema cache|function/i.test(error.message)) return "Anmelden mit Benutzername ist noch nicht eingerichtet – bitte mit deiner E-Mail anmelden.";
-        return fehlerText(error.message);
-      }
-      if (!data) return "Benutzername oder Passwort stimmt nicht.";
-      adresse = String(data);
-    }
-    const { error } = await supabase.auth.signInWithPassword({ email: email(adresse), password: passwort });
+    const { error } = await supabase.auth.verifyOtp({ email: email(adresse), token: code.replace(/\D/g, ""), type: "email" });
     if (error) return fehlerText(error.message);
     await AsyncStorage.removeItem(GAST).catch(() => {});
     setGastName(null);
+    clipRechteNeuLaden();
     return null;
-  }, []);
-
-  /** Nach Google/Apple: Gastmodus beenden und – wenn gewählt – als Fahrlehrer eintragen. */
-  const nachSozialAnmeldung = useCallback(async (rolle?: Rolle) => {
-    await AsyncStorage.removeItem(GAST).catch(() => {});
-    setGastName(null);
-    if (rolle === "fahrlehrer") {
-      await supabase.rpc("lern_rolle_setzen", { p_rolle: "fahrlehrer" });
-      clipRechteNeuLaden();
-    }
-  }, []);
-
-  /** Anmeldung über die Seite des Anbieters im Browser (Google, Apple außerhalb des iPhones). */
-  const imBrowser = useCallback(
-    async (anbieter: "google" | "apple", rolle?: Rolle): Promise<SozialErgebnis> => {
-      if (!serverVerbunden) return { fehler: "Die App ist noch mit keinem Server verbunden." };
-      const name = anbieter === "google" ? "Google" : "Apple";
-      const ziel = Linking.createURL("auth-callback");
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: anbieter,
-        options: { redirectTo: ziel, skipBrowserRedirect: true, queryParams: anbieter === "google" ? { prompt: "select_account" } : undefined },
-      });
-      if (error || !data?.url) return { fehler: fehlerText(error?.message ?? `${name}-Anmeldung konnte nicht starten.`) };
-      imBrowserAktiv.current = true;
-      const antwort = await WebBrowser.openAuthSessionAsync(data.url, ziel).finally(() => {
-        imBrowserAktiv.current = false;
-      });
-      if (antwort.type !== "success") return { abgebrochen: true };
-      const e = await codeEinloesen(antwort.url);
-      if (!e) return { fehler: `${name} hat keine Anmeldung zurückgegeben. Bitte versuch es noch einmal.` };
-      if (e.fehler) return { fehler: e.fehler };
-      await nachSozialAnmeldung(rolle);
-      return {};
-    },
-    [nachSozialAnmeldung],
-  );
-
-  const mitGoogle = useCallback((rolle?: Rolle) => imBrowser("google", rolle), [imBrowser]);
-
-  const mitApple = useCallback(
-    async (rolle?: Rolle): Promise<SozialErgebnis> => {
-      if (!serverVerbunden) return { fehler: "Die App ist noch mit keinem Server verbunden." };
-      // Auf dem iPhone mit Apples eigener Anmeldung, sonst über die Apple-Seite im Browser.
-      const nativ = Platform.OS === "ios" && (await AppleAuthentication.isAvailableAsync().catch(() => false));
-      if (!nativ) return imBrowser("apple", rolle);
-      try {
-        // Einmalwert gegen wiederverwendete Apple-Anmeldungen: Apple bekommt
-        // den Hash, der Server prüft ihn gegen den Rohwert.
-        const nonce = Crypto.randomUUID();
-        const nonceHash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, nonce);
-        const cred = await AppleAuthentication.signInAsync({
-          requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
-          nonce: nonceHash,
-        });
-        if (!cred.identityToken) return { fehler: "Apple hat keine Anmeldung zurückgegeben." };
-        const { data, error } = await supabase.auth.signInWithIdToken({ provider: "apple", token: cred.identityToken, nonce });
-        if (error) return { fehler: fehlerText(error.message) };
-        // Den Namen gibt Apple nur beim allerersten Mal heraus – dann gleich übernehmen.
-        const vorname = cred.fullName?.givenName?.trim();
-        if (vorname && data.user) {
-          await supabase.auth.updateUser({ data: { name: vorname, nachname: cred.fullName?.familyName?.trim() ?? null } });
-          await supabase.from("lern_profil").update({ name: vorname }).eq("id", data.user.id);
-        }
-        await nachSozialAnmeldung(rolle);
-        return {};
-      } catch (e) {
-        if ((e as { code?: string }).code === "ERR_REQUEST_CANCELED") return { abgebrochen: true };
-        return { fehler: "Die Anmeldung mit Apple hat nicht geklappt. Bitte versuch es noch einmal." };
-      }
-    },
-    [nachSozialAnmeldung, imBrowser],
-  );
-
-  const passwortVergessen = useCallback(async (adresse: string) => {
-    if (!serverVerbunden) return "Die App ist noch mit keinem Server verbunden.";
-    const { error } = await supabase.auth.resetPasswordForEmail(email(adresse), { redirectTo: APP_LINK });
-    return error ? fehlerText(error.message) : null;
-  }, []);
-
-  const passwortAendern = useCallback(async (neu: string) => {
-    if (neu.length < 8) return "Das Passwort braucht mindestens 8 Zeichen.";
-    const { error } = await supabase.auth.updateUser({ password: neu });
-    return error ? fehlerText(error.message) : null;
   }, []);
 
   const abmelden = useCallback(async () => {
@@ -404,29 +255,6 @@ export function KontoProvider({ children }: { children: ReactNode }) {
     };
   }, [nutzerId]);
 
-  // Links aus den Mails (Bestätigung, Passwort zurücksetzen) melden direkt an –
-  // aber nur mit dem Einmal-Code, den diese App selbst angefordert hat.
-  useEffect(() => {
-    if (!serverVerbunden) return;
-    async function verarbeiten(url: string | null) {
-      if (!url) return;
-      // Google/Apple im Browser löst imBrowser() selbst ein – außer die App
-      // wurde währenddessen beendet und startet mit dem Rückkehr-Link neu.
-      if (url.includes("auth-callback") && imBrowserAktiv.current) return;
-      const e = await codeEinloesen(url);
-      if (!e) return;
-      if (e.fehler) {
-        dialog("Link nicht gültig", `${e.fehler}\n\nFordere sonst einfach einen neuen Link an.`);
-        return;
-      }
-      await AsyncStorage.removeItem(GAST).catch(() => {});
-      setGastName(null);
-    }
-    Linking.getInitialURL().then(verarbeiten);
-    const abo = Linking.addEventListener("url", ({ url }) => verarbeiten(url));
-    return () => abo.remove();
-  }, []);
-
   const rolleSetzen = useCallback(
     async (rolle: Rolle) => {
       if (!session) return "Bitte melde dich an.";
@@ -459,41 +287,30 @@ export function KontoProvider({ children }: { children: ReactNode }) {
       gast,
       drin: Boolean(session) || gast,
       anzeigeName: profil?.name || gastName || session?.user.email?.split("@")[0] || "Du",
-      registrieren,
-      anmelden,
-      mitGoogle,
-      mitApple,
+      codeSenden,
+      codePruefen,
       rolleSetzen,
-      passwortVergessen,
-      passwortAendern,
       abmelden,
       alsGast,
       profilSpeichern,
       benutzernameFrei,
       benutzernameAendern,
       profilNeuLaden: () => profilLaden(session),
-      passwortNeuFaellig,
-      passwortNeuErledigt: () => setPasswortNeuFaellig(false),
     };
   }, [
     laedt,
     session,
     profil,
     gastName,
-    registrieren,
-    anmelden,
-    mitGoogle,
-    mitApple,
+    codeSenden,
+    codePruefen,
     rolleSetzen,
-    passwortVergessen,
-    passwortAendern,
     abmelden,
     alsGast,
     profilSpeichern,
     benutzernameFrei,
     benutzernameAendern,
     profilLaden,
-    passwortNeuFaellig,
   ]);
 
   return <Kontext.Provider value={wert}>{children}</Kontext.Provider>;
@@ -503,4 +320,100 @@ export function useKonto(): KontoKontext {
   const k = useContext(Kontext);
   if (!k) throw new Error("useKonto außerhalb von KontoProvider");
   return k;
+}
+
+/** Zustand von „Code per E-Mail“ – für Anmelden und Registrieren gleich. */
+export type CodeAblauf = {
+  /** An diese Adresse ging der letzte Code – null, solange noch keiner verschickt ist. */
+  gesendetAn: string | null;
+  code: string;
+  setCode: (c: string) => void;
+  laedt: boolean;
+  fehler: string | null;
+  setFehler: (f: string | null) => void;
+  /** Sekunden, bis „Code erneut senden“ wieder geht. */
+  warten: number;
+  senden: (adresse: string, neu?: Registrierung) => Promise<boolean>;
+  /** Prüft den Code; true = angemeldet. */
+  pruefen: (code?: string) => Promise<boolean>;
+  nochmalSenden: () => Promise<void>;
+  /** Zurück zur Eingabe der E-Mail. */
+  andereAdresse: () => void;
+};
+
+export function useCodeAblauf(): CodeAblauf {
+  const { codeSenden, codePruefen } = useKonto();
+  const [gesendetAn, setGesendetAn] = useState<string | null>(null);
+  const [code, setCodeRoh] = useState("");
+  const [laedt, setLaedt] = useState(false);
+  const [fehler, setFehler] = useState<string | null>(null);
+  const [warten, setWarten] = useState(0);
+  // Fürs erneute Senden: dieselben Angaben wie beim ersten Mal.
+  const letzteAngaben = useRef<Registrierung | undefined>(undefined);
+
+  useEffect(() => {
+    if (warten <= 0) return;
+    const t = setTimeout(() => setWarten((w) => w - 1), 1000);
+    return () => clearTimeout(t);
+  }, [warten]);
+
+  const senden = useCallback(
+    async (adresse: string, neu?: Registrierung) => {
+      setFehler(null);
+      setLaedt(true);
+      const f = await codeSenden(adresse, neu);
+      setLaedt(false);
+      if (f) {
+        setFehler(f);
+        return false;
+      }
+      letzteAngaben.current = neu;
+      setGesendetAn(email(adresse));
+      setCodeRoh("");
+      setWarten(NEU_SENDEN_SEKUNDEN);
+      return true;
+    },
+    [codeSenden],
+  );
+
+  const pruefen = useCallback(
+    async (eingabe?: string) => {
+      const c = (eingabe ?? code).replace(/\D/g, "");
+      if (!gesendetAn || laedt || c.length < CODE_LAENGE) return false;
+      setFehler(null);
+      setLaedt(true);
+      const f = await codePruefen(gesendetAn, c);
+      setLaedt(false);
+      if (f) {
+        setFehler(f);
+        setCodeRoh("");
+        return false;
+      }
+      return true;
+    },
+    [code, gesendetAn, laedt, codePruefen],
+  );
+
+  const nochmalSenden = useCallback(async () => {
+    if (!gesendetAn || warten > 0 || laedt) return;
+    await senden(gesendetAn, letzteAngaben.current);
+  }, [gesendetAn, warten, laedt, senden]);
+
+  return {
+    gesendetAn,
+    code,
+    setCode: (c) => setCodeRoh(c.replace(/\D/g, "").slice(0, CODE_LAENGE)),
+    laedt,
+    fehler,
+    setFehler,
+    warten,
+    senden,
+    pruefen,
+    nochmalSenden,
+    andereAdresse: () => {
+      setGesendetAn(null);
+      setCodeRoh("");
+      setFehler(null);
+    },
+  };
 }

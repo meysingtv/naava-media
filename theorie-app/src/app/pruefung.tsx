@@ -22,6 +22,8 @@ import { liveSimulation } from "@/lib/live-aktivitaet";
 import { gemischt, useStand } from "@/lib/stand";
 import { mitDeckkraft, RAND, schrift } from "@/lib/theme";
 import { useZurueckTaste } from "@/lib/zurueck-taste";
+import { useDesktop } from "@/lib/fenster";
+import { PruefungErgebnisWeb, PruefungLaeuftWeb, PruefungStartWeb } from "@/components/web/pruefung-web";
 
 const FRAGEN_ANZAHL = 30;
 const MAX_FEHLERPUNKTE = 10;
@@ -50,6 +52,8 @@ function beantwortet(f: Frage, a?: { auswahl: number[]; eingabe: string }) {
 
 export default function Pruefung() {
   const insets = useSafeAreaInsets();
+  // Im Browser am PC: Vollbild-Fassung mit Tastatur (web/pruefung-web.tsx).
+  const desktop = useDesktop();
   const { farbwelt: f, belohnungen } = useDarstellung();
   const { direkt } = useLocalSearchParams<{ direkt?: string }>();
   const { stand, antwort, pruefungFertig, zeitBuchen } = useStand();
@@ -200,6 +204,7 @@ export default function Pruefung() {
       { icon: "shield-checkmark-outline", text: "Bestanden mit höchstens 10 Fehlerpunkten – außer bei zwei falschen 5-Punkte-Fragen" },
       { icon: "eye-off-outline", text: "Die Auflösung siehst du erst nach dem Abgeben" },
     ];
+    if (desktop) return <PruefungStartWeb anzahl={Math.min(FRAGEN_ANZAHL, FRAGEN.length)} onStart={starten} onSchliessen={() => router.back()} />;
     return (
       <FarbweltBereich farbwelt={f}>
         <StatusBar style={f.hell ? "dark" : "light"} />
@@ -270,6 +275,21 @@ export default function Pruefung() {
         ? "Zwei falsche 5-Punkte-Fragen – das reicht in der echten Prüfung zum Durchfallen."
         : "Schau dir die Fehler an und übe die Themen gezielt.";
     const hatFehler = ergebnis.falsche.length > 0;
+    if (desktop) {
+      return (
+        <PruefungErgebnisWeb
+          ids={ids}
+          antworten={antworten}
+          ergebnis={ergebnis}
+          zeit={dauer(sekunden)}
+          xp={belohnungen ? ergebnis.xp : undefined}
+          text={text}
+          reihenfolge={reihenfolge}
+          onFertig={() => router.back()}
+          onNochmal={starten}
+        />
+      );
+    }
     return (
       <FarbweltBereich farbwelt={f}>
         <StatusBar style="light" />
@@ -362,6 +382,27 @@ export default function Pruefung() {
     setAntworten((alt) => ({ ...alt, [frage.id]: { ...(alt[frage.id] ?? { auswahl: [], eingabe: "" }), ...teil } }));
   const rest = Math.max(0, ZEIT_LIMIT - sekunden);
   const knapp = rest <= ZEIT_KNAPP;
+
+  if (desktop) {
+    return (
+      <PruefungLaeuftWeb
+        ids={ids}
+        index={index}
+        antworten={antworten}
+        beantwortet={(i) => {
+          const q = frageVon(ids[i]);
+          return q ? beantwortet(q, antworten[ids[i]]) : false;
+        }}
+        rest={rest}
+        knapp={knapp}
+        reihenfolge={reihenfolge}
+        onAntwort={setzeAntwort}
+        onGehe={gehe}
+        onAbgeben={abgebenFragen}
+        onAbbrechen={abbrechenFragen}
+      />
+    );
+  }
 
   return (
     <FarbweltBereich farbwelt={f}>

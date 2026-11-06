@@ -14,9 +14,11 @@ import { Icon } from "@/components/icon";
 import { Lader } from "@/components/lader";
 import { GrossKopf, Seite } from "@/components/seite";
 import { Knopf, Segment, T } from "@/components/ui";
+import { CreatorVerwaltungWeb } from "@/components/web/creator-web";
 import { useClipRechte, vorZeit } from "@/lib/clips-server";
 import { useBewerbungen, type Bewerbung } from "@/lib/creator";
 import { useFarbwelt } from "@/lib/darstellung";
+import { useDesktop } from "@/lib/fenster";
 import { tippen } from "@/lib/haptik";
 import { abstand, mitDeckkraft, RAND, schrift } from "@/lib/theme";
 
@@ -88,7 +90,11 @@ function Inhalt() {
   const rechte = useClipRechte();
   const { liste, fehler, neuLaden } = useBewerbungen(rechte.inhaber);
   const [reiter, setReiter] = useState<Reiter | null>(null);
+  const desktop = useDesktop();
   const inhalt = { paddingHorizontal: RAND, paddingTop: abstand(4), paddingBottom: insets.bottom + abstand(10) };
+
+  // Im Browser am PC: eigene Fassung über die volle Breite (web/creator-web.tsx).
+  if (desktop) return <CreatorVerwaltungWeb inhaber={rechte.inhaber} liste={liste} fehler={fehler} onNeuLaden={neuLaden} reiter={reiter} onReiter={setReiter} />;
 
   if (!rechte.inhaber) {
     return (
@@ -184,9 +190,10 @@ function Inhalt() {
 }
 
 export default function CreatorVerwaltung() {
+  const desktop = useDesktop();
   return (
     <Seite>
-      <GlasGrund />
+      {desktop ? null : <GlasGrund />}
       <Inhalt />
     </Seite>
   );

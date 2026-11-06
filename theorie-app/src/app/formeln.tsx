@@ -16,7 +16,8 @@ import { Kopfzeile } from "@/components/home";
 import { GlasGrund, GlasKarte } from "@/components/glas-flaeche";
 import { GrossKopf, Seite } from "@/components/seite";
 import { useFarbwelt } from "@/lib/darstellung";
-import { useFenster } from "@/lib/fenster";
+import { FormelnWeb } from "@/components/web/formeln-web";
+import { useDesktop, useFenster } from "@/lib/fenster";
 import { zahlText } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
 import { farben, leuchten, mitDeckkraft, RAND, schrift, verlauf } from "@/lib/theme";
@@ -156,8 +157,12 @@ function Raster({ spalten, children }: { spalten: number; children: ReactNode[] 
   );
 }
 
-/** Faustformeln zum Ausprobieren: Tempo wählen, Wege vergleichen. */
+/** Faustformeln zum Ausprobieren: Tempo wählen, Wege vergleichen. Am PC eine eigene Fassung. */
 export default function Formeln() {
+  return useDesktop() ? <FormelnWeb /> : <FormelnHandy />;
+}
+
+function FormelnHandy() {
   const insets = useSafeAreaInsets();
   const f = useFarbwelt();
   const { width } = useFenster();
