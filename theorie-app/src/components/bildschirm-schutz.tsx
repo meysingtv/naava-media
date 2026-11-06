@@ -28,15 +28,22 @@ const nativ = Platform.OS === "ios" ? requireOptionalNativeModule<Nativ>("Aufnah
 
 // --- Schalter für den Inhaber: Aufnahmen für mich erlauben (Standard: ja) ------
 let erlaubt = true;
+let geladen = false;
 const hoerer = new Set<() => void>();
-AsyncStorage.getItem(SPEICHER)
-  .then((w) => {
-    if (w === "nein") {
-      erlaubt = false;
-      hoerer.forEach((h) => h());
-    }
-  })
-  .catch(() => {});
+
+/** Gespeicherte Wahl erst nach dem Start lesen, nicht schon beim Laden der Datei. */
+function wahlLaden() {
+  if (geladen) return;
+  geladen = true;
+  AsyncStorage.getItem(SPEICHER)
+    .then((w) => {
+      if (w === "nein") {
+        erlaubt = false;
+        hoerer.forEach((h) => h());
+      }
+    })
+    .catch(() => {});
+}
 
 function abonnieren(h: () => void) {
   hoerer.add(h);
@@ -48,6 +55,7 @@ function abonnieren(h: () => void) {
 /** Darf der Inhaber aufnehmen? Zum Testen der Sperre lässt sich das ausschalten. */
 export function useInhaberAufnahme(): [boolean, (an: boolean) => void] {
   const wert = useSyncExternalStore(abonnieren, () => erlaubt);
+  useEffect(wahlLaden, []);
   const setzen = (an: boolean) => {
     erlaubt = an;
     hoerer.forEach((h) => h());
