@@ -107,11 +107,12 @@ export function mFlaeche(): ViewStyle {
 }
 
 /** Karte mit Kopf (Titel, Zusatz, Aktion rechts). */
-export function Tafel({ titel, zusatz, rechts, children, style, innen = true }: { titel?: string; zusatz?: string; rechts?: ReactNode; children: ReactNode; style?: StyleProp<ViewStyle>; innen?: boolean }) {
+export function Tafel({ titel, zusatz, rechts, children, style, innen = true, icon, ton }: { titel?: string; zusatz?: string; rechts?: ReactNode; children: ReactNode; style?: StyleProp<ViewStyle>; innen?: boolean; icon?: IconName; ton?: Ton }) {
   return (
     <View style={[mFlaeche(), { overflow: "hidden" }, style]}>
       {titel ? (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, minHeight: 54, paddingHorizontal: 20, borderBottomWidth: 1.5, borderBottomColor: B.ton }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, minHeight: 58, paddingHorizontal: 20, borderBottomWidth: 1.5, borderBottomColor: B.ton }}>
+          {icon ? <Symbol icon={icon} ton={ton ?? TOENE.orange} groesse={32} /> : null}
           <Text style={{ ...n.schwarz, fontSize: 17, color: B.text }}>{titel}</Text>
           {zusatz ? (
             <View style={{ minWidth: 26, height: 24, paddingHorizontal: 8, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: B.orangeHell }}>
@@ -134,7 +135,7 @@ export function Kennzahlen({ werte }: { werte: Kennzahl[] }) {
   return (
     <Raster min={200} max={4} abstand={16}>
       {werte.map((w) => (
-        <Pressable key={w.titel} disabled={!w.onPress} onPress={w.onPress} style={(z: Zustand) => [mFlaeche(), { padding: 20, gap: 12 }, z.hovered && w.onPress ? { backgroundColor: B.hover, borderColor: B.kante } : null]}>
+        <Pressable key={w.titel} disabled={!w.onPress} onPress={w.onPress} style={(z: Zustand) => [mFlaeche(), { padding: 20, gap: 12, borderBottomWidth: 4, borderBottomColor: (w.ton ?? TOENE.orange).farbe }, z.hovered && w.onPress ? { backgroundColor: (w.ton ?? TOENE.orange).hell } : null]}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             {w.icon ? <Symbol icon={w.icon} ton={w.ton ?? TOENE.orange} groesse={42} /> : <View />}
             {w.onPress ? <Icon name="chevron-forward" size={18} color={B.text3} /> : null}
@@ -223,17 +224,41 @@ export function rolleText(rolle: Rolle, inhaber?: boolean): string {
   return inhaber ? "Inhaber" : ROLLE_TEXT[rolle];
 }
 
-/** Profilbild oder Kürzel. */
+/** Farben für Kürzel-Avatare – je Name immer dieselbe. */
+const AVATAR_TOENE: (keyof typeof TOENE)[] = ["blau", "lila", "gruen", "pink", "tuerkis", "bernstein", "indigo", "koralle", "orange", "limette"];
+
+export function avatarTon(name: string): Ton {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return TOENE[AVATAR_TOENE[h % AVATAR_TOENE.length]];
+}
+
+/** Profilbild oder farbiges Kürzel. */
 export function MAvatar({ pfad, name, groesse = 32 }: { pfad: string | null | undefined; name: string; groesse?: number }) {
   const teile = name.trim().split(/\s+/);
   const kuerzel = ((teile[0]?.[0] ?? "") + (teile.length > 1 ? (teile[teile.length - 1]?.[0] ?? "") : "")).toUpperCase() || "?";
+  const ton = avatarTon(name.trim().toLowerCase());
   return (
-    <View style={{ width: groesse, height: groesse, borderRadius: groesse / 2, overflow: "hidden", alignItems: "center", justifyContent: "center", backgroundColor: B.ton }}>
+    <View style={{ width: groesse, height: groesse, borderRadius: groesse / 2, overflow: "hidden", alignItems: "center", justifyContent: "center", backgroundColor: pfad ? B.ton : ton.hell }}>
       {pfad ? (
         <Image source={{ uri: profilbildUrl(pfad) }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
       ) : (
-        <Text style={{ ...n.schwarz, fontSize: groesse * 0.38, color: B.text2 }}>{kuerzel}</Text>
+        <Text style={{ ...n.schwarz, fontSize: groesse * 0.38, color: ton.kante }}>{kuerzel}</Text>
       )}
+    </View>
+  );
+}
+
+/** Rolle als farbige Marke: Inhaber orange, Fahrlehrer lila, Fahrschüler blau. */
+export function RollenMarke({ rolle, inhaber }: { rolle: Rolle; inhaber?: boolean }) {
+  const ton = inhaber ? TOENE.orange : rolle === "fahrlehrer" ? TOENE.lila : TOENE.blau;
+  const icon: IconName = inhaber ? "star" : rolle === "fahrlehrer" ? "car" : "school";
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 5, height: 26, paddingHorizontal: 10, borderRadius: 13, backgroundColor: ton.hell }}>
+      <Icon name={icon} size={13} color={ton.kante} />
+      <Text style={{ ...n.fett, fontSize: 12.5, color: ton.kante }} numberOfLines={1}>
+        {rolleText(rolle, inhaber)}
+      </Text>
     </View>
   );
 }

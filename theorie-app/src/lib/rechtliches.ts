@@ -139,13 +139,13 @@ export const DATENSCHUTZ: Abschnitt[] = [
     inhalt: [
       "Clips, Kommentare, Reaktionen, Likes, wem du folgst, Chat-Nachrichten in Lives sowie dein öffentliches Profil (Vorname, Benutzername, Profilbild, Bundesland) sind für andere Nutzer sichtbar. Wir speichern sie, bis du sie oder dein Konto löschst.",
       "Für Live-Streams nutzen wir LiveKit Cloud (LiveKit, Inc., San Jose, USA). Bild und Ton werden nur übertragen, während du selbst live bist; Zuschauer empfangen den Stream, ohne dass wir ihn aufzeichnen. Für die Übermittlung in die USA gelten die EU-Standardvertragsklauseln.",
-      "Meldungen von Inhalten speichern wir mit dem gemeldeten Inhalt, um sie zu prüfen. Wen du blockierst, speichern wir, damit dir die Inhalte dieser Person nicht mehr angezeigt werden. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO und unser berechtigtes Interesse an einer sicheren Community (Art. 6 Abs. 1 lit. f DSGVO).",
+      "Meldungen von Inhalten speichern wir mit dem gemeldeten Inhalt, um sie zu prüfen. Entfernen wir etwas, bekommt die Person, die es geschrieben hat, eine Begründung in der App; wer gemeldet hat, erfährt, dass geprüft wurde. Die Entscheidung halten wir in einem Protokoll fest. Wen du blockierst, speichern wir, damit dir die Inhalte dieser Person nicht mehr angezeigt werden. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO und unser berechtigtes Interesse an einer sicheren Community (Art. 6 Abs. 1 lit. f DSGVO).",
     ],
   },
   {
     titel: "8. Mitteilungen",
     inhalt: [
-      "Wenn du Mitteilungen erlaubst, speichern wir einen Push-Token deines Geräts, um dir z. B. Bescheid zu geben, wenn ein Live startet. Zugestellt werden die Mitteilungen über den Push-Dienst von Expo (650 Industries, Inc., USA) sowie Apple (Apple Push Notification Service) bzw. Google (Firebase Cloud Messaging). Die tägliche Lern-Erinnerung plant die App nur lokal auf deinem Gerät. Du kannst Mitteilungen jederzeit in den Einstellungen deines Geräts oder der App abschalten (Einwilligung, Art. 6 Abs. 1 lit. a DSGVO).",
+      "Wenn du Mitteilungen erlaubst, speichern wir einen Push-Token deines Geräts, um dir z. B. Bescheid zu geben, wenn ein Live startet oder deine Fahrschule eine Nachricht schickt. Zugestellt werden die Mitteilungen über den Push-Dienst von Expo (650 Industries, Inc., USA) sowie Apple (Apple Push Notification Service) bzw. Google (Firebase Cloud Messaging). Die tägliche Lern-Erinnerung plant die App nur lokal auf deinem Gerät. Du kannst Mitteilungen jederzeit in den Einstellungen deines Geräts oder der App abschalten (Einwilligung, Art. 6 Abs. 1 lit. a DSGVO).",
     ],
   },
   {
@@ -169,7 +169,11 @@ export const DATENSCHUTZ: Abschnitt[] = [
   {
     titel: "12. Verwaltung durch Fahrschule oder Betreiber",
     inhalt: [
-      "Wurde dein Zugang von uns oder deiner Fahrschule angelegt, können wir im Verwaltungsbereich sehen, welche Zugänge es gibt, sie einem Fahrlehrer zuordnen, pausieren, sperren oder löschen und eine kurze Notiz hinterlegen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.",
+      "Im Verwaltungsbereich sehen wir bzw. deine Fahrschule, welche Zugänge es gibt, und können sie einem Fahrlehrer zuordnen, pausieren, sperren oder löschen und eine kurze Notiz hinterlegen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.",
+      "Damit deine Fahrschule dich gut vorbereiten kann, sieht sie dort auch deinen Lernstand (Fortschritt je Thema, Prüfungssimulationen, Lernzeit, Serie, gefundene Schilder) und deinen Prüfungstermin, wenn du ihn eingetragen hast. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, soweit die App Teil deiner Ausbildung ist, sonst unser berechtigtes Interesse an einer guten Betreuung (Art. 6 Abs. 1 lit. f DSGVO). Möchtest du das nicht, schreib uns – dann löschen wir die Zuordnung.",
+      "Löst du einen Einladungscode deiner Fahrschule ein, speichern wir, wer ihn wann eingelöst hat, und ordnen dich dem dazugehörigen Fahrlehrer zu.",
+      "Nachrichten an dich (z. B. Mitteilungen der Fahrschule oder Hinweise zu Meldungen) speichern wir, bis du sie gelesen hast, und danach so lange wie dein Konto.",
+      "Wer sich als Fahrlehrer registriert, wird von uns geprüft und bestätigt, bevor er Clips hochladen kann. Dafür sehen wir Name, Benutzername und E-Mail-Adresse.",
     ],
   },
   {
@@ -247,6 +251,8 @@ export const NUTZUNGSBEDINGUNGEN: Abschnitt[] = [
     titel: "6. Melden, Blockieren und Moderation",
     inhalt: [
       "Du kannst Clips und Chat-Nachrichten melden und andere Personen blockieren. Wir prüfen Meldungen und können Inhalte entfernen sowie Konten pausieren oder sperren, wenn gegen diese Bedingungen oder gegen Gesetze verstoßen wird. Bei schweren Verstößen auch ohne Vorwarnung.",
+      "Entfernen wir einen Inhalt von dir, bekommst du in der App eine Begründung. Bist du anderer Meinung, schreib uns über die Kontaktadresse im Impressum – wir prüfen die Entscheidung dann noch einmal. Wer gemeldet hat, erfährt, dass die Meldung geprüft wurde.",
+      "Als Fahrlehrer registrierte Konten können erst Clips hochladen, wenn wir sie bestätigt haben.",
     ],
   },
   {

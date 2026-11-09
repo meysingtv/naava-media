@@ -294,6 +294,23 @@ in der Seitenleiste verlinkt.
   Themenseite der App) und Erklärvideos zu einzelnen Fragen (erscheinen beim
   Lernen neben der KI-Hilfe). Datei hineinziehen oder klicken, MP4 oder MOV
   bis 50 MB, mit Fortschritt; Titel ändern, Reihenfolge, löschen.
+- **Einladungen:** Code und QR-Code (`spur://einladung?code=…`) für neue
+  Fahrschüler, wahlweise mit Fahrlehrer, Laufzeit und Anzahl. Wer ihn scannt
+  oder beim Registrieren eintippt, ist danach direkt zugeordnet. Kopieren,
+  drucken, beenden.
+- **Prüfungstermine:** alle Termine, die Fahrschüler in der App eingetragen
+  haben, nach Monaten, mit Countdown. Klick öffnet den Zugang.
+- **Meldungen:** gemeldete Clips und Chat-Nachrichten mit allen Gründen.
+  Entfernen (mit Begründung, die der Verfasser in der App bekommt) oder
+  behalten; wer gemeldet hat, bekommt eine Rückmeldung (DSA Art. 16/17).
+  Protokoll unter „Erledigt“.
+- **Freigaben:** Wer sich als Fahrlehrer registriert, darf erst nach der
+  Bestätigung Clips hochladen. Dazu die Creator-Bewerbungen.
+- **Mitteilungen:** Nachricht an alle, alle Fahrschüler, alle Fahrlehrer oder
+  die Schüler eines Fahrlehrers – als Push und als Hinweis beim nächsten Öffnen
+  der App. Mit Vorschau und Verlauf.
+- Im Zugang eines Fahrschülers zusätzlich der **Lernstand**: Prüfungstermin,
+  Serie, Lernzeit, Schilder, Fortschritt je Thema, Prüfungssimulationen.
 
 Einrichten (einmal):
 
@@ -306,6 +323,9 @@ Einrichten (einmal):
    → Inhalt von `supabase/functions/manager/index.ts` einfügen → Deploy.
    Secrets braucht sie keine – den Dienstschlüssel stellt Supabase selbst
    bereit, er kommt nie in die App oder in den Browser.
+3. Für Einladungen, Termine, Meldungen, Freigaben und Mitteilungen:
+   `supabase/update-verwaltung.sql` ausführen (Abschnitt 29). Die Edge
+   Function muss dafür nicht neu hochgeladen werden.
 
 ## Live-Stream in Clips
 

@@ -40,9 +40,11 @@ Prozentzahlen sind grobe Schätzungen und keine Statistik.
 5. „TÜV“ und „echte Prüfung“ aus Werbung und App-Texten nehmen (Punkt 5 der
    früheren Liste). Mit fremden Markennamen zu werben oder etwas Irreführendes
    zu versprechen, ist ein Risiko.
-6. **Kommentare meldbar machen** und beim Löschen eines Inhalts dem
-   Verfasser eine kurze Begründung schicken (DSA Art. 16 und 17, gilt auch für
-   Kleinstanbieter). Noch nicht gebaut.
+6. **Kommentare meldbar machen.** Die Begründung beim Löschen ist gebaut
+   (Verwaltung → Meldungen, DSA Art. 17): Der Verfasser bekommt sie in der
+   App, wer gemeldet hat eine Rückmeldung (Art. 16 Abs. 5). Kommentare lassen
+   sich aber noch nicht melden. Dafür `supabase/update-verwaltung.sql`
+   ausführen.
 7. Gewerbe anmelden, sobald mit der App Geld verdient wird (z. B. Premium).
 8. Code-Login: Absender-Mail über Gmail einrichten (`docs/login-einrichten.md`,
    Schritt 2) und `supabase/update-code-login.sql` ausführen. Google- und

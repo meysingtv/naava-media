@@ -22,6 +22,7 @@ import {
   MKnopf,
   Reiter,
   rolleText,
+  RollenMarke,
   SeitenBlatt,
   StatusPlakette,
   statusText,
@@ -34,6 +35,8 @@ import {
 import { n as nf } from "@/components/web/bunt";
 import { Schalter } from "@/components/schalter";
 import { HAUPT_KLASSEN } from "@/lib/klassen";
+import { LernstandTafel } from "@/components/manager-mehr";
+import { fahrlehrerEntscheiden } from "@/lib/verwaltung";
 import { passwortVorschlag, zugangAendern, zugangAnlegen, zugangLoeschen, zugangStatus, type Aenderung, type ManagerNutzer, type Rolle } from "@/lib/manager";
 
 // Zugänge im Manager: Liste als Tabelle mit Suche und Filtern, Details zum
@@ -178,9 +181,9 @@ export function ZugangListe({
                 </Text>
               </View>
             </View>
-            <Text style={{ ...spalte(SPALTEN.rolle), ...nf.text, fontSize: 14, color: n.inhaber ? M.orange : M.text2 }} numberOfLines={1}>
-              {rolleText(n.rolle, n.inhaber)}
-            </Text>
+            <View style={spalte(SPALTEN.rolle)}>
+              <RollenMarke rolle={n.rolle} inhaber={n.inhaber} />
+            </View>
             <Text style={{ ...spalte(SPALTEN.lehrer), ...nf.text, fontSize: 14, color: n.fahrlehrer_id ? M.text : M.text3 }} numberOfLines={1}>
               {n.fahrlehrer_id ? (lehrerVon.get(n.fahrlehrer_id) ?? "–") : "–"}
             </Text>
@@ -321,7 +324,9 @@ export function AnlegenFenster({
     if (z.passwort.length < 8) return setFehler("Das Passwort braucht mindestens 8 Zeichen.");
     setLaeuft(true);
     try {
-      await zugangAnlegen({ ...z, email: z.email.trim(), name: z.name.trim(), fahrlehrer_id: z.rolle === "schueler" ? z.fahrlehrer_id : null });
+      const id = await zugangAnlegen({ ...z, email: z.email.trim(), name: z.name.trim(), fahrlehrer_id: z.rolle === "schueler" ? z.fahrlehrer_id : null });
+      // Selbst angelegte Fahrlehrer sind gleich bestätigt (ohne Nachricht an sie).
+      if (z.rolle === "fahrlehrer") await fahrlehrerEntscheiden(id, true, true).catch(() => {});
       setFertig({ email: z.email.trim().toLowerCase(), passwort: z.passwort, name: z.name.trim() });
       onAngelegt();
     } catch (e) {
@@ -483,7 +488,16 @@ export function ZugangBlatt({ nutzer, alle, onSchliessen, onGeaendert }: { nutze
     }
   }
 
-  const sichern = () => ausfuehren("sichern", () => zugangAendern(n.id, aenderung), "Gespeichert.");
+  const sichern = () =>
+    ausfuehren(
+      "sichern",
+      async () => {
+        await zugangAendern(n.id, aenderung);
+        // Zum Fahrlehrer gemacht: gleich bestätigt, damit Hochladen klappt.
+        if (aenderung.rolle === "fahrlehrer") await fahrlehrerEntscheiden(n.id, true, true).catch(() => {});
+      },
+      "Gespeichert.",
+    );
 
   const verwerfen = () => {
     setForm({ name: n.name, benutzername: n.benutzername, email: n.email, rolle: n.rolle, klasse: n.klasse, fahrlehrer_id: n.fahrlehrer_id, notiz: n.notiz, darf_clips: n.darf_clips });
@@ -561,6 +575,13 @@ export function ZugangBlatt({ nutzer, alle, onSchliessen, onGeaendert }: { nutze
             </View>
           ))}
         </View>
+
+        {n.rolle === "schueler" && !n.inhaber ? (
+          <>
+            <Abschnitt titel="Lernstand" />
+            <LernstandTafel nutzerId={n.id} />
+          </>
+        ) : null}
 
         <Abschnitt titel="Konto" />
         <Feld titel="Name">
