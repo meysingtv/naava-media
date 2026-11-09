@@ -98,6 +98,7 @@ Die App braucht einen neuen Build, weil `expo-apple-authentication` und
 - Bestehende Konten (auch frühere Google-/Apple-Konten und im Manager angelegte
   Zugänge) melden sich einfach mit ihrer E-Mail und dem Code an.
 - „Code erneut senden“ geht nach 60 Sekunden wieder (Supabase-Grenze pro Adresse).
-- Jeder kann sich als „Fahrlehrer“ eintragen – eine Prüfung gibt es noch nicht.
+- Wer sich als „Fahrlehrer“ einträgt, kann erst Clips hochladen, wenn du ihn in
+  der Verwaltung unter **Freigaben** bestätigt hast (`supabase/update-verwaltung.sql`).
 - Telefonnummer, Nachname und Geburtsdatum liegen nur im Konto (nicht im
   öffentlichen Profil der Rangliste).
