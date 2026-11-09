@@ -13,6 +13,7 @@ import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, In
 import { Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold, Nunito_900Black } from "@expo-google-fonts/nunito";
 
 import { BildschirmSchutz } from "@/components/bildschirm-schutz";
+import { HinweisBruecke } from "@/components/hinweis-bruecke";
 import { AuswahlBlattHost } from "@/components/auswahl-blatt";
 import { BossTrefferAnzeige } from "@/components/crew";
 import { DialogHost } from "@/components/dialog";
@@ -159,6 +160,8 @@ function Navigation() {
         <Stack.Screen name="impressum" />
         <Stack.Screen name="datenschutz" />
         <Stack.Screen name="nutzungsbedingungen" />
+        {/* Einladung der Fahrschule (QR-Code) – auch vor der Anmeldung */}
+        <Stack.Screen name="einladung" />
         <Stack.Protected guard={!drin}>
           <Stack.Screen name="willkommen" options={{ animation: "fade" }} />
         </Stack.Protected>
@@ -220,6 +223,7 @@ function Navigation() {
       <AuswahlBlattHost />
       <TourOverlay />
       <BildschirmSchutz />
+      <HinweisBruecke />
     </View>
     </FarbweltBereich>
   );

@@ -12,12 +12,13 @@ import { useCodeAblauf, useKonto, type Rolle } from "@/lib/konto";
 import { tippen } from "@/lib/haptik";
 import { useStand } from "@/lib/stand";
 import { serverVerbunden } from "@/lib/supabase";
+import { einladungMerken, gemerkteEinladung } from "@/lib/verwaltung";
 import { abstand, farben, radius, RAND, schrift } from "@/lib/theme";
 import { RechtsLinks } from "@/components/rechts-seite";
 
 const ROLLEN: Auswahl<Rolle>[] = [
   { id: "schueler", titel: "Fahrschüler", unter: "Ich lerne für die Prüfung", icon: "school-outline" },
-  { id: "fahrlehrer", titel: "Fahrlehrer", unter: "Ich bilde Fahrschüler aus", icon: "id-card-outline" },
+  { id: "fahrlehrer", titel: "Fahrlehrer", unter: "Ich bilde aus – wir bestätigen dich kurz", icon: "id-card-outline" },
 ];
 
 const KLASSEN: Auswahl<string>[] = [
@@ -125,6 +126,11 @@ export default function Registrieren() {
   const [geburt, setGeburt] = useState("");
   const [klasse, setKlasse] = useState("B");
   const [email, setEmail] = useState("");
+  // Einladungscode der Fahrschule (optional) – vorbelegt, wenn ein QR-Code gescannt wurde.
+  const [einladung, setEinladung] = useState("");
+  useEffect(() => {
+    gemerkteEinladung().then((c) => c && setEinladung(c));
+  }, []);
   // Nach dem Absenden: Code aus der E-Mail eingeben – erst dann entsteht das Konto.
   const ablauf = useCodeAblauf();
   // Im Browser am PC: zweigeteilte Fassung (web/auth-web.tsx).
@@ -163,10 +169,13 @@ export default function Registrieren() {
     frei !== false &&
     telefonOk &&
     geburtOk &&
-    /\S+@\S+\.\S+/.test(email.trim());
+    /\S+@\S+\.\S+/.test(email.trim()) &&
+    (einladung.length === 0 || /^[A-Z2-9]{8}$/.test(einladung));
 
   function absenden() {
     if (!allesOk || ablauf.laedt) return;
+    // Wird nach der Anmeldung automatisch eingelöst (HinweisBruecke).
+    einladungMerken(rolle === "schueler" && einladung ? einladung : null);
     ablauf.senden(email, {
       rolle,
       vorname,
@@ -330,6 +339,22 @@ export default function Registrieren() {
           onSubmitEditing={absenden}
         />
         <FeldHinweis text="Hierhin schicken wir dir einen Code – ein Passwort brauchst du nicht." />
+
+        {rolle === "schueler" ? (
+          <>
+            <Feld
+              label="Einladungscode (optional)"
+              icon="ticket-outline"
+              value={einladung}
+              onChangeText={(t) => setEinladung(t.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8))}
+              placeholder="Von deiner Fahrschule"
+              autoCapitalize="characters"
+              autoCorrect={false}
+              fehler={einladung.length > 0 && !/^[A-Z2-9]{8}$/.test(einladung)}
+            />
+            <FeldHinweis text="Hast du einen Code von deiner Fahrschule? Dann bist du gleich deinem Fahrlehrer zugeordnet." />
+          </>
+        ) : null}
       </View>
 
       {ablauf.fehler ? (
