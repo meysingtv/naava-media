@@ -282,7 +282,47 @@ export function HeldWerte({
 // ---------------------------------------------------------------------------
 
 /** Großer oranger Knopf wie in der Vorlage – mit Schein und einem Glanz, der ab und zu darüberläuft. */
-export function StartKnopf({ titel, unter, onPress, style }: { titel: string; unter?: string; onPress: () => void; style?: StyleProp<ViewStyle> }) {
+export function StartKnopf({ titel, unter, onPress, style, flach }: { titel: string; unter?: string; onPress: () => void; style?: StyleProp<ViewStyle>; flach?: boolean }) {
+  if (flach) return <StartKnopfFlach titel={titel} unter={unter} onPress={onPress} style={style} />;
+  return <StartKnopfGlanz titel={titel} unter={unter} onPress={onPress} style={style} />;
+}
+
+/**
+ * Ruhige Fassung des Startknopfs (Startseite): eine Fläche in Orange, kein
+ * Verlauf, kein Leuchten, kein wandernder Glanz. Pfeil in einem hellen Feld.
+ */
+function StartKnopfFlach({ titel, unter, onPress, style }: { titel: string; unter?: string; onPress: () => void; style?: StyleProp<ViewStyle> }) {
+  const f = useFarbwelt();
+  const hoehe = unter ? 68 : 60;
+  return (
+    <Pressable
+      onPress={() => {
+        tippen();
+        onPress();
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={unter ? `${titel}. ${unter}` : titel}
+      style={({ pressed }) => [
+        { height: hoehe, borderRadius: 20, backgroundColor: f.orange, flexDirection: "row", alignItems: "center", paddingLeft: 20, paddingRight: 12, gap: 12, transform: [{ scale: pressed ? 0.98 : 1 }] },
+        style,
+      ]}
+    >
+      <View style={{ flex: 1 }}>
+        <Text style={{ ...schrift.textHalb, fontSize: 18, color: "#FFFFFF" }}>{titel}</Text>
+        {unter ? (
+          <Text style={{ ...schrift.textMittel, fontSize: 13, color: "rgba(255,255,255,0.86)", marginTop: 2 }} numberOfLines={1}>
+            {unter}
+          </Text>
+        ) : null}
+      </View>
+      <View style={{ width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.18)" }}>
+        <Icon name="arrow-forward" size={20} color="#FFFFFF" />
+      </View>
+    </Pressable>
+  );
+}
+
+function StartKnopfGlanz({ titel, unter, onPress, style }: { titel: string; unter?: string; onPress: () => void; style?: StyleProp<ViewStyle> }) {
   const f = useFarbwelt();
   const [breite, setBreite] = useState(0);
   const glanz = useRef(new Animated.Value(0)).current;
@@ -344,11 +384,13 @@ export function StartKnopf({ titel, unter, onPress, style }: { titel: string; un
 // Überschriften und Schnellstart
 // ---------------------------------------------------------------------------
 
-export function Kopfzeile({ titel, link, onLink, style }: { titel: string; link?: string; onLink?: () => void; style?: StyleProp<ViewStyle> }) {
+export function Kopfzeile({ titel, link, onLink, style, ruhig }: { titel: string; link?: string; onLink?: () => void; style?: StyleProp<ViewStyle>; ruhig?: boolean }) {
   const f = useFarbwelt();
   return (
-    <View style={[{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: RAND, marginBottom: 12 }, style]}>
-      <Text style={{ ...schrift.titel, fontSize: 21, lineHeight: 26, color: f.text }}>{titel}</Text>
+    <View style={[{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: RAND, marginBottom: 12 }, style]}>
+      <Text style={{ ...(ruhig ? schrift.titelHalb : schrift.titel), fontSize: ruhig ? 20 : 21, lineHeight: 26, color: f.text, flexShrink: 1 }} numberOfLines={1}>
+        {titel}
+      </Text>
       {link && onLink ? (
         <Pressable
           onPress={() => {
@@ -396,7 +438,7 @@ export function Schnellstart({ ziele, style }: { ziele: Schnellziel[]; style?: S
             ...(f.hell ? leuchten("#3C2C18", 0.06, 6, 2) : null),
           })}
         >
-          <Icon name={z.icon} size={16} color={f.orange} />
+          <Icon name={z.icon} size={16} color={f.text2} />
           <Text style={{ ...schrift.textHalb, fontSize: 14, color: f.text }}>{z.titel}</Text>
           {z.zahl ? (
             <View style={{ minWidth: 20, height: 20, paddingHorizontal: 6, borderRadius: 10, backgroundColor: f.orange, alignItems: "center", justifyContent: "center" }}>
@@ -465,7 +507,7 @@ export function FokusKarte({ thema, anteil, offen, style, onPress }: { thema: Th
 }
 
 /** Ein Thema als Poster: Foto, Symbol, Titel und Fortschritt. */
-export function ThemaPoster({ id, anteil, breite = 148, hoehe = 204, ohneStand, onPress }: { id: ThemaId; anteil: number; breite?: number | `${number}%`; hoehe?: number; ohneStand?: boolean; onPress: () => void }) {
+export function ThemaPoster({ id, anteil, breite = 148, hoehe = 204, ohneStand, angabe, onPress }: { id: ThemaId; anteil: number; breite?: number | `${number}%`; hoehe?: number; ohneStand?: boolean; angabe?: string; onPress: () => void }) {
   const t = themaVon(id);
   return (
     <Pressable
@@ -478,19 +520,13 @@ export function ThemaPoster({ id, anteil, breite = 148, hoehe = 204, ohneStand, 
       style={({ pressed }) => ({ width: breite, height: hoehe, borderRadius: 24, overflow: "hidden", transform: [{ scale: pressed ? 0.97 : 1 }] })}
     >
       <Image source={themaFoto(id)} style={FOTO} resizeMode="cover" fadeDuration={0} />
-      <LinearGradient colors={["rgba(3,5,7,0.15)", "rgba(3,5,7,0.2)", "rgba(3,5,7,0.92)"]} locations={[0, 0.4, 1]} style={FUELLEN} />
-      <Glas klar style={{ position: "absolute", top: 12, left: 12, width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" }}>
-        <Icon name={t.icon as IconName} size={18} color="#FFFFFF" />
-      </Glas>
+      <LinearGradient colors={["rgba(3,5,7,0)", "rgba(3,5,7,0.12)", "rgba(3,5,7,0.82)"]} locations={[0, 0.45, 1]} style={FUELLEN} />
       <View style={{ position: "absolute", left: 13, right: 13, bottom: 13, gap: 8 }}>
-        <Text style={{ ...schrift.titelFett, fontSize: 16, lineHeight: 20, color: "#FFFFFF" }} numberOfLines={2}>
+        <Text style={{ ...schrift.titelHalb, fontSize: 15, lineHeight: 19, color: "#FFFFFF" }} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.85}>
           {t.titel}
         </Text>
         {ohneStand ? (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <Icon name="play-circle" size={15} color="rgba(255,255,255,0.85)" />
-            <Text style={{ ...schrift.textHalb, fontSize: 12, color: "rgba(255,255,255,0.85)" }}>Videos ansehen</Text>
-          </View>
+          <Text style={{ ...schrift.textMittel, fontSize: 12.5, color: "rgba(255,255,255,0.85)", fontVariant: ["tabular-nums"] }}>{angabe ?? "Videos"}</Text>
         ) : (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <View style={{ flex: 1 }}>
@@ -505,11 +541,11 @@ export function ThemaPoster({ id, anteil, breite = 148, hoehe = 204, ohneStand, 
 }
 
 /** Themen als Poster zum Durchwischen. */
-export function ThemenKarussell({ themen, onThema, ohneStand }: { themen: { id: ThemaId; anteil: number }[]; onThema: (id: ThemaId) => void; ohneStand?: boolean }) {
+export function ThemenKarussell({ themen, onThema, ohneStand }: { themen: { id: ThemaId; anteil: number; angabe?: string }[]; onThema: (id: ThemaId) => void; ohneStand?: boolean }) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} decelerationRate="fast" snapToInterval={160} contentContainerStyle={{ paddingHorizontal: RAND, gap: 12 }}>
-      {themen.map(({ id, anteil }) => (
-        <ThemaPoster key={id} id={id} anteil={anteil} ohneStand={ohneStand} onPress={() => onThema(id)} />
+      {themen.map(({ id, anteil, angabe }) => (
+        <ThemaPoster key={id} id={id} anteil={anteil} angabe={angabe} ohneStand={ohneStand} onPress={() => onThema(id)} />
       ))}
     </ScrollView>
   );

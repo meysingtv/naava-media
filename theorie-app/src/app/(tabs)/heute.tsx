@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDesktop, useFenster } from "@/lib/fenster";
 import { HomeWeb } from "@/components/web/home-web";
 import { CrewBereich } from "@/components/crew";
-import { FokusKarte, GRUSS, Handschrift, HeldWerte, heldHoehe, KinoHeld, Kopfzeile, PruefungKarte, Schnellstart, StartKnopf, tageszeit, ThemenKarussell, ZitatKarte } from "@/components/home";
+import { FokusKarte, GRUSS, Handschrift, HeldWerte, heldHoehe, KinoHeld, Kopfzeile, PruefungKarte, Schnellstart, StartKnopf, tageszeit, ThemenKarussell } from "@/components/home";
 import { Icon } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
 import { useInhaltUnten } from "@/components/tab-leiste";
@@ -19,21 +19,15 @@ import { tippen } from "@/lib/haptik";
 import { heuteDran } from "@/lib/karteikarten";
 import { useKonto } from "@/lib/konto";
 import { useLeistenScroll } from "@/lib/leisten-scroll";
+import { useLernvideos } from "@/lib/lernvideos";
 import { tageBis, terminDatum } from "@/lib/pruefungstag";
 import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, serieAktuell, useStand } from "@/lib/stand";
 import { RAND, schrift } from "@/lib/theme";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
-const ZITATE: [string, string][] = [
-  ["Kleine Schritte.", "Große Freiheit."],
-  ["Heute üben.", "Morgen bestehen."],
-  ["Jede Frage zählt.", "Du packst das."],
-  ["Dranbleiben.", "Die Straße wartet."],
-];
 
 /** Schnellziele, solange die Fragen aus sind: nur Inhalte ohne Prüfungsfragen. */
 const SCHNELL_OHNE_FRAGEN = [
-  { icon: "play-circle", farbe: "#4DA3FF", titel: "Lernvideos", unter: "Alle Themen erklärt", ziel: "/lernen" },
   { icon: "bulb", farbe: "#FF4D6D", titel: "Kurz erklärt", unter: "Regeln in 30 Sekunden", ziel: "/kurz-erklaert" },
   { icon: "warning", farbe: "#E5392C", titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", ziel: "/zeichen" },
   { icon: "calculator", farbe: "#E0A100", titel: "Formeln", unter: "Anhalteweg & Co.", ziel: "/formeln" },
@@ -56,6 +50,7 @@ function HomeHandy() {
   const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();
   const { anzeigeName } = useKonto();
+  const { zuThema } = useLernvideos();
   const [ueberFoto, setUeberFoto] = useState(true);
 
   const jetzt = new Date();
@@ -84,7 +79,6 @@ function HomeHandy() {
   const fokusThema = [...offeneThemen.filter((t) => t.begonnen)].sort((a, b) => a.anteil - b.anteil)[0] ?? offeneThemen[0] ?? themen[0];
 
   const letzte = stand.pruefungen[0] ?? null;
-  const zitat = ZITATE[jetzt.getDate() % ZITATE.length];
   const glockePunkt = !stand.erinnerung.an;
 
   // Über dem Foto hell, darunter (im hellen Modus) dunkle Statusleiste.
@@ -104,8 +98,8 @@ function HomeHandy() {
             {/* Begrüßung */}
             <View style={{ position: "absolute", top: insets.top + 2, left: 26, right: RAND, flexDirection: "row", alignItems: "flex-start" }}>
               <View style={{ flex: 1 }}>
-                <Text style={{ ...schrift.text, fontSize: 17, color: "rgba(255,255,255,0.92)", textShadowColor: "rgba(0,0,0,0.35)", textShadowRadius: 6 }}>{GRUSS[zeit]}</Text>
-                <Text style={{ ...schrift.titel, fontSize: 38, lineHeight: 44, color: "#FFFFFF", letterSpacing: -0.5, textShadowColor: "rgba(0,0,0,0.35)", textShadowRadius: 8 }} numberOfLines={1}>
+                <Text style={{ ...schrift.text, fontSize: 17, color: "rgba(255,255,255,0.92)" }}>{GRUSS[zeit]}</Text>
+                <Text style={{ ...schrift.titelHalb, fontSize: 36, lineHeight: 44, color: "#FFFFFF", letterSpacing: -0.4 }} numberOfLines={1}>
                   {vorname}
                 </Text>
               </View>
@@ -159,12 +153,13 @@ function HomeHandy() {
           <TourZiel id="home-start" style={{ marginTop: -80, marginHorizontal: RAND }}>
             {FRAGEN_AKTIV ? (
               <StartKnopf
+                flach
                 titel={heute > 0 ? "Weiterlernen" : "Lernen starten"}
                 unter={rest > 0 ? `Noch ${rest} Fragen bis zum Tagesziel` : "Tagesziel geschafft – jede Frage zählt extra"}
                 onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
               />
             ) : (
-              <StartKnopf titel="Lernvideos ansehen" unter="Alle Themen kurz und einfach erklärt" onPress={() => router.navigate("/lernen")} />
+              <StartKnopf flach titel="Lernvideos ansehen" unter="Alle Themen kurz und einfach erklärt" onPress={() => router.navigate("/lernen")} />
             )}
           </TourZiel>
 
@@ -187,7 +182,7 @@ function HomeHandy() {
 
           {FRAGEN_AKTIV ? (
             <TourZiel id="home-fokus" style={{ marginTop: 30, marginHorizontal: RAND }}>
-              <Kopfzeile titel="Dein Fokus heute" style={{ paddingHorizontal: 0 }} />
+              <Kopfzeile ruhig titel="Dein Fokus heute" style={{ paddingHorizontal: 0 }} />
               <FokusKarte
                 thema={fokusThema.id}
                 anteil={fokusThema.anteil}
@@ -197,26 +192,28 @@ function HomeHandy() {
             </TourZiel>
           ) : null}
 
-          <Kopfzeile titel={FRAGEN_AKTIV ? "Deine Themen" : "Lernvideos nach Thema"} link="Alle ansehen" onLink={() => router.navigate("/lernen")} style={{ marginTop: 30 }} />
-          <ThemenKarussell themen={themen} ohneStand={!FRAGEN_AKTIV} onThema={(id) => router.push({ pathname: "/thema/[id]", params: { id } })} />
+          <Kopfzeile ruhig titel={FRAGEN_AKTIV ? "Deine Themen" : "Lernvideos nach Thema"} link="Alle ansehen" onLink={() => router.navigate("/lernen")} style={{ marginTop: 30 }} />
+          <ThemenKarussell themen={themen.map((t) => ({ ...t, angabe: videoAngabe(zuThema(t.id).length) }))} ohneStand={!FRAGEN_AKTIV} onThema={(id) => router.push({ pathname: "/thema/[id]", params: { id } })} />
 
           {FRAGEN_AKTIV ? (
             <>
-              <Kopfzeile titel="Deine Prüfung" style={{ marginTop: 30 }} />
+              <Kopfzeile ruhig titel="Deine Prüfung" style={{ marginTop: 30 }} />
               <View style={{ paddingHorizontal: RAND }}>
                 <PruefungKarte tage={kommend} letzte={letzte} onPress={() => router.navigate("/pruefen")} onTermin={() => router.push("/pruefungstermin")} />
               </View>
 
               {/* Crew: gemeinsame Flamme und Wochen-Boss */}
-              <CrewBereich style={{ marginHorizontal: RAND }} kopf={<Kopfzeile titel="Deine Crew" link="Öffnen" onLink={() => router.push("/crew")} style={{ marginTop: 30, marginHorizontal: -RAND }} />} />
+              <CrewBereich style={{ marginHorizontal: RAND }} kopf={<Kopfzeile ruhig titel="Deine Crew" link="Öffnen" onLink={() => router.push("/crew")} style={{ marginTop: 30, marginHorizontal: -RAND }} />} />
             </>
           ) : null}
 
-          <View style={{ paddingHorizontal: RAND, marginTop: 30 }}>
-            <ZitatKarte zeilen={zitat} />
-          </View>
         </ScrollView>
       </View>
     </FarbweltBereich>
   );
+}
+
+/** „3 Videos“, „1 Video“ oder „Videos folgen“. */
+function videoAngabe(n: number): string {
+  return n === 1 ? "1 Video" : n ? `${n} Videos` : "Videos folgen";
 }
