@@ -11,6 +11,7 @@ import { Archivo_600SemiBold, Archivo_800ExtraBold, Archivo_800ExtraBold_Italic,
 import { MarckScript_400Regular } from "@expo-google-fonts/marck-script";
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 import { Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold, Nunito_900Black } from "@expo-google-fonts/nunito";
+import { BarlowSemiCondensed_500Medium, BarlowSemiCondensed_600SemiBold, BarlowSemiCondensed_700Bold } from "@expo-google-fonts/barlow-semi-condensed";
 
 import { BildschirmSchutz } from "@/components/bildschirm-schutz";
 import { AuswahlBlattHost } from "@/components/auswahl-blatt";
@@ -241,6 +242,10 @@ export default function RootLayout() {
     Nunito_700Bold,
     Nunito_800ExtraBold,
     Nunito_900Black,
+    // Startseite am Handy: Schrift im Stil deutscher Straßenschilder
+    BarlowSemiCondensed_500Medium,
+    BarlowSemiCondensed_600SemiBold,
+    BarlowSemiCondensed_700Bold,
   });
 
   if (!schriftenGeladen) return null;
