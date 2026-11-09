@@ -14,7 +14,6 @@
     "@bacons/apple-targets": "^5.0.0",
     "@config-plugins/react-native-webrtc": "^13.0.0",
     "@expo-google-fonts/archivo": "^0.4.1",
-    "@expo-google-fonts/barlow-semi-condensed": "^0.4.1",
     "@expo-google-fonts/inter": "^0.4.1",
     "@expo-google-fonts/marck-script": "^0.4.1",
     "@expo-google-fonts/nunito": "^0.4.2",

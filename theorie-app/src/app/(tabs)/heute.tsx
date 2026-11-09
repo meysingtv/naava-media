@@ -1,193 +1,220 @@
-import { ScrollView, View } from "react-native";
+import { useState } from "react";
+import { Pressable, ScrollView, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useDesktop } from "@/lib/fenster";
+import { useDesktop, useFenster } from "@/lib/fenster";
 import { HomeWeb } from "@/components/web/home-web";
-import { Abschnitt, Liste, startFarben, StartKopf, TagesThema, Wegweiser, Zusatzzeichen, type Eintrag } from "@/components/start";
+import { CrewBereich } from "@/components/crew";
+import { FokusKarte, GRUSS, Handschrift, HeldWerte, heldHoehe, KinoHeld, Kopfzeile, PruefungKarte, Schnellstart, StartKnopf, tageszeit, ThemenKarussell, ZitatKarte } from "@/components/home";
+import { Icon } from "@/components/icon";
+import { ProfilBild } from "@/components/profilbild";
 import { useInhaltUnten } from "@/components/tab-leiste";
 import { TourZiel, useTourBlatt } from "@/components/tour";
 import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
-import { CLIPS } from "@/lib/clips";
-import { FOTOS, type FotoKey } from "@/lib/fotos";
-import { FRAGEN, THEMEN, themaVon, type ThemaId } from "@/lib/fragen";
+import { FRAGEN, THEMEN, type ThemaId } from "@/lib/fragen";
+import { tippen } from "@/lib/haptik";
 import { heuteDran } from "@/lib/karteikarten";
 import { useKonto } from "@/lib/konto";
 import { useLeistenScroll } from "@/lib/leisten-scroll";
-import { useLernvideos } from "@/lib/lernvideos";
 import { tageBis, terminDatum } from "@/lib/pruefungstag";
-import { ALBUM } from "@/lib/schilder-jagd";
-import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, useStand } from "@/lib/stand";
-import { ZEICHEN_INFO } from "@/components/zeichen";
+import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, serieAktuell, useStand } from "@/lib/stand";
+import { RAND, schrift } from "@/lib/theme";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
+
+const ZITATE: [string, string][] = [
+  ["Kleine Schritte.", "Große Freiheit."],
+  ["Heute üben.", "Morgen bestehen."],
+  ["Jede Frage zählt.", "Du packst das."],
+  ["Dranbleiben.", "Die Straße wartet."],
+];
+
+/** Schnellziele, solange die Fragen aus sind: nur Inhalte ohne Prüfungsfragen. */
+const SCHNELL_OHNE_FRAGEN = [
+  { icon: "play-circle", farbe: "#4DA3FF", titel: "Lernvideos", unter: "Alle Themen erklärt", ziel: "/lernen" },
+  { icon: "bulb", farbe: "#FF4D6D", titel: "Kurz erklärt", unter: "Regeln in 30 Sekunden", ziel: "/kurz-erklaert" },
+  { icon: "warning", farbe: "#E5392C", titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", ziel: "/zeichen" },
+  { icon: "calculator", farbe: "#E0A100", titel: "Formeln", unter: "Anhalteweg & Co.", ziel: "/formeln" },
+  { icon: "camera", farbe: "#23A548", titel: "Schilder-Jagd", unter: "Schilder sammeln", ziel: "/schilder-jagd" },
+  { icon: "film", farbe: "#8B5CF6", titel: "Clips", unter: "Kurze Videos", ziel: "/clips" },
+] as const;
 
 export default function Home() {
   // Im Browser am PC eine eigene Fassung (web/home-web.tsx).
   return useDesktop() ? <HomeWeb /> : <HomeHandy />;
 }
 
-/**
- * Helle Fotos je Thema für die Startseite (einige Themenfotos sind
- * Nachtaufnahmen, die hier zu schwer wirken).
- */
-const TAGES_FOTO: Record<ThemaId, FotoKey> = {
-  gefahren: "gefahren",
-  vorfahrt: "vorfahrt",
-  zeichen: "strasse1",
-  umwelt: "baeume",
-  technik: "pruefung",
-  manoever: "verhalten",
-  tempo: "tempo",
-  parken: "strasse3",
-  autobahn: "grundstoff",
-  mensch: "simulation",
-  zahlen: "lernen",
-};
-
-/**
- * Startseite am Handy. Die Bildsprache kommt von der Straße: oben ein gelber
- * Pfeilwegweiser, der bis zur Theorieprüfung zählt, darunter das Thema des
- * Tages mit großem Foto, eine ruhige Liste zum Nachschlagen und die Regel des
- * Tages als Zusatzzeichen.
- */
 function HomeHandy() {
   const insets = useSafeAreaInsets();
+  const { width } = useFenster();
   const inhaltUnten = useInhaltUnten();
   const leistenScroll = useLeistenScroll();
   const tourBlatt = useTourBlatt("/heute");
   const fokus = useIsFocused();
   const { farbwelt: f } = useDarstellung();
-  const c = startFarben(f);
   const { stand } = useStand();
   const { anzeigeName } = useKonto();
-  const { zuThema } = useLernvideos();
+  const [ueberFoto, setUeberFoto] = useState(true);
 
   const jetzt = new Date();
-  const datum = jetzt.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+  const zeit = tageszeit(jetzt.getHours());
   const vorname = anzeigeName.split(" ")[0] || "Gast";
-  const glockePunkt = !stand.erinnerung.an;
-  const tagNr = Math.floor((jetzt.getTime() - jetzt.getTimezoneOffset() * 60000) / 86400000);
-
-  // Prüfungstermin für den Wegweiser
+  const gesamt = fortschritt(stand);
+  const serie = serieAktuell(stand);
+  const heute = heuteBeantwortet(stand);
+  const rest = Math.max(0, stand.tagesziel - heute);
   const termin = terminDatum(stand.pruefungstermin);
   const tage = termin ? tageBis(termin) : null;
   const kommend = tage !== null && tage >= 0 ? tage : null;
-  const wegweiser =
-    kommend === null
-      ? { entfernung: "Termin?", einheit: undefined, unter: "Trag deinen Prüfungstermin ein, dann zählt das Schild die Tage mit." }
-      : kommend === 0
-        ? { entfernung: "Heute", einheit: undefined, unter: "Viel Erfolg bei deiner Prüfung." }
-        : {
-            entfernung: String(kommend),
-            einheit: kommend === 1 ? "Tag" : "Tage",
-            unter: `Am ${termin!.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" })}. Antippen, um den Termin zu ändern.`,
-          };
 
-  // Thema des Tages – bevorzugt eines mit Videos
-  const mitVideos = THEMEN.filter((t) => zuThema(t.id as ThemaId).length > 0);
-  const auswahl = mitVideos.length ? mitVideos : THEMEN;
-  const tagesThema = auswahl[tagNr % auswahl.length].id as ThemaId;
-  const tagesVideos = zuThema(tagesThema);
-  const minuten = Math.round(tagesVideos.reduce((sum, v) => sum + (v.dauer ?? 0), 0) / 60);
-  const meta = tagesVideos.length ? `${tagesVideos.length === 1 ? "1 Video" : `${tagesVideos.length} Videos`}${minuten > 0 ? `, etwa ${minuten} Min.` : ""}` : undefined;
+  // Die Handschrift zählt bis zur Prüfung – ohne Termin der Slogan wie immer.
+  const zeilen =
+    kommend === null ? ["Mach", "deinen Führerschein", "möglich."] : kommend === 0 ? ["Heute ist", "dein Tag."] : kommend === 1 ? ["Morgen", "ist Prüfung."] : [`Noch ${kommend} Tage`, "bis zur Prüfung."];
 
-  // Mit Fragen: schwächstes begonnenes Thema und Tagesziel
-  const themenStand = THEMEN.map((t) => {
+  // Stand je Thema; Fokus ist das schwächste bereits begonnene Thema.
+  const themen = THEMEN.map((t) => {
     const liste = FRAGEN.filter((q) => q.thema === t.id);
     const p = fortschritt(stand, liste);
-    return { id: t.id as ThemaId, anteil: p.anteil, offen: p.gesamt - p.richtig, begonnen: liste.some((q) => stand.fragen[q.id]) };
+    const begonnen = liste.some((q) => stand.fragen[q.id]);
+    return { id: t.id as ThemaId, anteil: p.anteil, offen: p.gesamt - p.richtig, begonnen };
   });
-  const offene = themenStand.filter((t) => t.offen > 0);
-  const fokusThema = [...offene.filter((t) => t.begonnen)].sort((a, b) => a.anteil - b.anteil)[0] ?? offene[0] ?? themenStand[0];
-  const heute = heuteBeantwortet(stand);
-  const rest = Math.max(0, stand.tagesziel - heute);
+  const offeneThemen = themen.filter((t) => t.offen > 0);
+  const fokusThema = [...offeneThemen.filter((t) => t.begonnen)].sort((a, b) => a.anteil - b.anteil)[0] ?? offeneThemen[0] ?? themen[0];
 
-  const schilder = ALBUM.filter((k) => stand.schilder[k]).length;
-  const regel = CLIPS[tagNr % CLIPS.length];
-  const zumThema = (id: ThemaId) => router.push({ pathname: "/thema/[id]", params: { id } });
+  const letzte = stand.pruefungen[0] ?? null;
+  const zitat = ZITATE[jetzt.getDate() % ZITATE.length];
+  const glockePunkt = !stand.erinnerung.an;
 
-  const eintraege: Eintrag[] = FRAGEN_AKTIV
-    ? [
-        { icon: "refresh", titel: "Fehler üben", wert: String(fehlerIds(stand).length), onPress: () => router.push({ pathname: "/training", params: { modus: "fehler" } }) },
-        { icon: "albums-outline", titel: "Karteikarten", wert: `${heuteDran(stand).gesamt} fällig`, onPress: () => router.push("/karteikarten") },
-        { icon: "heart-outline", titel: "Favoriten", wert: String(gemerktIds(stand).length), onPress: () => router.push("/favoriten") },
-        { icon: "flash-outline", titel: "Duell", onPress: () => router.push("/duell") },
-        { icon: "camera-outline", titel: "Schilder-Jagd", wert: `${schilder} von ${ALBUM.length}`, onPress: () => router.push("/schilder-jagd") },
-      ]
-    : [
-        { icon: "warning-outline", titel: "Verkehrszeichen", wert: String(ZEICHEN_INFO.length), onPress: () => router.push("/zeichen") },
-        { icon: "bulb-outline", titel: "Regeln in 30 Sekunden", wert: String(CLIPS.length), onPress: () => router.push("/kurz-erklaert") },
-        { icon: "calculator-outline", titel: "Formeln", onPress: () => router.push("/formeln") },
-        { icon: "camera-outline", titel: "Schilder-Jagd", wert: `${schilder} von ${ALBUM.length}`, onPress: () => router.push("/schilder-jagd") },
-        { icon: "albums-outline", titel: "Alle Themen", wert: String(THEMEN.length), onPress: () => router.navigate("/lernen") },
-      ];
+  // Über dem Foto hell, darunter (im hellen Modus) dunkle Statusleiste.
+  const schwelle = heldHoehe(width) - insets.top - 60;
+  function beimScrollen(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    leistenScroll.onScroll?.(e);
+    const oben = e.nativeEvent.contentOffset.y < schwelle;
+    if (oben !== ueberFoto) setUeberFoto(oben);
+  }
 
   return (
     <FarbweltBereich farbwelt={f}>
-      {fokus ? <StatusBar style={c.hell ? "dark" : "light"} /> : null}
-      <View style={{ flex: 1, backgroundColor: c.grund }}>
-        <ScrollView {...leistenScroll} {...tourBlatt} contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: inhaltUnten + 28 }} showsVerticalScrollIndicator={false}>
-          <StartKopf
-            datum={datum}
-            name={vorname}
-            anzeigeName={anzeigeName}
-            glockePunkt={glockePunkt}
-            onGlocke={() => router.push("/einstellungen")}
-            onProfil={() => router.navigate("/profil")}
-          />
-
-          <TourZiel id="home-werte" style={{ marginTop: 28 }}>
-            <Wegweiser ziel="Theorieprüfung" entfernung={wegweiser.entfernung} einheit={wegweiser.einheit} unter={wegweiser.unter} onPress={() => router.push("/pruefungstermin")} />
-          </TourZiel>
-
-          {FRAGEN_AKTIV ? (
-            <TourZiel id="home-start" style={{ marginTop: 40 }}>
-              <Abschnitt titel="Weiterlernen" />
-              <TagesThema
-                foto={FOTOS[TAGES_FOTO[fokusThema.id]]}
-                titel={themaVon(fokusThema.id).titel}
-                unter={rest > 0 ? `Noch ${rest} Fragen bis zu deinem Tagesziel. Wir fangen mit deinem schwächsten Thema an.` : "Tagesziel geschafft. Jede weitere Frage zählt trotzdem."}
-                fortschritt={stand.tagesziel ? heute / stand.tagesziel : 0}
-                knopf={heute > 0 ? "Weiterlernen" : "Lernen starten"}
-                meta={`${heute} von ${stand.tagesziel} heute`}
-                onFoto={() => zumThema(fokusThema.id)}
-                onKnopf={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
-              />
-            </TourZiel>
-          ) : (
-            <TourZiel id="home-start" style={{ marginTop: 40 }}>
-              <Abschnitt titel="Thema des Tages" />
-              <TagesThema
-                foto={FOTOS[TAGES_FOTO[tagesThema]]}
-                titel={themaVon(tagesThema).titel}
-                unter={themaVon(tagesThema).kurz}
-                knopf={tagesVideos.length ? "Videos ansehen" : "Thema öffnen"}
-                meta={meta}
-                onFoto={() => zumThema(tagesThema)}
-                onKnopf={() => zumThema(tagesThema)}
-              />
-            </TourZiel>
-          )}
-
-          <TourZiel id="home-schnell" style={{ marginTop: 40 }}>
-            <Abschnitt titel={FRAGEN_AKTIV ? "Üben" : "Nachschlagen"} />
-            <Liste eintraege={eintraege} />
-          </TourZiel>
-
-          {FRAGEN_AKTIV ? (
-            <TourZiel id="home-fokus" style={{ marginTop: 12 }}>
-              <Liste eintraege={[{ icon: "shield-checkmark-outline", titel: "Prüfung simulieren", wert: "30 Fragen", onPress: () => router.navigate("/pruefen") }]} />
-            </TourZiel>
-          ) : null}
-
-          {regel ? (
-            <View style={{ marginTop: 40 }}>
-              <Abschnitt titel="Regel des Tages" />
-              <Zusatzzeichen titel={regel.titel} text={regel.punkte[0] ?? ""} link="Mehr in „Kurz erklärt“" onPress={() => router.push("/kurz-erklaert")} />
+      {fokus ? <StatusBar style={f.hell && !ueberFoto ? "dark" : "light"} /> : null}
+      <View style={{ flex: 1, backgroundColor: f.grund }}>
+        <ScrollView {...tourBlatt} onScroll={beimScrollen} scrollEventThrottle={16} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
+          <KinoHeld zeit={zeit}>
+            {/* Begrüßung */}
+            <View style={{ position: "absolute", top: insets.top + 2, left: 26, right: RAND, flexDirection: "row", alignItems: "flex-start" }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...schrift.text, fontSize: 17, color: "rgba(255,255,255,0.92)", textShadowColor: "rgba(0,0,0,0.35)", textShadowRadius: 6 }}>{GRUSS[zeit]}</Text>
+                <Text style={{ ...schrift.titel, fontSize: 38, lineHeight: 44, color: "#FFFFFF", letterSpacing: -0.5, textShadowColor: "rgba(0,0,0,0.35)", textShadowRadius: 8 }} numberOfLines={1}>
+                  {vorname}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => {
+                  tippen();
+                  router.push("/einstellungen");
+                }}
+                accessibilityLabel="Erinnerungen"
+                hitSlop={8}
+                style={{ marginTop: 20, marginRight: 18 }}
+              >
+                <Icon name="notifications" size={24} color="#FFFFFF" />
+                {glockePunkt ? (
+                  <View style={{ position: "absolute", top: -3, right: -3, width: 9, height: 9, borderRadius: 4.5, backgroundColor: f.orange, borderWidth: 1.5, borderColor: "rgba(0,0,0,0.4)" }} />
+                ) : null}
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  tippen();
+                  router.navigate("/profil");
+                }}
+                accessibilityLabel="Profil"
+                style={{ marginTop: 6 }}
+              >
+                <ProfilBild name={anzeigeName} groesse={50} />
+              </Pressable>
             </View>
+
+            <Handschrift zeilen={zeilen} style={{ position: "absolute", left: 30, top: insets.top + 112 }} />
+
+            {FRAGEN_AKTIV ? (
+            <View style={{ position: "absolute", left: RAND, right: RAND, bottom: 104 }}>
+              <TourZiel id="home-werte">
+                <HeldWerte
+                  reife={gesamt.anteil}
+                  sicher={gesamt.richtig}
+                  gesamt={gesamt.gesamt}
+                  serie={serie}
+                  heute={heute}
+                  ziel={stand.tagesziel}
+                  onReife={() => router.push("/statistik")}
+                  onSerie={() => router.push("/statistik")}
+                  onHeute={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
+                />
+              </TourZiel>
+            </View>
+            ) : null}
+          </KinoHeld>
+
+          <TourZiel id="home-start" style={{ marginTop: -80, marginHorizontal: RAND }}>
+            {FRAGEN_AKTIV ? (
+              <StartKnopf
+                titel={heute > 0 ? "Weiterlernen" : "Lernen starten"}
+                unter={rest > 0 ? `Noch ${rest} Fragen bis zum Tagesziel` : "Tagesziel geschafft – jede Frage zählt extra"}
+                onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
+              />
+            ) : (
+              <StartKnopf titel="Lernvideos ansehen" unter="Alle Themen kurz und einfach erklärt" onPress={() => router.navigate("/lernen")} />
+            )}
+          </TourZiel>
+
+          <TourZiel id="home-schnell" style={{ marginTop: 18 }}>
+            <Schnellstart
+              ziele={
+                FRAGEN_AKTIV
+                  ? [
+                      { icon: "heart", titel: "Favoriten", zahl: gemerktIds(stand).length, onPress: () => router.push("/favoriten") },
+                      { icon: "refresh", titel: "Fehler üben", zahl: fehlerIds(stand).length, onPress: () => router.push({ pathname: "/training", params: { modus: "fehler" } }) },
+                      { icon: "albums-outline", titel: "Karteikarten", zahl: heuteDran(stand).gesamt, onPress: () => router.push("/karteikarten") },
+                      { icon: "camera", titel: "Schilder-Jagd", onPress: () => router.push("/schilder-jagd") },
+                      { icon: "flash", titel: "Duell", onPress: () => router.push("/duell") },
+                      { icon: "stats-chart", titel: "Statistik", onPress: () => router.push("/statistik") },
+                    ]
+                  : SCHNELL_OHNE_FRAGEN.map((z) => ({ icon: z.icon, titel: z.titel, onPress: () => router.push(z.ziel as never) }))
+              }
+            />
+          </TourZiel>
+
+          {FRAGEN_AKTIV ? (
+            <TourZiel id="home-fokus" style={{ marginTop: 30, marginHorizontal: RAND }}>
+              <Kopfzeile titel="Dein Fokus heute" style={{ paddingHorizontal: 0 }} />
+              <FokusKarte
+                thema={fokusThema.id}
+                anteil={fokusThema.anteil}
+                offen={fokusThema.offen}
+                onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: fokusThema.id } })}
+              />
+            </TourZiel>
           ) : null}
+
+          <Kopfzeile titel={FRAGEN_AKTIV ? "Deine Themen" : "Lernvideos nach Thema"} link="Alle ansehen" onLink={() => router.navigate("/lernen")} style={{ marginTop: 30 }} />
+          <ThemenKarussell themen={themen} ohneStand={!FRAGEN_AKTIV} onThema={(id) => router.push({ pathname: "/thema/[id]", params: { id } })} />
+
+          {FRAGEN_AKTIV ? (
+            <>
+              <Kopfzeile titel="Deine Prüfung" style={{ marginTop: 30 }} />
+              <View style={{ paddingHorizontal: RAND }}>
+                <PruefungKarte tage={kommend} letzte={letzte} onPress={() => router.navigate("/pruefen")} onTermin={() => router.push("/pruefungstermin")} />
+              </View>
+
+              {/* Crew: gemeinsame Flamme und Wochen-Boss */}
+              <CrewBereich style={{ marginHorizontal: RAND }} kopf={<Kopfzeile titel="Deine Crew" link="Öffnen" onLink={() => router.push("/crew")} style={{ marginTop: 30, marginHorizontal: -RAND }} />} />
+            </>
+          ) : null}
+
+          <View style={{ paddingHorizontal: RAND, marginTop: 30 }}>
+            <ZitatKarte zeilen={zitat} />
+          </View>
         </ScrollView>
       </View>
     </FarbweltBereich>
