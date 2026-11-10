@@ -135,7 +135,7 @@ export function Kennzahlen({ werte }: { werte: Kennzahl[] }) {
   return (
     <Raster min={200} max={4} abstand={16}>
       {werte.map((w) => (
-        <Pressable key={w.titel} disabled={!w.onPress} onPress={w.onPress} style={(z: Zustand) => [mFlaeche(), { padding: 20, gap: 12, borderBottomWidth: 4, borderBottomColor: (w.ton ?? TOENE.orange).farbe }, z.hovered && w.onPress ? { backgroundColor: (w.ton ?? TOENE.orange).hell } : null]}>
+        <Pressable key={w.titel} disabled={!w.onPress} onPress={w.onPress} style={(z: Zustand) => [mFlaeche(), { flex: 1, padding: 20, gap: 12, borderBottomWidth: 4, borderBottomColor: (w.ton ?? TOENE.orange).farbe }, z.hovered && w.onPress ? { backgroundColor: (w.ton ?? TOENE.orange).hell } : null]}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             {w.icon ? <Symbol icon={w.icon} ton={w.ton ?? TOENE.orange} groesse={42} /> : <View />}
             {w.onPress ? <Icon name="chevron-forward" size={18} color={B.text3} /> : null}

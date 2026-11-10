@@ -575,8 +575,8 @@ export function TermineBereich({ onWaehlen, tick }: { onWaehlen: (id: string) =>
     <View style={{ gap: 24 }}>
       <Kennzahlen
         werte={[
-          { titel: "In den nächsten 7 Tagen", wert: String(woche), icon: "alarm", ton: TOENE.orange },
-          { titel: "In den nächsten 30 Tagen", wert: String(monat), icon: "calendar", ton: TOENE.bernstein },
+          { titel: "In den nächsten 7 Tagen", wert: String(woche), unter: "Prüfungen diese Woche", icon: "alarm", ton: TOENE.orange },
+          { titel: "In den nächsten 30 Tagen", wert: String(monat), unter: "Prüfungen in einem Monat", icon: "calendar", ton: TOENE.bernstein },
           { titel: "Termine eingetragen", wert: String(kommend.length), unter: "von Fahrschülern in der App", icon: "people", ton: TOENE.blau },
         ]}
       />
