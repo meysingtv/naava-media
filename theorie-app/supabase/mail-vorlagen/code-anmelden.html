@@ -4,68 +4,39 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>Dein Code für Fahrschul Pro</title>
+<title>Dein Anmeldecode</title>
 </head>
-<body style="margin:0;padding:0;background:#F7F3EE;">
+<body style="margin:0;padding:0;background:#FFFFFF;">
 <!-- Supabase → Emails → Templates → Magic Link. Betreff: Dein Code: {{ .Token }} -->
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Dein Anmelde-Code: {{ .Token }}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F7F3EE;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Gib den Code in der App ein. Er gilt 60 Minuten.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;">
   <tr>
-    <td align="center" style="padding:40px 16px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#FFFFFF;border-radius:24px;overflow:hidden;">
-        <!-- Orange Streifen oben -->
-        <tr><td style="height:6px;background:#F2540A;font-size:0;line-height:0;">&nbsp;</td></tr>
+    <td align="center" style="padding:48px 24px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1A1D21;">
         <tr>
-          <td style="padding:36px 40px 8px 40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-            <!-- Logo als Text -->
-            <div style="font-size:24px;font-weight:800;letter-spacing:-0.3px;color:#14171B;">Fahrschul<span style="color:#F2540A;">&nbsp;Pro</span></div>
-          </td>
+          <td style="font-size:17px;font-weight:700;letter-spacing:-0.2px;color:#1A1D21;padding-bottom:40px;">Fahrschul <span style="color:#E8500A;">Pro</span></td>
         </tr>
         <tr>
-          <td style="padding:28px 40px 0 40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-            <span style="display:inline-block;padding:7px 14px;border-radius:999px;background:#FFF0E6;color:#C2410C;font-size:12px;font-weight:800;letter-spacing:1.2px;">ANMELDE-CODE</span>
-            <h1 style="margin:18px 0 0 0;font-size:34px;line-height:40px;font-weight:800;letter-spacing:-0.6px;color:#14171B;">Schön, dass du da bist.<br><span style="color:#F2540A;">Hier ist dein Code.</span></h1>
-            <p style="margin:16px 0 0 0;font-size:16px;line-height:24px;color:#4D535B;">Tippe diesen Code in der App ein, dann bist du angemeldet.</p>
-          </td>
+          <td style="font-size:24px;line-height:30px;font-weight:600;color:#1A1D21;padding-bottom:12px;">Dein Anmeldecode</td>
         </tr>
-        <!-- Code -->
         <tr>
-          <td style="padding:28px 40px 0 40px;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFF6F0;border:2px dashed #F9B48C;border-radius:20px;">
-              <tr>
-                <td align="center" style="padding:28px 16px 10px 16px;font-family:'SF Mono',Menlo,Consolas,'Courier New',monospace;font-size:44px;line-height:52px;font-weight:800;letter-spacing:12px;color:#F2540A;">{{ .Token }}</td>
-              </tr>
-              <tr>
-                <td align="center" style="padding:0 16px 24px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:#7A5B49;">Gilt 60 Minuten &middot; nur für dich</td>
-              </tr>
-            </table>
-          </td>
+          <td style="font-size:16px;line-height:24px;color:#4A4F57;padding-bottom:28px;">Gib diesen Code in der App ein, um dich anzumelden. Er gilt 60 Minuten.</td>
         </tr>
-        <!-- Tipp -->
         <tr>
-          <td style="padding:20px 40px 0 40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          <td style="padding-bottom:28px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td width="6" style="background:#F2540A;border-radius:3px;font-size:0;">&nbsp;</td>
-                <td style="padding:2px 0 2px 14px;font-size:14px;line-height:21px;color:#4D535B;"><strong style="color:#14171B;">Tipp:</strong> Auf dem iPhone schlägt die Tastatur den Code direkt vor – einfach antippen.</td>
+                <td style="background:#F5F5F4;border-radius:12px;padding:16px 24px;font-size:36px;line-height:40px;font-weight:700;letter-spacing:8px;color:#E8500A;">{{ .Token }}</td>
               </tr>
             </table>
           </td>
         </tr>
         <tr>
-          <td style="padding:28px 40px 36px 40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-            <div style="border-top:1px solid #EEE7DF;padding-top:20px;font-size:13px;line-height:20px;color:#8A8F96;">Du hast keinen Code angefordert? Dann kannst du diese E-Mail einfach ignorieren – ohne den Code kommt niemand in dein Konto.</div>
-          </td>
+          <td style="font-size:14px;line-height:21px;color:#6B7079;padding-bottom:40px;">Du hast keinen Code angefordert? Dann kannst du diese E-Mail ignorieren. Ohne den Code kommt niemand in dein Konto.</td>
         </tr>
-      </table>
-      <!-- Fußzeile -->
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
         <tr>
-          <td align="center" style="padding:22px 16px 0 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#8A8F96;">
-            Fahrschul Pro &middot; Theorie lernen mit Videos<br>
-            <a href="https://fahrschulpro.de" style="color:#C2410C;text-decoration:underline;">fahrschulpro.de</a>
-            &nbsp;&middot;&nbsp; <a href="https://lernen.fahrschulpro.de/impressum" style="color:#C2410C;text-decoration:underline;">Impressum</a>
-            &nbsp;&middot;&nbsp; <a href="https://lernen.fahrschulpro.de/datenschutz" style="color:#C2410C;text-decoration:underline;">Datenschutz</a>
+          <td style="border-top:1px solid #EAEAEA;padding-top:20px;font-size:12px;line-height:19px;color:#9A9EA5;">
+            Fahrschul Pro &middot; <a href="https://fahrschulpro.de" style="color:#9A9EA5;">fahrschulpro.de</a> &middot; <a href="https://lernen.fahrschulpro.de/impressum" style="color:#9A9EA5;">Impressum</a> &middot; <a href="https://lernen.fahrschulpro.de/datenschutz" style="color:#9A9EA5;">Datenschutz</a>
           </td>
         </tr>
       </table>
