@@ -60,18 +60,22 @@ oder in eine Datei im Projekt.
 
 ## 3. Code in die E-Mail schreiben
 
-Supabase → Authentication → **Email Templates**. In **Magic Link** und
-**Confirm signup** den Link durch den Code ersetzen, z. B.:
+Supabase → Authentication → **Emails** → Reiter **Templates**. Fertige
+Vorlagen im Design der App (Orange) liegen in `supabase/mail-vorlagen/`:
 
-```html
-<h2>Dein Code für Fahrschul Pro</h2>
-<p>Gib diesen Code in der App ein:</p>
-<p style="font-size:32px;font-weight:bold;letter-spacing:6px">{{ .Token }}</p>
-<p>Der Code gilt eine Stunde. Hast du ihn nicht angefordert, ignoriere diese Mail.</p>
-```
+| Vorlage in Supabase | Datei | Betreff |
+|---|---|---|
+| **Magic Link** (Anmelden) | `code-anmelden.html` | `Dein Code: {{ .Token }}` |
+| **Confirm sign up** (Registrieren) | `code-registrieren.html` | `Dein Code: {{ .Token }}` |
 
-Betreff z. B. „Dein Code: {{ .Token }}“ – dann sieht man ihn schon in der
-Mitteilung, und iOS schlägt ihn über der Tastatur vor.
+Datei öffnen (z. B. mit TextEdit), alles kopieren, in Supabase den alten
+Inhalt im Feld „Message body“ löschen, einfügen, Betreff eintragen, **Save**.
+`{{ .Token }}` ersetzt Supabase durch den Code. Den Code im Betreff sieht man
+schon in der Mitteilung, und iOS schlägt ihn über der Tastatur vor.
+
+Impressum und Datenschutz in der Fußzeile verlinken auf
+`lernen.fahrschulpro.de` – die Links gehen, sobald die Website online ist
+(`docs/website-online.md`).
 
 ## 4. Code-Länge und Gültigkeit
 

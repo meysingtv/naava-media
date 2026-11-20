@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Willkommen bei Fahrschul Pro</title>
+</head>
+<body style="margin:0;padding:0;background:#F7F3EE;">
+<!-- Supabase → Emails → Templates → Confirm sign up. Betreff: Dein Code: {{ .Token }} -->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Dein Code zum Registrieren: {{ .Token }}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F7F3EE;">
+  <tr>
+    <td align="center" style="padding:40px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#FFFFFF;border-radius:24px;overflow:hidden;">
+        <!-- Orange Streifen oben -->
+        <tr><td style="height:6px;background:#F2540A;font-size:0;line-height:0;">&nbsp;</td></tr>
+        <tr>
+          <td style="padding:36px 40px 8px 40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+            <!-- Logo als Text -->
+            <div style="font-size:24px;font-weight:800;letter-spacing:-0.3px;color:#14171B;">Fahrschul<span style="color:#F2540A;">&nbsp;Pro</span></div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 40px 0 40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+            <span style="display:inline-block;padding:7px 14px;border-radius:999px;background:#FFF0E6;color:#C2410C;font-size:12px;font-weight:800;letter-spacing:1.2px;">WILLKOMMEN</span>
+            <h1 style="margin:18px 0 0 0;font-size:34px;line-height:40px;font-weight:800;letter-spacing:-0.6px;color:#14171B;">Nur noch ein Schritt.<br><span style="color:#F2540A;">Dein Code ist da.</span></h1>
+            <p style="margin:16px 0 0 0;font-size:16px;line-height:24px;color:#4D535B;">Tippe diesen Code in der App ein, dann ist dein Konto fertig und du kannst loslernen.</p>
+          </td>
+        </tr>
+        <!-- Code -->
+        <tr>
+          <td style="padding:28px 40px 0 40px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFF6F0;border:2px dashed #F9B48C;border-radius:20px;">
+              <tr>
+                <td align="center" style="padding:28px 16px 10px 16px;font-family:'SF Mono',Menlo,Consolas,'Courier New',monospace;font-size:44px;line-height:52px;font-weight:800;letter-spacing:12px;color:#F2540A;">{{ .Token }}</td>
+              </tr>
+              <tr>
+                <td align="center" style="padding:0 16px 24px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;line-height:20px;color:#7A5B49;">Gilt 60 Minuten &middot; nur für dich</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <!-- Tipp -->
+        <tr>
+          <td style="padding:20px 40px 0 40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td width="6" style="background:#F2540A;border-radius:3px;font-size:0;">&nbsp;</td>
+                <td style="padding:2px 0 2px 14px;font-size:14px;line-height:21px;color:#4D535B;"><strong style="color:#14171B;">Tipp:</strong> Auf dem iPhone schlägt die Tastatur den Code direkt vor – einfach antippen.</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 40px 36px 40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+            <div style="border-top:1px solid #EEE7DF;padding-top:20px;font-size:13px;line-height:20px;color:#8A8F96;">Du hast dich nicht bei Fahrschul Pro registriert? Dann kannst du diese E-Mail einfach ignorieren – ohne den Code entsteht kein Konto.</div>
+          </td>
+        </tr>
+      </table>
+      <!-- Fußzeile -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+        <tr>
+          <td align="center" style="padding:22px 16px 0 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#8A8F96;">
+            Fahrschul Pro &middot; Theorie lernen mit Videos<br>
+            <a href="https://fahrschulpro.de" style="color:#C2410C;text-decoration:underline;">fahrschulpro.de</a>
+            &nbsp;&middot;&nbsp; <a href="https://lernen.fahrschulpro.de/impressum" style="color:#C2410C;text-decoration:underline;">Impressum</a>
+            &nbsp;&middot;&nbsp; <a href="https://lernen.fahrschulpro.de/datenschutz" style="color:#C2410C;text-decoration:underline;">Datenschutz</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
