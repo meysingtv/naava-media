@@ -2,7 +2,8 @@ import { useMemo } from "react";
 
 import { ANIMATION_TITEL, animationZuLage } from "./erklaer-animationen";
 import { useErklaervideos } from "./erklaervideos";
-import { fragenZuThema, THEMEN, type ThemaId } from "./fragen";
+import { fragenZuThema, THEMEN } from "./fragen";
+import { FRAGEN_AKTIV } from "./funktionen";
 import { useThemenvideos } from "./themenvideos";
 
 /**
@@ -20,34 +21,43 @@ export type Lernvideo = {
   params: { id?: string; frage?: string; lage?: string };
 };
 
-export type LernvideoStand = { geladen: boolean; zuThema: (thema: ThemaId) => Lernvideo[] };
+export type LernvideoStand = { geladen: boolean; zuThema: (thema: string) => Lernvideo[] };
 
-/** Videos aller Themen; `zuThema` liefert die Liste eines Themas. */
+/**
+ * Videos je Thema; `zuThema` liefert die Liste eines Themas. Die Themen legt der
+ * Inhaber im Manager an (lern_thema). Solange die Prüfungsfragen an sind, hängen
+ * an den alten festen Themen zusätzlich Erklärvideos und Animationen der Fragen.
+ */
 export function useLernvideos(): LernvideoStand {
   const themen = useThemenvideos();
   const fragen = useErklaervideos();
   return useMemo(() => {
-    const karte = new Map<ThemaId, Lernvideo[]>();
-    for (const t of THEMEN) {
-      const liste: Lernvideo[] = themen.videos
-        .filter((v) => v.thema_id === t.id)
-        .map((v) => ({ schluessel: `t-${v.id}`, art: "thema", titel: v.titel, dauer: v.dauer, params: { id: v.id } }));
-      let nr = 0;
-      const lagen = new Set<string>();
-      for (const q of fragenZuThema(t.id)) {
-        const v = fragen.videos[q.id];
-        if (v) {
-          nr += 1;
-          liste.push({ schluessel: `f-${q.id}`, art: "frage", titel: `${t.titel} · Erklärvideo ${nr}`, dauer: v.dauer, params: { frage: q.id } });
-        }
-        const lage = q.bild;
-        if (lage && !lagen.has(lage) && animationZuLage(lage)) {
-          lagen.add(lage);
-          liste.push({ schluessel: `a-${lage}`, art: "animation", titel: ANIMATION_TITEL[lage] ?? "Animation", dauer: null, params: { lage } });
-        }
-      }
-      karte.set(t.id, liste);
+    const karte = new Map<string, Lernvideo[]>();
+    for (const v of themen.videos) {
+      const liste = karte.get(v.thema_id) ?? [];
+      liste.push({ schluessel: `t-${v.id}`, art: "thema", titel: v.titel, dauer: v.dauer, params: { id: v.id } });
+      karte.set(v.thema_id, liste);
     }
-    return { geladen: themen.geladen && fragen.geladen, zuThema: (id: ThemaId) => karte.get(id) ?? [] };
+    if (FRAGEN_AKTIV) {
+      for (const t of THEMEN) {
+        const liste = karte.get(t.id) ?? [];
+        let nr = 0;
+        const lagen = new Set<string>();
+        for (const q of fragenZuThema(t.id)) {
+          const v = fragen.videos[q.id];
+          if (v) {
+            nr += 1;
+            liste.push({ schluessel: `f-${q.id}`, art: "frage", titel: `${t.titel} · Erklärvideo ${nr}`, dauer: v.dauer, params: { frage: q.id } });
+          }
+          const lage = q.bild;
+          if (lage && !lagen.has(lage) && animationZuLage(lage)) {
+            lagen.add(lage);
+            liste.push({ schluessel: `a-${lage}`, art: "animation", titel: ANIMATION_TITEL[lage] ?? "Animation", dauer: null, params: { lage } });
+          }
+        }
+        karte.set(t.id, liste);
+      }
+    }
+    return { geladen: themen.geladen && fragen.geladen, zuThema: (id: string) => karte.get(id) ?? [] };
   }, [themen, fragen]);
 }

@@ -290,10 +290,14 @@ in der Seitenleiste verlinkt.
   1 Monat oder bis aufgehoben), **sperren** oder **löschen**. Pausierte und
   gesperrte Konten werden in der App abgemeldet und kommen nicht mehr rein.
   Inhaber-Konten und das eigene Konto lassen sich nicht sperren oder löschen.
-- **Videos:** Videos zu Themen (mehrere je Thema, erscheinen auf der
-  Themenseite der App) und Erklärvideos zu einzelnen Fragen (erscheinen beim
-  Lernen neben der KI-Hilfe). Datei hineinziehen oder klicken, MP4 oder MOV
-  bis 50 MB, mit Fortschritt; Titel ändern, Reihenfolge, löschen.
+- **Themen & Videos:** Die Themen unter „Lernen“ und auf dem Home legst du
+  selbst an – Titel, kurze Beschreibung, eigenes Bild (JPG, PNG oder WebP bis
+  5 MB; ohne Bild zeigt die App ein Straßenfoto), Reihenfolge, löschen (mit
+  allen Videos). Zu jedem Thema lädst du die Videos hoch: Datei hineinziehen
+  oder klicken, MP4 oder MOV bis 50 MB, mit Fortschritt; Titel ändern,
+  Reihenfolge, löschen. Änderungen erscheinen sofort in App und Website.
+  Solange die Fragen aus sind, gibt es nur diesen Teil; sonst zusätzlich
+  Erklärvideos zu einzelnen Fragen (beim Lernen neben der KI-Hilfe).
 - **Einladungen:** Code und QR-Code (`spur://einladung?code=…`) für neue
   Fahrschüler, wahlweise mit Fahrlehrer, Laufzeit und Anzahl. Wer ihn scannt
   oder beim Registrieren eintippt, ist danach direkt zugeordnet. Kopieren,
@@ -326,6 +330,10 @@ Einrichten (einmal):
 3. Für Einladungen, Termine, Meldungen, Freigaben und Mitteilungen:
    `supabase/update-verwaltung.sql` ausführen (Abschnitt 29). Die Edge
    Function muss dafür nicht neu hochgeladen werden.
+4. Für eigene Themen: `supabase/update-themen.sql` ausführen (Abschnitt 30).
+   Die früheren 11 festen Themen sind damit weg; Themen, zu denen schon
+   Videos hochgeladen waren, werden übernommen und lassen sich im Manager
+   umbenennen, bebildern oder löschen.
 
 ## Live-Stream in Clips
 
@@ -532,9 +540,8 @@ Fragenkatalog (mit Bildern und Videos) ist lizenzpflichtig
 **Zurzeit ausgeschaltet:** Bis die Lizenz für den amtlichen Katalog da ist,
 steht in `src/lib/funktionen.ts` `FRAGEN_AKTIV = false`. Dann sind Training,
 Prüfung (Tab), Duelle, Karteikarten, Favoriten, Statistik, Liga, Crew und das
-Live-Quiz ausgeblendet und gesperrt. Lernen zeigt die Themen nur mit ihren
-Videos (Themenvideos aus dem Manager, Erklärvideos zu Fragen ohne Fragetext,
-eingebaute Animationen). Verkehrszeichen, Formeln, Kurz erklärt,
+Live-Quiz ausgeblendet und gesperrt. Lernen zeigt die eigenen Themen aus dem
+Manager mit ihren Videos. Verkehrszeichen, Formeln, Kurz erklärt,
 Schilder-Jagd und Clips bleiben. Nichts ist gelöscht: auf `true` stellen und
 neu bauen, dann ist alles wieder da.
 

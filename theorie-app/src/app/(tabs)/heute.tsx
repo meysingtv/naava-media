@@ -19,6 +19,8 @@ import { tippen } from "@/lib/haptik";
 import { heuteDran } from "@/lib/karteikarten";
 import { useKonto } from "@/lib/konto";
 import { useLeistenScroll } from "@/lib/leisten-scroll";
+import { themaBild, useLernthemen } from "@/lib/lernthemen";
+import { useLernvideos } from "@/lib/lernvideos";
 import { tageBis, terminDatum } from "@/lib/pruefungstag";
 import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, serieAktuell, useStand } from "@/lib/stand";
 import { RAND, schrift } from "@/lib/theme";
@@ -81,6 +83,13 @@ function HomeHandy() {
     return { id: t.id as ThemaId, anteil: p.anteil, offen: p.gesamt - p.richtig, begonnen };
   });
   const offeneThemen = themen.filter((t) => t.offen > 0);
+  // Ohne Fragen: die Themen aus dem Manager (eigener Titel, eigenes Bild).
+  const lernthemen = useLernthemen();
+  const { zuThema } = useLernvideos();
+  const videoThemen = lernthemen.themen.map((t) => {
+    const n = zuThema(t.id).length;
+    return { id: t.id, anteil: 0, titel: t.titel, bild: themaBild(t), angabe: n === 1 ? "1 Video" : n ? `${n} Videos` : "Videos folgen" };
+  });
   const fokusThema = [...offeneThemen.filter((t) => t.begonnen)].sort((a, b) => a.anteil - b.anteil)[0] ?? offeneThemen[0] ?? themen[0];
 
   const letzte = stand.pruefungen[0] ?? null;
@@ -197,8 +206,12 @@ function HomeHandy() {
             </TourZiel>
           ) : null}
 
-          <Kopfzeile titel={FRAGEN_AKTIV ? "Deine Themen" : "Lernvideos nach Thema"} link="Alle ansehen" onLink={() => router.navigate("/lernen")} style={{ marginTop: 30 }} />
-          <ThemenKarussell themen={themen} ohneStand={!FRAGEN_AKTIV} onThema={(id) => router.push({ pathname: "/thema/[id]", params: { id } })} />
+          {FRAGEN_AKTIV || videoThemen.length ? (
+            <>
+              <Kopfzeile titel={FRAGEN_AKTIV ? "Deine Themen" : "Lernvideos nach Thema"} link="Alle ansehen" onLink={() => router.navigate("/lernen")} style={{ marginTop: 30 }} />
+              <ThemenKarussell themen={FRAGEN_AKTIV ? themen : videoThemen} ohneStand={!FRAGEN_AKTIV} onThema={(id) => router.push({ pathname: "/thema/[id]", params: { id } })} />
+            </>
+          ) : null}
 
           {FRAGEN_AKTIV ? (
             <>

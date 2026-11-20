@@ -1,9 +1,9 @@
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 
 import { Icon, type IconName } from "@/components/icon";
 import { GRUSS, tageszeit } from "@/components/home";
-import { Abschnitt, B, Balken, DickRing, Kachel, Knopf, n, Raster, Symbol, THEMA_TON, TOENE, Wert, zahlen, type Ton, type Zustand } from "@/components/web/bunt";
+import { Abschnitt, B, Balken, DickRing, Kachel, Knopf, Leer, n, Raster, Symbol, THEMA_TON, themaTon, TOENE, Wert, zahlen, type Ton, type Zustand } from "@/components/web/bunt";
 import { WebSeite } from "@/components/web/rahmen";
 import { FRAGEN, THEMEN, themaVon, type ThemaId } from "@/lib/fragen";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
@@ -11,6 +11,7 @@ import { heuteDran } from "@/lib/karteikarten";
 import { useKonto } from "@/lib/konto";
 import { tageBis, terminDatum } from "@/lib/pruefungstag";
 import { useLernvideos } from "@/lib/lernvideos";
+import { themaBild, useLernthemen } from "@/lib/lernthemen";
 import { ligaVon } from "@/lib/rangliste";
 import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, serieAktuell, useStand } from "@/lib/stand";
 
@@ -116,20 +117,28 @@ function HomeWebOhneFragen() {
   );
 }
 
-/** Themen mit der Zahl ihrer Videos – für die Fassung ohne Fragen. */
-export function ThemenVideoListe({ videos, min = 400, max = 2 }: { videos: (id: ThemaId) => number; min?: number; max?: number }) {
+/** Themen aus dem Manager mit Bild und der Zahl ihrer Videos – für die Fassung ohne Fragen. */
+export function ThemenVideoListe({ videos, min = 400, max = 2 }: { videos: (id: string) => number; min?: number; max?: number }) {
+  const { geladen, themen } = useLernthemen();
+  if (!themen.length) {
+    return geladen ? (
+      <Kachel>
+        <Leer icon="film-outline" ton={TOENE.orange} titel="Videos folgen bald" text="Hier erscheinen die Themen mit ihren Videos." />
+      </Kachel>
+    ) : null;
+  }
   return (
     <Raster min={min} max={max} abstand={10}>
-      {THEMEN.map((t) => {
-        const ton = THEMA_TON[t.id as ThemaId];
-        const zahl = videos(t.id as ThemaId);
+      {themen.map((t) => {
+        const ton = themaTon(t.id);
+        const zahl = videos(t.id);
         return (
           <Pressable
             key={t.id}
             onPress={() => router.push({ pathname: "/thema/[id]", params: { id: t.id } })}
-            style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 14, height: 64, borderRadius: 14, borderWidth: 1.5, borderColor: z.hovered ? B.kante : B.linie, backgroundColor: z.hovered ? B.hover : B.flaeche })}
+            style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 12, height: 68, borderRadius: 14, borderWidth: 1.5, borderColor: z.hovered ? B.kante : B.linie, backgroundColor: z.hovered ? B.hover : B.flaeche })}
           >
-            <Symbol icon={t.icon as IconName} ton={ton} groesse={38} />
+            <Image source={themaBild(t)} style={{ width: 52, height: 44, borderRadius: 10 }} resizeMode="cover" />
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={{ ...n.fett, fontSize: 15, color: B.text }} numberOfLines={1}>
                 {t.titel}

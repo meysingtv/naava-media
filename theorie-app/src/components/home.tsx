@@ -465,8 +465,30 @@ export function FokusKarte({ thema, anteil, offen, style, onPress }: { thema: Th
 }
 
 /** Ein Thema als Poster: Foto, Symbol, Titel und Fortschritt. */
-export function ThemaPoster({ id, anteil, breite = 148, hoehe = 204, ohneStand, onPress }: { id: ThemaId; anteil: number; breite?: number | `${number}%`; hoehe?: number; ohneStand?: boolean; onPress: () => void }) {
-  const t = themaVon(id);
+export function ThemaPoster({
+  id,
+  anteil,
+  breite = 148,
+  hoehe = 204,
+  ohneStand,
+  titel,
+  bild,
+  angabe,
+  onPress,
+}: {
+  id: string;
+  anteil: number;
+  breite?: number | `${number}%`;
+  hoehe?: number;
+  ohneStand?: boolean;
+  /** Eigenes Thema aus dem Manager: Titel, Bild und z. B. „3 Videos“. */
+  titel?: string;
+  bild?: ImageSourcePropType;
+  angabe?: string;
+  onPress: () => void;
+}) {
+  const fest = themaVon(id as ThemaId);
+  const t = { titel: titel ?? fest.titel, icon: titel != null ? "play" : fest.icon };
   return (
     <Pressable
       onPress={() => {
@@ -477,7 +499,7 @@ export function ThemaPoster({ id, anteil, breite = 148, hoehe = 204, ohneStand, 
       accessibilityLabel={`${t.titel}, ${Math.round(anteil * 100)} Prozent`}
       style={({ pressed }) => ({ width: breite, height: hoehe, borderRadius: 24, overflow: "hidden", transform: [{ scale: pressed ? 0.97 : 1 }] })}
     >
-      <Image source={themaFoto(id)} style={FOTO} resizeMode="cover" fadeDuration={0} />
+      <Image source={bild ?? themaFoto(id as ThemaId)} style={FOTO} resizeMode="cover" fadeDuration={0} />
       <LinearGradient colors={["rgba(3,5,7,0.15)", "rgba(3,5,7,0.2)", "rgba(3,5,7,0.92)"]} locations={[0, 0.4, 1]} style={FUELLEN} />
       <Glas klar style={{ position: "absolute", top: 12, left: 12, width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" }}>
         <Icon name={t.icon as IconName} size={18} color="#FFFFFF" />
@@ -489,7 +511,7 @@ export function ThemaPoster({ id, anteil, breite = 148, hoehe = 204, ohneStand, 
         {ohneStand ? (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <Icon name="play-circle" size={15} color="rgba(255,255,255,0.85)" />
-            <Text style={{ ...schrift.textHalb, fontSize: 12, color: "rgba(255,255,255,0.85)" }}>Videos ansehen</Text>
+            <Text style={{ ...schrift.textHalb, fontSize: 12, color: "rgba(255,255,255,0.85)" }}>{angabe ?? "Videos ansehen"}</Text>
           </View>
         ) : (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -505,11 +527,19 @@ export function ThemaPoster({ id, anteil, breite = 148, hoehe = 204, ohneStand, 
 }
 
 /** Themen als Poster zum Durchwischen. */
-export function ThemenKarussell({ themen, onThema, ohneStand }: { themen: { id: ThemaId; anteil: number }[]; onThema: (id: ThemaId) => void; ohneStand?: boolean }) {
+export function ThemenKarussell({
+  themen,
+  onThema,
+  ohneStand,
+}: {
+  themen: { id: string; anteil: number; titel?: string; bild?: ImageSourcePropType; angabe?: string }[];
+  onThema: (id: string) => void;
+  ohneStand?: boolean;
+}) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} decelerationRate="fast" snapToInterval={160} contentContainerStyle={{ paddingHorizontal: RAND, gap: 12 }}>
-      {themen.map(({ id, anteil }) => (
-        <ThemaPoster key={id} id={id} anteil={anteil} ohneStand={ohneStand} onPress={() => onThema(id)} />
+      {themen.map(({ id, anteil, titel, bild, angabe }) => (
+        <ThemaPoster key={id} id={id} anteil={anteil} titel={titel} bild={bild} angabe={angabe} ohneStand={ohneStand} onPress={() => onThema(id)} />
       ))}
     </ScrollView>
   );

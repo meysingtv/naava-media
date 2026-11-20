@@ -5,10 +5,11 @@ import { router } from "expo-router";
 import { Icon, type IconName } from "@/components/icon";
 import { Kontrollleuchte } from "@/components/leuchten";
 import { Verkehrszeichen } from "@/components/zeichen";
-import { Abschnitt, B, Chip, DickRing, Kachel, Knopf, Leer, n, Raster, Reiter, Spalte, Symbol, THEMA_TON, UnterKopf, type Ton, type Zustand } from "@/components/web/bunt";
+import { Abschnitt, B, Chip, DickRing, Kachel, Knopf, Leer, n, Raster, Reiter, Spalte, Symbol, THEMA_TON, themaTon, UnterKopf, type Ton, type Zustand } from "@/components/web/bunt";
 import { WebSeite } from "@/components/web/rahmen";
 import { fragenZuThema, istZeichen, THEMEN, themaVon, type Frage, type LeuchteKey, type ThemaId, type ZeichenKey } from "@/lib/fragen";
 import { themaFoto } from "@/lib/fotos";
+import { themaBild, useLernthemen } from "@/lib/lernthemen";
 import { useLernvideos } from "@/lib/lernvideos";
 import { fortschritt, themaStatistik, useStand, type Stand } from "@/lib/stand";
 import { useThemenvideos } from "@/lib/themenvideos";
@@ -255,13 +256,17 @@ export function ThemaWeb({ id }: { id: ThemaId }) {
  * Kacheln (Themenvideos, Erklärvideos ohne Fragetext, Animationen), rechts die
  * nächsten Themen.
  */
-export function ThemaVideosWeb({ id }: { id: ThemaId }) {
-  const thema = themaVon(id);
-  const ton: Ton = THEMA_TON[thema.id];
+export function ThemaVideosWeb({ id }: { id: string }) {
+  // Themen kommen aus dem Manager (eigener Titel, eigenes Bild).
+  const { geladen: themenGeladen, themen } = useLernthemen();
+  const gefunden = themen.find((t) => t.id === id) ?? null;
+  const thema = { id, titel: gefunden?.titel ?? (themenGeladen ? "Thema nicht gefunden" : ""), kurz: gefunden?.kurz ?? (themenGeladen ? "Dieses Thema gibt es nicht mehr." : "") };
+  const bild = themaBild(gefunden ?? { id, bild_pfad: null });
+  const ton: Ton = themaTon(id);
   const { geladen, zuThema } = useLernvideos();
-  const videos = zuThema(thema.id);
-  const platz = THEMEN.findIndex((t) => t.id === thema.id);
-  const weitere = [1, 2, 3, 4].map((k) => THEMEN[(platz + k) % THEMEN.length]);
+  const videos = zuThema(id);
+  const platz = themen.findIndex((t) => t.id === id);
+  const weitere = themen.length > 1 ? [1, 2, 3, 4].map((k) => themen[(platz + k) % themen.length]).filter((t, i, a) => t.id !== id && a.findIndex((x) => x.id === t.id) === i) : [];
 
   return (
     <WebSeite ohneRechts>
@@ -277,7 +282,7 @@ export function ThemaVideosWeb({ id }: { id: ThemaId }) {
                   return (
                     <Kachel key={v.schluessel} onPress={() => router.push({ pathname: "/themavideo", params: v.params })} style={{ overflow: "hidden" }}>
                       <View style={{ height: 150, backgroundColor: "#0B0E12" }}>
-                        <Image source={themaFoto(thema.id)} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                        <Image source={bild} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
                         <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.25)" }}>
                           <View style={{ width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.25)", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" }}>
                             <Icon name={v.art === "animation" ? "git-branch" : "play"} size={22} color="#FFFFFF" />
@@ -306,12 +311,12 @@ export function ThemaVideosWeb({ id }: { id: ThemaId }) {
             )}
           </View>
 
+          {weitere.length ? (
           <View style={{ width: 340, gap: 28 }}>
             <View>
               <Abschnitt titel="Weitere Themen" link="Alle" onLink={() => router.navigate("/lernen")} />
               <Kachel>
                 {weitere.map((t, i) => {
-                  const tt = THEMA_TON[t.id];
                   const zahl = zuThema(t.id).length;
                   return (
                     <Pressable
@@ -321,7 +326,7 @@ export function ThemaVideosWeb({ id }: { id: ThemaId }) {
                       accessibilityLabel={t.titel}
                       style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, height: 58, borderTopWidth: i ? 1.5 : 0, borderTopColor: B.ton, backgroundColor: z.hovered ? B.hover : "transparent" })}
                     >
-                      <Symbol icon={t.icon as IconName} ton={tt} groesse={34} />
+                      <Image source={themaBild(t)} style={{ width: 40, height: 34, borderRadius: 8 }} resizeMode="cover" />
                       <Text style={{ flex: 1, ...n.fett, fontSize: 14.5, color: B.text }} numberOfLines={1}>
                         {t.titel}
                       </Text>
@@ -332,6 +337,7 @@ export function ThemaVideosWeb({ id }: { id: ThemaId }) {
               </Kachel>
             </View>
           </View>
+          ) : null}
         </View>
       </Spalte>
     </WebSeite>

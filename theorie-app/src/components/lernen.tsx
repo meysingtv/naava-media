@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { Animated, Easing, Image, Pressable, ScrollView, Text, TextInput, View, type StyleProp, type ViewStyle } from "react-native";
+import { Animated, Easing, Image, Pressable, ScrollView, Text, TextInput, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import type { SFSymbol } from "expo-symbols";
 
@@ -446,7 +446,11 @@ export function GrundstoffKarte({ anzahl, anteil, onPress, style }: { anzahl: nu
 }
 
 export type ThemaPosterDaten = {
-  id: ThemaId;
+  /** Feste Themen-Kennung (mit Fragen) oder ein eigenes Thema aus dem Manager. */
+  id: string;
+  /** Eigenes Thema: Titel und Bild aus dem Manager. Fehlt beides, gilt das feste Thema. */
+  titel?: string;
+  bild?: ImageSourcePropType;
   anteil: number;
   anzahl: number;
   stufe: Exclude<Stufe, "alle">;
@@ -459,7 +463,9 @@ const STUFE_NAME: Record<Exclude<Stufe, "alle">, string> = { leicht: "Leicht", m
 /** Ein Thema als Poster: Foto, Symbol, Titel, Stand. */
 function ThemaPoster({ thema, breite, onPress }: { thema: ThemaPosterDaten; breite: number; onPress: () => void }) {
   const f = useFarbwelt();
-  const t = themaVon(thema.id);
+  const eigen = thema.titel != null;
+  const fest = themaVon(thema.id as ThemaId);
+  const t = { titel: thema.titel ?? fest.titel, icon: eigen ? "play" : fest.icon };
   const prozent = Math.round(thema.anteil * 100);
   const nurVideos = thema.videos != null;
   const videoText = thema.videos ? (thema.videos === 1 ? "1 Video" : `${thema.videos} Videos`) : "Videos folgen";
@@ -474,7 +480,7 @@ function ThemaPoster({ thema, breite, onPress }: { thema: ThemaPosterDaten; brei
       style={({ pressed }) => [{ width: breite, height: Math.round(breite * 1.22), borderRadius: 24, transform: [{ scale: pressed ? 0.97 : 1 }] }, f.hell ? leuchten("#3C2C18", 0.12, 12, 5) : null]}
     >
       <View style={{ flex: 1, borderRadius: 24, overflow: "hidden" }}>
-        <Image source={themaFoto(thema.id)} style={FOTO} resizeMode="cover" fadeDuration={0} />
+        <Image source={thema.bild ?? themaFoto(thema.id as ThemaId)} style={FOTO} resizeMode="cover" fadeDuration={0} />
         <LinearGradient colors={["rgba(3,5,7,0.22)", "rgba(3,5,7,0)", "rgba(3,5,7,0.92)"]} locations={[0, 0.3, 1]} style={FUELLEN} />
         <View style={{ position: "absolute", top: 11, left: 11, right: 11, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <Glas klar style={{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" }}>
@@ -513,7 +519,7 @@ function ThemaPoster({ thema, breite, onPress }: { thema: ThemaPosterDaten; brei
 }
 
 /** Themen als Poster in zwei Spalten – am PC mit `breite` (ohne Rand) und `spalten`. */
-export function ThemenRaster({ themen, onThema, style, breite: vorgabe, spalten = 2 }: { themen: ThemaPosterDaten[]; onThema: (id: ThemaId) => void; style?: StyleProp<ViewStyle>; breite?: number; spalten?: number }) {
+export function ThemenRaster({ themen, onThema, style, breite: vorgabe, spalten = 2 }: { themen: ThemaPosterDaten[]; onThema: (id: string) => void; style?: StyleProp<ViewStyle>; breite?: number; spalten?: number }) {
   const { width } = useFenster();
   const luecke = vorgabe ? 16 : 12;
   const breite = vorgabe ? Math.floor((vorgabe - (spalten - 1) * luecke) / spalten) : Math.floor((width - 2 * RAND - 12) / 2);

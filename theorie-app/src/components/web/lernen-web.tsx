@@ -8,6 +8,7 @@ import { ThemenListe, ThemenVideoListe } from "@/components/web/home-web";
 import { WebSeite } from "@/components/web/rahmen";
 import { FRAGEN, THEMEN, fragenZuThema, themaVon, type ThemaId } from "@/lib/fragen";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
+import { useLernthemen } from "@/lib/lernthemen";
 import { heuteDran } from "@/lib/karteikarten";
 import { useLernvideos } from "@/lib/lernvideos";
 import { ALBUM } from "@/lib/schilder-jagd";
@@ -48,7 +49,8 @@ function LernenWebOhneFragen() {
   const { stand } = useStand();
   const { zuThema } = useLernvideos();
   const gefunden = ALBUM.filter((k) => stand.schilder[k]).length;
-  const alleVideos = THEMEN.reduce((sum, t) => sum + zuThema(t.id).length, 0);
+  const { themen } = useLernthemen();
+  const alleVideos = themen.reduce((sum, t) => sum + zuThema(t.id).length, 0);
   const modi: Modus[] = [
     { titel: "Kurz erklärt", unter: "Regeln in 30 Sekunden", icon: "bulb", ton: TOENE.lila, onPress: () => router.push("/kurz-erklaert") },
     { titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", icon: "warning", ton: TOENE.gelb, onPress: () => router.push("/zeichen") },
@@ -58,7 +60,7 @@ function LernenWebOhneFragen() {
   return (
     <WebSeite ohneRechts>
       <Spalte>
-        <SeitenTitel titel="Lernen" unter={`${THEMEN.length} Themen${alleVideos ? ` · ${alleVideos} Videos` : ""} · Klasse ${stand.klasse}`} />
+        <SeitenTitel titel="Lernen" unter={`${themen.length ? `${themen.length === 1 ? "1 Thema" : `${themen.length} Themen`}${alleVideos ? ` · ${alleVideos} Videos` : ""} · ` : ""}Klasse ${stand.klasse}`} />
         <View>
           <Abschnitt titel="Lernhilfen" />
           <Raster min={240} abstand={12}>

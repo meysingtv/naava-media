@@ -34,6 +34,7 @@ import { Verkehrszeichen } from "@/components/zeichen";
 import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
 import { useLernvideos } from "@/lib/lernvideos";
+import { themaBild, useLernthemen } from "@/lib/lernthemen";
 import { useDesktop } from "@/lib/fenster";
 import { FRAGEN, THEMEN, fragenZuThema, themaVon, type ThemaId, type ZeichenKey } from "@/lib/fragen";
 import { heuteDran, kartenZahlen } from "@/lib/karteikarten";
@@ -75,15 +76,18 @@ function LernenNurVideos() {
   const { farbwelt: f } = useDarstellung();
   const { stand } = useStand();
   const { zuThema } = useLernvideos();
+  const lernthemen = useLernthemen();
   const [kopfHoehe, setKopfHoehe] = useState(0);
 
   const gefunden = ALBUM.filter((k) => stand.schilder[k]);
   const letztesSchild: ZeichenKey = [...gefunden].sort((a, b) => (stand.schilder[b] ?? "").localeCompare(stand.schilder[a] ?? ""))[0] ?? "z206";
-  const themen: ThemaPosterDaten[] = THEMEN.map((t) => ({ id: t.id, anteil: 0, anzahl: 0, stufe: "mittel", videos: zuThema(t.id).length }));
+  // Themen legt der Inhaber im Manager an (eigener Titel, eigenes Bild).
+  const themen: ThemaPosterDaten[] = lernthemen.themen.map((t) => ({ id: t.id, titel: t.titel, bild: themaBild(t), anteil: 0, anzahl: 0, stufe: "mittel", videos: zuThema(t.id).length }));
   const alleVideos = themen.reduce((s, t) => s + (t.videos ?? 0), 0);
   const kopfText = f.hell ? "#14171B" : "#FFFFFF";
-  const unterText = `${THEMEN.length} Themen${alleVideos > 0 ? ` · ${alleVideos} Videos` : ""} · Klasse ${stand.klasse}`;
-  const zumThema = (id: ThemaId) => router.push({ pathname: "/thema/[id]", params: { id } });
+  const themenText = themen.length === 1 ? "1 Thema" : `${themen.length} Themen`;
+  const unterText = themen.length ? `${themenText}${alleVideos > 0 ? ` · ${alleVideos} Videos` : ""} · Klasse ${stand.klasse}` : `Klasse ${stand.klasse}`;
+  const zumThema = (id: string) => router.push({ pathname: "/thema/[id]", params: { id } });
 
   const schilderJagd = (
     <ModusKarte
@@ -124,8 +128,17 @@ function LernenNurVideos() {
           </TourZiel>
           <ModusRaster modi={[zeichen, formeln]} style={{ marginTop: 10 }} />
 
-          <Kopfzeile titel="Alle Themen" link={`${THEMEN.length} Themen`} style={{ marginTop: 32 }} />
-          <ThemenRaster themen={themen} onThema={zumThema} />
+          {themen.length ? (
+            <>
+              <Kopfzeile titel="Alle Themen" link={themenText} style={{ marginTop: 32 }} />
+              <ThemenRaster themen={themen} onThema={zumThema} />
+            </>
+          ) : lernthemen.geladen ? (
+            <View style={{ marginHorizontal: RAND, marginTop: 32, paddingVertical: 32, paddingHorizontal: 24, borderRadius: 22, alignItems: "center", gap: 10, backgroundColor: f.flaeche, borderWidth: 1, borderColor: f.linie }}>
+              <Icon name="film-outline" size={28} color={f.text3} />
+              <Text style={{ ...schrift.textHalb, fontSize: 16, lineHeight: 22, color: f.text, textAlign: "center" }}>Videos zu den Themen folgen bald.</Text>
+            </View>
+          ) : null}
         </ScrollView>
       </View>
     </FarbweltBereich>

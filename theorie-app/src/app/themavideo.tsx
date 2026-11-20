@@ -16,6 +16,7 @@ import { ANIMATION_TITEL, animationZuLage } from "@/lib/erklaer-animationen";
 import { erklaervideoUrl, useErklaervideos } from "@/lib/erklaervideos";
 import { useFenster } from "@/lib/fenster";
 import { themaFoto } from "@/lib/fotos";
+import { themaBild, useLernthemen } from "@/lib/lernthemen";
 import { frageVon, themaVon, type ThemaId } from "@/lib/fragen";
 import { RAND, schrift } from "@/lib/theme";
 import { themavideoUrl, useThemenvideos } from "@/lib/themenvideos";
@@ -66,8 +67,11 @@ function ThemavideoHandy() {
   const fragevideo = frage ? erklaer.videos[frage.id] : undefined;
   const animation = animationZuLage(params.lage);
 
-  const themaId = (themavideo?.thema_id ?? frage?.thema) as ThemaId | undefined;
-  const thema = themaId ? themaVon(themaId) : null;
+  // Themenvideo: Thema aus dem Manager. Erklärvideo zu einer Frage: festes Thema der Frage.
+  const lernthemen = useLernthemen();
+  const eigenes = themavideo ? lernthemen.themen.find((t) => t.id === themavideo.thema_id) : undefined;
+  const festesThema = !themavideo && frage ? themaVon(frage.thema as ThemaId) : null;
+  const thema = eigenes ? { titel: eigenes.titel, bild: themaBild(eigenes) } : festesThema ? { titel: festesThema.titel, bild: themaFoto(festesThema.id) } : null;
   const url = themavideo ? themavideoUrl(themavideo.pfad) : fragevideo ? erklaervideoUrl(fragevideo.pfad) : null;
   const geladen = params.id ? themen.geladen : params.frage ? erklaer.geladen : true;
   const titel = themavideo?.titel ?? (animation && params.lage ? ANIMATION_TITEL[params.lage] ?? "Animation" : fragevideo ? "Erklärvideo" : "Video");
@@ -80,7 +84,7 @@ function ThemavideoHandy() {
         links={<GlasRund icon="close" label="Schließen" onPress={() => router.back()} />}
         rechts={<View />}
         titel={titel}
-        unter={thema ? <KopfPille bild={themaFoto(thema.id)} text={thema.titel} /> : undefined}
+        unter={thema ? <KopfPille bild={thema.bild} text={thema.titel} /> : undefined}
       />
       <View style={{ flex: 1, paddingHorizontal: RAND, paddingBottom: insets.bottom + 12 }}>
         {url ? (

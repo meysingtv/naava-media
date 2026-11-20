@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View, type ImageSourcePropType } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEvent } from "expo";
 import { useVideoPlayer, VideoView } from "expo-video";
@@ -7,13 +7,14 @@ import { useVideoPlayer, VideoView } from "expo-video";
 import { ErklaerAnimationSpieler } from "@/components/erklaer-animation";
 import { Icon, type IconName } from "@/components/icon";
 import { Lader } from "@/components/lader";
-import { Abschnitt, B, Kachel, Knopf, Leer, n, Reiter, Spalte, Symbol, THEMA_TON, UnterKopf, type Zustand } from "@/components/web/bunt";
+import { Abschnitt, B, Kachel, Knopf, Leer, n, Reiter, Spalte, Symbol, THEMA_TON, themaTon, UnterKopf, type Zustand } from "@/components/web/bunt";
 import { WebSeite } from "@/components/web/rahmen";
 import { FrageBild } from "@/components/web/thema-web";
 import { animationFuer, ANIMATION_TITEL, animationZuLage } from "@/lib/erklaer-animationen";
 import { erklaervideoUrl, useErklaervideos } from "@/lib/erklaervideos";
 import { FRAGEN, frageVon, themaVon, type ThemaId } from "@/lib/fragen";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
+import { themaBild, useLernthemen } from "@/lib/lernthemen";
 import { useLernvideos, type Lernvideo } from "@/lib/lernvideos";
 import { themavideoUrl, useThemenvideos } from "@/lib/themenvideos";
 
@@ -62,8 +63,8 @@ function Platzhalter({ laedt, icon, titel, text }: { laedt: boolean; icon: IconN
 // Themenvideo
 // ---------------------------------------------------------------------------
 
-function VideoZeile({ video, themaId, aktiv, oben }: { video: Lernvideo; themaId: ThemaId; aktiv: boolean; oben: boolean }) {
-  const ton = THEMA_TON[themaId];
+function VideoZeile({ video, themaId, aktiv, oben }: { video: Lernvideo; themaId: string; aktiv: boolean; oben: boolean }) {
+  const ton = themaTon(themaId);
   const dauer = dauerText(video.dauer);
   return (
     <Pressable
@@ -99,9 +100,17 @@ export function ThemavideoWeb() {
   const frage = params.frage ? frageVon(params.frage) : undefined;
   const fragevideo = frage ? erklaer.videos[frage.id] : undefined;
   const animation = animationZuLage(params.lage);
-  const themaId = (themavideo?.thema_id ?? frage?.thema ?? (params.lage ? FRAGEN.find((q) => q.bild === params.lage)?.thema : undefined)) as ThemaId | undefined;
-  const thema = themaId ? themaVon(themaId) : null;
-  const ton = thema ? THEMA_TON[thema.id] : null;
+  // Themenvideo: Thema aus dem Manager. Erklärvideo oder Animation: festes Thema der Frage.
+  const { themen: lernthemen } = useLernthemen();
+  const eigenes = themavideo ? lernthemen.find((t) => t.id === themavideo.thema_id) : undefined;
+  const festeId = (frage?.thema ?? (params.lage ? FRAGEN.find((q) => q.bild === params.lage)?.thema : undefined)) as ThemaId | undefined;
+  const fest = !themavideo && festeId ? themaVon(festeId) : null;
+  const thema = eigenes
+    ? { id: eigenes.id, titel: eigenes.titel, kurz: eigenes.kurz, bild: themaBild(eigenes) as ImageSourcePropType | null, icon: "play" as IconName }
+    : fest
+      ? { id: fest.id as string, titel: fest.titel, kurz: fest.kurz, bild: null, icon: fest.icon as IconName }
+      : null;
+  const ton = thema ? themaTon(thema.id) : null;
   const url = themavideo ? themavideoUrl(themavideo.pfad) : fragevideo ? erklaervideoUrl(fragevideo.pfad) : null;
   const geladen = params.id ? themen.geladen : params.frage ? erklaer.geladen : true;
   const titel = themavideo?.titel ?? (animation && params.lage ? (ANIMATION_TITEL[params.lage] ?? "Animation") : fragevideo ? "Erklärvideo" : "Video");
@@ -131,7 +140,7 @@ export function ThemavideoWeb() {
             <View style={{ width: 340, gap: 20 }}>
               <Kachel style={{ padding: 22, gap: 16 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-                  <Symbol icon={thema.icon as IconName} ton={ton} groesse={48} />
+                  {thema.bild ? <Image source={thema.bild} style={{ width: 56, height: 48, borderRadius: 12 }} resizeMode="cover" /> : <Symbol icon={thema.icon} ton={ton} groesse={48} />}
                   <View style={{ flex: 1 }}>
                     <Text style={{ ...n.schwarz, fontSize: 17, color: B.text }} numberOfLines={1}>
                       {thema.titel}
@@ -141,7 +150,7 @@ export function ThemavideoWeb() {
                     </Text>
                   </View>
                 </View>
-                {FRAGEN_AKTIV ? <Knopf titel="Thema lernen" icon="play" onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: thema.id } })} /> : null}
+                {FRAGEN_AKTIV && fest ? <Knopf titel="Thema lernen" icon="play" onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: fest.id } })} /> : null}
                 <Knopf titel="Zur Themenseite" art="rand" ton="blau" onPress={() => router.push({ pathname: "/thema/[id]", params: { id: thema.id } })} />
               </Kachel>
 

@@ -38,7 +38,7 @@ const BEREICHE: { id: Bereich; titel: string; unter: string; an: IconName; aus: 
   { id: "meldungen", titel: "Meldungen", unter: "Gemeldete Clips und Chat-Nachrichten prüfen", an: "flag", aus: "flag-outline", ton: TOENE.rot },
   { id: "freigaben", titel: "Freigaben", unter: "Neue Fahrlehrer bestätigen und Creator-Bewerbungen entscheiden", an: "shield-checkmark", aus: "shield-checkmark-outline", ton: TOENE.lila },
   { id: "mitteilungen", titel: "Mitteilungen", unter: "Nachricht an alle, an eine Rolle oder an die Schüler eines Fahrlehrers", an: "megaphone", aus: "megaphone-outline", ton: TOENE.indigo },
-  { id: "videos", titel: "Videos", unter: "Videos zu Themen und Erklärvideos zu einzelnen Fragen", an: "film", aus: "film-outline", ton: TOENE.pink },
+  { id: "videos", titel: "Themen & Videos", unter: "Eigene Themen mit Bild anlegen und Videos dazu hochladen", an: "film", aus: "film-outline", ton: TOENE.pink },
 ];
 
 /** Nach diesen Bereichen kommt in der Seitenleiste ein Trennstrich. */

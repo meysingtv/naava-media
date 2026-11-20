@@ -123,6 +123,16 @@ export function webDunkel(): boolean {
 
 export type TonName = keyof typeof TOENE;
 
+/** Farbe eines Themas: feste Themen wie bisher, eigene Themen je Kennung fest gewählt. */
+export function themaTon(id: string): Ton {
+  const fest = (THEMA_TON as Record<string, Ton | undefined>)[id];
+  if (fest) return fest;
+  const liste = [TOENE.blau, TOENE.gruen, TOENE.lila, TOENE.pink, TOENE.tuerkis, TOENE.bernstein, TOENE.indigo, TOENE.koralle];
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return liste[h % liste.length];
+}
+
 /** Jedes Thema hat seine eigene Farbe. */
 export const THEMA_TON: Record<ThemaId, Ton> = {
   gefahren: TOENE.rot,

@@ -1,17 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 
 import { dialog } from "@/components/dialog";
 import { Icon } from "@/components/icon";
-import { Drehung, Fenster, Hinweis, IconTaste, MEingabe, mFlaeche, MKnopf, Reiter, Tafel, M, type Zustand } from "@/components/manager-teile";
-import { n as nf } from "@/components/web/bunt";
+import { Drehung, Feld, Fenster, Hinweis, IconTaste, MEingabe, mFlaeche, MKnopf, Reiter, Tafel, M, type Zustand } from "@/components/manager-teile";
+import { n as nf, Symbol, TOENE } from "@/components/web/bunt";
 import { erklaervideoHochladenDatei, erklaervideoLoeschen, erklaervideoUrl, useErklaervideos } from "@/lib/erklaervideos";
-import { FRAGEN, THEMEN, themaVon, type ThemaId } from "@/lib/fragen";
+import { FRAGEN, themaVon } from "@/lib/fragen";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
+import { lernthemaAendern, lernthemaAnlegen, lernthemaBildEntfernen, lernthemaBildHochladen, lernthemaLoeschen, lernthemaVerschieben, themaBild, themenbildPruefen, useLernthemen } from "@/lib/lernthemen";
 import { themavideoHochladen, themavideoLoeschen, themavideoUmbenennen, themavideoUrl, themavideoVerschieben, useThemenvideos, type Themavideo } from "@/lib/themenvideos";
 import { videoDauer, videoPruefen } from "@/lib/web-hochladen";
 
-// Videos im Manager (nur im Browser): Videos zu ganzen Themen – mehrere je
-// Thema, sichtbar auf der Themenseite – und Erklärvideos zu einzelnen Fragen,
+// Themen und Videos im Manager (nur im Browser): eigene Themen mit Bild,
+// Titel und Beschreibung, dazu ihre Videos – mehrere je Thema, sichtbar auf
+// der Themenseite – und Erklärvideos zu einzelnen Fragen,
 // die beim Lernen neben der KI-Hilfe erscheinen. Dateien per Klick oder
 // Ziehen & Ablegen, mit Fortschritt beim Hochladen.
 
@@ -135,23 +138,102 @@ function Fortschritt({ anteil, text, onAbbrechen }: { anteil: number; text: stri
 }
 
 // ---------------------------------------------------------------------------
-// Themenvideos
+// Themen und ihre Videos
 // ---------------------------------------------------------------------------
+
+/** Bild-Dialog des Browsers öffnen. */
+function bildWaehlen(): Promise<File | null> {
+  return new Promise((fertig) => {
+    const feld = document.createElement("input");
+    feld.type = "file";
+    feld.accept = "image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp";
+    feld.onchange = () => fertig(feld.files?.[0] ?? null);
+    feld.click();
+  });
+}
 
 type Upload = { datei: File; titel: string; dauer: number | null; anteil: number; laeuft: boolean };
 
+/**
+ * Themen verwalten (erscheinen in App und Website unter Lernen und auf dem
+ * Home): links die Liste in ihrer Reihenfolge, rechts das gewählte Thema mit
+ * Bild, Titel, Beschreibung und seinen Videos.
+ */
 function ThemenVideos() {
-    const { videos } = useThemenvideos();
-  const [thema, setThema] = useState<ThemaId>(THEMEN[0].id);
+  const { geladen, themen } = useLernthemen();
+  const { videos } = useThemenvideos();
+  const [gewaehlt, setGewaehlt] = useState<string | null>(null);
+  const [neu, setNeu] = useState<{ titel: string; kurz: string } | null>(null);
+  const [form, setForm] = useState<{ titel: string; kurz: string }>({ titel: "", kurz: "" });
+  const [laeuft, setLaeuft] = useState<string | null>(null);
   const [upload, setUpload] = useState<Upload | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
   const [ansehen, setAnsehen] = useState<Themavideo | null>(null);
   const [umbenennen, setUmbenennen] = useState<{ id: string; titel: string } | null>(null);
   const abbruch = useRef<{ aktuell: (() => void) | null }>({ aktuell: null });
 
+  const thema = themen.find((t) => t.id === gewaehlt) ?? themen[0] ?? null;
   const anzahl = (id: string) => videos.filter((v) => v.thema_id === id).length;
-  const liste = videos.filter((v) => v.thema_id === thema);
-  const t = themaVon(thema);
+  const liste = thema ? videos.filter((v) => v.thema_id === thema.id) : [];
+
+  // Formular mit dem gewählten Thema füllen
+  useEffect(() => {
+    setForm({ titel: thema?.titel ?? "", kurz: thema?.kurz ?? "" });
+    setUpload(null);
+    setFehler(null);
+    setOk(null);
+  }, [thema?.id, thema?.titel, thema?.kurz]);
+
+  async function machen(schritt: string, arbeit: () => Promise<void>, meldung?: string) {
+    setLaeuft(schritt);
+    setFehler(null);
+    setOk(null);
+    try {
+      await arbeit();
+      if (meldung) setOk(meldung);
+    } catch (e) {
+      setFehler(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLaeuft(null);
+    }
+  }
+
+  async function anlegen() {
+    if (!neu) return;
+    if (!neu.titel.trim()) return setFehler("Bitte gib dem Thema einen Titel.");
+    await machen("anlegen", async () => {
+      const id = await lernthemaAnlegen(neu.titel.trim(), neu.kurz.trim());
+      setGewaehlt(id);
+      setNeu(null);
+    });
+  }
+
+  async function bildAendern() {
+    if (!thema) return;
+    const d = await bildWaehlen();
+    if (!d) return;
+    const problem = themenbildPruefen(d);
+    if (problem) return setFehler(problem);
+    await machen("bild", () => lernthemaBildHochladen(thema.id, d), "Bild gespeichert.");
+  }
+
+  const themaLoeschen = () => {
+    if (!thema) return;
+    const n = anzahl(thema.id);
+    dialog("Thema löschen?", `„${thema.titel}“ verschwindet aus App und Website${n ? ` – mit ${n === 1 ? "seinem Video" : `allen ${n} Videos`}` : ""}. Das lässt sich nicht rückgängig machen.`, [
+      { text: "Abbrechen", style: "cancel" },
+      {
+        text: "Löschen",
+        style: "destructive",
+        onPress: () =>
+          machen("loeschen", async () => {
+            await lernthemaLoeschen(thema.id);
+            setGewaehlt(null);
+          }),
+      },
+    ]);
+  };
 
   async function datei(d: File) {
     setFehler(null);
@@ -162,13 +244,13 @@ function ThemenVideos() {
   }
 
   async function hochladen() {
-    if (!upload) return;
+    if (!upload || !thema) return;
     if (!upload.titel.trim()) return setFehler("Bitte gib dem Video einen Titel.");
     setFehler(null);
     setUpload({ ...upload, laeuft: true, anteil: 0 });
     try {
       await themavideoHochladen({
-        themaId: thema,
+        themaId: thema.id,
         titel: upload.titel.trim(),
         datei: upload.datei,
         dauer: upload.dauer,
@@ -182,8 +264,8 @@ function ThemenVideos() {
     }
   }
 
-  const loeschen = (v: Themavideo) =>
-    dialog("Video löschen?", `„${v.titel}“ verschwindet aus dem Thema ${t.titel}.`, [
+  const videoLoeschen = (v: Themavideo) =>
+    dialog("Video löschen?", `„${v.titel}“ verschwindet aus dem Thema ${thema?.titel ?? ""}.`, [
       { text: "Abbrechen", style: "cancel" },
       { text: "Löschen", style: "destructive", onPress: () => themavideoLoeschen(v.id).catch((e) => setFehler(e instanceof Error ? e.message : String(e))) },
     ]);
@@ -198,94 +280,196 @@ function ThemenVideos() {
     }
   }
 
+  const neuFenster = (
+    <Fenster
+      offen={!!neu}
+      onSchliessen={() => setNeu(null)}
+      titel="Neues Thema"
+      unter="Erscheint in App und Website unter Lernen und auf dem Home. Ein Bild kannst du danach hochladen."
+      fuss={
+        <>
+          <MKnopf titel="Abbrechen" art="leise" onPress={() => setNeu(null)} />
+          <MKnopf titel="Thema anlegen" icon="add" onPress={anlegen} laedt={laeuft === "anlegen"} deaktiviert={!neu?.titel.trim()} />
+        </>
+      }
+    >
+      {neu ? (
+        <>
+          <Feld titel="Titel">
+            <MEingabe value={neu.titel} onChangeText={(titel) => setNeu({ ...neu, titel })} placeholder="z. B. Kreisverkehr" maxLength={60} autoFocus />
+          </Feld>
+          <Feld titel="Kurze Beschreibung" hinweis="Steht unter dem Titel auf der Themenseite.">
+            <MEingabe value={neu.kurz} onChangeText={(kurz) => setNeu({ ...neu, kurz })} placeholder="z. B. Einfahren, Blinken, Ausfahren" maxLength={160} />
+          </Feld>
+          {fehler ? <Hinweis art="fehler">{fehler}</Hinweis> : null}
+        </>
+      ) : null}
+    </Fenster>
+  );
+
+  if (!geladen) {
+    return (
+      <View style={{ alignItems: "center", paddingVertical: 48 }}>
+        <Drehung farbe={M.orange} groesse={24} />
+      </View>
+    );
+  }
+
+  if (!thema) {
+    return (
+      <View style={[mFlaeche(), { alignItems: "center", paddingVertical: 48, paddingHorizontal: 24, gap: 12 }]}>
+        <Symbol icon="albums" ton={TOENE.pink} groesse={60} />
+        <Text style={{ ...nf.schwarz, fontSize: 20, color: M.text, textAlign: "center" }}>Noch keine Themen</Text>
+        <Text style={{ ...nf.halb, fontSize: 14.5, lineHeight: 20, color: M.text2, textAlign: "center", maxWidth: 440 }}>
+          Leg dein erstes Thema an, z. B. „Kreisverkehr“. Danach lädst du ein Bild und die Videos dazu hoch – alles erscheint sofort in App und Website.
+        </Text>
+        <MKnopf titel="Erstes Thema anlegen" icon="add" onPress={() => setNeu({ titel: "", kurz: "" })} style={{ marginTop: 8 }} />
+        {fehler ? <Hinweis art="fehler">{fehler}</Hinweis> : null}
+        {neuFenster}
+      </View>
+    );
+  }
+
+  const geaendert = form.titel.trim() !== thema.titel || form.kurz.trim() !== thema.kurz;
+  const platz = themen.findIndex((t) => t.id === thema.id);
+
   return (
     <View style={{ flexDirection: "row", gap: 20, alignItems: "flex-start" }}>
-      <View style={[mFlaeche(), { width: 250, paddingVertical: 6, overflow: "hidden" }]}>
-        {THEMEN.map((th) => {
-          const aktiv = th.id === thema;
+      {/* Liste der Themen */}
+      <View style={[mFlaeche(), { width: 290, overflow: "hidden" }]}>
+        <View style={{ padding: 10, borderBottomWidth: 1.5, borderBottomColor: M.linie }}>
+          <MKnopf titel="Neues Thema" icon="add" onPress={() => setNeu({ titel: "", kurz: "" })} />
+        </View>
+        {themen.map((th, i) => {
+          const aktiv = th.id === thema.id;
           const n = anzahl(th.id);
           return (
             <Pressable
               key={th.id}
-              onPress={() => {
-                setThema(th.id);
-                setUpload(null);
-                setFehler(null);
-              }}
-              style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, height: 36, backgroundColor: aktiv ? M.orangeSoft : z.hovered ? M.hover : "transparent" })}
+              onPress={() => setGewaehlt(th.id)}
+              style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 10, paddingVertical: 8, borderTopWidth: i ? 1 : 0, borderTopColor: M.linie, backgroundColor: aktiv ? M.orangeSoft : z.hovered ? M.hover : "transparent" })}
             >
-              <Icon name={th.icon} size={15} color={aktiv ? M.orange : M.text3} />
-              <Text style={{ flex: 1, ...(aktiv ? nf.fett : nf.text), fontSize: 14, color: aktiv ? M.text : M.text2 }} numberOfLines={1}>
-                {th.titel}
-              </Text>
-              <Text style={{ ...nf.halb, fontSize: 12.5, color: n ? M.text2 : M.text3, fontVariant: ["tabular-nums"] }}>{n || "–"}</Text>
+              <Image source={themaBild(th)} style={{ width: 52, height: 38, borderRadius: 8 }} resizeMode="cover" />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={{ ...(aktiv ? nf.fett : nf.halb), fontSize: 14, color: M.text }} numberOfLines={1}>
+                  {th.titel}
+                </Text>
+                <Text style={{ ...nf.text, fontSize: 12.5, color: M.text3 }}>{n === 1 ? "1 Video" : n ? `${n} Videos` : "noch keine Videos"}</Text>
+              </View>
             </Pressable>
           );
         })}
       </View>
 
-      <Tafel titel={t.titel} rechts={<Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>erscheint auf der Themenseite</Text>} style={{ flex: 1, minWidth: 0 }} innen={false}>
-        <View style={{ padding: 16, gap: 12, borderBottomWidth: liste.length ? 1 : 0, borderBottomColor: M.linie }}>
-          {upload ? (
-            <View style={{ gap: 12 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <Icon name="film-outline" size={16} color={M.text2} />
-                <Text style={{ flex: 1, ...nf.halb, fontSize: 14, color: M.text }} numberOfLines={1}>
-                  {upload.datei.name}
-                </Text>
-                <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>
-                  {Math.round(upload.datei.size / 1024 / 1024)} MB{upload.dauer ? ` · ${dauerText(upload.dauer)}` : ""}
-                </Text>
-              </View>
-              {upload.laeuft ? (
-                <Fortschritt anteil={upload.anteil} text="Wird hochgeladen …" onAbbrechen={() => abbruch.current.aktuell?.()} />
-              ) : (
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  <View style={{ flex: 1 }}>
-                    <MEingabe placeholder="Titel, z. B. „Rechts vor links in 2 Minuten“" value={upload.titel} onChangeText={(titel) => setUpload({ ...upload, titel })} maxLength={80} />
-                  </View>
-                  <MKnopf titel="Verwerfen" art="leise" onPress={() => setUpload(null)} />
-                  <MKnopf titel="Hochladen" onPress={hochladen} />
-                </View>
-              )}
-            </View>
-          ) : (
-            <Ablage onDatei={datei} />
-          )}
-          {fehler ? <Hinweis art="fehler">{fehler}</Hinweis> : null}
-          {liste.length === 0 && !upload ? <Text style={{ ...nf.text, fontSize: 14, color: M.text3 }}>Noch keine Videos zu diesem Thema.</Text> : null}
-        </View>
-
-        {liste.map((v, i) => (
-          <View key={v.id} style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, paddingVertical: 10, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: M.linie }}>
-            <Text style={{ width: 16, ...nf.halb, fontSize: 13, color: M.text3, fontVariant: ["tabular-nums"] }}>{i + 1}</Text>
-            <Vorschau url={themavideoUrl(v.pfad)} breite={128} onPress={() => setAnsehen(v)} />
-            <View style={{ flex: 1, gap: 3 }}>
-              {umbenennen?.id === v.id ? (
-                <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-                  <View style={{ flex: 1 }}>
-                    <MEingabe value={umbenennen.titel} onChangeText={(titel) => setUmbenennen({ id: v.id, titel })} maxLength={80} autoFocus onSubmitEditing={umbenennenSichern} />
-                  </View>
-                  <MKnopf titel="Abbrechen" art="leise" onPress={() => setUmbenennen(null)} />
-                  <MKnopf titel="Sichern" onPress={umbenennenSichern} />
-                </View>
-              ) : (
-                <Text style={{ ...nf.halb, fontSize: 14.5, color: M.text }} numberOfLines={2}>
-                  {v.titel}
-                </Text>
-              )}
-              <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>{[dauerText(v.dauer), new Date(v.erstellt_am).toLocaleDateString("de-DE")].filter(Boolean).join(" · ")}</Text>
-            </View>
+      {/* Gewähltes Thema */}
+      <View style={{ flex: 1, minWidth: 0, gap: 20 }}>
+        <Tafel
+          titel="Thema"
+          icon="albums"
+          ton={TOENE.pink}
+          rechts={
             <View style={{ flexDirection: "row", gap: 2 }}>
-              <IconTaste icon="chevron-up" label="Nach oben" aus={i === 0} onPress={() => themavideoVerschieben(v.id, -1).catch((e) => setFehler(String(e?.message ?? e)))} />
-              <IconTaste icon="chevron-down" label="Nach unten" aus={i === liste.length - 1} onPress={() => themavideoVerschieben(v.id, 1).catch((e) => setFehler(String(e?.message ?? e)))} />
-              <IconTaste icon="create-outline" label="Umbenennen" onPress={() => setUmbenennen({ id: v.id, titel: v.titel })} />
-              <IconTaste icon="trash-outline" label="Löschen" gefahr onPress={() => loeschen(v)} />
+              <IconTaste icon="chevron-up" label="Weiter nach oben" aus={platz === 0} onPress={() => machen("ordnen", () => lernthemaVerschieben(thema.id, -1))} />
+              <IconTaste icon="chevron-down" label="Weiter nach unten" aus={platz === themen.length - 1} onPress={() => machen("ordnen", () => lernthemaVerschieben(thema.id, 1))} />
+              <IconTaste icon="trash-outline" label="Thema löschen" gefahr onPress={themaLoeschen} />
+            </View>
+          }
+        >
+          <View style={{ flexDirection: "row", gap: 20, flexWrap: "wrap" }}>
+            <View style={{ gap: 10 }}>
+              <Pressable onPress={bildAendern} accessibilityLabel="Bild ändern" style={(z: Zustand) => ({ width: 240, height: 160, borderRadius: 16, overflow: "hidden", backgroundColor: M.flaeche2, opacity: z.hovered ? 0.88 : 1 })}>
+                <Image source={themaBild(thema)} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+                <View style={{ position: "absolute", left: 10, bottom: 10, flexDirection: "row", alignItems: "center", gap: 6, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: "rgba(0,0,0,0.6)" }}>
+                  {laeuft === "bild" ? <Drehung farbe="#FFFFFF" groesse={13} /> : <Icon name="image" size={14} color="#FFFFFF" />}
+                  <Text style={{ ...nf.fett, fontSize: 13, color: "#FFFFFF" }}>{thema.bild_pfad ? "Bild ändern" : "Bild hochladen"}</Text>
+                </View>
+              </Pressable>
+              {thema.bild_pfad ? (
+                <MKnopf titel="Bild entfernen" art="leise" onPress={() => machen("bild", () => lernthemaBildEntfernen(thema.id), "Bild entfernt.")} />
+              ) : (
+                <Text style={{ width: 240, ...nf.text, fontSize: 12.5, lineHeight: 17, color: M.text3 }}>Ohne eigenes Bild zeigt die App ein Straßenfoto. JPG, PNG oder WebP bis 5 MB, am besten im Querformat.</Text>
+              )}
+            </View>
+            <View style={{ flex: 1, minWidth: 260, gap: 14 }}>
+              <Feld titel="Titel">
+                <MEingabe value={form.titel} onChangeText={(titel) => setForm({ ...form, titel })} maxLength={60} />
+              </Feld>
+              <Feld titel="Kurze Beschreibung" hinweis={`${form.kurz.length} / 160 Zeichen`}>
+                <MEingabe value={form.kurz} onChangeText={(kurz) => setForm({ ...form, kurz })} maxLength={160} placeholder="Steht unter dem Titel auf der Themenseite" />
+              </Feld>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <MKnopf titel="Speichern" icon="checkmark" onPress={() => machen("sichern", () => lernthemaAendern(thema.id, form.titel.trim(), form.kurz.trim()), "Gespeichert.")} laedt={laeuft === "sichern"} deaktiviert={!geaendert || !form.titel.trim()} />
+                {geaendert ? <MKnopf titel="Verwerfen" art="leise" onPress={() => setForm({ titel: thema.titel, kurz: thema.kurz })} /> : null}
+              </View>
             </View>
           </View>
-        ))}
-      </Tafel>
+          {ok ? <View style={{ marginTop: 14 }}><Hinweis art="ok">{ok}</Hinweis></View> : null}
+          {fehler && !neu ? <View style={{ marginTop: 14 }}><Hinweis art="fehler">{fehler}</Hinweis></View> : null}
+        </Tafel>
+
+        <Tafel titel="Videos" icon="film" ton={TOENE.lila} zusatz={liste.length ? String(liste.length) : undefined} rechts={<Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>erscheinen auf der Themenseite</Text>} innen={false}>
+          <View style={{ padding: 16, gap: 12, borderBottomWidth: liste.length ? 1 : 0, borderBottomColor: M.linie }}>
+            {upload ? (
+              <View style={{ gap: 12 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                  <Icon name="film-outline" size={16} color={M.text2} />
+                  <Text style={{ flex: 1, ...nf.halb, fontSize: 14, color: M.text }} numberOfLines={1}>
+                    {upload.datei.name}
+                  </Text>
+                  <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>
+                    {Math.round(upload.datei.size / 1024 / 1024)} MB{upload.dauer ? ` · ${dauerText(upload.dauer)}` : ""}
+                  </Text>
+                </View>
+                {upload.laeuft ? (
+                  <Fortschritt anteil={upload.anteil} text="Wird hochgeladen …" onAbbrechen={() => abbruch.current.aktuell?.()} />
+                ) : (
+                  <View style={{ flexDirection: "row", gap: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <MEingabe placeholder="Titel, z. B. „Rechts vor links in 2 Minuten“" value={upload.titel} onChangeText={(titel) => setUpload({ ...upload, titel })} maxLength={80} />
+                    </View>
+                    <MKnopf titel="Verwerfen" art="leise" onPress={() => setUpload(null)} />
+                    <MKnopf titel="Hochladen" onPress={hochladen} />
+                  </View>
+                )}
+              </View>
+            ) : (
+              <Ablage onDatei={datei} />
+            )}
+            {liste.length === 0 && !upload ? <Text style={{ ...nf.text, fontSize: 14, color: M.text3 }}>Noch keine Videos zu diesem Thema.</Text> : null}
+          </View>
+
+          {liste.map((v, i) => (
+            <View key={v.id} style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 16, paddingVertical: 10, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: M.linie }}>
+              <Text style={{ width: 16, ...nf.halb, fontSize: 13, color: M.text3, fontVariant: ["tabular-nums"] }}>{i + 1}</Text>
+              <Vorschau url={themavideoUrl(v.pfad)} breite={128} onPress={() => setAnsehen(v)} />
+              <View style={{ flex: 1, gap: 3 }}>
+                {umbenennen?.id === v.id ? (
+                  <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+                    <View style={{ flex: 1 }}>
+                      <MEingabe value={umbenennen.titel} onChangeText={(titel) => setUmbenennen({ id: v.id, titel })} maxLength={80} autoFocus onSubmitEditing={umbenennenSichern} />
+                    </View>
+                    <MKnopf titel="Abbrechen" art="leise" onPress={() => setUmbenennen(null)} />
+                    <MKnopf titel="Sichern" onPress={umbenennenSichern} />
+                  </View>
+                ) : (
+                  <Text style={{ ...nf.halb, fontSize: 14.5, color: M.text }} numberOfLines={2}>
+                    {v.titel}
+                  </Text>
+                )}
+                <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>{[dauerText(v.dauer), new Date(v.erstellt_am).toLocaleDateString("de-DE")].filter(Boolean).join(" · ")}</Text>
+              </View>
+              <View style={{ flexDirection: "row", gap: 2 }}>
+                <IconTaste icon="chevron-up" label="Nach oben" aus={i === 0} onPress={() => themavideoVerschieben(v.id, -1).catch((e) => setFehler(String(e?.message ?? e)))} />
+                <IconTaste icon="chevron-down" label="Nach unten" aus={i === liste.length - 1} onPress={() => themavideoVerschieben(v.id, 1).catch((e) => setFehler(String(e?.message ?? e)))} />
+                <IconTaste icon="create-outline" label="Umbenennen" onPress={() => setUmbenennen({ id: v.id, titel: v.titel })} />
+                <IconTaste icon="trash-outline" label="Löschen" gefahr onPress={() => videoLoeschen(v)} />
+              </View>
+            </View>
+          ))}
+        </Tafel>
+      </View>
       <Abspielen url={ansehen ? themavideoUrl(ansehen.pfad) : null} titel={ansehen?.titel ?? ""} onSchliessen={() => setAnsehen(null)} />
+      {neuFenster}
     </View>
   );
 }
@@ -390,8 +574,10 @@ function FragenVideos() {
 }
 
 export function VideoVerwaltung() {
-    const [art, setArt] = useState<"themen" | "fragen">("themen");
+  const [art, setArt] = useState<"themen" | "fragen">("themen");
   const zahlen = useVideoZahlen();
+  // Ohne Fragen in der App gibt es nur Themen und ihre Videos.
+  if (!FRAGEN_AKTIV) return <ThemenVideos />;
   return (
     <View style={{ gap: 16 }}>
       <View style={{ borderBottomWidth: 1, borderBottomColor: M.linie }}>
@@ -399,7 +585,7 @@ export function VideoVerwaltung() {
           wert={art}
           onWechsel={setArt}
           optionen={[
-            { id: "themen", titel: "Videos zu Themen", zahl: zahlen.themen },
+            { id: "themen", titel: "Themen & Videos", zahl: zahlen.themen },
             { id: "fragen", titel: "Erklärvideos zu Fragen", zahl: zahlen.fragen },
           ]}
         />
