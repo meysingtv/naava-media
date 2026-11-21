@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Image, Pressable, ScrollView, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { router } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -25,7 +26,7 @@ import { themaBild, useLernthemen } from "@/lib/lernthemen";
 import { useLernvideos } from "@/lib/lernvideos";
 import { tageBis, terminDatum } from "@/lib/pruefungstag";
 import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, serieAktuell, useStand } from "@/lib/stand";
-import { RAND, schrift } from "@/lib/theme";
+import { mitDeckkraft, RAND, schrift } from "@/lib/theme";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 const ZITATE: [string, string][] = [
@@ -72,7 +73,7 @@ function HomeLila() {
   const tage = termin ? tageBis(termin) : null;
   const kommend = tage !== null && tage >= 0 ? tage : null;
   const glockePunkt = !stand.erinnerung.an;
-  const innen = Math.min(width, 560) - 2 * LILA_RAND;
+  const heldH = Math.round(Math.min(width, 560) * (576 / 1100));
 
   const countdown =
     kommend === null
@@ -87,8 +88,8 @@ function HomeLila() {
     <View style={{ flex: 1, backgroundColor: l.grund }}>
       {fokus ? <StatusBar style={l.hell ? "dark" : "light"} /> : null}
       <ScrollView {...tourBlatt} contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: inhaltUnten + 8, paddingHorizontal: LILA_RAND, width: "100%", maxWidth: 560, alignSelf: "center" }} showsVerticalScrollIndicator={false}>
-        {/* Begrüßung */}
-        <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+        {/* Begrüßung (über dem Bild) */}
+        <View style={{ flexDirection: "row", alignItems: "flex-start", zIndex: 2 }}>
           <Text style={{ flex: 1, ...lilaSchrift.titel, fontSize: 40, lineHeight: 43, letterSpacing: -0.6, color: l.tinte }} numberOfLines={2}>
             {GRUSS_LILA[zeit]},{"\n"}
             <Text style={{ color: l.lila }}>{vorname}</Text>!
@@ -117,13 +118,15 @@ function HomeLila() {
           </Pressable>
         </View>
 
-        {/* Bild mit der Figur */}
-        <View style={{ marginTop: 14, borderRadius: 22, overflow: "hidden", borderWidth: 1.5, borderColor: l.linie }}>
-          <Image source={FOTOS.heldAuto} style={{ width: "100%", height: Math.round((innen - 3) * (576 / 1100)) }} resizeMode="cover" accessibilityLabel="Die Figur sagt: Mach heute einen Schritt näher zum Führerschein!" />
+        {/* Bild mit der Figur: über die ganze Breite, oben und unten weich in den Grund */}
+        <View style={{ marginHorizontal: -LILA_RAND, marginTop: -6, height: heldH }}>
+          <Image source={FOTOS.heldAuto} style={{ width: "100%", height: heldH }} resizeMode="cover" accessibilityLabel="Die Figur sagt: Mach heute einen Schritt näher zum Führerschein!" />
+          <LinearGradient pointerEvents="none" colors={[l.grund, mitDeckkraft(l.grund, 0.6), mitDeckkraft(l.grund, 0)]} locations={[0, 0.08, 0.22]} style={{ position: "absolute", top: -1, left: 0, right: 0, height: heldH * 0.45 }} />
+          <LinearGradient pointerEvents="none" colors={[mitDeckkraft(l.grund, 0), mitDeckkraft(l.grund, 0.75), l.grund]} locations={[0, 0.55, 1]} style={{ position: "absolute", bottom: -1, left: 0, right: 0, height: heldH * 0.22 }} />
         </View>
 
-        {/* Countdown */}
-        <LilaKarte onPress={() => router.push("/pruefungstermin")} label={countdown.titel} style={{ marginTop: 14 }}>
+        {/* Countdown – ragt ins Bild hinein */}
+        <LilaKarte onPress={() => router.push("/pruefungstermin")} label={countdown.titel} style={{ marginTop: -20 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 13, paddingHorizontal: 14 }}>
             <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: l.lilaZart, alignItems: "center", justifyContent: "center" }}>
               <Icon name="calendar-outline" size={25} color={l.lila} />
