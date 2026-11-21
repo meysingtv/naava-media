@@ -156,6 +156,8 @@ function Navigation() {
         {/* Registrieren und Anmelden gehen auch aus dem Gastmodus heraus */}
         <Stack.Screen name="registrieren" />
         <Stack.Screen name="anmelden" />
+        {/* Neuer Start mit der Figur – bleibt nach der Anmeldung offen, bis „Alles bereit“ gezeigt ist */}
+        <Stack.Screen name="start" options={{ animation: "fade", gestureEnabled: false }} />
         {/* Rechtstexte – auch ohne Anmeldung erreichbar (Willkommen, Registrieren, Browser) */}
         <Stack.Screen name="impressum" />
         <Stack.Screen name="datenschutz" />

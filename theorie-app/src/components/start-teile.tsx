@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
-import { Pressable, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { ActivityIndicator, Image, Pressable, Text, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient as ExpoVerlauf } from "expo-linear-gradient";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 
 import { Verkehrszeichen } from "@/components/zeichen";
 import type { ZeichenKey } from "@/lib/fragen";
+import { Icon } from "@/components/icon";
 import { tippen } from "@/lib/haptik";
 
 // Bausteine für den Start (Willkommen, Fragen vor dem Konto): eigene,
@@ -35,23 +36,40 @@ export const startSchrift = {
   textHalb: { fontFamily: "Inter_600SemiBold" },
 } as const;
 
-type KnopfArt = "hell" | "dunkel" | "lila";
+/** Helle Seiten mit der Figur (Fragen vor dem Konto). */
+export const HELL = {
+  grund: "#F4F2FC",
+  tinte: "#2E2650",
+  tinte2: "#6E6888",
+  tinte3: "#A19CB6",
+  blase: "#E8E5F4",
+  karte: "#FFFFFF",
+  linie: "#E1DDF0",
+  spur: "#E3E0EF",
+  rot: "#E5484D",
+} as const;
 
-const KNOPF: Record<KnopfArt, { flaeche: string; kante: string; text: string }> = {
+type KnopfArt = "hell" | "dunkel" | "lila" | "zart";
+
+const KNOPF: Record<KnopfArt | "aus", { flaeche: string; kante: string; text: string }> = {
   hell: { flaeche: START.knopfHell, kante: START.knopfHellKante, text: START.knopfHellText },
   dunkel: { flaeche: START.knopfDunkel, kante: START.knopfDunkelKante, text: START.text },
   lila: { flaeche: START.lila, kante: START.lilaKante, text: "#FFFFFF" },
+  zart: { flaeche: "#E9E6F5", kante: "#CCC6E0", text: HELL.tinte },
+  aus: { flaeche: "#E7E4F0", kante: "#D2CEE0", text: "#A9A4BE" },
 };
 
 const KANTE = 5;
 
 /** Großer, runder Knopf mit fester Kante unten – gedrückt sinkt er ein. */
-export function StartKnopf({ titel, art = "hell", onPress, deaktiviert, style }: { titel: string; art?: KnopfArt; onPress: () => void; deaktiviert?: boolean; style?: StyleProp<ViewStyle> }) {
-  const k = KNOPF[art];
+export function StartKnopf({ titel, art = "hell", onPress, deaktiviert, laedt, style }: { titel: string; art?: KnopfArt; onPress: () => void; deaktiviert?: boolean; laedt?: boolean; style?: StyleProp<ViewStyle> }) {
+  // Auf hellen Seiten sind gesperrte Knöpfe grau statt durchsichtig.
+  const grau = deaktiviert && (art === "lila" || art === "zart");
+  const k = KNOPF[grau ? "aus" : art];
   return (
     <Pressable
       onPress={() => {
-        if (deaktiviert) return;
+        if (deaktiviert || laedt) return;
         tippen();
         onPress();
       }}
@@ -62,10 +80,10 @@ export function StartKnopf({ titel, art = "hell", onPress, deaktiviert, style }:
       {({ pressed }) => {
         const tief = pressed && !deaktiviert ? KANTE - 1 : 0;
         return (
-          <View style={{ flex: 1, justifyContent: "flex-end", opacity: deaktiviert ? 0.45 : 1 }}>
+          <View style={{ flex: 1, justifyContent: "flex-end", opacity: deaktiviert && !grau ? 0.45 : 1 }}>
             <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 58, borderRadius: 29, backgroundColor: k.kante }} />
             <View style={{ height: 58, borderRadius: 29, backgroundColor: k.flaeche, alignItems: "center", justifyContent: "center", transform: [{ translateY: tief - KANTE }] }}>
-              <Text style={{ ...startSchrift.titel, fontSize: 23, letterSpacing: -0.2, color: k.text }}>{titel}</Text>
+              {laedt ? <ActivityIndicator color={k.text} /> : <Text style={{ ...startSchrift.titel, fontSize: 23, letterSpacing: -0.2, color: k.text }}>{titel}</Text>}
             </View>
           </View>
         );
@@ -234,5 +252,107 @@ export function StartRechtsHinweis({ onNutzung, onDatenschutz }: { onNutzung: ()
       </Text>{" "}
       gelesen hast.
     </Text>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Figur und helle Frageseiten
+// ---------------------------------------------------------------------------
+
+export const FIGUR = {
+  grund: require("../../assets/images/figur/grund.png"),
+  neugierig: require("../../assets/images/figur/neugierig.png"),
+  winken: require("../../assets/images/figur/winken.png"),
+  freude: require("../../assets/images/figur/freude.png"),
+  denken: require("../../assets/images/figur/denken.png"),
+} satisfies Record<string, ImageSourcePropType>;
+
+export type FigurName = keyof typeof FIGUR;
+
+/** Oben: Zurück und Fortschritt. */
+export function FrageKopf({ anteil, onZurueck }: { anteil: number; onZurueck?: () => void }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 14, height: 44 }}>
+      {onZurueck ? (
+        <Pressable onPress={onZurueck} hitSlop={12} accessibilityRole="button" accessibilityLabel="Zurück" style={{ width: 32 }}>
+          <Icon name="arrow-back" size={24} color={HELL.tinte} />
+        </Pressable>
+      ) : (
+        <View style={{ width: 32 }} />
+      )}
+      <View style={{ flex: 1, height: 14, borderRadius: 7, backgroundColor: HELL.spur, overflow: "hidden" }}>
+        <View style={{ width: `${Math.max(8, Math.min(100, anteil * 100))}%`, height: "100%", borderRadius: 7, backgroundColor: START.lila }} />
+      </View>
+    </View>
+  );
+}
+
+/** Figur links, daneben eine Sprechblase mit der Frage. */
+export function FigurBlase({ figur, teile }: { figur: FigurName; teile: (string | [string])[] }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+      <Image source={FIGUR[figur]} style={{ width: 82, height: 82 }} resizeMode="contain" />
+      <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
+        <View style={{ width: 14, height: 14, backgroundColor: HELL.blase, transform: [{ rotate: "45deg" }], marginRight: -7, borderRadius: 2 }} />
+        <View style={{ flex: 1, backgroundColor: HELL.blase, borderRadius: 22, paddingVertical: 14, paddingHorizontal: 16 }}>
+          <Text style={{ ...startSchrift.titel, fontSize: 28, lineHeight: 30, letterSpacing: -0.4, color: HELL.tinte }}>
+            {teile.map((t, i) =>
+              typeof t === "string" ? (
+                t
+              ) : (
+                <Text key={i} style={{ color: START.lila }}>
+                  {t[0]}
+                </Text>
+              ),
+            )}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+/** Große Figur in der Mitte (z. B. zur Begrüßung oder am Ende). */
+export function GrosseFigur({ figur, groesse = 220 }: { figur: FigurName; groesse?: number }) {
+  return <Image source={FIGUR[figur]} style={{ width: groesse, height: groesse, alignSelf: "center" }} resizeMode="contain" />;
+}
+
+/** Wahl-Karte mit Kante; gewählt mit lila Rand. */
+export function WahlKarte({ aktiv, onPress, children, style, label }: { aktiv: boolean; onPress: () => void; children: ReactNode; style?: StyleProp<ViewStyle>; label: string }) {
+  return (
+    <Pressable
+      onPress={() => {
+        tippen();
+        onPress();
+      }}
+      accessibilityRole="radio"
+      accessibilityState={{ selected: aktiv }}
+      accessibilityLabel={label}
+      style={({ pressed }) => [
+        {
+          backgroundColor: aktiv ? "#F1EEFF" : HELL.karte,
+          borderRadius: 20,
+          borderWidth: 2,
+          borderBottomWidth: 5,
+          borderColor: aktiv ? START.lila : HELL.linie,
+          transform: [{ translateY: pressed ? 2 : 0 }],
+        },
+        style,
+      ]}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
+/** Rahmen eines Handys für die Vorschau-Bilder der Willkommens-Seiten. */
+export function VorschauRahmen({ breite, hoehe, children }: { breite: number; hoehe: number; children: ReactNode }) {
+  return (
+    <View style={{ width: breite, height: hoehe, alignSelf: "center", overflow: "hidden" }}>
+      <View style={{ position: "absolute", top: 0, left: 0, right: 0, height: hoehe + 60, borderRadius: 46, borderWidth: 7, borderColor: "#2C2C40", backgroundColor: "#1A1A28", overflow: "hidden", padding: 18 }}>
+        {children}
+      </View>
+      <ExpoVerlauf colors={["rgba(11,12,22,0)", START.grund]} locations={[0, 0.9]} style={{ position: "absolute", left: -10, right: -10, bottom: 0, height: hoehe * 0.32 }} pointerEvents="none" />
+    </View>
   );
 }

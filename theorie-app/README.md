@@ -71,6 +71,18 @@ in Expo Go) lässt sich auf der Seite nur auswählen, nicht wirklich wechseln. E
 drei Ordner legen, in `app.json` beim Plugin eintragen und in
 `src/lib/app-icon.ts` ergänzen.
 
+## Start (Willkommen, Fragen, Konto)
+
+Auf dem Handy beginnt die App mit vier Willkommens-Seiten zum Wischen
+(`app/willkommen.tsx`, eigene lila Farbwelt in `components/start-teile.tsx`,
+Schrift Barlow Condensed unter OFL in `assets/fonts`). Danach fragt die Figur
+(`assets/images/figur`) nacheinander: hell oder dunkel, Name, Fahrschüler oder
+Fahrlehrer, Bundesland, Klasse, Prüfungstermin und Erinnerungen
+(`app/start.tsx`). Am Ende E-Mail und Code – damit entsteht das Konto. „Ich
+habe schon ein Konto“ führt direkt zu E-Mail und Code (`/start?modus=anmelden`).
+Ohne Konto geht es über „Erst mal ohne Konto weiter“. Am PC bleibt die
+zweigeteilte Registrierung.
+
 ## Einrichtung und App-Tour
 
 Nach der Registrierung kommt nicht sofort die Startseite, sondern die
