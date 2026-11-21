@@ -15,7 +15,7 @@ export async function erinnerungPlanen(an: boolean, stunde: number, minute: numb
     await Notifications.setNotificationChannelAsync(KANAL, {
       name: "Tägliche Erinnerung",
       importance: Notifications.AndroidImportance.DEFAULT,
-      lightColor: "#FC5B0E",
+      lightColor: "#8C7AE6",
     });
   }
 

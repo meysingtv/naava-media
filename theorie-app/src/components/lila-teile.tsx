@@ -30,7 +30,7 @@ const HELL_LILA: Lila = {
   hell: true,
   grund: "#F4F2FC",
   karte: "#FFFFFF",
-  linie: "#E3DFF1",
+  linie: "#E1DDF0",
   kante: "#D8D3EA",
   tinte: "#2E2650",
   tinte2: "#6E6888",

@@ -282,7 +282,7 @@ export function HauptKnopf({ titel, icon, onPress, deaktiviert, style }: { titel
     >
       <View style={{ flex: 1, borderRadius: 28, overflow: "hidden" }}>
         {deaktiviert ? (
-          <View style={[FUELLEN, { backgroundColor: f.hell ? "#E6E1D8" : "rgba(255,255,255,0.08)", borderWidth: 1, borderColor: f.hell ? "rgba(20,23,27,0.06)" : "rgba(255,255,255,0.08)", borderRadius: 28 }]} />
+          <View style={[FUELLEN, { backgroundColor: f.hell ? "#E7E4F0" : "rgba(255,255,255,0.08)", borderWidth: 1, borderColor: f.hell ? "rgba(20,23,27,0.06)" : "rgba(255,255,255,0.08)", borderRadius: 28 }]} />
         ) : (
           <>
             <LinearGradient colors={verlauf.knopf} locations={[0, 0.5, 1]} style={FUELLEN} />

@@ -402,9 +402,9 @@ function DarstellungKachel({ art, aktiv, onPress }: { art: "dunkel" | "hell"; ak
       accessibilityRole="button"
       accessibilityState={{ selected: aktiv }}
       accessibilityLabel={dunkel ? "Nachtfahrt, dunkel" : "Tagfahrt, hell"}
-      style={({ pressed }) => [{ flex: 1, borderRadius: 22, transform: [{ scale: pressed ? 0.97 : 1 }] }, aktiv ? leuchten("#FC5B0E", f.hell ? 0.3 : 0.45, 12, 3) : null]}
+      style={({ pressed }) => [{ flex: 1, borderRadius: 22, transform: [{ scale: pressed ? 0.97 : 1 }] }, aktiv ? leuchten("#8C7AE6", f.hell ? 0.3 : 0.45, 12, 3) : null]}
     >
-      <View style={{ borderRadius: 22, overflow: "hidden", borderWidth: 2, borderColor: aktiv ? "#FC5B0E" : f.hell ? "rgba(20,23,27,0.08)" : "rgba(255,255,255,0.1)" }}>
+      <View style={{ borderRadius: 22, overflow: "hidden", borderWidth: 2, borderColor: aktiv ? "#8C7AE6" : f.hell ? "rgba(20,23,27,0.08)" : "rgba(255,255,255,0.1)" }}>
         {/* Mini-Vorschau der App in dieser Darstellung */}
         <LinearGradient colors={dunkel ? ["#1A2230", "#07090C"] : ["#FFFFFF", "#ECE6DC"]} style={{ height: 96, padding: 12, gap: 6 }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
@@ -422,7 +422,7 @@ function DarstellungKachel({ art, aktiv, onPress }: { art: "dunkel" | "hell"; ak
             <Text style={{ ...schrift.textHalb, fontSize: 14.5, color: f.text }}>{dunkel ? "Nachtfahrt" : "Tagfahrt"}</Text>
             <Text style={{ ...schrift.text, fontSize: 12, color: f.text3 }}>{dunkel ? "Dunkel" : "Hell"}</Text>
           </View>
-          <View style={{ width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: aktiv ? "#FC5B0E" : "transparent", borderWidth: aktiv ? 0 : 2, borderColor: f.hell ? "rgba(20,23,27,0.2)" : "rgba(255,255,255,0.25)" }}>
+          <View style={{ width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: aktiv ? "#8C7AE6" : "transparent", borderWidth: aktiv ? 0 : 2, borderColor: f.hell ? "rgba(20,23,27,0.2)" : "rgba(255,255,255,0.25)" }}>
             {aktiv ? <Icon name="checkmark" size={14} color="#FFFFFF" /> : null}
           </View>
         </View>

@@ -41,9 +41,9 @@ export function Instrumententafel({ hoehe, lichtY, children }: { hoehe: number; 
       <Svg width={width} height={hoehe} style={{ position: "absolute" }}>
         <Defs>
           <RadialGradient id="tafelLicht" cx={width / 2} cy={lichtY} r={width * 0.72} gradientUnits="userSpaceOnUse">
-            <Stop offset="0" stopColor={f.hell ? "#FFFFFF" : "#FC5B0E"} stopOpacity={f.hell ? 1 : 0.2} />
-            <Stop offset="0.45" stopColor={f.hell ? "#FFFFFF" : "#FC5B0E"} stopOpacity={f.hell ? 0.55 : 0.06} />
-            <Stop offset="1" stopColor={f.hell ? "#FFFFFF" : "#FC5B0E"} stopOpacity={0} />
+            <Stop offset="0" stopColor={f.hell ? "#FFFFFF" : "#8C7AE6"} stopOpacity={f.hell ? 1 : 0.2} />
+            <Stop offset="0.45" stopColor={f.hell ? "#FFFFFF" : "#8C7AE6"} stopOpacity={f.hell ? 0.55 : 0.06} />
+            <Stop offset="1" stopColor={f.hell ? "#FFFFFF" : "#8C7AE6"} stopOpacity={0} />
           </RadialGradient>
           <RadialGradient id="tafelKante" cx={width / 2} cy={lichtY} r={width * 0.95} gradientUnits="userSpaceOnUse">
             <Stop offset="0.55" stopColor={f.hell ? "#D9D2C6" : "#000000"} stopOpacity={0} />

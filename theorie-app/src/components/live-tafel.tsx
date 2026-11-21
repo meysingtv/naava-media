@@ -95,7 +95,7 @@ function Chip({ titel, aktiv, onPress }: { titel: string; aktiv: boolean; onPres
         paddingHorizontal: 14,
         borderRadius: 17,
         justifyContent: "center",
-        backgroundColor: aktiv ? "rgba(252,91,14,0.2)" : "rgba(255,255,255,0.08)",
+        backgroundColor: aktiv ? "rgba(140,122,230,0.2)" : "rgba(255,255,255,0.08)",
         borderWidth: 1,
         borderColor: aktiv ? farben.orange : "rgba(255,255,255,0.12)",
         opacity: pressed ? 0.75 : 1,

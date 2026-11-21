@@ -85,7 +85,7 @@ function SchilderJagdHandy() {
         <GlasKarte style={{ borderRadius: 26 }}>
           <View style={{ padding: 18, gap: 16 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-              <View style={{ width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center", backgroundColor: mitDeckkraft(komplett ? "#4ED053" : "#FC5B0E", f.hell ? 0.1 : 0.15) }}>
+              <View style={{ width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center", backgroundColor: mitDeckkraft(komplett ? "#4ED053" : "#8C7AE6", f.hell ? 0.1 : 0.15) }}>
                 {komplett ? <TrophyIcon size={24} color={gruen} weight="fill" /> : <CrosshairIcon size={24} color={f.orange} weight="fill" />}
               </View>
               <View style={{ flex: 1 }}>
@@ -132,7 +132,7 @@ function SchilderJagdHandy() {
               })}
             </View>
 
-            <Pressable onPress={scannen} accessibilityRole="button" accessibilityLabel="Schild scannen" style={({ pressed }) => [{ height: 54, borderRadius: 27, transform: [{ scale: pressed ? 0.98 : 1 }] }, leuchten("#FC5B0E", f.hell ? 0.3 : 0.45, 14, 4)]}>
+            <Pressable onPress={scannen} accessibilityRole="button" accessibilityLabel="Schild scannen" style={({ pressed }) => [{ height: 54, borderRadius: 27, transform: [{ scale: pressed ? 0.98 : 1 }] }, leuchten("#8C7AE6", f.hell ? 0.3 : 0.45, 14, 4)]}>
               <LinearGradient colors={verlauf.knopf} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ flex: 1, borderRadius: 27, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
                 <CameraIcon size={22} color="#FFFFFF" weight="fill" />
                 <Text style={{ ...schrift.textFett, fontSize: 16.5, color: "#FFFFFF" }}>Schild scannen</Text>
@@ -278,7 +278,7 @@ function SchilderJagdHandy() {
                 </View>
               </View>
               {stand.schilder[offen.key] ? (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 28, paddingHorizontal: 12, borderRadius: 14, backgroundColor: mitDeckkraft("#FC5B0E", f.hell ? 0.1 : 0.16) }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 28, paddingHorizontal: 12, borderRadius: 14, backgroundColor: mitDeckkraft("#8C7AE6", f.hell ? 0.1 : 0.16) }}>
                   <CheckCircleIcon size={15} color={f.orange} weight="fill" />
                   <Text style={{ ...schrift.textHalb, fontSize: 13, color: f.orange }}>Gefunden am {datumLang(new Date(stand.schilder[offen.key]))}</Text>
                 </View>
@@ -297,7 +297,7 @@ function SchilderJagdHandy() {
                 </T>
               </View>
               <View style={{ alignSelf: "stretch", flexDirection: "row", alignItems: "flex-start", gap: 12, padding: 14, borderRadius: 18, backgroundColor: f.hell ? "#F6F2EC" : "rgba(255,255,255,0.05)" }}>
-                <View style={{ width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: mitDeckkraft("#FC5B0E", f.hell ? 0.1 : 0.15) }}>
+                <View style={{ width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: mitDeckkraft("#8C7AE6", f.hell ? 0.1 : 0.15) }}>
                   <MapPinIcon size={18} color={f.orange} weight="fill" />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>

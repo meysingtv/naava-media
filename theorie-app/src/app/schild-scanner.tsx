@@ -60,7 +60,7 @@ function RundTaste({ icon, label, onPress, gross, aktiv }: { icon: IconName; lab
       accessibilityLabel={label}
     >
       {({ pressed }) => (
-        <Glas interaktiv toenung={aktiv ? "rgba(252,91,14,0.55)" : undefined} style={{ width: g, height: g, borderRadius: g / 2, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
+        <Glas interaktiv toenung={aktiv ? "rgba(140,122,230,0.55)" : undefined} style={{ width: g, height: g, borderRadius: g / 2, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
           <Icon name={icon} size={gross ? 22 : 19} color="#FFFFFF" weight="semibold" />
         </Glas>
       )}

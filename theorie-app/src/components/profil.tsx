@@ -114,7 +114,7 @@ export function Fuehrerscheinweg({
         style,
       ]}
     >
-      {f.hell ? null : <LinearGradient colors={["rgba(252,91,14,0.10)", "rgba(252,91,14,0)"]} locations={[0, 0.6]} style={FUELLEN} />}
+      {f.hell ? null : <LinearGradient colors={["rgba(140,122,230,0.10)", "rgba(140,122,230,0)"]} locations={[0, 0.6]} style={FUELLEN} />}
       <View style={{ flexDirection: "row", alignItems: "flex-start", paddingHorizontal: 18, paddingTop: 16 }}>
         <View style={{ flex: 1, gap: 3 }}>
           <Text style={{ ...schrift.titelFett, fontSize: 17, color: f.text }}>Dein Weg zum Führerschein</Text>
@@ -135,7 +135,7 @@ export function Fuehrerscheinweg({
           {meilensteine.map((s, k) => {
             const p = punktBei(lage[k]);
             return s.erreicht ? (
-              <Circle key={k} cx={p.x} cy={p.y} r={10} fill="#FC5B0E" stroke="#FFFFFF" strokeWidth={2} />
+              <Circle key={k} cx={p.x} cy={p.y} r={10} fill="#8C7AE6" stroke="#FFFFFF" strokeWidth={2} />
             ) : (
               <Circle key={k} cx={p.x} cy={p.y} r={9} fill={f.flaeche} stroke={f.hell ? "#B9BEC5" : "#5C636C"} strokeWidth={2} />
             );
@@ -170,8 +170,8 @@ export function Fuehrerscheinweg({
         })}
 
         {/* Das eigene Auto */}
-        <View pointerEvents="none" style={[{ position: "absolute", left: auto.x - 18, top: auto.y - 18, width: 36, height: 36, borderRadius: 18 }, leuchten("#FC5B0E", 0.6, 12, 0)]}>
-          <LinearGradient colors={["#FF9A3C", "#FC5B0E", "#E4470A"]} style={{ flex: 1, borderRadius: 18, borderWidth: 2, borderColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
+        <View pointerEvents="none" style={[{ position: "absolute", left: auto.x - 18, top: auto.y - 18, width: 36, height: 36, borderRadius: 18 }, leuchten("#8C7AE6", 0.6, 12, 0)]}>
+          <LinearGradient colors={["#FF9A3C", "#8C7AE6", "#E4470A"]} style={{ flex: 1, borderRadius: 18, borderWidth: 2, borderColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
             <Icon name="car" sf="car.fill" size={17} color="#FFFFFF" />
           </LinearGradient>
         </View>
@@ -203,7 +203,7 @@ export function Medaillen({ medaillen, onPress, umbrechen }: { medaillen: Medail
           style={({ pressed }) => ({ width: 96, alignItems: "center", gap: 8, paddingTop: 6, transform: [{ scale: pressed ? 0.95 : 1 }] })}
         >
           {m.erreicht ? (
-            <View style={[{ width: 70, height: 70, borderRadius: 35 }, leuchten("#FC5B0E", f.hell ? 0.3 : 0.5, 12, 3)]}>
+            <View style={[{ width: 70, height: 70, borderRadius: 35 }, leuchten("#8C7AE6", f.hell ? 0.3 : 0.5, 12, 3)]}>
               <LinearGradient colors={["#FFC065", "#FC6A14", "#D8430A"]} locations={[0, 0.55, 1]} style={{ flex: 1, borderRadius: 35, alignItems: "center", justifyContent: "center" }}>
                 <View style={{ position: "absolute", top: 4, left: 4, right: 4, bottom: 4, borderRadius: 31, borderWidth: 1.5, borderColor: "rgba(255,255,255,0.45)" }} />
                 <Icon name={m.icon} size={29} color="#FFFFFF" />

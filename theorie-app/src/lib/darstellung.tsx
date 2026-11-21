@@ -64,24 +64,25 @@ export const NACHT: Farbwelt = {
 
 export const TAG: Farbwelt = {
   hell: true,
-  grund: "#F4F1EC",
+  // Farben der lila Vorlage
+  grund: "#F4F2FC",
   flaeche: "#FFFFFF",
-  flaeche2: "#F1EDE6",
-  flaeche3: "#E3DED5",
-  linie: "rgba(28,22,14,0.08)",
-  linieStark: "rgba(28,22,14,0.14)",
-  text: "#14171B",
-  text2: "#4D535B",
-  text3: "#878C94",
-  orange: "#F2540A",
-  orangeSoft: "rgba(242,84,10,0.11)",
-  orangeLinie: "rgba(242,84,10,0.45)",
+  flaeche2: "#EEEBFB",
+  flaeche3: "#E1DDF0",
+  linie: "#E1DDF0",
+  linieStark: "#D2CDE6",
+  text: "#2E2650",
+  text2: "#6E6888",
+  text3: "#9A95B0",
+  orange: "#8C7AE6",
+  orangeSoft: "rgba(140,122,230,0.14)",
+  orangeLinie: "rgba(140,122,230,0.5)",
   gruen: "#23A548",
   gruenSoft: "rgba(35,165,72,0.12)",
-  himmel: ["#FFFFFF", "#F3EFE8"],
+  himmel: ["#FFFFFF", "#F1EEFA"],
   mast: ["#C4C9CF", "#9CA3AB"],
   schein: "rgba(255,255,255,0)",
-  schatten: "rgba(60,44,24,0.18)",
+  schatten: "rgba(46,38,80,0.16)",
 };
 
 type Kontext = {
