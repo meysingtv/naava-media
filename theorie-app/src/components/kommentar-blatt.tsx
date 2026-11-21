@@ -127,9 +127,9 @@ function Zeile({
                     height: 26,
                     paddingHorizontal: 8,
                     borderRadius: 13,
-                    backgroundColor: meins ? "rgba(124,77,255,0.2)" : c.chip,
+                    backgroundColor: meins ? "rgba(138,95,255,0.2)" : c.chip,
                     borderWidth: 1,
-                    borderColor: meins ? "rgba(124,77,255,0.6)" : "transparent",
+                    borderColor: meins ? "rgba(138,95,255,0.6)" : "transparent",
                   }}
                 >
                   <Text style={{ fontSize: 13 }}>{emoji}</Text>
@@ -164,7 +164,7 @@ function Zeile({
                     borderRadius: 18,
                     alignItems: "center",
                     justifyContent: "center",
-                    backgroundColor: k.meine_reaktion === emoji ? "rgba(124,77,255,0.25)" : pressed ? c.gedrueckt : "transparent",
+                    backgroundColor: k.meine_reaktion === emoji ? "rgba(138,95,255,0.25)" : pressed ? c.gedrueckt : "transparent",
                     transform: [{ scale: pressed ? 1.2 : 1 }],
                   })}
                 >

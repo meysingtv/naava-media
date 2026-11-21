@@ -12,9 +12,9 @@ import { tippen } from "@/lib/haptik";
 // lila Farbwelt mit schmaler, kräftiger Überschrift und Knöpfen mit Kante.
 
 export const START = {
-  lila: "#7C4DFF",
-  lilaHell: "#B794FF",
-  lilaKante: "#5B2ED6",
+  lila: "#8A5FFF",
+  lilaHell: "#C0A6FF",
+  lilaKante: "#6A3FE6",
   lilaTief: "#1F1B45",
   lilaGeraet: "#35305F",
   grund: "#0B0C16",

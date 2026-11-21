@@ -35,8 +35,8 @@ const HELL_LILA: Lila = {
   tinte: "#2E2650",
   tinte2: "#6E6888",
   tinte3: "#A19CB6",
-  lila: "#7C4DFF",
-  lilaKante: "#5B2ED6",
+  lila: "#8A5FFF",
+  lilaKante: "#6A3FE6",
   lilaZart: "#EEE6FF",
   lilaFlaeche: "#F4EEFF",
   spur: "#E7E3F4",
@@ -51,8 +51,8 @@ const DUNKEL_LILA: Lila = {
   tinte: "#FFFFFF",
   tinte2: "#C9C6DA",
   tinte3: "#8E8BA3",
-  lila: "#9466FF",
-  lilaKante: "#5B2ED6",
+  lila: "#9B74FF",
+  lilaKante: "#6A3FE6",
   lilaZart: "#2A1F55",
   lilaFlaeche: "#25194D",
   spur: "#24253A",
@@ -114,9 +114,9 @@ export function LilaBanner({ titel, unter, icon = "play", onPress }: { titel: st
       accessibilityLabel={titel}
       style={({ pressed }) => ({ borderRadius: 20, backgroundColor: l.lilaKante, paddingBottom: pressed ? 2 : 5, marginTop: pressed ? 3 : 0 })}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 14, borderRadius: 20, backgroundColor: "#7C4DFF", paddingVertical: 14, paddingHorizontal: 16 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 14, borderRadius: 20, backgroundColor: "#8A5FFF", paddingVertical: 14, paddingHorizontal: 16 }}>
         <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
-          <Icon name={icon} size={22} color="#7C4DFF" />
+          <Icon name={icon} size={22} color="#8A5FFF" />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={{ ...lilaSchrift.titel, fontSize: 24, lineHeight: 27, color: "#FFFFFF" }}>{titel}</Text>
@@ -140,7 +140,7 @@ export function LilaKnopf({ titel, icon, onPress, style }: { titel: string; icon
       accessibilityRole="button"
       style={({ pressed }) => [{ borderRadius: 18, backgroundColor: l.lilaKante, paddingBottom: pressed ? 1 : 4, marginTop: pressed ? 3 : 0 }, style]}
     >
-      <View style={{ height: 54, borderRadius: 18, backgroundColor: "#7C4DFF", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
+      <View style={{ height: 54, borderRadius: 18, backgroundColor: "#8A5FFF", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
         <Text style={{ ...lilaSchrift.titel, fontSize: 22, color: "#FFFFFF" }}>{titel}</Text>
         {icon ? <Icon name={icon} size={20} color="#FFFFFF" /> : null}
       </View>
@@ -303,7 +303,7 @@ export function LilaSchalter({ wert, onWechsel }: { wert: boolean; onWechsel: (a
       accessibilityRole="switch"
       accessibilityState={{ checked: wert }}
       hitSlop={8}
-      style={{ width: 50, height: 30, borderRadius: 15, padding: 3, backgroundColor: wert ? "#7C4DFF" : l.spur, justifyContent: "center" }}
+      style={{ width: 50, height: 30, borderRadius: 15, padding: 3, backgroundColor: wert ? "#8A5FFF" : l.spur, justifyContent: "center" }}
     >
       <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: "#FFFFFF", alignSelf: wert ? "flex-end" : "flex-start", shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 2, shadowOffset: { width: 0, height: 1 } }} />
     </Pressable>
@@ -321,7 +321,7 @@ export function LilaChip({ text, aktiv, onPress }: { text: string; aktiv: boolea
       }}
       accessibilityRole="button"
       accessibilityState={{ selected: aktiv }}
-      style={{ height: 40, paddingHorizontal: 15, borderRadius: 13, justifyContent: "center", backgroundColor: aktiv ? "#7C4DFF" : l.karte, borderWidth: 1.5, borderColor: aktiv ? "#7C4DFF" : l.linie }}
+      style={{ height: 40, paddingHorizontal: 15, borderRadius: 13, justifyContent: "center", backgroundColor: aktiv ? "#8A5FFF" : l.karte, borderWidth: 1.5, borderColor: aktiv ? "#8A5FFF" : l.linie }}
     >
       <Text style={{ ...lilaSchrift.textHalb, fontSize: 14, color: aktiv ? "#FFFFFF" : l.tinte }}>{text}</Text>
     </Pressable>

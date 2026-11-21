@@ -61,7 +61,7 @@ function Umschalter({ wert, live, onWechsel }: { wert: Kategorie; live: boolean;
     { id: "folge_ich", titel: "Folge ich", icon: "people-outline" },
   ];
   return (
-    <View style={{ flexDirection: "row", padding: 5, borderRadius: 20, gap: 4, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: l.linie, shadowColor: "#5B2ED6", shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } }}>
+    <View style={{ flexDirection: "row", padding: 5, borderRadius: 20, gap: 4, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: l.linie, shadowColor: "#6A3FE6", shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } }}>
       {optionen.map((o) => {
         const aktiv = o.id === wert;
         return (
@@ -75,7 +75,7 @@ function Umschalter({ wert, live, onWechsel }: { wert: Kategorie; live: boolean;
             accessibilityRole="tab"
             accessibilityState={{ selected: aktiv }}
             accessibilityLabel={o.id === "live" && live ? "Live – gerade läuft ein Live" : o.titel}
-            style={{ flex: 1, height: 42, borderRadius: 15, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, backgroundColor: aktiv ? "#7C4DFF" : "transparent" }}
+            style={{ flex: 1, height: 42, borderRadius: 15, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, backgroundColor: aktiv ? "#8A5FFF" : "transparent" }}
           >
             <Icon name={o.icon} size={19} color={aktiv ? "#FFFFFF" : l.tinte} />
             <Text style={{ ...lilaSchrift.textHalb, fontSize: 15, color: aktiv ? "#FFFFFF" : l.tinte }} numberOfLines={1}>
@@ -100,7 +100,7 @@ function BildTaste({ bild, label, onPress, durchgestrichen }: { bild: ImageSourc
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => ({ width: 48, height: 48, borderRadius: 24, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center", shadowColor: "#5B2ED6", shadowOpacity: 0.14, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, transform: [{ scale: pressed ? 0.92 : 1 }] })}
+      style={({ pressed }) => ({ width: 48, height: 48, borderRadius: 24, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center", shadowColor: "#6A3FE6", shadowOpacity: 0.14, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, transform: [{ scale: pressed ? 0.92 : 1 }] })}
     >
       <Image source={bild} style={{ width: 40, height: 40 }} resizeMode="contain" />
       {durchgestrichen ? <View pointerEvents="none" style={{ position: "absolute", left: 12, top: 22, width: 24, height: 3.5, borderRadius: 2, backgroundColor: "#4B2E9E", transform: [{ rotate: "-45deg" }] }} /> : null}
@@ -432,7 +432,7 @@ export default function Clips() {
   } else if (!feed.geladen || (feed.laedt && feed.eintraege.length === 0)) {
     inhalt = (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <Lader color="#7C4DFF" />
+        <Lader color="#8A5FFF" />
       </View>
     );
   } else if (feed.eintraege.length === 0) {

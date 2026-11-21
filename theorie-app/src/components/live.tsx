@@ -272,7 +272,7 @@ export function LiveChat({
 // ---------------------------------------------------------------------------
 
 type Herz = { id: number; wert: Animated.Value; drift: number; farbe: string; groesse: number };
-const HERZ_FARBEN = ["#FF2D55", "#FF5A5F", "#7C4DFF", "#FF8A2A", "#FF4F8B"];
+const HERZ_FARBEN = ["#FF2D55", "#FF5A5F", "#8A5FFF", "#FF8A2A", "#FF4F8B"];
 
 /** Herzen auslösen (eigene und die von anderen) – `herzen` irgendwo über die Herz-Taste legen. */
 export function useHerzen(): { ausloesen: () => void; herzen: ReactNode } {

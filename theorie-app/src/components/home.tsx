@@ -454,7 +454,7 @@ export function FokusKarte({ thema, anteil, offen, style, onPress }: { thema: Th
           </Text>
           <Fortschritt anteil={anteil} />
         </View>
-        <View style={[{ width: 58, height: 58, borderRadius: 29, overflow: "hidden" }, leuchten("#7C4DFF", 0.5, 14, 4)]}>
+        <View style={[{ width: 58, height: 58, borderRadius: 29, overflow: "hidden" }, leuchten("#8A5FFF", 0.5, 14, 4)]}>
           <LinearGradient colors={verlauf.knopf} style={{ flex: 1, borderRadius: 29, alignItems: "center", justifyContent: "center" }}>
             <Icon name="play" size={24} color="#FFFFFF" />
           </LinearGradient>

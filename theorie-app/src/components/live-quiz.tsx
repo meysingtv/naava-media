@@ -368,7 +368,7 @@ export function AntwortZeile({
   // Gewählt: ruhig – oranger Rand, leicht getönt, kein Leuchten und kein Hüpfen (die Zeile bleibt gleich groß).
   const gewaehlt = zustand === "gewaehlt";
   const rand = gewaehlt ? farben.orange : zustand === "richtig" || zustand === "verpasst" ? GRUEN : zustand === "falsch" ? ROT : "rgba(255,255,255,0.1)";
-  const grund = gewaehlt ? "rgba(124,77,255,0.14)" : zustand === "richtig" ? "rgba(78,208,83,0.1)" : zustand === "falsch" ? "rgba(255,90,78,0.1)" : "rgba(255,255,255,0.06)";
+  const grund = gewaehlt ? "rgba(138,95,255,0.14)" : zustand === "richtig" ? "rgba(78,208,83,0.1)" : zustand === "falsch" ? "rgba(255,90,78,0.1)" : "rgba(255,255,255,0.06)";
   const balken = balkenFarbe ?? (zustand === "richtig" || zustand === "verpasst" ? "rgba(78,208,83,0.28)" : zustand === "falsch" ? "rgba(255,90,78,0.24)" : "rgba(255,255,255,0.1)");
 
   return (
@@ -448,7 +448,7 @@ export function Erklaerung({ text }: { text: string }) {
   if (!text) return null;
   return (
     <View style={{ flexDirection: "row", gap: 12, paddingVertical: 2 }}>
-      <LinearGradient colors={["#FFB25C", "#7C4DFF"]} style={{ width: 3, borderRadius: 2 }} />
+      <LinearGradient colors={["#FFB25C", "#8A5FFF"]} style={{ width: 3, borderRadius: 2 }} />
       <View style={{ flex: 1, gap: 4 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
           <Icon name="bulb" size={13} color="#FFB27A" />
@@ -525,9 +525,9 @@ export function RanglistenZeile({ platz, name, bildPfad, farbe, punkte, wert, ic
         paddingLeft: 10,
         paddingRight: 14,
         borderRadius: 14,
-        backgroundColor: ich ? "rgba(124,77,255,0.15)" : "rgba(255,255,255,0.05)",
+        backgroundColor: ich ? "rgba(138,95,255,0.15)" : "rgba(255,255,255,0.05)",
         borderWidth: 1,
-        borderColor: ich ? "rgba(124,77,255,0.55)" : "rgba(255,255,255,0.07)",
+        borderColor: ich ? "rgba(138,95,255,0.55)" : "rgba(255,255,255,0.07)",
       }}
     >
       <Text style={{ ...schrift.textFett, width: 24, textAlign: "center", fontSize: 13.5, color: "rgba(255,255,255,0.65)" }}>{platz}</Text>
@@ -550,7 +550,7 @@ function DeinPlatz({ stand }: { stand: QuizStand }) {
         ))}
       </View>
       <View style={[{ borderRadius: 18 }, leuchten(farben.orange, 0.3, 14, 2)]}>
-        <LinearGradient colors={["rgba(124,77,255,0.24)", "rgba(124,77,255,0.08)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingLeft: 10, paddingRight: 16, borderRadius: 18, borderWidth: 1, borderColor: "rgba(124,77,255,0.5)" }}>
+        <LinearGradient colors={["rgba(138,95,255,0.24)", "rgba(138,95,255,0.08)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingLeft: 10, paddingRight: 16, borderRadius: 18, borderWidth: 1, borderColor: "rgba(138,95,255,0.5)" }}>
           <LinearGradient colors={verlauf.knopf} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}>
             <Text style={{ ...schrift.titel, fontSize: stand.platz > 99 ? 13 : 16, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{stand.platz}</Text>
           </LinearGradient>
@@ -748,7 +748,7 @@ export function QuizZuschauerKarte({
 /** Kleine Pille „+12 XP“ fürs Mitspielen. */
 export function XpPille({ xp }: { xp: number }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 3, height: 24, paddingHorizontal: 9, borderRadius: 12, backgroundColor: "rgba(124,77,255,0.16)" }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 3, height: 24, paddingHorizontal: 9, borderRadius: 12, backgroundColor: "rgba(138,95,255,0.16)" }}>
       <Icon name="flash" size={12} color={farben.orange} />
       <Text style={{ ...schrift.textFett, fontSize: 12.5, color: farben.orange }}>+{xp} XP</Text>
     </View>
@@ -849,7 +849,7 @@ export function QuizGastgeberKarte({
                       zustand={!offen && richtig ? "richtig" : "offen"}
                       loesung={offen && richtig}
                       anteil={teilnehmer ? stimmen / teilnehmer : 0}
-                      balkenFarbe={offen ? "rgba(124,77,255,0.3)" : undefined}
+                      balkenFarbe={offen ? "rgba(138,95,255,0.3)" : undefined}
                       rechts={offen ? String(stimmen) : `${prozent(stimmen, teilnehmer)} %`}
                     />
                   );
@@ -921,7 +921,7 @@ function MiniBild({ frage }: { frage: Frage }) {
     );
   }
   return (
-    <View style={[kachel, { backgroundColor: "rgba(124,77,255,0.14)" }]}>
+    <View style={[kachel, { backgroundColor: "rgba(138,95,255,0.14)" }]}>
       <Icon name={themaVon(frage.thema).icon} size={20} color="#FF8A2A" />
     </View>
   );
@@ -997,7 +997,7 @@ export function QuizAuswahl({
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, justifyContent: "flex-end" }}>
         <Pressable style={{ flex: 1 }} onPress={onSchliessen} accessibilityLabel="Schließen" />
         <View style={{ height: Math.round(height * 0.8), backgroundColor: "#0E1014", borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1, borderBottomWidth: 0, borderColor: "rgba(255,255,255,0.09)", overflow: "hidden" }}>
-          <LinearGradient pointerEvents="none" colors={["rgba(124,77,255,0.16)", "rgba(124,77,255,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 140 }} />
+          <LinearGradient pointerEvents="none" colors={["rgba(138,95,255,0.16)", "rgba(138,95,255,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 140 }} />
           <View style={{ alignSelf: "center", width: 38, height: 5, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.22)", marginTop: 8 }} />
 
           {vorschau && vorschau.art === "auswahl" ? (

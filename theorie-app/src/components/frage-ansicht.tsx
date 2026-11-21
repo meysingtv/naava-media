@@ -282,7 +282,7 @@ function Erklaerung({ frage, richtig }: { frage: Frage; richtig: boolean }) {
           </View>
         </View>
 
-        <View style={{ padding: 14, borderRadius: 18, backgroundColor: f.hell ? "#FBF6EF" : "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: f.hell ? "rgba(124,77,255,0.14)" : "rgba(255,255,255,0.07)", gap: 4 }}>
+        <View style={{ padding: 14, borderRadius: 18, backgroundColor: f.hell ? "#FBF6EF" : "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: f.hell ? "rgba(138,95,255,0.14)" : "rgba(255,255,255,0.07)", gap: 4 }}>
           <Text style={{ fontFamily: handschrift, fontSize: 25, lineHeight: 30, color: f.orange }}>Merke dir</Text>
           <Text style={{ ...schrift.text, fontSize: 15.5, lineHeight: 23, color: f.hell ? "#2A2F36" : "#E6E8EB" }}>{frage.erklaerung}</Text>
         </View>

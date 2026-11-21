@@ -51,7 +51,7 @@ function HerzRegen({ anzahl }: { anzahl: number }) {
       wert: new Animated.Value(0),
       x: 12 + Math.random() * (width - 48),
       groesse: 16 + Math.round(Math.random() * 16),
-      farbe: ["#FF2D55", "#FF5A5F", "#7C4DFF", "#FF8A2A", "#FF4F8B"][i % 5],
+      farbe: ["#FF2D55", "#FF5A5F", "#8A5FFF", "#FF8A2A", "#FF4F8B"][i % 5],
       drift: (Math.random() - 0.5) * 60,
       dauer: 2600 + Math.random() * 1800,
       start: Math.random() * 2400,
@@ -176,7 +176,7 @@ export function LiveEnde({
         </Defs>
         <Circle cx={glut / 2} cy={glut / 2} r={glut / 2} fill="url(#ende-glut)" />
       </DekoSvg>
-      <LinearGradient pointerEvents="none" colors={["rgba(124,77,255,0)", "rgba(124,77,255,0.12)"]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 260 }} />
+      <LinearGradient pointerEvents="none" colors={["rgba(138,95,255,0)", "rgba(138,95,255,0.12)"]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 260 }} />
       <HerzRegen anzahl={herzen} />
 
       <View style={{ flex: 1 }}>

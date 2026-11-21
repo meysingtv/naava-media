@@ -40,7 +40,7 @@ export function GlasGruppe({ children, style }: { children: ReactNode; style?: S
 }
 
 // Warme Lichtfarben passend zum Orange der App
-const LICHT = { orange: "#7C4DFF", gold: "#B794FF" };
+const LICHT = { orange: "#8A5FFF", gold: "#C0A6FF" };
 
 type Fleck = { id: string; cx: number; cy: number; rx: number; ry: number; farbe: string; a: number };
 

@@ -103,7 +103,7 @@ export async function pruefungstagErinnerungPlanen(iso: string | null, fragen: b
       await Notifications.setNotificationChannelAsync(KANAL, {
         name: "Tägliche Erinnerung",
         importance: Notifications.AndroidImportance.DEFAULT,
-        lightColor: "#7C4DFF",
+        lightColor: "#8A5FFF",
       });
     }
     const rechte = await Notifications.getPermissionsAsync();

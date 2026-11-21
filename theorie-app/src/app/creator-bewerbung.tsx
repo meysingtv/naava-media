@@ -206,14 +206,14 @@ function Schritt({ titel, zeit, art, farbe, letzter, kreuz }: { titel: string; z
             borderRadius: 12,
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: art === "fertig" ? farbe : art === "jetzt" ? mitDeckkraft(farbe.startsWith("#") ? farbe : "#7C4DFF", 0.16) : "transparent",
+            backgroundColor: art === "fertig" ? farbe : art === "jetzt" ? mitDeckkraft(farbe.startsWith("#") ? farbe : "#8A5FFF", 0.16) : "transparent",
             borderWidth: art === "fertig" ? 0 : 2,
             borderColor: art === "jetzt" ? farbe : leer,
           }}
         >
           {art === "fertig" ? kreuz ? <XIcon size={12} color="#FFFFFF" weight="bold" /> : <CheckIcon size={13} color="#FFFFFF" weight="bold" /> : art === "jetzt" ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: farbe }} /> : null}
         </View>
-        {letzter ? null : <View style={{ flex: 1, width: 2, minHeight: 22, marginVertical: 4, borderRadius: 1, backgroundColor: art === "fertig" ? mitDeckkraft(farbe.startsWith("#") ? farbe : "#7C4DFF", 0.45) : leer }} />}
+        {letzter ? null : <View style={{ flex: 1, width: 2, minHeight: 22, marginVertical: 4, borderRadius: 1, backgroundColor: art === "fertig" ? mitDeckkraft(farbe.startsWith("#") ? farbe : "#8A5FFF", 0.45) : leer }} />}
       </View>
       <View style={{ flex: 1, paddingBottom: letzter ? 0 : 18, gap: 1 }}>
         <Text style={{ ...schrift.textHalb, fontSize: 15.5, lineHeight: 22, color: art === "offen" ? f.text3 : f.text }}>{titel}</Text>

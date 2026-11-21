@@ -78,7 +78,7 @@ function FormelnHandy() {
                 accessibilityRole="button"
                 accessibilityState={{ selected: an }}
                 accessibilityLabel={`${t} Kilometer pro Stunde`}
-                style={({ pressed }) => ({ width: 58, height: 58, borderRadius: 29, alignItems: "center", justifyContent: "center", backgroundColor: an ? "#7C4DFF" : l.karte, borderWidth: 1.5, borderBottomWidth: 4, borderColor: an ? "#7C4DFF" : l.linie, borderBottomColor: an ? l.lilaKante : l.kante, transform: [{ translateY: pressed ? 2 : 0 }] })}
+                style={({ pressed }) => ({ width: 58, height: 58, borderRadius: 29, alignItems: "center", justifyContent: "center", backgroundColor: an ? "#8A5FFF" : l.karte, borderWidth: 1.5, borderBottomWidth: 4, borderColor: an ? "#8A5FFF" : l.linie, borderBottomColor: an ? l.lilaKante : l.kante, transform: [{ translateY: pressed ? 2 : 0 }] })}
               >
                 <Text style={{ ...lilaSchrift.titel, fontSize: t >= 100 ? 21 : 23, color: an ? "#FFFFFF" : l.tinte, fontVariant: ["tabular-nums"] }}>{t}</Text>
               </Pressable>
@@ -110,7 +110,7 @@ function FormelnHandy() {
               <Icon name="add" size={22} color={l.lila} />
               <View style={{ alignItems: "center" }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: "#7C4DFF" }} />
+                  <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: "#8A5FFF" }} />
                   <Text style={{ ...lilaSchrift.textMittel, fontSize: 13.5, color: l.tinte2 }}>Bremsweg</Text>
                 </View>
                 <Text style={{ ...lilaSchrift.titel, fontSize: 26, color: l.tinte }}>{zahlText(bremsweg)} m</Text>
@@ -123,8 +123,8 @@ function FormelnHandy() {
         <LilaKarte style={{ marginTop: 10 }}>
           <View style={{ padding: 16, gap: 14 }}>
             {[
-              { titel: "Normale Bremsung", gesamt: anhalteweg, teile: [balken(reaktion, blau), balken(bremsweg, "#7C4DFF")] },
-              { titel: "Gefahrenbremsung", gesamt: reaktion + gefahr, teile: [balken(reaktion, blau), balken(gefahr, "#B794FF")] },
+              { titel: "Normale Bremsung", gesamt: anhalteweg, teile: [balken(reaktion, blau), balken(bremsweg, "#8A5FFF")] },
+              { titel: "Gefahrenbremsung", gesamt: reaktion + gefahr, teile: [balken(reaktion, blau), balken(gefahr, "#C0A6FF")] },
             ].map((b) => (
               <View key={b.titel} style={{ gap: 8 }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>

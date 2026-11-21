@@ -54,7 +54,7 @@ function ZeichenHandy() {
                 }}
                 accessibilityRole="button"
                 accessibilityState={{ selected: an }}
-                style={{ height: 40, paddingHorizontal: 16, borderRadius: 13, justifyContent: "center", backgroundColor: an ? "#7C4DFF" : l.karte, borderWidth: 1.5, borderColor: an ? "#7C4DFF" : l.linie }}
+                style={{ height: 40, paddingHorizontal: 16, borderRadius: 13, justifyContent: "center", backgroundColor: an ? "#8A5FFF" : l.karte, borderWidth: 1.5, borderColor: an ? "#8A5FFF" : l.linie }}
               >
                 <Text style={{ ...lilaSchrift.textHalb, fontSize: 14, color: an ? "#FFFFFF" : l.tinte }}>{g.titel}</Text>
               </Pressable>

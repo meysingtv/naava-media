@@ -99,7 +99,7 @@ function Vorderseite({ inhalt, eng }: { inhalt: KartenInhalt; eng: boolean }) {
 function Merke({ text }: { text: string }) {
   const f = useFarbwelt();
   return (
-    <View style={{ padding: 14, borderRadius: 18, gap: 2, backgroundColor: f.hell ? "#FBF6EF" : "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: f.hell ? "rgba(124,77,255,0.14)" : "rgba(255,255,255,0.07)" }}>
+    <View style={{ padding: 14, borderRadius: 18, gap: 2, backgroundColor: f.hell ? "#FBF6EF" : "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: f.hell ? "rgba(138,95,255,0.14)" : "rgba(255,255,255,0.07)" }}>
       <T v="text" farbe={f.orange} style={{ fontFamily: handschrift, fontSize: 24, lineHeight: 29 }}>
         Merke dir
       </T>
@@ -256,7 +256,7 @@ export function FlipKarte({
       >
         <View style={{ flex: 1, borderRadius: 28, overflow: "hidden" }}>
         <LinearGradient
-          colors={hinten ? (f.hell ? ["rgba(35,165,72,0.09)", "rgba(35,165,72,0)"] : ["rgba(78,208,83,0.10)", "rgba(78,208,83,0)"]) : f.hell ? ["rgba(124,77,255,0.06)", "rgba(124,77,255,0)"] : ["rgba(255,255,255,0.06)", "rgba(255,255,255,0)"]}
+          colors={hinten ? (f.hell ? ["rgba(35,165,72,0.09)", "rgba(35,165,72,0)"] : ["rgba(78,208,83,0.10)", "rgba(78,208,83,0)"]) : f.hell ? ["rgba(138,95,255,0.06)", "rgba(138,95,255,0)"] : ["rgba(255,255,255,0.06)", "rgba(255,255,255,0)"]}
           locations={[0, 0.55]}
           style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
           pointerEvents="none"

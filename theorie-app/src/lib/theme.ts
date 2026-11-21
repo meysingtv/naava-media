@@ -23,14 +23,14 @@ export const farben = {
   // Orange aus der Vorlage gemessen: kräftiges Rot-Orange für Knöpfe, Ring
   // und Tab-Leiste, wärmeres Orange für Punkte, Balken und Flamme.
   // Hauptfarbe ist Lila (Name „orange“ bleibt, damit alle Stellen sie finden).
-  orange: "#7C4DFF",
-  orangeHell: "#B794FF",
-  orangeTief: "#5B2ED6",
-  orangeSoft: "rgba(124,77,255,0.16)",
-  orangeLinie: "rgba(124,77,255,0.6)",
+  orange: "#8A5FFF",
+  orangeHell: "#C0A6FF",
+  orangeTief: "#6A3FE6",
+  orangeSoft: "rgba(138,95,255,0.16)",
+  orangeLinie: "rgba(138,95,255,0.6)",
   orangeDunkel: "#1F1B45",
   aufOrange: "#FFFFFF",
-  flamme: "#7C4DFF",
+  flamme: "#8A5FFF",
 
   blau: "#4DA3FF",
   blauSoft: "rgba(77,163,255,0.14)",
@@ -70,21 +70,21 @@ export const farben = {
 /** Orange Verläufe, Element für Element aus der Vorlage gemessen. */
 export const verlauf = {
   /** Große Knöpfe, von oben nach unten: oben heller, unten tiefer. */
-  knopf: ["#9466FF", "#7C4DFF", "#6A35F0"],
+  knopf: ["#9B74FF", "#8A5FFF", "#7A4BF2"],
   /** Heller Schein am linken Ende von „Lernen starten“, von links nach rechts. */
-  knopfSchein: ["rgba(183,148,255,0.6)", "rgba(183,148,255,0.35)", "rgba(183,148,255,0.06)", "rgba(183,148,255,0)"],
+  knopfSchein: ["rgba(192,166,255,0.6)", "rgba(192,166,255,0.35)", "rgba(192,166,255,0.06)", "rgba(192,166,255,0)"],
   /** Aktiver Filter-Chip, von links nach rechts. */
-  chip: ["#9466FF", "#7C4DFF", "#6A35F0"],
+  chip: ["#9B74FF", "#8A5FFF", "#7A4BF2"],
   /** Aktives Segment, von links nach rechts. */
-  segment: ["#9466FF", "#7C4DFF"],
+  segment: ["#9B74FF", "#8A5FFF"],
   /** Fortschrittsbalken auf der Startseite, von links nach rechts. */
-  balken: ["#7C4DFF", "#9466FF"],
+  balken: ["#8A5FFF", "#9B74FF"],
   /** Balken in den Kategorien, von links nach rechts. */
-  kategorie: ["#7C4DFF", "#9466FF"],
+  kategorie: ["#8A5FFF", "#9B74FF"],
   /** Säulen im Diagramm, von oben nach unten. */
-  saeule: ["#B794FF", "#9466FF", "#7C4DFF", "#5B2ED6"],
+  saeule: ["#C0A6FF", "#9B74FF", "#8A5FFF", "#6A3FE6"],
   /** Großer Ring in der Statistik, von oben nach unten. */
-  ring: ["#9466FF", "#5B2ED6"],
+  ring: ["#9B74FF", "#6A3FE6"],
 } as const;
 
 type Gewicht = "400" | "500" | "600" | "700" | "800";

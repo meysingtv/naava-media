@@ -44,7 +44,7 @@ function LilaFeld(props: React.ComponentProps<typeof TextInput> & { fehler?: boo
   return (
     <TextInput
       placeholderTextColor={l.tinte3}
-      selectionColor="#7C4DFF"
+      selectionColor="#8A5FFF"
       {...rest}
       style={[{ height: 54, borderRadius: 16, paddingHorizontal: 16, backgroundColor: l.karte, borderWidth: 1.5, borderBottomWidth: 4, borderColor: fehler ? "#E5484D" : l.linie, borderBottomColor: fehler ? "#E5484D" : l.kante, ...lilaSchrift.textHalb, fontSize: 16, color: l.tinte }, style]}
     />
@@ -227,7 +227,7 @@ function EinstellungenHandy() {
               style={{ width: "31%", flexGrow: 1 }}
             >
               <View style={{ alignItems: "center", paddingVertical: 12, gap: 2 }}>
-                <Text style={{ ...lilaSchrift.titel, fontSize: 26, color: stand.klasse === k.id ? "#7C4DFF" : l.tinte }}>{k.id}</Text>
+                <Text style={{ ...lilaSchrift.titel, fontSize: 26, color: stand.klasse === k.id ? "#8A5FFF" : l.tinte }}>{k.id}</Text>
                 <Text style={{ ...lilaSchrift.text, fontSize: 11.5, color: l.tinte2, textAlign: "center" }} numberOfLines={2}>
                   {k.kurz}
                 </Text>
@@ -325,9 +325,9 @@ function DarstellungKachel({ art, aktiv, onPress }: { art: "dunkel" | "hell"; ak
       accessibilityRole="button"
       accessibilityState={{ selected: aktiv }}
       accessibilityLabel={dunkel ? "Nachtfahrt, dunkel" : "Tagfahrt, hell"}
-      style={({ pressed }) => [{ flex: 1, borderRadius: 22, transform: [{ scale: pressed ? 0.97 : 1 }] }, aktiv ? leuchten("#7C4DFF", f.hell ? 0.3 : 0.45, 12, 3) : null]}
+      style={({ pressed }) => [{ flex: 1, borderRadius: 22, transform: [{ scale: pressed ? 0.97 : 1 }] }, aktiv ? leuchten("#8A5FFF", f.hell ? 0.3 : 0.45, 12, 3) : null]}
     >
-      <View style={{ borderRadius: 22, overflow: "hidden", borderWidth: 2, borderColor: aktiv ? "#7C4DFF" : f.hell ? "rgba(20,23,27,0.08)" : "rgba(255,255,255,0.1)" }}>
+      <View style={{ borderRadius: 22, overflow: "hidden", borderWidth: 2, borderColor: aktiv ? "#8A5FFF" : f.hell ? "rgba(20,23,27,0.08)" : "rgba(255,255,255,0.1)" }}>
         {/* Mini-Vorschau der App in dieser Darstellung */}
         <LinearGradient colors={dunkel ? ["#1A2230", "#07090C"] : ["#FFFFFF", "#ECE6DC"]} style={{ height: 96, padding: 12, gap: 6 }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
@@ -345,7 +345,7 @@ function DarstellungKachel({ art, aktiv, onPress }: { art: "dunkel" | "hell"; ak
             <Text style={{ ...schrift.textHalb, fontSize: 14.5, color: f.text }}>{dunkel ? "Nachtfahrt" : "Tagfahrt"}</Text>
             <Text style={{ ...schrift.text, fontSize: 12, color: f.text3 }}>{dunkel ? "Dunkel" : "Hell"}</Text>
           </View>
-          <View style={{ width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: aktiv ? "#7C4DFF" : "transparent", borderWidth: aktiv ? 0 : 2, borderColor: f.hell ? "rgba(20,23,27,0.2)" : "rgba(255,255,255,0.25)" }}>
+          <View style={{ width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: aktiv ? "#8A5FFF" : "transparent", borderWidth: aktiv ? 0 : 2, borderColor: f.hell ? "rgba(20,23,27,0.2)" : "rgba(255,255,255,0.25)" }}>
             {aktiv ? <Icon name="checkmark" size={14} color="#FFFFFF" /> : null}
           </View>
         </View>

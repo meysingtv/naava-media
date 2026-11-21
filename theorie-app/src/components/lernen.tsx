@@ -119,7 +119,7 @@ export function SuchPille({ onPress, style }: { onPress: () => void; style?: Sty
 export function LernStand({ sicher, fehler, neu, onPress }: { sicher: number; fehler: number; neu: number; onPress: () => void }) {
   const f = useFarbwelt();
   const gruen = f.hell ? "#23A548" : "#4ED053";
-  const orange = f.hell ? "#7C4DFF" : "#FF8A2A";
+  const orange = f.hell ? "#8A5FFF" : "#FF8A2A";
   const grau = f.hell ? "rgba(20,23,27,0.18)" : "rgba(255,255,255,0.22)";
   const teile = [
     { wert: sicher, farbe: gruen, label: "sicher" },
@@ -435,7 +435,7 @@ export function GrundstoffKarte({ anzahl, anteil, onPress, style }: { anzahl: nu
             <Balken anteil={anteil} hoehe={6} />
           </View>
         </View>
-        <View style={[{ position: "absolute", right: 16, bottom: 16, width: 50, height: 50, borderRadius: 25, overflow: "hidden" }, leuchten("#7C4DFF", 0.5, 12, 3)]}>
+        <View style={[{ position: "absolute", right: 16, bottom: 16, width: 50, height: 50, borderRadius: 25, overflow: "hidden" }, leuchten("#8A5FFF", 0.5, 12, 3)]}>
           <LinearGradient colors={verlauf.knopf} style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
             <Icon name="play" size={21} color="#FFFFFF" />
           </LinearGradient>
