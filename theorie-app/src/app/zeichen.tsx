@@ -14,7 +14,7 @@ import { useDarstellung } from "@/lib/darstellung";
 import { useDesktop } from "@/lib/fenster";
 import { FOTOS } from "@/lib/fotos";
 import { tippen } from "@/lib/haptik";
-import { leuchten, RAND, schrift } from "@/lib/theme";
+import { leuchten, mitDeckkraft, RAND, schrift } from "@/lib/theme";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 const GRUPPEN: { id: "alle" | ZeichenInfo["gruppe"]; titel: string }[] = [
@@ -79,7 +79,9 @@ function ZeichenHandy() {
                   <ZeichenInhalt z={z} farbe={f.text2} />
                 </View>
               ) : (
-                <GlasKarte pointerEvents="none" style={{ borderRadius: 24 }}>
+                <GlasKarte pointerEvents="none" toenung="rgba(22,20,20,0.5)" style={{ borderRadius: 24, borderWidth: 1, borderColor: mitDeckkraft(f.orange, 0.3) }}>
+                  {/* Orange Akzent: warmes Licht von unten */}
+                  <LinearGradient colors={[mitDeckkraft(f.orange, 0), mitDeckkraft(f.orange, 0.2)]} locations={[0.35, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
                   <ZeichenInhalt z={z} farbe={f.text} />
                 </GlasKarte>
               )}
