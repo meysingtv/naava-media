@@ -21,14 +21,14 @@ function WillkommenHandy() {
   const insets = useSafeAreaInsets();
   const { width, height } = useFenster();
   // Bild so hoch, dass Titel, Werte und Knöpfe ohne Scrollen passen
-  const bildHoehe = Math.max(230, Math.min(width * 1.05, height - insets.bottom - 560));
+  const bildHoehe = Math.max(230, Math.min(width * 0.78 + insets.top, height - insets.bottom - 560));
 
   return (
     <View style={{ flex: 1, backgroundColor: START.grund }}>
       <StatusBar style="light" />
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false} showsVerticalScrollIndicator={false}>
         <StartBild breite={width} hoehe={bildHoehe} oben={insets.top} />
-        <View style={{ flex: 1, paddingHorizontal: 20, gap: 22, marginTop: 4, paddingBottom: 8 }}>
+        <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 20, gap: 22, paddingTop: 4, paddingBottom: 8 }}>
           <StartTitel groesse={width < 420 ? 35 : 40} teile={["Mach deinen ", ["Führerschein."], "\nBestehe die Theorie."]} />
           <View style={{ flexDirection: "row", justifyContent: "center", gap: 22 }}>
             <LorbeerWert wert="100" label="VERKEHRSZEICHEN" />

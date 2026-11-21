@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 import { Pressable, Text, View, type StyleProp, type ViewStyle } from "react-native";
-import Svg, { Circle, Ellipse, G, Path, Polygon, Rect } from "react-native-svg";
+import { LinearGradient as ExpoVerlauf } from "expo-linear-gradient";
+import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 
-import { Icon, type IconName } from "@/components/icon";
+import { Verkehrszeichen } from "@/components/zeichen";
+import type { ZeichenKey } from "@/lib/fragen";
 import { tippen } from "@/lib/haptik";
-import type { SFSymbol } from "expo-symbols";
 
 // Bausteine für den Start (Willkommen, Fragen vor dem Konto): eigene,
 // lila Farbwelt mit schmaler, kräftiger Überschrift und Knöpfen mit Kante.
@@ -120,62 +121,83 @@ export function LorbeerWert({ wert, label }: { wert: string; label: string }) {
   );
 }
 
-type Schwebe = { name: IconName; sf?: SFSymbol; x: number; y: number; groesse: number; dreh: number };
-
-const SCHWEBEN: Schwebe[] = [
-  { name: "sparkles", x: 0.13, y: 0.13, groesse: 26, dreh: -12 },
-  { name: "trophy-outline", sf: "trophy", x: 0.24, y: 0.3, groesse: 34, dreh: -14 },
-  { name: "sparkles", x: 0.37, y: 0.2, groesse: 22, dreh: 10 },
-  { name: "warning-outline", sf: "exclamationmark.triangle", x: 0.52, y: 0.27, groesse: 32, dreh: 8 },
-  { name: "car-outline", sf: "car", x: 0.36, y: 0.44, groesse: 34, dreh: -8 },
-  { name: "bulb-outline", sf: "lightbulb", x: 0.67, y: 0.42, groesse: 30, dreh: 10 },
-  { name: "flag-outline", sf: "flag.checkered", x: 0.82, y: 0.2, groesse: 32, dreh: 14 },
-  { name: "hourglass-outline", sf: "hourglass", x: 0.66, y: 0.11, groesse: 26, dreh: -16 },
-];
+/** Ein Schild auf einem Pfahl, unten auf dem Boden der Szene. */
+type Schild = { zeichen: ZeichenKey; x: number; fuss: number; groesse: number; pfahl: number };
 
 /**
- * Bild der ersten Seite: Aus dem Handy mit dem App-Zeichen führt eine lila
- * Straße nach oben, darauf schweben Symbole fürs Lernen und Fahren.
+ * Bild der ersten Seite: abends auf dem Land. Eine Straße läuft durch lila
+ * Hügel zum Horizont, am Rand stehen Verkehrszeichen, vorne fährt ein Auto.
  */
 export function StartBild({ breite, hoehe, oben }: { breite: number; hoehe: number; oben: number }) {
   const W = breite;
   const H = hoehe;
-  const kreisR = Math.min(W * 0.29, H * 0.28);
-  const kreisY = H - kreisR - 4;
-  const gH = kreisR * 1.22; // Gerät
-  const gB = gH * 0.75;
-  const gX = (W - gB) / 2;
-  const gY = kreisY - kreisR * 0.5;
-  const rand = 9;
-  // Straße: unten so breit wie das Gerät, nach oben weit und geschwungen
-  const l0 = gX + rand;
-  const r0 = gX + gB - rand;
-  const strasse = `M ${l0} ${gY + 4} C ${l0 - W * 0.02} ${gY - H * 0.16}, ${W * 0.02} ${H * 0.3}, ${-W * 0.2} ${-2} L ${W * 1.2} ${-2} C ${W * 0.98} ${H * 0.26}, ${r0 + W * 0.04} ${gY - H * 0.2}, ${r0} ${gY + 4} Z`;
-  const mitte = `M ${W / 2} ${gY - 6} C ${W * 0.5} ${gY - H * 0.18}, ${W * 0.47} ${H * 0.28}, ${W * 0.5} ${-2}`;
+  const hor = oben + (H - oben) * 0.46; // Horizont
+  const fern = { x: W * 0.56, y: hor + 2 }; // Fluchtpunkt der Straße
+  // Straße: unten breit, geschwungen zum Horizont
+  const d = H - hor;
+  const strasse = `M ${W * 0.18} ${H} C ${W * 0.36} ${H - d * 0.5}, ${W * 0.54} ${hor + d * 0.3}, ${fern.x - 4} ${fern.y} L ${fern.x + 4} ${fern.y} C ${W * 0.62} ${hor + d * 0.3}, ${W * 0.66} ${H - d * 0.5}, ${W * 0.84} ${H} Z`;
+  const mitte = `M ${W * 0.51} ${H} C ${W * 0.51} ${H - d * 0.5}, ${W * 0.58} ${hor + d * 0.3}, ${fern.x} ${fern.y}`;
+  const sterne = [
+    [0.08, 0.3], [0.2, 0.18], [0.34, 0.36], [0.46, 0.14], [0.64, 0.28], [0.78, 0.12], [0.9, 0.34], [0.72, 0.42],
+  ];
+  const schilder: Schild[] = [
+    { zeichen: "z306", x: W * 0.1, fuss: H - (H - hor) * 0.28, groesse: Math.min(54, W * 0.13), pfahl: (H - hor) * 0.32 },
+    { zeichen: "z274_50", x: W * 0.84, fuss: hor + (H - hor) * 0.5, groesse: Math.min(42, W * 0.1), pfahl: (H - hor) * 0.24 },
+    { zeichen: "z103_20", x: W * 0.34, fuss: hor + (H - hor) * 0.2, groesse: Math.min(24, W * 0.06), pfahl: (H - hor) * 0.12 },
+  ];
+  const auto = { b: Math.min(W * 0.2, 96), x: W * 0.515, y: H - (H - hor) * 0.26 };
 
   return (
-    <View style={{ width: W, height: H }}>
+    <View style={{ width: W, height: H, overflow: "hidden" }}>
       <Svg width={W} height={H}>
-        <Circle cx={W / 2} cy={kreisY} r={kreisR} fill={START.lilaTief} />
-        <Path d={strasse} fill={START.lila} />
-        <Path d={mitte} stroke="rgba(255,255,255,0.35)" strokeWidth={4} strokeDasharray="16 14" strokeLinecap="round" fill="none" />
-        {/* Gerät, unten vom Kreis abgeschnitten */}
-        <Rect x={gX} y={gY} width={gB} height={gH} rx={gB * 0.2} fill={START.lilaGeraet} stroke={START.lila} strokeWidth={rand} />
-        {/* App-Zeichen */}
-        <G transform={`translate(${W / 2 - gB * 0.22} ${gY + gH * 0.2}) scale(${(gB * 0.44) / 100})`}>
-          <Polygon points="20,92 33,92 50,10 44,10" fill="#FFFFFF" />
-          <Polygon points="80,92 67,92 50,10 56,10" fill="#FFFFFF" />
-          <Polygon points="46,92 54,92 53.4,72 46.6,72" fill={START.lilaHell} />
-          <Polygon points="47,60 53,60 52.6,47 47.4,47" fill={START.lilaHell} />
+        <Defs>
+          <LinearGradient id="himmel" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={START.grund} />
+            <Stop offset="1" stopColor="#2A2361" />
+          </LinearGradient>
+          <LinearGradient id="boden" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor="#7A68DA" />
+            <Stop offset="1" stopColor={START.lila} />
+          </LinearGradient>
+        </Defs>
+        <Rect x={0} y={0} width={W} height={hor + 4} fill="url(#himmel)" />
+        {sterne.map(([x, y], i) => (
+          <Circle key={i} cx={W * x} cy={oben + (hor - oben) * y} r={i % 3 ? 1.4 : 2} fill="#FFFFFF" opacity={i % 2 ? 0.5 : 0.85} />
+        ))}
+        {/* Mond */}
+        <Circle cx={W * 0.8} cy={oben + (hor - oben) * 0.32} r={W * 0.07} fill={START.lilaHell} opacity={0.9} />
+        <Circle cx={W * 0.8 - W * 0.028} cy={oben + (hor - oben) * 0.32 - W * 0.012} r={W * 0.066} fill="#1A1640" />
+        {/* Hügel hinten und vorne */}
+        <Path d={`M 0 ${hor - H * 0.05} C ${W * 0.2} ${hor - H * 0.12}, ${W * 0.38} ${hor - H * 0.02}, ${W * 0.55} ${hor - H * 0.04} C ${W * 0.72} ${hor - H * 0.07}, ${W * 0.86} ${hor - H * 0.13}, ${W} ${hor - H * 0.06} L ${W} ${hor + 4} L 0 ${hor + 4} Z`} fill="#3B3184" />
+        <Rect x={0} y={hor} width={W} height={H - hor} fill="url(#boden)" />
+        <Path d={`M 0 ${hor + (H - hor) * 0.08} C ${W * 0.25} ${hor - 6}, ${W * 0.45} ${hor + 4}, ${W * 0.6} ${hor + 2} C ${W * 0.78} ${hor}, ${W * 0.9} ${hor + (H - hor) * 0.1}, ${W} ${hor + (H - hor) * 0.06} L ${W} ${hor + (H - hor) * 0.2} L 0 ${hor + (H - hor) * 0.22} Z`} fill="#6B59CC" opacity={0.6} />
+        {/* Straße */}
+        <Path d={strasse} fill="#241F4A" />
+        <Path d={mitte} stroke="#FFFFFF" strokeWidth={3} strokeDasharray="14 12" fill="none" opacity={0.85} />
+        {/* Pfähle */}
+        {schilder.map((s, i) => (
+          <Rect key={i} x={s.x - 1.5} y={s.fuss - s.pfahl} width={3} height={s.pfahl} rx={1.5} fill="#D9D4F5" />
+        ))}
+        {/* Auto von hinten */}
+        <G transform={`translate(${auto.x - auto.b / 2} ${auto.y - auto.b * 0.62})`}>
+          <Ellipse cx={auto.b / 2} cy={auto.b * 0.66} rx={auto.b * 0.56} ry={auto.b * 0.07} fill="#000000" opacity={0.28} />
+          <Rect x={auto.b * 0.1} y={auto.b * 0.5} width={auto.b * 0.16} height={auto.b * 0.16} rx={auto.b * 0.04} fill="#15122E" />
+          <Rect x={auto.b * 0.74} y={auto.b * 0.5} width={auto.b * 0.16} height={auto.b * 0.16} rx={auto.b * 0.04} fill="#15122E" />
+          <Path d={`M ${auto.b * 0.2} ${auto.b * 0.22} Q ${auto.b * 0.24} ${auto.b * 0.02} ${auto.b * 0.5} ${auto.b * 0.02} Q ${auto.b * 0.76} ${auto.b * 0.02} ${auto.b * 0.8} ${auto.b * 0.22} Z`} fill="#F3F1FF" />
+          <Path d={`M ${auto.b * 0.27} ${auto.b * 0.2} Q ${auto.b * 0.3} ${auto.b * 0.07} ${auto.b * 0.5} ${auto.b * 0.07} Q ${auto.b * 0.7} ${auto.b * 0.07} ${auto.b * 0.73} ${auto.b * 0.2} Z`} fill="#2D2766" />
+          <Rect x={0} y={auto.b * 0.2} width={auto.b} height={auto.b * 0.36} rx={auto.b * 0.12} fill="#F3F1FF" />
+          <Rect x={auto.b * 0.07} y={auto.b * 0.29} width={auto.b * 0.2} height={auto.b * 0.08} rx={auto.b * 0.04} fill="#FF5A6E" />
+          <Rect x={auto.b * 0.73} y={auto.b * 0.29} width={auto.b * 0.2} height={auto.b * 0.08} rx={auto.b * 0.04} fill="#FF5A6E" />
+          <Rect x={auto.b * 0.36} y={auto.b * 0.4} width={auto.b * 0.28} height={auto.b * 0.1} rx={auto.b * 0.02} fill="#FFFFFF" stroke="#C7C1E4" strokeWidth={1} />
         </G>
-        {/* Gerät verschwindet nach unten in den Grund */}
-        <Rect x={0} y={kreisY + kreisR} width={W} height={H} fill={START.grund} />
       </Svg>
-      {SCHWEBEN.map((s, i) => (
-        <View key={i} pointerEvents="none" style={{ position: "absolute", left: W * s.x - s.groesse / 2, top: oben + (gY - oben) * (s.y / 0.46) * 0.92 - s.groesse / 2, transform: [{ rotate: `${s.dreh}deg` }] }}>
-          <Icon name={s.name} sf={s.sf} size={s.groesse} color="#FFFFFF" weight="regular" />
+      {schilder.map((s, i) => (
+        <View key={i} pointerEvents="none" style={{ position: "absolute", left: s.x - s.groesse / 2, top: s.fuss - s.pfahl - s.groesse * 0.9 }}>
+          <Verkehrszeichen zeichen={s.zeichen} groesse={s.groesse} />
         </View>
       ))}
+      {/* Unten weich in den Grund */}
+      <ExpoVerlauf colors={["rgba(11,12,22,0)", START.grund]} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: H * 0.16 }} pointerEvents="none" />
     </View>
   );
 }
