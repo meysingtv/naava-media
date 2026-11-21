@@ -80,12 +80,12 @@ function ZeichenHandy() {
                   <ZeichenInhalt z={z} farbe={f.text2} />
                 </View>
               ) : (
-                <View style={{ borderRadius: 24, overflow: "hidden", backgroundColor: "rgba(30,28,28,0.45)" }}>
+                <View style={{ borderRadius: 24, overflow: "hidden", backgroundColor: "rgba(30,28,28,0.32)" }}>
                   {/* Mattglas: der Lichtgrund dahinter schimmert weich durch */}
-                  <BlurView intensity={30} tint="dark" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
-                  <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(255,255,255,0.05)" }} />
-                  {/* Orange Akzent: warmes Licht von unten */}
-                  <LinearGradient colors={[mitDeckkraft(f.orange, 0), mitDeckkraft(f.orange, 0.2)]} locations={[0.35, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+                  <BlurView intensity={45} tint="dark" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+                  <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(255,255,255,0.07)" }} />
+                  {/* Orange Akzent: dezent aus der Ecke oben rechts */}
+                  <LinearGradient colors={[mitDeckkraft(f.orange, 0.12), mitDeckkraft(f.orange, 0)]} locations={[0, 0.55]} start={{ x: 1, y: 0 }} end={{ x: 0, y: 1 }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
                   <ZeichenInhalt z={z} farbe={f.text} />
                 </View>
               )}
