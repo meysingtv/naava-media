@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AktionsLeiste, HauptKnopf, NebenKnopf } from "@/components/frage-rahmen";
-import { GlasGrund, GlasKarte } from "@/components/glas-flaeche";
+import { GlasGrund } from "@/components/glas-flaeche";
 import { FotoKopf, Seite } from "@/components/seite";
 import { Chip, Knopf, T } from "@/components/ui";
 import { ZeichenWeb } from "@/components/web/zeichen-web";
@@ -50,7 +50,7 @@ function ZeichenHandy() {
   return (
     <Seite>
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
-        {/* Dunkel: weicher Lichtgrund unter dem Foto, darauf Kacheln aus Glas */}
+        {/* Dunkel: weicher Lichtgrund unter dem Foto */}
         {f.hell ? null : <GlasGrund ab={insets.top + 300} dezent />}
         <FotoKopf bild={FOTOS.schilder} hoehe={300} titel="Verkehrszeichen" unter={`${ZEICHEN_INFO.length} Zeichen mit Bedeutung`} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: RAND, gap: 8, paddingTop: 8, paddingBottom: 16 }}>
@@ -79,11 +79,11 @@ function ZeichenHandy() {
                   <ZeichenInhalt z={z} farbe={f.text2} />
                 </View>
               ) : (
-                <GlasKarte pointerEvents="none" toenung="rgba(22,20,20,0.5)" style={{ borderRadius: 24, borderWidth: 1, borderColor: mitDeckkraft(f.orange, 0.3) }}>
+                <View style={{ borderRadius: 24, overflow: "hidden", backgroundColor: "rgba(20,19,19,0.82)", borderWidth: 1, borderColor: mitDeckkraft(f.orange, 0.3) }}>
                   {/* Orange Akzent: warmes Licht von unten */}
                   <LinearGradient colors={[mitDeckkraft(f.orange, 0), mitDeckkraft(f.orange, 0.2)]} locations={[0.35, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
                   <ZeichenInhalt z={z} farbe={f.text} />
-                </GlasKarte>
+                </View>
               )}
             </Pressable>
           ))}
