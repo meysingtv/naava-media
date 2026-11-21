@@ -237,9 +237,12 @@ export default function SchildScanner() {
   const oben = (
     <View style={{ position: "absolute", top: insets.top + 6, left: 16, right: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
       <RundTaste icon="close" label="Schließen" onPress={zumAlbum} />
-      <View style={{ height: 38, borderRadius: 19, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 7, backgroundColor: FLAECHE, borderWidth: 1.5, borderColor: FLAECHE_RAND }}>
-        <Icon name="scan" size={15} color={farben.orange} weight="semibold" />
-        <Text style={{ ...schrift.textHalb, fontSize: 14, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>
+      <View style={{ height: 40, borderRadius: 20, paddingLeft: 6, paddingRight: 14, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: FLAECHE, borderWidth: 1.5, borderColor: FLAECHE_RAND }}>
+        {/* Symbol in einem lila Kreis, Text genau auf gleicher Höhe */}
+        <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: "#8C7AE6", alignItems: "center", justifyContent: "center" }}>
+          <Icon name="scan" size={15} color="#FFFFFF" weight="semibold" />
+        </View>
+        <Text style={{ ...startSchrift.fett, fontSize: 18, lineHeight: 22, includeFontPadding: false, textAlignVertical: "center", color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>
           {gefunden} / {ALBUM.length} gefunden
         </Text>
       </View>
