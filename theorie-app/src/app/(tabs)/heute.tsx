@@ -51,6 +51,9 @@ export default function Home() {
   return useDesktop() ? <HomeWeb /> : <HomeHandy />;
 }
 
+/** Himmelfarbe oben im Bild – oben auf der Startseite geht sie nahtlos weiter. */
+const HIMMEL = "#D3D2FE";
+
 /** Begrüßung je Tageszeit (mit Komma, darunter der Name). */
 const GRUSS_LILA: Record<ReturnType<typeof tageszeit>, string> = { morgen: "Guten Morgen", tag: "Hallo", abend: "Guten Abend", nacht: "Hey" };
 
@@ -73,7 +76,7 @@ function HomeLila() {
   const tage = termin ? tageBis(termin) : null;
   const kommend = tage !== null && tage >= 0 ? tage : null;
   const glockePunkt = !stand.erinnerung.an;
-  const heldH = Math.round(Math.min(width, 560) * (576 / 1100));
+  const heldH = Math.round(width * (546 / 1100));
 
   const countdown =
     kommend === null
@@ -86,13 +89,15 @@ function HomeLila() {
 
   return (
     <View style={{ flex: 1, backgroundColor: l.grund }}>
-      {fokus ? <StatusBar style={l.hell ? "dark" : "light"} /> : null}
-      <ScrollView {...tourBlatt} contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: inhaltUnten + 8, paddingHorizontal: LILA_RAND, width: "100%", maxWidth: 560, alignSelf: "center" }} showsVerticalScrollIndicator={false}>
-        {/* Begrüßung (über dem Bild) */}
-        <View style={{ flexDirection: "row", alignItems: "flex-start", zIndex: 2 }}>
+      {fokus ? <StatusBar style="dark" /> : null}
+      {/* Himmel hinter dem oberen Teil – auch beim Überziehen nach unten */}
+      <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", backgroundColor: HIMMEL }} />
+      <ScrollView {...tourBlatt} contentContainerStyle={{ paddingBottom: inhaltUnten + 8 }} showsVerticalScrollIndicator={false}>
+        {/* Begrüßung auf dem Himmel – das Bild darunter setzt ihn nahtlos fort */}
+        <View style={{ backgroundColor: HIMMEL, paddingTop: insets.top + 10, paddingHorizontal: LILA_RAND, flexDirection: "row", alignItems: "flex-start" }}>
           <Text style={{ flex: 1, ...lilaSchrift.titel, fontSize: 40, lineHeight: 43, letterSpacing: -0.6, color: l.tinte }} numberOfLines={2}>
             {GRUSS_LILA[zeit]},{"\n"}
-            <Text style={{ color: l.lila }}>{vorname}</Text>!
+            <Text style={{ color: l.lilaKante }}>{vorname}</Text>!
           </Text>
           <Pressable
             onPress={() => {
@@ -104,7 +109,7 @@ function HomeLila() {
             style={{ marginTop: 10, marginRight: 16 }}
           >
             <Icon name="notifications-outline" size={26} color={l.tinte} />
-            {glockePunkt ? <View style={{ position: "absolute", top: -1, right: -1, width: 9, height: 9, borderRadius: 5, backgroundColor: l.lila, borderWidth: 1.5, borderColor: l.grund }} /> : null}
+            {glockePunkt ? <View style={{ position: "absolute", top: -1, right: -1, width: 9, height: 9, borderRadius: 5, backgroundColor: l.lila, borderWidth: 1.5, borderColor: HIMMEL }} /> : null}
           </Pressable>
           <Pressable
             onPress={() => {
@@ -118,15 +123,12 @@ function HomeLila() {
           </Pressable>
         </View>
 
-        {/* Bild mit der Figur: über die ganze Breite, oben und unten weich in den Grund */}
-        <View style={{ marginHorizontal: -LILA_RAND, marginTop: -6, height: heldH }}>
-          <Image source={FOTOS.heldAuto} style={{ width: "100%", height: heldH }} resizeMode="cover" accessibilityLabel="Die Figur sagt: Mach heute einen Schritt näher zum Führerschein!" />
-          <LinearGradient pointerEvents="none" colors={[l.grund, mitDeckkraft(l.grund, 0.6), mitDeckkraft(l.grund, 0)]} locations={[0, 0.08, 0.22]} style={{ position: "absolute", top: -1, left: 0, right: 0, height: heldH * 0.45 }} />
-          <LinearGradient pointerEvents="none" colors={[mitDeckkraft(l.grund, 0), mitDeckkraft(l.grund, 0.75), l.grund]} locations={[0, 0.55, 1]} style={{ position: "absolute", bottom: -1, left: 0, right: 0, height: heldH * 0.22 }} />
-        </View>
+        {/* Bild mit der Figur über die ganze Breite */}
+        <Image source={FOTOS.heldAuto} style={{ width: "100%", height: heldH, backgroundColor: HIMMEL }} resizeMode="cover" accessibilityLabel="Die Figur sagt: Mach heute einen Schritt näher zum Führerschein!" />
 
-        {/* Countdown – ragt ins Bild hinein */}
-        <LilaKarte onPress={() => router.push("/pruefungstermin")} label={countdown.titel} style={{ marginTop: -20 }}>
+        {/* Inhalt als Blatt mit runden Ecken, das über dem Bild liegt */}
+        <View style={{ marginTop: -26, backgroundColor: l.grund, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: LILA_RAND, paddingTop: 18 }}>
+        <LilaKarte onPress={() => router.push("/pruefungstermin")} label={countdown.titel}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 13, paddingHorizontal: 14 }}>
             <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: l.lilaZart, alignItems: "center", justifyContent: "center" }}>
               <Icon name="calendar-outline" size={25} color={l.lila} />
@@ -155,6 +157,7 @@ function HomeLila() {
           </View>
           <LilaKachel titel="Schilder-Jagd" icon="scan-outline" gross onPress={() => router.push("/schilder-jagd")} />
         </TourZiel>
+        </View>
       </ScrollView>
     </View>
   );

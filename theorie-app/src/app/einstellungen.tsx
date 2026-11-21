@@ -54,15 +54,8 @@ function EinstellungenHandy() {
         />
 
         <View>
-          <Abschnitt titel="Darstellung" klein />
-          <View style={{ flexDirection: "row", gap: abstand(3) }}>
-            <DarstellungKachel art="hell" aktiv={darstellung === "hell"} onPress={() => darstellungSetzen("hell")} />
-            <DarstellungKachel art="dunkel" aktiv={darstellung === "dunkel"} onPress={() => darstellungSetzen("dunkel")} />
-          </View>
-          <T v="klein" style={{ marginTop: abstand(2) }}>
-            Gilt für die ganze App – nur Clips, Kamera und Anmeldung bleiben dunkel.
-          </T>
-          <GlasGruppe style={{ marginTop: abstand(4) }}>
+          <Abschnitt titel="App" klein />
+          <GlasGruppe>
             <Zeile icon="color-palette" iconFarbe="#9B5CFF" titel="App-Icon" unter="Dein Lenkrad für den Homescreen" wert={iconTitel} onPress={() => router.push("/app-icon")} />
             {FRAGEN_AKTIV ? (
               <Zeile

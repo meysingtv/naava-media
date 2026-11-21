@@ -280,25 +280,7 @@ export function EinstellungenWeb() {
           <View style={{ flex: 1, minWidth: 380, gap: 28 }}>
             <Gruppe titel="Darstellung">
               <Kachel>
-                <ListenZeile
-                  icon={darstellung === "hell" ? "sunny" : "moon"}
-                  ton={darstellung === "hell" ? TOENE.gelb : TOENE.indigo}
-                  titel={darstellung === "hell" ? "Tagfahrt" : "Nachtfahrt"}
-                  unter="Gilt für dieses Gerät"
-                  rechts={
-                    <Reiter
-                      optionen={[
-                        { id: "hell", titel: "Hell" },
-                        { id: "dunkel", titel: "Dunkel" },
-                      ]}
-                      wert={darstellung}
-                      onWechsel={(d) => {
-                        if (d !== darstellung) darstellungSetzen(d);
-                      }}
-                    />
-                  }
-                />
-                <ListenZeile icon="color-palette" ton={TOENE.lila} titel="App-Icon" unter="Dein Lenkrad für den Homescreen" rechts={<Wert text={e.iconTitel} />} onPress={() => router.push("/app-icon")} oben />
+                <ListenZeile icon="color-palette" ton={TOENE.lila} titel="App-Icon" unter="Dein Lenkrad für den Homescreen" rechts={<Wert text={e.iconTitel} />} onPress={() => router.push("/app-icon")} />
                 {FRAGEN_AKTIV ? (
                   <ListenZeile icon="flash" ton={TOENE.orange} titel="XP, HP & Abzeichen einblenden" unter={belohnungen ? "Beim Lernen und in den Ergebnissen sichtbar" : "Aus – keine Einblendungen beim Lernen"} rechts={<Schalter wert={belohnungen} onWechsel={belohnungenSetzen} />} oben />
                 ) : null}

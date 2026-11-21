@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, BackHandler, Easing, Image, KeyboardAvoidingView, Modal, Pressable, ScrollView, Text, TextInput, useColorScheme, View } from "react-native";
+import { Animated, BackHandler, Easing, Image, KeyboardAvoidingView, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,7 +8,6 @@ import { Icon } from "@/components/icon";
 import { MarkenLogo, type Marke } from "@/components/marken-logos";
 import { FIGUR, FigurBlase, FrageKopf, GrosseFigur, HELL, START, StartKnopf, startSchrift, WahlKarte } from "@/components/start-teile";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
-import { useDarstellung } from "@/lib/darstellung";
 import { einrichtungErledigt } from "@/lib/einrichtung";
 import { erinnerungPlanen } from "@/lib/erinnerung";
 import { useDesktop } from "@/lib/fenster";
@@ -24,8 +23,7 @@ import { serverVerbunden } from "@/lib/supabase";
 // – damit entsteht das Konto bzw. man meldet sich an. Mit ?modus=anmelden
 // geht es direkt zur E-Mail.
 
-type Schritt = "darstellung" | "name" | "hallo" | "quelle" | "rolle" | "land" | "klasse" | "termin" | "mitteilung" | "email" | "code" | "fertig";
-type Wahl = "hell" | "dunkel" | "system";
+type Schritt = "name" | "hallo" | "quelle" | "rolle" | "land" | "klasse" | "termin" | "mitteilung" | "email" | "code" | "fertig";
 
 const MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
 const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
@@ -54,15 +52,12 @@ export default function Start() {
 function StartHandy() {
   const insets = useSafeAreaInsets();
   const anmelden = useLocalSearchParams<{ modus?: string }>().modus === "anmelden";
-  const { setzen: darstellungSetzen } = useDarstellung();
-  const system = useColorScheme();
   const { setzen } = useStand();
   const { benutzernameFrei, alsGast, session } = useKonto();
   const ablauf = useCodeAblauf();
 
-  const reihe: Schritt[] = anmelden ? ["email", "code"] : ["darstellung", "name", "hallo", "quelle", "rolle", "land", "klasse", "termin", "mitteilung", "email", "code", "fertig"];
+  const reihe: Schritt[] = anmelden ? ["email", "code"] : ["name", "hallo", "quelle", "rolle", "land", "klasse", "termin", "mitteilung", "email", "code", "fertig"];
   const [schritt, setSchritt] = useState<Schritt>(reihe[0]);
-  const [wahl, setWahl] = useState<Wahl | null>(null);
   const [name, setName] = useState("");
   const [quelle, setQuelle] = useState<string | null>(null);
   const [rolle, setRolle] = useState<Rolle | null>(null);
@@ -136,11 +131,6 @@ function StartHandy() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [angemeldet, session]);
 
-  function darstellungWaehlen(w: Wahl) {
-    setWahl(w);
-    darstellungSetzen(w === "system" ? (system === "dark" ? "dunkel" : "hell") : w);
-  }
-
   async function erinnerungAn() {
     const ok = await erinnerungPlanen(true, 18, 0).catch(() => false);
     setErinnerung(ok);
@@ -172,8 +162,6 @@ function StartHandy() {
   // Unten: der passende Knopf je Schritt
   const fuss = (() => {
     switch (schritt) {
-      case "darstellung":
-        return <StartKnopf titel="Weiter" art="lila" deaktiviert={!wahl} onPress={weiter} />;
       case "name":
         return <StartKnopf titel="Weiter" art="lila" deaktiviert={vorname.length < 2} onPress={weiter} />;
       case "quelle":
@@ -226,48 +214,6 @@ function StartHandy() {
 
         <Animated.View style={{ flex: 1, opacity: blende }}>
           <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 22, paddingBottom: 16 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-            {schritt === "darstellung" ? (
-              <>
-                <FigurBlase figur="neugierig" teile={["Hell oder dunkel? Such dir deinen ", ["Look"], " aus!"]} />
-                <View style={{ flex: 1, justifyContent: "center", paddingVertical: 24 }}>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
-                    {(
-                      [
-                        { id: "hell", titel: "Hell" },
-                        { id: "dunkel", titel: "Dunkel" },
-                        { id: "system", titel: "System" },
-                      ] as { id: Wahl; titel: string }[]
-                    ).map((o) => (
-                      <Pressable
-                        key={o.id}
-                        onPress={() => {
-                          tippen();
-                          darstellungWaehlen(o.id);
-                        }}
-                        accessibilityRole="radio"
-                        accessibilityState={{ selected: wahl === o.id }}
-                        style={{ flex: 1, alignItems: "center", gap: 12 }}
-                      >
-                        <Text style={{ ...startSchrift.titel, fontSize: 22, color: HELL.tinte }}>{o.titel}</Text>
-                        <View style={{ width: "100%", aspectRatio: 1, maxWidth: 110, borderRadius: 24, padding: 4, borderWidth: 3, borderColor: wahl === o.id ? START.lila : "transparent" }}>
-                          <View style={{ flex: 1, borderRadius: 18, overflow: "hidden", borderWidth: 1, borderColor: HELL.linie, flexDirection: "row", backgroundColor: o.id === "dunkel" ? START.grund : "#FFFFFF" }}>
-                            {o.id === "system" ? <View style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "50%", backgroundColor: START.grund }} /> : null}
-                            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-                              <Icon name={o.id === "hell" ? "sunny-outline" : o.id === "dunkel" ? "moon-outline" : "contrast-outline"} sf={o.id === "hell" ? "sun.max" : o.id === "dunkel" ? "moon" : "circle.lefthalf.filled"} size={34} color={o.id === "dunkel" ? "#FFFFFF" : o.id === "system" ? START.lila : HELL.tinte} weight="regular" />
-                            </View>
-                          </View>
-                        </View>
-                        <View style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 2.5, borderColor: wahl === o.id ? START.lila : "#C9C4DB", backgroundColor: wahl === o.id ? START.lila : "transparent", alignItems: "center", justifyContent: "center" }}>
-                          {wahl === o.id ? <Icon name="checkmark" size={16} color="#FFFFFF" /> : null}
-                        </View>
-                      </Pressable>
-                    ))}
-                  </View>
-                  <Text style={{ ...startSchrift.text, fontSize: 15, color: HELL.tinte2, textAlign: "center", marginTop: 24 }}>„System“ folgt der Einstellung deines Handys.</Text>
-                </View>
-              </>
-            ) : null}
-
             {schritt === "name" ? (
               <>
                 <FigurBlase figur="winken" teile={["Hi! Wie ", ["heißt"], " du?"]} />

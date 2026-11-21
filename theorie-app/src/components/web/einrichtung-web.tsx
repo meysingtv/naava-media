@@ -15,7 +15,7 @@ import { FRAGEN_AKTIV } from "@/lib/funktionen";
 // Karte Zurück und Weiter. Enter geht einen Schritt weiter. Die Logik bleibt
 // in der Route (app/einrichtung.tsx).
 
-const NAMEN = ["Klasse", "Prüfung", FRAGEN_AKTIV ? "Tagesziel" : "Erinnerung", "Darstellung"];
+const NAMEN = ["Klasse", "Prüfung", FRAGEN_AKTIV ? "Tagesziel" : "Erinnerung"];
 const WOCHENTAGE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 const MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
 const TAGE_KURZ = ["So.", "Mo.", "Di.", "Mi.", "Do.", "Fr.", "Sa."];
@@ -480,7 +480,6 @@ const KOEPFE: { titel: string; unter: string }[] = [
   FRAGEN_AKTIV
     ? { titel: "Wie viel pro Tag?", unter: "Kleine, tägliche Schritte bringen am meisten. Du kannst es jederzeit ändern." }
     : { titel: "Sollen wir dich erinnern?", unter: "Kleine, tägliche Schritte bringen am meisten. Du kannst es jederzeit ändern." },
-  { titel: "Hell oder dunkel?", unter: "Wähl, wie die App aussehen soll." },
 ];
 
 function Taste({ children }: { children: ReactNode }) {
@@ -493,9 +492,9 @@ function Taste({ children }: { children: ReactNode }) {
 
 export function EinrichtungWeb(p: EinrichtungWebProps) {
   const { schritt } = p;
-  const fertig = schritt >= 4;
+  const fertig = schritt >= 3;
   const weiterAus = schritt === 1 && !p.termin && !p.keinTermin;
-  const weiterTitel = fertig ? "Los geht's" : schritt === 3 ? "Fertig" : weiterAus ? "Datum wählen" : "Weiter";
+  const weiterTitel = fertig ? "Los geht's" : schritt === 2 ? "Fertig" : weiterAus ? "Datum wählen" : "Weiter";
   const weiter = () => {
     if (weiterAus) return;
     if (fertig) p.onFertig();
@@ -538,7 +537,6 @@ export function EinrichtungWeb(p: EinrichtungWebProps) {
             {schritt === 0 ? <SchrittKlasse wert={p.klasse} onWahl={p.onKlasse} /> : null}
             {schritt === 1 ? <SchrittTermin {...p} /> : null}
             {schritt === 2 ? <SchrittZiel {...p} /> : null}
-            {schritt === 3 ? <SchrittDarstellung wert={p.darstellung} onWahl={p.onDarstellung} /> : null}
             {fertig ? (
               <Fertig
                 name={p.vorname}

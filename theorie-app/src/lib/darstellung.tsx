@@ -98,16 +98,14 @@ type Kontext = {
 const DarstellungKontext = createContext<Kontext>({ darstellung: "hell", farbwelt: TAG, setzen: () => {}, belohnungen: false, belohnungenSetzen: () => {}, bereit: true });
 
 export function DarstellungProvider({ children }: { children: ReactNode }) {
-  // Ohne gespeicherte Wahl ist die App hell; dunkel nur, wenn man es so eingestellt hat.
-  const [darstellung, setDarstellung] = useState<Darstellung>("hell");
+  // Die App ist immer hell – den dunklen Modus gibt es nicht mehr.
+  const darstellung: Darstellung = "hell";
   const [belohnungen, setBelohnungen] = useState(false);
   const [bereit, setBereit] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(SPEICHER)
-      .then((w) => {
-        if (w === "hell" || w === "dunkel") setDarstellung(w);
-      })
+    // Alte Wahl „dunkel“ vergessen.
+    AsyncStorage.removeItem(SPEICHER)
       .catch(() => {})
       .finally(() => setBereit(true));
     AsyncStorage.getItem(SPEICHER_BELOHNUNGEN)
@@ -119,10 +117,7 @@ export function DarstellungProvider({ children }: { children: ReactNode }) {
     () => ({
       darstellung,
       farbwelt: darstellung === "hell" ? TAG : NACHT,
-      setzen: (d) => {
-        setDarstellung(d);
-        AsyncStorage.setItem(SPEICHER, d).catch(() => {});
-      },
+      setzen: () => {},
       belohnungen,
       belohnungenSetzen: (an) => {
         setBelohnungen(an);

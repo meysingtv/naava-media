@@ -42,7 +42,7 @@ import { FRAGEN_AKTIV } from "@/lib/funktionen";
 // dunkel. Am Ende eine Zusammenfassung und danach die App-Tour. Alles lässt
 // sich später in den Einstellungen ändern.
 
-const SCHRITTE = 4;
+const SCHRITTE = 3;
 const ZIELE = [
   { n: 15, name: "Entspannt", min: 8 },
   { n: 30, name: "Normal", min: 15 },
@@ -676,7 +676,7 @@ function Inhalt() {
     );
   }
 
-  const weiterTitel = ["Weiter", termin || keinTermin ? "Weiter" : "Datum wählen", "Weiter", "Fertig", zurueck ? "Weiter" : "Tour starten"][schritt];
+  const weiterTitel = ["Weiter", termin || keinTermin ? "Weiter" : "Datum wählen", "Fertig", zurueck ? "Weiter" : "Tour starten"][schritt];
   const weiterAus = schritt === 1 && !termin && !keinTermin;
 
   return (
@@ -718,8 +718,7 @@ function Inhalt() {
             />
           ) : null}
           {schritt === 2 ? <SchrittZiel ziel={tagesziel} empfohlen={empfohlen} onZiel={setZiel} erinnerung={erinnerung} onErinnerung={setErinnerung} /> : null}
-          {schritt === 3 ? <SchrittDarstellung wert={darstellung} onWahl={darstellungSetzen} /> : null}
-          {schritt === 4 ? (
+          {schritt === 3 ? (
             <Fertig
               name={vorname}
               mitTour={!zurueck}
