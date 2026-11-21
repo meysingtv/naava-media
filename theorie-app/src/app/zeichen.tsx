@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AktionsLeiste, HauptKnopf, NebenKnopf } from "@/components/frage-rahmen";
+import { GlasGrund, GlasKarte } from "@/components/glas-flaeche";
 import { FotoKopf, Seite } from "@/components/seite";
 import { Chip, Knopf, T } from "@/components/ui";
 import { ZeichenWeb } from "@/components/web/zeichen-web";
@@ -28,6 +29,17 @@ export default function Zeichen() {
   return useDesktop() ? <ZeichenWeb /> : <ZeichenHandy />;
 }
 
+function ZeichenInhalt({ z, farbe }: { z: ZeichenInfo; farbe: string }) {
+  return (
+    <View style={{ alignItems: "center", gap: 12, paddingTop: 20, paddingBottom: 16, paddingHorizontal: 8 }}>
+      <Verkehrszeichen zeichen={z.key} groesse={62} />
+      <Text numberOfLines={2} style={{ ...schrift.textMittel, fontSize: 12, lineHeight: 16, color: farbe, textAlign: "center" }}>
+        {z.kurz ?? z.name}
+      </Text>
+    </View>
+  );
+}
+
 function ZeichenHandy() {
   const insets = useSafeAreaInsets();
   const { farbwelt: f } = useDarstellung();
@@ -38,6 +50,8 @@ function ZeichenHandy() {
   return (
     <Seite>
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+        {/* Dunkel: weicher Lichtgrund unter dem Foto, darauf Kacheln aus Glas */}
+        {f.hell ? null : <GlasGrund ab={insets.top + 300} dezent />}
         <FotoKopf bild={FOTOS.schilder} hoehe={300} titel="Verkehrszeichen" unter={`${ZEICHEN_INFO.length} Zeichen mit Bedeutung`} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: RAND, gap: 8, paddingTop: 8, paddingBottom: 16 }}>
           {GRUPPEN.map((g) => (
@@ -56,20 +70,19 @@ function ZeichenHandy() {
               accessibilityLabel={z.name}
               style={({ pressed }) => [
                 { width: "31%", flexGrow: 1, maxWidth: "32%", borderRadius: 24, transform: [{ scale: pressed ? 0.96 : 1 }] },
-                f.hell ? { backgroundColor: "#FFFFFF", ...leuchten("#3C2C18", 0.06, 16, 6) } : { backgroundColor: "#16181C" },
+                f.hell ? { backgroundColor: "#FFFFFF", ...leuchten("#3C2C18", 0.06, 16, 6) } : null,
               ]}
             >
-              <View style={{ borderRadius: 24, overflow: "hidden" }}>
-                {/* Ruhiger Verlauf: oben etwas heller, wie Licht von oben */}
-                <LinearGradient colors={f.hell ? ["#FFFFFF", "#F8F6F2"] : ["#24272D", "#16181C"]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
-                {f.hell ? null : <View style={{ position: "absolute", top: 0, left: 18, right: 18, height: 1, backgroundColor: "rgba(255,255,255,0.08)" }} />}
-                <View style={{ alignItems: "center", gap: 12, paddingTop: 20, paddingBottom: 16, paddingHorizontal: 8 }}>
-                  <Verkehrszeichen zeichen={z.key} groesse={62} />
-                  <Text numberOfLines={2} style={{ ...schrift.textMittel, fontSize: 12, lineHeight: 16, color: f.text2, textAlign: "center" }}>
-                    {z.kurz ?? z.name}
-                  </Text>
+              {f.hell ? (
+                <View style={{ borderRadius: 24, overflow: "hidden" }}>
+                  <LinearGradient colors={["#FFFFFF", "#F8F6F2"]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+                  <ZeichenInhalt z={z} farbe={f.text2} />
                 </View>
-              </View>
+              ) : (
+                <GlasKarte pointerEvents="none" style={{ borderRadius: 24 }}>
+                  <ZeichenInhalt z={z} farbe={f.text} />
+                </GlasKarte>
+              )}
             </Pressable>
           ))}
         </View>
