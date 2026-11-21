@@ -245,6 +245,9 @@ export default function RootLayout() {
     Nunito_700Bold,
     Nunito_800ExtraBold,
     Nunito_900Black,
+    // Start (Willkommen und Fragen vor dem Konto)
+    BarlowCondensed_700Bold: require("../../assets/fonts/BarlowCondensed_700Bold.ttf"),
+    BarlowCondensed_800ExtraBold: require("../../assets/fonts/BarlowCondensed_800ExtraBold.ttf"),
   });
 
   if (!schriftenGeladen) return null;

@@ -1,100 +1,49 @@
-import { useState } from "react";
-import { Image, KeyboardAvoidingView, Pressable, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useDesktop, useFenster } from "@/lib/fenster";
-import { Eingabe, Knopf, T } from "@/components/ui";
-import { Logo } from "@/components/grafik";
 import { WillkommenWeb } from "@/components/web/auth-web";
-import { FOTOS } from "@/lib/fotos";
-import { useKonto } from "@/lib/konto";
-import { tippen } from "@/lib/haptik";
-import { abstand, farben, RAND, schrift } from "@/lib/theme";
-import { RechtsLinks } from "@/components/rechts-seite";
-import { FRAGEN_AKTIV } from "@/lib/funktionen";
+import { LorbeerWert, SeitenPunkte, START, StartBild, StartKnopf, StartRechtsHinweis, StartTitel } from "@/components/start-teile";
 
 /** Im Browser am PC: zweigeteilte Fassung (web/auth-web.tsx). */
 export default function Willkommen() {
   return useDesktop() ? <WillkommenWeb /> : <WillkommenHandy />;
 }
 
+/**
+ * Erste Seite des Starts: Bild, kurzer Satz, zwei Werte und die Knöpfe.
+ * Die weiteren Seiten (Vorstellung, Fragen mit der Figur, am Ende E-Mail)
+ * folgen.
+ */
 function WillkommenHandy() {
   const insets = useSafeAreaInsets();
-  const { width } = useFenster();
-  const { alsGast } = useKonto();
-  const [gastForm, setGastForm] = useState(false);
-  const [name, setName] = useState("");
-  const bildHoehe = Math.min(width * 0.92, 420);
+  const { width, height } = useFenster();
+  // Bild so hoch, dass Titel, Werte und Knöpfe ohne Scrollen passen
+  const bildHoehe = Math.max(230, Math.min(width * 1.05, height - insets.bottom - 560));
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: farben.grund }} behavior="padding">
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + abstand(6) }} keyboardShouldPersistTaps="handled" bounces={false}>
-        <View style={{ height: bildHoehe + insets.top, overflow: "hidden" }}>
-          <Image source={FOTOS.tagesziel} style={{ position: "absolute", top: 0, left: 0, width, height: bildHoehe + insets.top }} resizeMode="cover" />
-          <LinearGradient
-            colors={["rgba(11,12,15,0.55)", "rgba(11,12,15,0)", "rgba(11,12,15,0.35)", farben.grund]}
-            locations={[0, 0.3, 0.65, 1]}
-            style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
-            pointerEvents="none"
-          />
-          <View style={{ position: "absolute", top: insets.top + abstand(4), left: RAND }}>
-            <Logo groesse={30} />
+    <View style={{ flex: 1, backgroundColor: START.grund }}>
+      <StatusBar style="light" />
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false} showsVerticalScrollIndicator={false}>
+        <StartBild breite={width} hoehe={bildHoehe} oben={insets.top} />
+        <View style={{ flex: 1, paddingHorizontal: 20, gap: 22, marginTop: 4, paddingBottom: 8 }}>
+          <StartTitel groesse={width < 420 ? 35 : 40} teile={["Mach deinen ", ["Führerschein."], "\nBestehe die Theorie."]} />
+          <View style={{ flexDirection: "row", justifyContent: "center", gap: 22 }}>
+            <LorbeerWert wert="100" label="VERKEHRSZEICHEN" />
+            <LorbeerWert wert="Videos" label="ZU JEDEM THEMA" />
           </View>
         </View>
-
-        <View style={{ flex: 1, paddingHorizontal: RAND, gap: abstand(3), marginTop: -abstand(6) }}>
-          <T v="mini" farbe={farben.orange}>
-            Führerschein-Theorie
-          </T>
-          <T v="display">Deine Theorie.{"\n"}Klar geplant.</T>
-          <T v="text" style={{ fontSize: 16, lineHeight: 24 }}>
-            {FRAGEN_AKTIV
-              ? "Kurze Lerneinheiten, echte Prüfungslogik und ein klarer Überblick, wie weit du schon bist."
-              : "Alle Themen in kurzen Videos erklärt – dazu Verkehrszeichen, Formeln und die Schilder-Jagd."}
-          </T>
-
-          <View style={{ flex: 1, minHeight: abstand(6) }} />
-
-          {gastForm ? (
-            <View style={{ gap: abstand(3) }}>
-              <Eingabe
-                icon="person-outline"
-                value={name}
-                onChangeText={setName}
-                placeholder="Wie heißt du?"
-                autoFocus
-                autoCapitalize="words"
-                returnKeyType="go"
-                onSubmitEditing={() => alsGast(name)}
-              />
-              <Knopf titel="Los geht's" icon="arrow-forward" onPress={() => alsGast(name)} />
-              <T v="klein" zentriert>
-                Dein Fortschritt bleibt auf diesem Gerät. Ein Konto kannst du jederzeit anlegen.
-              </T>
-            </View>
-          ) : (
-            <View style={{ gap: abstand(3) }}>
-              <Knopf titel="Konto erstellen" icon="arrow-forward" onPress={() => router.push("/registrieren")} />
-              <Knopf titel="Ich habe schon ein Konto" art="sekundaer" onPress={() => router.push("/anmelden")} />
-              <Pressable
-                onPress={() => {
-                  tippen();
-                  setGastForm(true);
-                }}
-                hitSlop={8}
-                style={{ alignSelf: "center", paddingVertical: abstand(2) }}
-              >
-                <T v="klein" farbe={farben.text2} style={{ ...schrift.textHalb }}>
-                  Erst mal ohne Konto umschauen
-                </T>
-              </Pressable>
-              <RechtsLinks />
-            </View>
-          )}
-        </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+      <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: insets.bottom + 8, gap: 14 }}>
+        <SeitenPunkte anzahl={4} aktiv={0} />
+        <View style={{ gap: 10, marginTop: 6 }}>
+          <StartKnopf titel="Weiter" onPress={() => router.push("/registrieren")} />
+          <StartKnopf titel="Ich habe schon ein Konto" art="dunkel" onPress={() => router.push("/anmelden")} />
+        </View>
+        <StartRechtsHinweis onNutzung={() => router.push("/nutzungsbedingungen")} onDatenschutz={() => router.push("/datenschutz")} />
+      </View>
+    </View>
   );
 }
