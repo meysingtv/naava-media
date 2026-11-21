@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Image, Pressable, Text, View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
+import { Image, Pressable, Text, View, type ImageSourcePropType, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 import { router } from "expo-router";
 
 import { Icon, type IconName } from "@/components/icon";
@@ -207,13 +207,23 @@ export function LilaFigurBlase({ figur = "grund", text, style }: { figur?: Figur
 }
 
 /** Kleine Karte für Schnellzugriffe und Lernhilfen: Symbol + Name. */
-export function LilaKachel({ titel, icon, iconFarbe, onPress, style, gross }: { titel: string; icon: IconName; iconFarbe?: string; onPress: () => void; style?: StyleProp<ViewStyle>; gross?: boolean }) {
+/** Eigene Symbole im App-Stil (assets/images/icons). */
+export const SYMBOLE = {
+  play: require("../../assets/images/icons/play.png"),
+  birne: require("../../assets/images/icons/birne.png"),
+  warnung: require("../../assets/images/icons/warnung.png"),
+  rechner: require("../../assets/images/icons/rechner.png"),
+  scan: require("../../assets/images/icons/scan.png"),
+  kalender: require("../../assets/images/icons/kalender.png"),
+} satisfies Record<string, ImageSourcePropType>;
+
+export function LilaKachel({ titel, icon, bild, iconFarbe, onPress, style, gross }: { titel: string; icon?: IconName; bild?: ImageSourcePropType; iconFarbe?: string; onPress: () => void; style?: StyleProp<ViewStyle>; gross?: boolean }) {
   const l = useLila();
   return (
     <LilaKarte onPress={onPress} label={titel} style={style}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 10, height: gross ? 54 : 50, paddingHorizontal: 14 }}>
-        <Icon name={icon} size={gross ? 24 : 21} color={iconFarbe ?? l.lila} />
-        <Text style={{ ...lilaSchrift.fett, fontSize: gross ? 21 : 18, color: l.tinte, flexShrink: 1 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 9, height: gross ? 56 : 52, paddingHorizontal: 12 }}>
+        {bild ? <Image source={bild} style={{ width: gross ? 32 : 27, height: gross ? 32 : 27 }} resizeMode="contain" /> : icon ? <Icon name={icon} size={gross ? 24 : 21} color={iconFarbe ?? l.lila} /> : null}
+        <Text style={{ ...lilaSchrift.fett, fontSize: gross ? 21 : 17.5, color: l.tinte, flexShrink: 1 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
           {titel}
         </Text>
       </View>

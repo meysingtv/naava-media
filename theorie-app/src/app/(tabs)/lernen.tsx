@@ -9,7 +9,7 @@ import { Glas } from "@/components/glas";
 import { GlasGrund } from "@/components/glas-flaeche";
 import { Kopfzeile, StartKnopf } from "@/components/home";
 import { Icon } from "@/components/icon";
-import { LilaFigurBlase, LilaKachel, LilaKarte, LilaKopf, LILA_RAND, LilaTitel, lilaSchrift, useLila } from "@/components/lila-teile";
+import { LilaFigurBlase, LilaKachel, LilaKarte, LilaKopf, LILA_RAND, LilaTitel, lilaSchrift, SYMBOLE, useLila } from "@/components/lila-teile";
 import { FIGUR } from "@/components/start-teile";
 import {
   GrundstoffKarte,
@@ -90,12 +90,12 @@ function LernenNurVideos() {
         <LilaKopf titel="Lernhilfen" style={{ marginTop: 14 }} />
         <TourZiel id="lernen-modi" style={{ gap: 10 }}>
           <View style={{ flexDirection: "row", gap: 10 }}>
-            <LilaKachel titel="Schilder-Jagd" icon="scan-outline" onPress={() => router.push("/schilder-jagd")} style={{ flex: 1 }} />
-            <LilaKachel titel="Kurz erklärt" icon="bulb" iconFarbe="#F5B400" onPress={() => router.push("/kurz-erklaert")} style={{ flex: 1 }} />
+            <LilaKachel titel="Schilder-Jagd" bild={SYMBOLE.scan} onPress={() => router.push("/schilder-jagd")} style={{ flex: 1 }} />
+            <LilaKachel titel="Kurz erklärt" bild={SYMBOLE.birne} onPress={() => router.push("/kurz-erklaert")} style={{ flex: 1 }} />
           </View>
           <View style={{ flexDirection: "row", gap: 10 }}>
-            <LilaKachel titel="Verkehrszeichen" icon="warning-outline" onPress={() => router.push("/zeichen")} style={{ flex: 1 }} />
-            <LilaKachel titel="Formeln" icon="calculator-outline" onPress={() => router.push("/formeln")} style={{ flex: 1 }} />
+            <LilaKachel titel="Verkehrszeichen" bild={SYMBOLE.warnung} onPress={() => router.push("/zeichen")} style={{ flex: 1 }} />
+            <LilaKachel titel="Formeln" bild={SYMBOLE.rechner} onPress={() => router.push("/formeln")} style={{ flex: 1 }} />
           </View>
         </TourZiel>
 

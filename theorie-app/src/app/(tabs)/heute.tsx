@@ -11,7 +11,7 @@ import { HomeWeb } from "@/components/web/home-web";
 import { CrewBereich } from "@/components/crew";
 import { FokusKarte, GRUSS, Handschrift, HeldWerte, heldHoehe, KinoHeld, Kopfzeile, PruefungKarte, Schnellstart, StartKnopf, tageszeit, ThemenKarussell, ZitatKarte } from "@/components/home";
 import { Icon } from "@/components/icon";
-import { LilaBanner, LilaKachel, LilaKarte, LilaKopf, LILA_RAND, lilaSchrift, useLila } from "@/components/lila-teile";
+import { LilaBanner, LilaKachel, LilaKarte, LilaKopf, LILA_RAND, lilaSchrift, SYMBOLE, useLila } from "@/components/lila-teile";
 import { FOTOS } from "@/lib/fotos";
 import { ProfilBild } from "@/components/profilbild";
 import { useInhaltUnten } from "@/components/tab-leiste";
@@ -144,7 +144,7 @@ function HomeLila() {
         <LilaKarte onPress={() => router.push("/pruefungstermin")} label={countdown.titel}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 13, paddingHorizontal: 14 }}>
             <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: l.lilaZart, alignItems: "center", justifyContent: "center" }}>
-              <Icon name="calendar-outline" size={25} color={l.lila} />
+              <Image source={SYMBOLE.kalender} style={{ width: 34, height: 34 }} resizeMode="contain" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ ...lilaSchrift.titel, fontSize: 24, lineHeight: 27, color: l.tinte }}>{countdown.titel}</Text>
@@ -161,14 +161,14 @@ function HomeLila() {
         <LilaKopf titel="Schnellzugriffe" style={{ marginTop: 22 }} />
         <TourZiel id="home-schnell" style={{ gap: 10 }}>
           <View style={{ flexDirection: "row", gap: 10 }}>
-            <LilaKachel titel="Lernvideos" icon="play-outline" onPress={() => router.navigate("/lernen")} style={{ flex: 1 }} />
-            <LilaKachel titel="Kurz erklärt" icon="bulb" iconFarbe="#F5B400" onPress={() => router.push("/kurz-erklaert")} style={{ flex: 1 }} />
+            <LilaKachel titel="Lernvideos" bild={SYMBOLE.play} onPress={() => router.navigate("/lernen")} style={{ flex: 1 }} />
+            <LilaKachel titel="Kurz erklärt" bild={SYMBOLE.birne} onPress={() => router.push("/kurz-erklaert")} style={{ flex: 1 }} />
           </View>
           <View style={{ flexDirection: "row", gap: 10 }}>
-            <LilaKachel titel="Verkehrszeichen" icon="warning-outline" onPress={() => router.push("/zeichen")} style={{ flex: 1 }} />
-            <LilaKachel titel="Formeln" icon="calculator-outline" onPress={() => router.push("/formeln")} style={{ flex: 1 }} />
+            <LilaKachel titel="Verkehrszeichen" bild={SYMBOLE.warnung} onPress={() => router.push("/zeichen")} style={{ flex: 1 }} />
+            <LilaKachel titel="Formeln" bild={SYMBOLE.rechner} onPress={() => router.push("/formeln")} style={{ flex: 1 }} />
           </View>
-          <LilaKachel titel="Schilder-Jagd" icon="scan-outline" gross onPress={() => router.push("/schilder-jagd")} />
+          <LilaKachel titel="Schilder-Jagd" bild={SYMBOLE.scan} gross onPress={() => router.push("/schilder-jagd")} />
         </TourZiel>
         </View>
       </ScrollView>
