@@ -76,7 +76,7 @@ function HomeLila() {
   const tage = termin ? tageBis(termin) : null;
   const kommend = tage !== null && tage >= 0 ? tage : null;
   const glockePunkt = !stand.erinnerung.an;
-  const heldH = Math.round(width * (546 / 1100));
+  const heldH = Math.round(width * (586 / 1100));
 
   const countdown =
     kommend === null
@@ -91,10 +91,11 @@ function HomeLila() {
     <View style={{ flex: 1, backgroundColor: l.grund }}>
       {fokus ? <StatusBar style="dark" /> : null}
       {/* Himmel hinter dem oberen Teil – auch beim Überziehen nach unten */}
-      <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", backgroundColor: HIMMEL }} />
+      <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", backgroundColor: l.grund }} />
       <ScrollView {...tourBlatt} contentContainerStyle={{ paddingBottom: inhaltUnten + 8 }} showsVerticalScrollIndicator={false}>
         {/* Begrüßung auf dem Himmel – das Bild darunter setzt ihn nahtlos fort */}
-        <View style={{ backgroundColor: HIMMEL, paddingTop: insets.top + 10, paddingHorizontal: LILA_RAND, flexDirection: "row", alignItems: "flex-start" }}>
+        <View style={{ paddingTop: insets.top + 10, paddingHorizontal: LILA_RAND, paddingBottom: 6, flexDirection: "row", alignItems: "flex-start" }}>
+          <LinearGradient pointerEvents="none" colors={[l.grund, HIMMEL]} locations={[0.35, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
           <Text style={{ flex: 1, ...lilaSchrift.titel, fontSize: 40, lineHeight: 43, letterSpacing: -0.6, color: l.tinte }} numberOfLines={2}>
             {GRUSS_LILA[zeit]},{"\n"}
             <Text style={{ color: l.lilaKante }}>{vorname}</Text>!
@@ -109,7 +110,7 @@ function HomeLila() {
             style={{ marginTop: 10, marginRight: 16 }}
           >
             <Icon name="notifications-outline" size={26} color={l.tinte} />
-            {glockePunkt ? <View style={{ position: "absolute", top: -1, right: -1, width: 9, height: 9, borderRadius: 5, backgroundColor: l.lila, borderWidth: 1.5, borderColor: HIMMEL }} /> : null}
+            {glockePunkt ? <View style={{ position: "absolute", top: -1, right: -1, width: 9, height: 9, borderRadius: 5, backgroundColor: l.lila, borderWidth: 1.5, borderColor: l.grund }} /> : null}
           </Pressable>
           <Pressable
             onPress={() => {
@@ -124,10 +125,14 @@ function HomeLila() {
         </View>
 
         {/* Bild mit der Figur über die ganze Breite */}
-        <Image source={FOTOS.heldAuto} style={{ width: "100%", height: heldH, backgroundColor: HIMMEL }} resizeMode="cover" accessibilityLabel="Die Figur sagt: Mach heute einen Schritt näher zum Führerschein!" />
+        <View>
+          <Image source={FOTOS.heldAuto} style={{ width: "100%", height: heldH, backgroundColor: HIMMEL }} resizeMode="cover" accessibilityLabel="Die Figur sagt: Mach heute einen Schritt näher zum Führerschein!" />
+          {/* Ganz oben weich aus dem Himmel heraus – keine Kante */}
+          <LinearGradient pointerEvents="none" colors={[HIMMEL, mitDeckkraft(HIMMEL, 0)]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 26 }} />
+        </View>
 
         {/* Inhalt als Blatt mit runden Ecken, das über dem Bild liegt */}
-        <View style={{ marginTop: -26, backgroundColor: l.grund, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: LILA_RAND, paddingTop: 18 }}>
+        <View style={{ marginTop: -10, backgroundColor: l.grund, borderTopLeftRadius: 10, borderTopRightRadius: 10, paddingHorizontal: LILA_RAND, paddingTop: 16 }}>
         <LilaKarte onPress={() => router.push("/pruefungstermin")} label={countdown.titel}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 13, paddingHorizontal: 14 }}>
             <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: l.lilaZart, alignItems: "center", justifyContent: "center" }}>
