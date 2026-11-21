@@ -217,7 +217,7 @@ function StartHandy() {
       <StatusBar style="dark" />
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={{ paddingTop: insets.top + 6, paddingHorizontal: 20 }}>
-          {schritt === "fertig" || schritt === "hallo" ? <View style={{ height: 44 }} /> : <FrageKopf anteil={(platz + 1) / reiheOhne.length} onZurueck={zurueck} />}
+          {schritt === "fertig" || schritt === "hallo" ? <View style={{ height: 44 }} /> : <FrageKopf schritt={platz + 1} gesamt={reiheOhne.length} onZurueck={zurueck} />}
         </View>
 
         <Animated.View style={{ flex: 1, opacity: blende }}>
@@ -342,7 +342,7 @@ function StartHandy() {
                       setLandOffen(true);
                     }}
                     accessibilityRole="button"
-                    style={{ alignSelf: "stretch", flexDirection: "row", alignItems: "center", height: 62, paddingHorizontal: 20, borderRadius: 20, backgroundColor: HELL.karte, borderWidth: 2, borderBottomWidth: 5, borderColor: land ? START.lila : HELL.linie, marginTop: 8 }}
+                    style={{ alignSelf: "stretch", flexDirection: "row", alignItems: "center", height: 62, paddingHorizontal: 20, borderRadius: 18, backgroundColor: HELL.karte, borderWidth: 2, borderBottomWidth: 4, borderColor: land ? START.lila : HELL.linie, marginTop: 8 }}
                   >
                     <Icon name="location-outline" size={20} color={START.lila} />
                     <Text style={{ ...startSchrift.textHalb, fontSize: 17, color: land ? HELL.tinte : HELL.tinte3, flex: 1, marginLeft: 12 }}>{land ?? "Bundesland wählen"}</Text>
@@ -416,7 +416,7 @@ function StartHandy() {
               <>
                 <FigurBlase figur="brief" teile={anmelden ? ["Schön, dass du ", ["wieder da"], " bist!"] : ["Fast geschafft! Wohin schicke ich deinen ", ["Code"], "?"]} />
                 <View style={{ flex: 1, justifyContent: "center", paddingVertical: 24, gap: 14 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12, height: 64, paddingHorizontal: 18, borderRadius: 20, backgroundColor: HELL.karte, borderWidth: 2, borderBottomWidth: 5, borderColor: email ? START.lila : HELL.linie }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 12, height: 64, paddingHorizontal: 18, borderRadius: 18, backgroundColor: HELL.karte, borderWidth: 2, borderBottomWidth: 4, borderColor: email ? START.lila : HELL.linie }}>
                     <Icon name="mail-outline" size={22} color={START.lila} />
                     <TextInput
                       value={email}

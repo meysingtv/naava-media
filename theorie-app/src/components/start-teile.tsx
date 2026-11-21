@@ -59,7 +59,7 @@ const KNOPF: Record<KnopfArt | "aus", { flaeche: string; kante: string; text: st
   aus: { flaeche: "#E7E4F0", kante: "#D2CEE0", text: "#A9A4BE" },
 };
 
-const KANTE = 5;
+const KANTE = 4;
 
 /** Großer, runder Knopf mit fester Kante unten – gedrückt sinkt er ein. */
 export function StartKnopf({ titel, art = "hell", onPress, deaktiviert, laedt, style }: { titel: string; art?: KnopfArt; onPress: () => void; deaktiviert?: boolean; laedt?: boolean; style?: StyleProp<ViewStyle> }) {
@@ -81,8 +81,8 @@ export function StartKnopf({ titel, art = "hell", onPress, deaktiviert, laedt, s
         const tief = pressed && !deaktiviert ? KANTE - 1 : 0;
         return (
           <View style={{ flex: 1, justifyContent: "flex-end", opacity: deaktiviert && !grau ? 0.45 : 1 }}>
-            <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 58, borderRadius: 29, backgroundColor: k.kante }} />
-            <View style={{ height: 58, borderRadius: 29, backgroundColor: k.flaeche, alignItems: "center", justifyContent: "center", transform: [{ translateY: tief - KANTE }] }}>
+            <View style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 58, borderRadius: 18, backgroundColor: k.kante }} />
+            <View style={{ height: 58, borderRadius: 18, backgroundColor: k.flaeche, alignItems: "center", justifyContent: "center", transform: [{ translateY: tief - KANTE }] }}>
               {laedt ? <ActivityIndicator color={k.text} /> : <Text style={{ ...startSchrift.titel, fontSize: 23, letterSpacing: -0.2, color: k.text }}>{titel}</Text>}
             </View>
           </View>
@@ -95,9 +95,9 @@ export function StartKnopf({ titel, art = "hell", onPress, deaktiviert, laedt, s
 /** Punkte für die Seiten des Starts. */
 export function SeitenPunkte({ anzahl, aktiv }: { anzahl: number; aktiv: number }) {
   return (
-    <View style={{ flexDirection: "row", justifyContent: "center", gap: 9 }}>
+    <View style={{ flexDirection: "row", justifyContent: "center", gap: 6 }}>
       {Array.from({ length: anzahl }, (_, i) => (
-        <View key={i} style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: i === aktiv ? "#FFFFFF" : "rgba(255,255,255,0.28)" }} />
+        <View key={i} style={{ width: i === aktiv ? 24 : 8, height: 8, borderRadius: 4, backgroundColor: i === aktiv ? START.lila : "rgba(255,255,255,0.28)" }} />
       ))}
     </View>
   );
@@ -276,19 +276,21 @@ export const FIGUR = {
 
 export type FigurName = keyof typeof FIGUR;
 
-/** Oben: Zurück und Fortschritt. */
-export function FrageKopf({ anteil, onZurueck }: { anteil: number; onZurueck?: () => void }) {
+/** Oben: runde Zurück-Taste und Fortschritt in Abschnitten (einer je Frage). */
+export function FrageKopf({ schritt, gesamt, onZurueck }: { schritt: number; gesamt: number; onZurueck?: () => void }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 14, height: 44 }}>
       {onZurueck ? (
-        <Pressable onPress={onZurueck} hitSlop={12} accessibilityRole="button" accessibilityLabel="Zurück" style={{ width: 32 }}>
-          <Icon name="arrow-back" size={24} color={HELL.tinte} />
+        <Pressable onPress={onZurueck} hitSlop={10} accessibilityRole="button" accessibilityLabel="Zurück" style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, backgroundColor: pressed ? "#ECE9F7" : HELL.karte, borderWidth: 1.5, borderColor: HELL.linie, alignItems: "center", justifyContent: "center" })}>
+          <Icon name="chevron-back" size={20} color={HELL.tinte} />
         </Pressable>
       ) : (
-        <View style={{ width: 32 }} />
+        <View style={{ width: 40 }} />
       )}
-      <View style={{ flex: 1, height: 14, borderRadius: 7, backgroundColor: HELL.spur, overflow: "hidden" }}>
-        <View style={{ width: `${Math.max(8, Math.min(100, anteil * 100))}%`, height: "100%", borderRadius: 7, backgroundColor: START.lila }} />
+      <View style={{ flex: 1, flexDirection: "row", gap: 4 }}>
+        {Array.from({ length: gesamt }, (_, i) => (
+          <View key={i} style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: i < schritt ? START.lila : HELL.spur }} />
+        ))}
       </View>
     </View>
   );
@@ -300,8 +302,7 @@ export function FigurBlase({ figur, teile }: { figur: FigurName; teile: (string 
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
       <Image source={FIGUR[figur]} style={{ width: 82, height: 82 }} resizeMode="contain" />
       <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
-        <View style={{ width: 14, height: 14, backgroundColor: HELL.blase, transform: [{ rotate: "45deg" }], marginRight: -7, borderRadius: 2 }} />
-        <View style={{ flex: 1, backgroundColor: HELL.blase, borderRadius: 22, paddingVertical: 14, paddingHorizontal: 16 }}>
+        <View style={{ flex: 1, backgroundColor: HELL.karte, borderRadius: 20, borderTopLeftRadius: 6, borderWidth: 1.5, borderColor: HELL.linie, paddingVertical: 14, paddingHorizontal: 16 }}>
           <Text style={{ ...startSchrift.titel, fontSize: 28, lineHeight: 30, letterSpacing: -0.4, color: HELL.tinte }}>
             {teile.map((t, i) =>
               typeof t === "string" ? (
@@ -338,9 +339,9 @@ export function WahlKarte({ aktiv, onPress, children, style, label }: { aktiv: b
       style={({ pressed }) => [
         {
           backgroundColor: aktiv ? "#F1EEFF" : HELL.karte,
-          borderRadius: 20,
+          borderRadius: 18,
           borderWidth: 2,
-          borderBottomWidth: 5,
+          borderBottomWidth: 4,
           borderColor: aktiv ? START.lila : HELL.linie,
           transform: [{ translateY: pressed ? 2 : 0 }],
         },
