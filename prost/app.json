@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "PROST",
+    "slug": "prost",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0C0A18",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.prost.party"
+    },
+    "android": {
+      "package": "com.prost.party"
+    }
+  }
+}
