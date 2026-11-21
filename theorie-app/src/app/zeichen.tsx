@@ -1,19 +1,27 @@
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AktionsLeiste, HauptKnopf, NebenKnopf } from "@/components/frage-rahmen";
 import { FotoKopf, Seite } from "@/components/seite";
-import { Chip, kartenFlaeche, Knopf, T } from "@/components/ui";
+import { Chip, Knopf, T } from "@/components/ui";
 import { ZeichenWeb } from "@/components/web/zeichen-web";
 import { Verkehrszeichen, ZEICHEN_INFO, type ZeichenInfo } from "@/components/zeichen";
 import { useDarstellung } from "@/lib/darstellung";
 import { useDesktop } from "@/lib/fenster";
 import { FOTOS } from "@/lib/fotos";
 import { tippen } from "@/lib/haptik";
-import { RAND, schrift } from "@/lib/theme";
+import { leuchten, mitDeckkraft, RAND, schrift } from "@/lib/theme";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
+
+/** Farbton je Gruppe für die Kacheln. */
+const GRUPPEN_TON: Record<ZeichenInfo["gruppe"], string> = {
+  gefahr: "#F59E0B",
+  vorschrift: "#EF4444",
+  richt: "#3B82F6",
+};
 
 const GRUPPEN: { id: "alle" | ZeichenInfo["gruppe"]; titel: string }[] = [
   { id: "alle", titel: "Alle" },
@@ -37,33 +45,45 @@ function ZeichenHandy() {
   return (
     <Seite>
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
-        <FotoKopf bild={FOTOS.zeichen} hoehe={230} titel="Verkehrszeichen" unter={`${ZEICHEN_INFO.length} Zeichen mit Bedeutung`} />
+        <FotoKopf bild={FOTOS.schilder} hoehe={300} titel="Verkehrszeichen" unter={`${ZEICHEN_INFO.length} Zeichen mit Bedeutung`} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: RAND, gap: 8, paddingTop: 8, paddingBottom: 16 }}>
           {GRUPPEN.map((g) => (
             <Chip key={g.id} text={g.titel} aktiv={g.id === gruppe} onPress={() => setGruppe(g.id)} />
           ))}
         </ScrollView>
         <View style={{ paddingHorizontal: RAND, flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-          {liste.map((z) => (
-            <Pressable
-              key={z.key}
-              onPress={() => {
-                tippen();
-                setOffen(z);
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={z.name}
-              style={({ pressed }) => [
-                { width: "31%", flexGrow: 1, maxWidth: "32%", alignItems: "center", gap: 10, paddingVertical: 16, paddingHorizontal: 8, borderRadius: 22, transform: [{ scale: pressed ? 0.96 : 1 }] },
-                kartenFlaeche(f),
-              ]}
-            >
-              <Verkehrszeichen zeichen={z.key} groesse={60} />
-              <Text numberOfLines={2} style={{ ...schrift.textMittel, fontSize: 12, lineHeight: 16, color: f.text2, textAlign: "center" }}>
-                {z.kurz ?? z.name}
-              </Text>
-            </Pressable>
-          ))}
+          {liste.map((z) => {
+            const ton = GRUPPEN_TON[z.gruppe];
+            return (
+              <Pressable
+                key={z.key}
+                onPress={() => {
+                  tippen();
+                  setOffen(z);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={z.name}
+                style={({ pressed }) => [
+                  { width: "31%", flexGrow: 1, maxWidth: "32%", borderRadius: 22, transform: [{ scale: pressed ? 0.96 : 1 }] },
+                  f.hell ? { backgroundColor: "#FFFFFF", ...leuchten("#3C2C18", 0.07, 12, 4) } : { backgroundColor: f.flaeche },
+                ]}
+              >
+                <View style={{ borderRadius: 22, overflow: "hidden", borderWidth: 1, borderColor: mitDeckkraft(ton, f.hell ? 0.16 : 0.26) }}>
+                  <LinearGradient
+                    colors={[mitDeckkraft(ton, f.hell ? 0.16 : 0.24), mitDeckkraft(ton, f.hell ? 0.03 : 0.04)]}
+                    locations={[0, 0.75]}
+                    style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+                  />
+                  <View style={{ alignItems: "center", gap: 10, paddingTop: 18, paddingBottom: 14, paddingHorizontal: 8 }}>
+                    <Verkehrszeichen zeichen={z.key} groesse={62} />
+                    <Text numberOfLines={2} style={{ ...schrift.textMittel, fontSize: 12, lineHeight: 16, color: f.text, textAlign: "center" }}>
+                      {z.kurz ?? z.name}
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            );
+          })}
         </View>
       </ScrollView>
 

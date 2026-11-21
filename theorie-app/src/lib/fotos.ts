@@ -29,6 +29,8 @@ export const FOTOS = {
   strasse3: require("../../assets/images/fotos/strasse3.jpg"),
   baeume: require("../../assets/images/fotos/baeume.jpg"),
   zitat: require("../../assets/images/fotos/zitat.jpg"),
+  // Kopfbild der Verkehrszeichen (eigene Grafik)
+  schilder: require("../../assets/images/fotos/schilder.jpg"),
   // Titelbild der Startseite – wechselt mit der Tageszeit
   heldMorgen: require("../../assets/images/home/held-morgen.jpg"),
   heldTag: require("../../assets/images/home/held-tag.jpg"),
