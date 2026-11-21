@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
+import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -79,7 +80,10 @@ function ZeichenHandy() {
                   <ZeichenInhalt z={z} farbe={f.text2} />
                 </View>
               ) : (
-                <View style={{ borderRadius: 24, overflow: "hidden", backgroundColor: "rgba(20,19,19,0.82)", borderWidth: 1, borderColor: mitDeckkraft(f.orange, 0.3) }}>
+                <View style={{ borderRadius: 24, overflow: "hidden", backgroundColor: "rgba(30,28,28,0.45)" }}>
+                  {/* Mattglas: der Lichtgrund dahinter schimmert weich durch */}
+                  <BlurView intensity={30} tint="dark" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+                  <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(255,255,255,0.05)" }} />
                   {/* Orange Akzent: warmes Licht von unten */}
                   <LinearGradient colors={[mitDeckkraft(f.orange, 0), mitDeckkraft(f.orange, 0.2)]} locations={[0.35, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
                   <ZeichenInhalt z={z} farbe={f.text} />
