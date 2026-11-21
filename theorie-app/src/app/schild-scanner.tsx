@@ -9,6 +9,7 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-g
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Glas } from "@/components/glas";
+import { START, StartKnopf, startSchrift } from "@/components/start-teile";
 import { Icon, type IconName } from "@/components/icon";
 import { Lader } from "@/components/lader";
 import { Knopf, T } from "@/components/ui";
@@ -98,13 +99,13 @@ function Ecke({ lage, farbe }: { lage: "ol" | "or" | "ul" | "ur"; farbe: string 
 
 function Hinweis({ icon, titel, text, children }: { icon: IconName; titel: string; text: string; children?: React.ReactNode }) {
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 34, gap: 10 }}>
-      <View style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: "rgba(255,255,255,0.06)", alignItems: "center", justifyContent: "center", marginBottom: 6 }}>
-        <Icon name={icon} size={32} color={farben.orange} />
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 28, gap: 10 }}>
+      <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: "#24213F", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+        <Icon name={icon} size={36} color="#FFFFFF" />
       </View>
-      <Text style={{ ...schrift.titelFett, fontSize: 21, color: "#FFFFFF", textAlign: "center" }}>{titel}</Text>
-      <Text style={{ ...schrift.text, fontSize: 15, lineHeight: 21, color: "#AEB3BA", textAlign: "center" }}>{text}</Text>
-      {children ? <View style={{ alignSelf: "stretch", gap: 10, marginTop: 14 }}>{children}</View> : null}
+      <Text style={{ ...startSchrift.titel, fontSize: 30, lineHeight: 33, color: "#FFFFFF", textAlign: "center" }}>{titel}</Text>
+      <Text style={{ ...schrift.text, fontSize: 15, lineHeight: 21, color: START.text2, textAlign: "center" }}>{text}</Text>
+      {children ? <View style={{ alignSelf: "stretch", gap: 10, marginTop: 18 }}>{children}</View> : null}
     </View>
   );
 }
@@ -254,18 +255,18 @@ export default function SchildScanner() {
 
   if (!erlaubnis.granted) {
     return (
-      <View style={{ flex: 1, backgroundColor: farben.grund }}>
+      <View style={{ flex: 1, backgroundColor: START.grund }}>
         <Hinweis
           icon="camera-outline"
           titel="Kamera für die Schilder-Jagd"
           text="Damit du echte Verkehrsschilder scannen kannst, braucht Fahrschul Pro die Kamera. Die Fotos werden nur auf deinem Handy ausgewertet und nicht gespeichert."
         >
           {erlaubnis.canAskAgain ? (
-            <Knopf titel="Kamera erlauben" icon="camera" onPress={() => erlaubnisAnfragen()} />
+            <StartKnopf titel="Kamera erlauben" art="lila" onPress={() => erlaubnisAnfragen()} />
           ) : (
-            <Knopf titel="Einstellungen öffnen" icon="settings-outline" onPress={() => Linking.openSettings()} />
+            <StartKnopf titel="Einstellungen öffnen" art="lila" onPress={() => Linking.openSettings()} />
           )}
-          <Knopf titel="Foto aus der Mediathek" art="sekundaer" icon="image-outline" onPress={ausMediathek} />
+          <StartKnopf titel="Foto aus der Mediathek" art="dunkel" onPress={ausMediathek} />
         </Hinweis>
         {oben}
         {laeuft || ergebnis ? (
@@ -342,7 +343,7 @@ export default function SchildScanner() {
 
               {!ergebnis ? (
                 <View pointerEvents="none" style={{ position: "absolute", top: rahmen.y + groesse + 18, left: 24, right: 24, alignItems: "center", gap: 4 }}>
-                  <Text style={{ ...schrift.textHalb, fontSize: 16, color: "#FFFFFF", textAlign: "center", textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 6 }}>
+                  <Text style={{ ...startSchrift.titel, fontSize: 22, color: "#FFFFFF", textAlign: "center", textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 6 }}>
                     {laeuft ? "Schild wird erkannt …" : "Halte ein Verkehrsschild in den Rahmen"}
                   </Text>
                   {!laeuft ? (

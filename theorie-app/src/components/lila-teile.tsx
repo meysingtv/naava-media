@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Image, Pressable, Text, View, type ImageSourcePropType, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
+import { Image, Modal, Pressable, Text, View, type ImageSourcePropType, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 import { router } from "expo-router";
 
 import { Icon, type IconName } from "@/components/icon";
@@ -228,5 +228,118 @@ export function LilaKachel({ titel, icon, bild, iconFarbe, onPress, style, gross
         </Text>
       </View>
     </LilaKarte>
+  );
+}
+
+/** Kleine Überschrift über einer Gruppe (z. B. „APP“). */
+export function LilaAbschnitt({ titel, style }: { titel: string; style?: StyleProp<ViewStyle> }) {
+  const l = useLila();
+  return <Text style={[{ ...lilaSchrift.textHalb, fontSize: 12.5, letterSpacing: 0.6, color: l.tinte2, marginBottom: 8, marginLeft: 4 } as TextStyle, style as StyleProp<TextStyle>]}>{titel.toUpperCase()}</Text>;
+}
+
+/** Zeilen untereinander in einer Karte, getrennt durch feine Linien. */
+export function LilaGruppe({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const l = useLila();
+  const kinder = (Array.isArray(children) ? children : [children]).flat().filter(Boolean);
+  return (
+    <LilaKarte style={[{ overflow: "hidden" }, style]}>
+      {kinder.map((k, i) => (
+        <View key={i}>
+          {i > 0 ? <View style={{ height: 1, backgroundColor: l.linie, marginLeft: 52 }} /> : null}
+          {k}
+        </View>
+      ))}
+    </LilaKarte>
+  );
+}
+
+/** Eine Zeile: lila Symbol, Titel, Unterzeile, rechts Pfeil oder eigener Inhalt. */
+export function LilaZeile({ icon, titel, unter, rechts, onPress, gefahr, ohnePfeil }: { icon: IconName; titel: string; unter?: string; rechts?: ReactNode; onPress?: () => void; gefahr?: boolean; ohnePfeil?: boolean }) {
+  const l = useLila();
+  const farbe = gefahr ? "#E5484D" : l.lila;
+  const inhalt = (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 14 }}>
+      <View style={{ width: 28, alignItems: "center" }}>
+        <Icon name={icon} size={22} color={farbe} />
+      </View>
+      <View style={{ flex: 1, gap: 1 }}>
+        <Text style={{ ...lilaSchrift.textHalb, fontSize: 15.5, color: gefahr ? "#E5484D" : l.tinte }} numberOfLines={1}>
+          {titel}
+        </Text>
+        {unter ? (
+          <Text style={{ ...lilaSchrift.text, fontSize: 13, lineHeight: 17, color: l.tinte2 }} numberOfLines={2}>
+            {unter}
+          </Text>
+        ) : null}
+      </View>
+      {rechts ?? (onPress && !ohnePfeil ? <Icon name="chevron-forward" size={18} color={l.tinte3} /> : null)}
+    </View>
+  );
+  if (!onPress) return inhalt;
+  return (
+    <Pressable
+      onPress={() => {
+        tippen();
+        onPress();
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={titel}
+      style={({ pressed }) => ({ backgroundColor: pressed ? l.lilaFlaeche : "transparent" })}
+    >
+      {inhalt}
+    </Pressable>
+  );
+}
+
+/** Lila Schalter. */
+export function LilaSchalter({ wert, onWechsel }: { wert: boolean; onWechsel: (an: boolean) => void }) {
+  const l = useLila();
+  return (
+    <Pressable
+      onPress={() => {
+        tippen();
+        onWechsel(!wert);
+      }}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: wert }}
+      hitSlop={8}
+      style={{ width: 50, height: 30, borderRadius: 15, padding: 3, backgroundColor: wert ? "#8C7AE6" : l.spur, justifyContent: "center" }}
+    >
+      <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: "#FFFFFF", alignSelf: wert ? "flex-end" : "flex-start", shadowColor: "#000", shadowOpacity: 0.15, shadowRadius: 2, shadowOffset: { width: 0, height: 1 } }} />
+    </Pressable>
+  );
+}
+
+/** Auswahl-Kapsel (Filter, Uhrzeiten, Bundesländer). */
+export function LilaChip({ text, aktiv, onPress }: { text: string; aktiv: boolean; onPress: () => void }) {
+  const l = useLila();
+  return (
+    <Pressable
+      onPress={() => {
+        tippen();
+        onPress();
+      }}
+      accessibilityRole="button"
+      accessibilityState={{ selected: aktiv }}
+      style={{ height: 40, paddingHorizontal: 15, borderRadius: 13, justifyContent: "center", backgroundColor: aktiv ? "#8C7AE6" : l.karte, borderWidth: 1.5, borderColor: aktiv ? "#8C7AE6" : l.linie }}
+    >
+      <Text style={{ ...lilaSchrift.textHalb, fontSize: 14, color: aktiv ? "#FFFFFF" : l.tinte }}>{text}</Text>
+    </Pressable>
+  );
+}
+
+/** Blatt von unten mit Titel. */
+export function LilaBlatt({ offen, titel, onSchliessen, children }: { offen: boolean; titel: string; onSchliessen: () => void; children: ReactNode }) {
+  const l = useLila();
+  return (
+    <Modal visible={offen} transparent animationType="slide" onRequestClose={onSchliessen} supportedOrientations={["portrait", "landscape"]}>
+      <Pressable onPress={onSchliessen} style={{ flex: 1, backgroundColor: "rgba(20,16,40,0.4)", justifyContent: "flex-end" }}>
+        <Pressable style={{ backgroundColor: l.grund, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 12, paddingHorizontal: LILA_RAND, paddingBottom: 34, maxHeight: "85%", width: "100%", maxWidth: 560, alignSelf: "center" }}>
+          <View style={{ alignSelf: "center", width: 40, height: 5, borderRadius: 3, backgroundColor: l.spur, marginBottom: 14 }} />
+          <Text style={{ ...lilaSchrift.titel, fontSize: 28, color: l.tinte, marginBottom: 14 }}>{titel}</Text>
+          {children}
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
 }

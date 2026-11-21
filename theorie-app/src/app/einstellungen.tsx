@@ -1,7 +1,8 @@
-import { useRef } from "react";
-import { Linking, Platform, Pressable, ScrollView, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { useRef, useState } from "react";
+import { Image, Linking, Platform, Pressable, ScrollView, Text, TextInput, View, type StyleProp, type ViewStyle } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GrossKopf, Seite } from "@/components/seite";
@@ -9,6 +10,9 @@ import { Abschnitt, Chip, Eingabe, Knopf, Segment, T, Zeile } from "@/components
 import { Logo } from "@/components/grafik";
 import { GlasGrund, GlasGruppe, GlasKarte } from "@/components/glas-flaeche";
 import { Icon, type IconName } from "@/components/icon";
+import { LilaLeisteSeite } from "@/components/lila-leiste";
+import { LilaAbschnitt, LilaBlatt, LilaChip, LilaGruppe, LilaKarte, LilaKnopf, LILA_RAND, LilaSchalter, LilaTitel, LilaZeile, LilaZurueck, lilaSchrift, useLila } from "@/components/lila-teile";
+import { FIGUR } from "@/components/start-teile";
 import { ProfilBild } from "@/components/profilbild";
 import { Schalter } from "@/components/schalter";
 import { tourStarten } from "@/components/tour";
@@ -31,326 +35,245 @@ export default function Einstellungen() {
   return useDesktop() ? <EinstellungenWeb /> : <EinstellungenHandy />;
 }
 
+type Blatt = "profil" | "klasse" | "land" | "zeit" | null;
+
+/** Eingabefeld im lila Stil. */
+function LilaFeld(props: React.ComponentProps<typeof TextInput> & { fehler?: boolean }) {
+  const l = useLila();
+  const { fehler, style, ...rest } = props;
+  return (
+    <TextInput
+      placeholderTextColor={l.tinte3}
+      selectionColor="#8C7AE6"
+      {...rest}
+      style={[{ height: 54, borderRadius: 16, paddingHorizontal: 16, backgroundColor: l.karte, borderWidth: 1.5, borderBottomWidth: 4, borderColor: fehler ? "#E5484D" : l.linie, borderBottomColor: fehler ? "#E5484D" : l.kante, ...lilaSchrift.textHalb, fontSize: 16, color: l.tinte }, style]}
+    />
+  );
+}
+
 function EinstellungenHandy() {
   const insets = useSafeAreaInsets();
+  const l = useLila();
   const e = useEinstellungen();
-  const { stand, setzen, rechte, offeneBewerbungen, meineBewerbung, iconTitel, name, speichert, nameSpeichern, benutzer, benutzerGueltig, benutzerGeaendert, frei, speichertBenutzer, benutzerSpeichern } = e;
+  const { stand, rechte, offeneBewerbungen, meineBewerbung, iconTitel, name, speichert, nameSpeichern, benutzer, benutzerGueltig, benutzerGeaendert, frei, speichertBenutzer, benutzerSpeichern } = e;
   const { liveAbo, liveAboAendern, erinnerungAendern, klasseAendern, zuruecksetzenFragen } = e;
   const { blockiert, aufnahmeErlaubt, aufnahmeSetzen, loeschtKonto, kontoLoeschenFragen } = e;
   const { session, profil, gast, anzeigeName } = e.konto;
-  const { darstellung, setzen: darstellungSetzen, belohnungen, belohnungenSetzen } = e.darstellung;
-  const { width } = useFenster();
-  const breit = width >= 700;
+  const { belohnungen, belohnungenSetzen } = e.darstellung;
+  const [blatt, setBlatt] = useState<Blatt>(null);
+  const klasse = KLASSEN.find((k) => k.id === stand.klasse);
+  const zu = () => setBlatt(null);
 
   return (
-    <Seite>
-      <GlasGrund />
-      <GrossKopf titel="Einstellungen" />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: RAND, paddingTop: abstand(3), paddingBottom: insets.bottom + abstand(10), gap: abstand(7) }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <KontoKopf
-          name={anzeigeName}
-          unter={profil ? `@${profil.benutzername}` : gast ? "Gastmodus" : (session?.user.email ?? "")}
-          infos={[`Klasse ${stand.klasse}`, profil?.rolle === "fahrlehrer" ? "Fahrlehrer" : null, profil?.bundesland ?? null].filter((k): k is string => Boolean(k))}
-        />
-
+    <View style={{ flex: 1, backgroundColor: l.grund }}>
+      <StatusBar style="dark" />
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 28, paddingHorizontal: LILA_RAND, width: "100%", maxWidth: 560, alignSelf: "center", gap: 22 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View>
-          <Abschnitt titel="App" klein />
-          <GlasGruppe>
-            <Zeile icon="color-palette" iconFarbe="#9B5CFF" titel="App-Icon" unter="Dein Lenkrad für den Homescreen" wert={iconTitel} onPress={() => router.push("/app-icon")} />
-            {FRAGEN_AKTIV ? (
-              <Zeile
-                icon="flash"
-                iconFarbe={farben.orange}
-                titel="XP, HP & Abzeichen einblenden"
-                unter={belohnungen ? "Beim Lernen und in den Ergebnissen sichtbar" : "Aus – keine Einblendungen beim Lernen"}
-                rechts={<Schalter wert={belohnungen} onWechsel={belohnungenSetzen} />}
-              />
-            ) : null}
-          </GlasGruppe>
-        </View>
-
-        {/* iPad: Tagesziel und Klasse nebeneinander statt gestreckt */}
-        <View style={breit ? { flexDirection: "row", alignItems: "flex-start", gap: abstand(4) } : { gap: abstand(7) }}>
-          {FRAGEN_AKTIV ? (
-          <View style={breit ? { flex: 1 } : null}>
-            <Abschnitt titel="Tagesziel" klein />
-            <WahlKarte titel={String(stand.tagesziel)} einheit="Fragen am Tag" unter={`${ZIEL_STUFE[stand.tagesziel] ?? "Eigenes Ziel"} · etwa ${Math.round(stand.tagesziel / 2)} Minuten`}>
-              <Segment optionen={ZIELE.map((z) => ({ id: String(z), titel: String(z) }))} wert={String(stand.tagesziel)} onWechsel={(id) => setzen({ tagesziel: Number(id) })} />
-            </WahlKarte>
-            <T v="klein" style={{ marginTop: abstand(2) }}>
-              Mit 30 Fragen am Tag bist du in wenigen Wochen prüfungsreif.
-            </T>
-          </View>
-          ) : null}
-
-          <View style={breit ? { flex: 1 } : null}>
-            <Abschnitt titel="Führerscheinklasse" klein />
-            <WahlKarte titel={`Klasse ${stand.klasse}`} unter={KLASSEN.find((k) => k.id === stand.klasse)?.text ?? ""}>
-              <KlassenLeiste wert={stand.klasse} onWahl={klasseAendern} />
-            </WahlKarte>
-            <T v="klein" style={{ marginTop: abstand(2) }}>
-              Wische zur Seite für Lkw, Bus und Traktor.
-            </T>
-          </View>
-        </View>
-
-        {session ? (
-          <View>
-            <Abschnitt titel="Bundesland" klein />
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: abstand(2) }}>
-              {BUNDESLAENDER.map((b) => (
-                <Chip
-                  key={b}
-                  text={b}
-                  aktiv={profil?.bundesland === b}
-                  onPress={() => e.bundeslandWaehlen(b)}
-                />
-              ))}
-            </View>
-            <T v="klein" style={{ marginTop: abstand(2) }}>
-              {FRAGEN_AKTIV ? "Für die regionale Rangliste in der Liga." : "Freiwillig – erscheint in deinem Profil."}
-            </T>
-          </View>
-        ) : null}
-
-        <View>
-          <Abschnitt titel="Mitteilungen" klein />
-          <GlasGruppe>
-            <Zeile
-              icon="notifications"
-              iconFarbe="#FF4A3D"
-              titel="Tägliche Erinnerung"
-              unter={stand.erinnerung.an ? `Jeden Tag um ${uhrzeit(stand.erinnerung.stunde, stand.erinnerung.minute)} Uhr` : "Aus"}
-              rechts={
-                <Schalter wert={stand.erinnerung.an} onWechsel={(an) => erinnerungAendern(an)} />
-              }
-            />
-            {session ? (
-              <Zeile
-                icon="radio"
-                iconFarbe="#A66BFF"
-                titel="Live-Streams"
-                unter={liveAbo ? "Mitteilung, sobald ein Live startet" : "Aus"}
-                rechts={<Schalter wert={liveAbo} onWechsel={liveAboAendern} />}
-              />
-            ) : null}
-          </GlasGruppe>
-          {stand.erinnerung.an ? (
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: abstand(2), marginTop: abstand(3) }}>
-              {ZEITEN.map(([h, m]) => (
-                <Chip
-                  key={`${h}:${m}`}
-                  text={uhrzeit(h, m)}
-                  aktiv={stand.erinnerung.stunde === h && stand.erinnerung.minute === m}
-                  onPress={() => erinnerungAendern(true, h, m)}
-                />
-              ))}
-            </View>
-          ) : null}
+          <LilaZurueck />
+          <LilaTitel style={{ marginTop: 14 }}>Einstellungen</LilaTitel>
         </View>
 
         <View>
-          <Abschnitt titel="Profil" klein />
-          <Karte style={{ gap: abstand(2) }}>
-            {profil ? (
-              <>
-                <T v="klein">Ich bin</T>
-                <View style={{ flexDirection: "row", gap: abstand(2) }}>
-                  {(
-                    [
-                      ["schueler", "Fahrschüler"],
-                      ["fahrlehrer", "Fahrlehrer"],
-                    ] as const
-                  ).map(([id, titel]) => (
-                    <Chip
-                      key={id}
-                      text={titel}
-                      aktiv={profil.rolle === id}
-                      onPress={() => e.rolleWaehlen(id)}
-                    />
-                  ))}
-                </View>
-                <View style={{ height: abstand(2) }} />
-              </>
-            ) : null}
-            <T v="klein">Name – so begrüßt dich die App</T>
-            <Eingabe
-              icon="person-outline"
-              value={name}
-              onChangeText={e.nameTippen}
-              placeholder="Dein Name"
-              autoCapitalize="words"
-              maxLength={40}
-            />
-            {name.trim() && name.trim() !== anzeigeName ? <Knopf titel="Namen speichern" klein laedt={speichert} onPress={nameSpeichern} /> : null}
-
-            {profil ? (
-              <>
-                <T v="klein" style={{ marginTop: abstand(3) }}>
-                  Benutzername – für Rangliste, Clips und Kommentare
-                </T>
-                <Eingabe
-                  icon="at"
-                  value={benutzer}
-                  onChangeText={e.benutzerTippen}
-                  placeholder="benutzername"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  fehler={benutzerGeaendert && (!benutzerGueltig || frei === false)}
-                />
-                {benutzerGeaendert ? (
-                  <T v="klein" farbe={!benutzerGueltig || frei === false ? farben.rot : frei ? farben.gruen : farben.text3}>
-                    {!benutzerGueltig
-                      ? "3–20 Zeichen: Buchstaben, Zahlen, Punkt und Unterstrich."
-                      : frei === false
-                        ? "Dieser Benutzername ist schon vergeben."
-                        : frei
-                          ? "Der Benutzername ist frei."
-                          : "Prüfe, ob der Name frei ist …"}
-                  </T>
-                ) : null}
-                {benutzerGeaendert ? (
-                  <Knopf titel="Benutzernamen speichern" klein laedt={speichertBenutzer} deaktiviert={!benutzerGueltig || frei !== true} onPress={benutzerSpeichern} />
-                ) : null}
-              </>
-            ) : null}
-          </Karte>
+          <LilaAbschnitt titel="Profil" />
+          <LilaGruppe>
+            <LilaZeile icon="person-outline" titel={anzeigeName || "Dein Name"} unter={profil ? `@${profil.benutzername}${profil.rolle === "fahrlehrer" ? " · Fahrlehrer" : ""}` : gast ? "Gastmodus" : undefined} onPress={() => setBlatt("profil")} />
+            <LilaZeile icon="id-card-outline" titel="Führerscheinklasse" unter={`Klasse ${stand.klasse}${klasse ? ` · ${klasse.text}` : ""}`} onPress={() => setBlatt("klasse")} />
+            {session ? <LilaZeile icon="location-outline" titel="Bundesland" unter={profil?.bundesland ?? "Noch nicht gewählt"} onPress={() => setBlatt("land")} /> : null}
+          </LilaGruppe>
         </View>
 
         <View>
-          <Abschnitt titel="Konto" klein />
+          <LilaAbschnitt titel="Konto" />
           {session ? (
-            <View style={{ gap: abstand(3) }}>
-              <GlasGruppe>
-                <Zeile icon="mail" iconFarbe="#4DA3FF" titel={session.user.email ?? ""} unter="E-Mail · Anmelden mit Code" />
-              </GlasGruppe>
-              <GlasGruppe>
-                <Zeile
-                  icon="ban-outline"
-                  iconFarbe="#7C838C"
-                  titel="Blockierte Personen"
-                  unter={blockiert.size ? `${blockiert.size} ${blockiert.size === 1 ? "Person" : "Personen"}` : "Niemand blockiert"}
-                  onPress={() => router.push("/blockiert")}
-                />
-              </GlasGruppe>
-            </View>
+            <LilaGruppe>
+              <LilaZeile icon="mail-outline" titel={session.user.email ?? ""} unter="E-Mail · Anmelden mit Code" />
+              <LilaZeile icon="ban-outline" titel="Blockierte Personen" unter={blockiert.size ? `${blockiert.size} ${blockiert.size === 1 ? "Person" : "Personen"}` : "Niemand blockiert"} onPress={() => router.push("/blockiert")} />
+              <LilaZeile icon="trash-outline" titel={loeschtKonto ? "Konto wird gelöscht …" : "Konto löschen"} unter="Konto und alle Daten endgültig entfernen" gefahr ohnePfeil onPress={loeschtKonto ? undefined : kontoLoeschenFragen} />
+            </LilaGruppe>
           ) : (
-            <GlasGruppe>
-              <Zeile
-                icon="person-add-outline"
-                iconFarbe={farben.orange}
-                titel="Konto erstellen"
-                unter={gast ? (FRAGEN_AKTIV ? "Sichert deinen Fortschritt, schaltet Liga, Likes und Kommentare frei" : "Schaltet Likes, Kommentare und dein Profilbild frei") : undefined}
-                onPress={() => router.push("/registrieren")}
-              />
-              <Zeile icon="log-in-outline" iconFarbe="#4DA3FF" titel="Ich habe schon ein Konto" onPress={() => router.push("/anmelden")} />
-            </GlasGruppe>
+            <LilaGruppe>
+              <LilaZeile icon="person-add-outline" titel="Konto erstellen" unter="Schaltet Likes, Kommentare und dein Profilbild frei" onPress={() => router.push("/start")} />
+              <LilaZeile icon="log-in-outline" titel="Ich habe schon ein Konto" onPress={() => router.push({ pathname: "/start", params: { modus: "anmelden" } })} />
+            </LilaGruppe>
           )}
         </View>
 
-        {rechte.ersteller ? (
-          <View>
-            <Abschnitt titel="Clips" klein />
-            <GlasGruppe>
-              <Zeile icon="film-outline" iconFarbe={farben.orange} titel="Clip hochladen" unter="Kurzes Video für alle im Clips-Tab" onPress={() => router.push("/clip-hochladen")} />
-              {rechte.inhaber ? (
-                <Zeile icon="people" iconFarbe="#4DA3FF" titel="Clip-Ersteller verwalten" unter="Wer außer dir Videos hochladen darf" onPress={() => router.push("/clip-ersteller")} />
-              ) : null}
-            </GlasGruppe>
-          </View>
-        ) : null}
-
-        {session ? (
-          <View>
-            <Abschnitt titel="Creator" klein />
-            <GlasGruppe>
-              {rechte.inhaber ? (
-                <Zeile
-                  icon="radio-outline"
-                  iconFarbe={farben.rot}
-                  titel="Creator-Bewerbungen"
-                  unter={offeneBewerbungen ? `${offeneBewerbungen} offen` : "Wer live gehen und Clips hochladen darf"}
-                  onPress={() => router.push("/creator-verwaltung")}
-                />
-              ) : (
-                <Zeile
-                  icon="radio-outline"
-                  iconFarbe={farben.rot}
-                  titel={meineBewerbung?.status === "angenommen" ? "Creator" : "Creator werden"}
-                  unter={meineBewerbung && meineBewerbung.status !== "zurueckgezogen" ? STATUS_TEXT[meineBewerbung.status] : "Live gehen und Clips hochladen"}
-                  onPress={() => router.push("/creator-bewerbung")}
-                />
-              )}
-            </GlasGruppe>
-          </View>
-        ) : null}
-
-        {rechte.inhaber ? (
-          <View>
-            <Abschnitt titel="Lernen" klein />
-            <GlasGruppe>
-              <Zeile icon="play-circle-outline" iconFarbe={farben.orange} titel="Erklärvideos" unter="Videos zu einzelnen Fragen – erscheinen beim Lernen" onPress={() => router.push("/erklaervideos")} />
-              {Platform.OS === "web" ? (
-                <Zeile icon="grid" iconFarbe="#8B5CF6" titel="Manager" unter="Zugänge anlegen und sperren, Videos zu Themen hochladen" onPress={() => router.push("/manager")} />
-              ) : null}
-              {Platform.OS !== "web" ? (
-                <Zeile
-                  icon="videocam-outline"
-                  iconFarbe="#FF4A3D"
-                  titel="Bildschirmaufnahmen erlauben"
-                  unter={aufnahmeErlaubt ? "Nur für dich an – alle anderen sind gesperrt" : "Aus – du siehst die Sperre wie alle anderen"}
-                  rechts={<Schalter wert={aufnahmeErlaubt} onWechsel={aufnahmeSetzen} />}
-                />
-              ) : null}
-            </GlasGruppe>
-          </View>
-        ) : null}
-
         <View>
-          <Abschnitt titel="Hilfe & Rechtliches" klein />
-          <GlasGruppe>
-            {SUPPORT ? <Zeile icon="help-buoy" iconFarbe="#4ED053" titel="Hilfe & Kontakt" onPress={() => Linking.openURL(`mailto:${SUPPORT}`)} /> : null}
-            <Zeile icon="shield-checkmark" iconFarbe="#4DA3FF" titel="Datenschutz" onPress={() => router.push("/datenschutz")} />
-            <Zeile icon="document-text" iconFarbe="#7C8BA1" titel="Impressum" onPress={() => router.push("/impressum")} />
-            <Zeile icon="reader" iconFarbe="#7C8BA1" titel="Nutzungsbedingungen" onPress={() => router.push("/nutzungsbedingungen")} />
-            <Zeile
-              icon="sparkles"
-              iconFarbe={farben.orange}
+          <LilaAbschnitt titel="App" />
+          <LilaGruppe>
+            <LilaZeile
+              icon="notifications-outline"
+              titel="Mitteilungen"
+              unter={stand.erinnerung.an ? `Tägliche Erinnerung um ${uhrzeit(stand.erinnerung.stunde, stand.erinnerung.minute)} Uhr` : "Tägliche Erinnerung aus"}
+              rechts={<LilaSchalter wert={stand.erinnerung.an} onWechsel={(an) => erinnerungAendern(an)} />}
+            />
+            {stand.erinnerung.an ? <LilaZeile icon="time-outline" titel="Uhrzeit der Erinnerung" unter={`${uhrzeit(stand.erinnerung.stunde, stand.erinnerung.minute)} Uhr`} onPress={() => setBlatt("zeit")} /> : null}
+            {session ? <LilaZeile icon="radio-outline" titel="Live-Streams" unter={liveAbo ? "Mitteilung, sobald ein Live startet" : "Aus"} rechts={<LilaSchalter wert={liveAbo} onWechsel={liveAboAendern} />} /> : null}
+            <LilaZeile icon="color-palette-outline" titel="App-Icon" unter={iconTitel} onPress={() => router.push("/app-icon")} />
+            {FRAGEN_AKTIV ? <LilaZeile icon="flash-outline" titel="XP, HP & Abzeichen" unter={belohnungen ? "Beim Lernen sichtbar" : "Aus"} rechts={<LilaSchalter wert={belohnungen} onWechsel={belohnungenSetzen} />} /> : null}
+            <LilaZeile
+              icon="sparkles-outline"
               titel="App-Tour ansehen"
-              unter="Die wichtigsten Stellen kurz erklärt"
               onPress={() => {
                 router.navigate("/heute");
                 setTimeout(tourStarten, 450);
               }}
             />
-            <Zeile icon="options" iconFarbe="#4DA3FF" titel="Einrichtung wiederholen" unter={FRAGEN_AKTIV ? "Klasse, Prüfungstermin, Tagesziel, Darstellung" : "Klasse, Prüfungstermin, Erinnerung, Darstellung"} onPress={() => router.push("/einrichtung")} />
-            <Zeile icon="images" iconFarbe="#E0A100" titel="Bildnachweise" onPress={() => router.push("/bildnachweise")} />
-          </GlasGruppe>
+            <LilaZeile icon="options-outline" titel="Einrichtung wiederholen" unter="Klasse, Prüfungstermin, Erinnerung" onPress={() => router.push("/einrichtung")} />
+          </LilaGruppe>
+        </View>
+
+        {rechte.ersteller || session ? (
+          <View>
+            <LilaAbschnitt titel="Clips & Creator" />
+            <LilaGruppe>
+              {rechte.ersteller ? <LilaZeile icon="film-outline" titel="Clip hochladen" unter="Kurzes Video für alle im Clips-Tab" onPress={() => router.push("/clip-hochladen")} /> : null}
+              {rechte.inhaber ? <LilaZeile icon="people-outline" titel="Clip-Ersteller verwalten" unter="Wer außer dir Videos hochladen darf" onPress={() => router.push("/clip-ersteller")} /> : null}
+              {session && rechte.inhaber ? (
+                <LilaZeile icon="radio-outline" titel="Creator-Bewerbungen" unter={offeneBewerbungen ? `${offeneBewerbungen} offen` : "Wer live gehen und Clips hochladen darf"} onPress={() => router.push("/creator-verwaltung")} />
+              ) : session ? (
+                <LilaZeile
+                  icon="radio-outline"
+                  titel={meineBewerbung?.status === "angenommen" ? "Creator" : "Creator werden"}
+                  unter={meineBewerbung && meineBewerbung.status !== "zurueckgezogen" ? STATUS_TEXT[meineBewerbung.status] : "Live gehen und Clips hochladen"}
+                  onPress={() => router.push("/creator-bewerbung")}
+                />
+              ) : null}
+            </LilaGruppe>
+          </View>
+        ) : null}
+
+        {rechte.inhaber ? (
+          <View>
+            <LilaAbschnitt titel="Inhaber" />
+            <LilaGruppe>
+              {FRAGEN_AKTIV ? <LilaZeile icon="play-circle-outline" titel="Erklärvideos" unter="Videos zu einzelnen Fragen" onPress={() => router.push("/erklaervideos")} /> : null}
+              {Platform.OS === "web" ? <LilaZeile icon="grid-outline" titel="Manager" unter="Zugänge, Themen und Videos" onPress={() => router.push("/manager")} /> : null}
+              {Platform.OS !== "web" ? (
+                <LilaZeile icon="videocam-outline" titel="Bildschirmaufnahmen erlauben" unter={aufnahmeErlaubt ? "Nur für dich an" : "Aus – gesperrt wie für alle"} rechts={<LilaSchalter wert={aufnahmeErlaubt} onWechsel={aufnahmeSetzen} />} />
+              ) : null}
+            </LilaGruppe>
+          </View>
+        ) : null}
+
+        <View>
+          <LilaAbschnitt titel="Hilfe & Rechtliches" />
+          <LilaGruppe>
+            {SUPPORT ? <LilaZeile icon="help-buoy-outline" titel="Hilfe & Kontakt" onPress={() => Linking.openURL(`mailto:${SUPPORT}`)} /> : null}
+            <LilaZeile icon="shield-checkmark-outline" titel="Datenschutz" onPress={() => router.push("/datenschutz")} />
+            <LilaZeile icon="document-text-outline" titel="Nutzungsbedingungen" onPress={() => router.push("/nutzungsbedingungen")} />
+            <LilaZeile icon="information-circle-outline" titel="Impressum" onPress={() => router.push("/impressum")} />
+            <LilaZeile icon="images-outline" titel="Bildnachweise" onPress={() => router.push("/bildnachweise")} />
+          </LilaGruppe>
         </View>
 
         <View>
-          <Abschnitt titel="Daten" klein />
-          <GlasGruppe>
-            <Zeile icon="refresh-circle-outline" titel="Fortschritt zurücksetzen" unter={FRAGEN_AKTIV ? "Antworten, Serien, Abzeichen" : "Gespeicherter Fortschritt auf diesem Gerät"} gefahr ohnePfeil onPress={zuruecksetzenFragen} />
-            {session ? (
-              <Zeile
-                icon="trash-outline"
-                titel={loeschtKonto ? "Konto wird gelöscht …" : "Konto löschen"}
-                unter="Konto und alle Daten endgültig entfernen"
-                gefahr
-                ohnePfeil
-                onPress={loeschtKonto ? undefined : kontoLoeschenFragen}
-              />
-            ) : null}
-          </GlasGruppe>
+          <LilaAbschnitt titel="Daten" />
+          <LilaGruppe>
+            <LilaZeile icon="refresh-outline" titel="Fortschritt zurücksetzen" unter="Gespeicherter Fortschritt auf diesem Gerät" gefahr ohnePfeil onPress={zuruecksetzenFragen} />
+          </LilaGruppe>
         </View>
 
-        <View style={{ alignItems: "center", gap: abstand(2), marginTop: abstand(2) }}>
-          <Logo groesse={24} hell={darstellung === "hell"} />
-          <T v="klein">{FRAGEN_AKTIV ? "Version 1.0 · Beispielfragen, nicht der amtliche Katalog" : "Version 1.0"}</T>
+        <View style={{ alignItems: "center", gap: 6, marginTop: 4 }}>
+          <Image source={FIGUR.kopf} style={{ width: 54, height: 54 }} resizeMode="contain" />
+          <Text style={{ ...lilaSchrift.fett, fontSize: 17, color: l.tinte }}>Fahrschul Pro</Text>
+          <Text style={{ ...lilaSchrift.text, fontSize: 13, color: l.tinte3 }}>Version 1.0</Text>
         </View>
       </ScrollView>
-    </Seite>
+      <LilaLeisteSeite aktiv="profil" />
+
+      {/* Profil bearbeiten */}
+      <LilaBlatt offen={blatt === "profil"} titel="Profil" onSchliessen={zu}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 10 }}>
+          {profil ? (
+            <>
+              <Text style={{ ...lilaSchrift.textHalb, fontSize: 14, color: l.tinte2 }}>Ich bin</Text>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <LilaChip text="Fahrschüler" aktiv={profil.rolle === "schueler"} onPress={() => e.rolleWaehlen("schueler")} />
+                <LilaChip text="Fahrlehrer" aktiv={profil.rolle === "fahrlehrer"} onPress={() => e.rolleWaehlen("fahrlehrer")} />
+              </View>
+            </>
+          ) : null}
+          <Text style={{ ...lilaSchrift.textHalb, fontSize: 14, color: l.tinte2, marginTop: 6 }}>Name – so begrüßt dich die App</Text>
+          <LilaFeld value={name} onChangeText={e.nameTippen} placeholder="Dein Name" autoCapitalize="words" maxLength={40} />
+          {name.trim() && name.trim() !== anzeigeName ? <LilaKnopf titel={speichert ? "Speichert …" : "Namen speichern"} onPress={nameSpeichern} /> : null}
+          {profil ? (
+            <>
+              <Text style={{ ...lilaSchrift.textHalb, fontSize: 14, color: l.tinte2, marginTop: 6 }}>Benutzername – für Clips und Kommentare</Text>
+              <LilaFeld value={benutzer} onChangeText={e.benutzerTippen} placeholder="benutzername" autoCapitalize="none" autoCorrect={false} fehler={benutzerGeaendert && (!benutzerGueltig || frei === false)} />
+              {benutzerGeaendert ? (
+                <Text style={{ ...lilaSchrift.textMittel, fontSize: 13, color: !benutzerGueltig || frei === false ? "#E5484D" : frei ? "#23A548" : l.tinte3 }}>
+                  {!benutzerGueltig ? "3–20 Zeichen: Buchstaben, Zahlen, Punkt und Unterstrich." : frei === false ? "Dieser Benutzername ist schon vergeben." : frei ? "Der Benutzername ist frei." : "Prüfe, ob der Name frei ist …"}
+                </Text>
+              ) : null}
+              {benutzerGeaendert && benutzerGueltig && frei === true ? <LilaKnopf titel={speichertBenutzer ? "Speichert …" : "Benutzernamen speichern"} onPress={benutzerSpeichern} /> : null}
+            </>
+          ) : null}
+        </ScrollView>
+      </LilaBlatt>
+
+      {/* Klasse */}
+      <LilaBlatt offen={blatt === "klasse"} titel="Führerscheinklasse" onSchliessen={zu}>
+        <ScrollView contentContainerStyle={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+          {KLASSEN.map((k) => (
+            <LilaKarte
+              key={k.id}
+              aktiv={stand.klasse === k.id}
+              onPress={() => {
+                klasseAendern(k.id);
+                zu();
+              }}
+              label={`Klasse ${k.id}`}
+              style={{ width: "31%", flexGrow: 1 }}
+            >
+              <View style={{ alignItems: "center", paddingVertical: 12, gap: 2 }}>
+                <Text style={{ ...lilaSchrift.titel, fontSize: 26, color: stand.klasse === k.id ? "#8C7AE6" : l.tinte }}>{k.id}</Text>
+                <Text style={{ ...lilaSchrift.text, fontSize: 11.5, color: l.tinte2, textAlign: "center" }} numberOfLines={2}>
+                  {k.kurz}
+                </Text>
+              </View>
+            </LilaKarte>
+          ))}
+        </ScrollView>
+      </LilaBlatt>
+
+      {/* Bundesland */}
+      <LilaBlatt offen={blatt === "land"} titel="Bundesland" onSchliessen={zu}>
+        <ScrollView>
+          <LilaGruppe>
+            {BUNDESLAENDER.map((b) => (
+              <LilaZeile
+                key={b}
+                icon={profil?.bundesland === b ? "checkmark-circle" : "ellipse-outline"}
+                titel={b}
+                ohnePfeil
+                onPress={() => {
+                  e.bundeslandWaehlen(b);
+                  zu();
+                }}
+              />
+            ))}
+          </LilaGruppe>
+        </ScrollView>
+      </LilaBlatt>
+
+      {/* Uhrzeit der Erinnerung */}
+      <LilaBlatt offen={blatt === "zeit"} titel="Uhrzeit" onSchliessen={zu}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          {ZEITEN.map(([h, m]) => (
+            <LilaChip
+              key={`${h}:${m}`}
+              text={uhrzeit(h, m)}
+              aktiv={stand.erinnerung.stunde === h && stand.erinnerung.minute === m}
+              onPress={() => {
+                erinnerungAendern(true, h, m);
+                zu();
+              }}
+            />
+          ))}
+        </View>
+      </LilaBlatt>
+    </View>
   );
 }
 
