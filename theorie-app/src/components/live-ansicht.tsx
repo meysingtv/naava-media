@@ -433,7 +433,7 @@ export function LiveAnsicht({
               hitSlop={8}
               style={{ alignSelf: "center", paddingVertical: 8 }}
             >
-              <Text style={{ ...schrift.textHalb, fontSize: 14, color: "#6D5BC9" }}>Selbst live gehen? Als Creator bewerben</Text>
+              <Text style={{ ...schrift.textHalb, fontSize: 14, color: "#5B2ED6" }}>Selbst live gehen? Als Creator bewerben</Text>
             </Pressable>
           ) : null}
         </ClipsHinweis>

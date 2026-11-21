@@ -151,7 +151,7 @@ function ProfilHandy() {
         { icon: "checkmark-circle", sf: "checkmark.circle.fill", farbe: "#4ED053", label: "Antworten", wert: tausender(gesamtZahlen.antworten), mini: { art: "balken", werte: letzteTage.map((t) => stand.antwortenTage[t] ?? 0) }, unter: "Letzte 7 Tage" },
         {
           icon: "flame",
-          farbe: "#8C7AE6",
+          farbe: "#7C4DFF",
           label: "Beste Serie",
           wert: `${stand.besteSerie}`,
           einheit: stand.besteSerie === 1 ? "Tag" : "Tage",
@@ -192,7 +192,7 @@ function ProfilHandy() {
     <MenueZeile key="formeln" icon="calculator" farbe="#E0A100" titel="Formeln" unter="Anhalteweg & Co." onPress={() => router.push("/formeln")} />,
   ];
   const mehrZeilen = FRAGEN_AKTIV ? [
-    <MenueZeile key="fortschritt" icon="stats-chart" farbe="#8C7AE6" titel="Mein Fortschritt" unter="Statistiken, Stärken & Schwächen" onPress={() => router.push("/statistik")} />,
+    <MenueZeile key="fortschritt" icon="stats-chart" farbe="#7C4DFF" titel="Mein Fortschritt" unter="Statistiken, Stärken & Schwächen" onPress={() => router.push("/statistik")} />,
     <MenueZeile
       key="schilder"
       icon="camera"
@@ -224,7 +224,7 @@ function ProfilHandy() {
   const kontoGruppe = (
     <MenueGruppe>
       <MenueZeile icon="settings-outline" farbe="#7C838C" titel="Einstellungen & Konto" unter={gast ? "Gastmodus" : undefined} onPress={() => router.push("/einstellungen")} />
-      <MenueZeile icon="diamond-outline" farbe="#8C7AE6" titel="Premium" unter="Bald verfügbar" onPress={() => router.push("/premium")} />
+      <MenueZeile icon="diamond-outline" farbe="#7C4DFF" titel="Premium" unter="Bald verfügbar" onPress={() => router.push("/premium")} />
       <MenueZeile icon="images-outline" farbe="#E0A100" titel="Bildnachweise" onPress={() => router.push("/bildnachweise")} />
       <MenueZeile icon="document-text-outline" farbe="#7C838C" titel="Impressum" onPress={() => router.push("/impressum")} />
       <MenueZeile icon="shield-checkmark-outline" farbe="#4DA3FF" titel="Datenschutz" onPress={() => router.push("/datenschutz")} />

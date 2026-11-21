@@ -23,11 +23,11 @@ import { leuchten, mitDeckkraft, RAND, schrift, verlauf } from "@/lib/theme";
 const FUELLEN = { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } as const;
 
 /** Ring des KI-Knopfs: Gold → Orange → tiefes Rotorange. */
-const RAND_FARBEN = ["#FFD27A", "#FF9A3C", "#8C7AE6", "#F2360C"] as const;
+const RAND_FARBEN = ["#FFD27A", "#FF9A3C", "#7C4DFF", "#F2360C"] as const;
 
 /** Rand der Blase – am Knopf kräftig orange, nach oben rechts immer feiner (Stelle, Farbe, Deckkraft). */
 const RAND_HELL: [number, string, number][] = [
-  [0, "#8C7AE6", 1],
+  [0, "#7C4DFF", 1],
   [0.3, "#FF8A2A", 0.9],
   [0.65, "#FFB56B", 0.55],
   [1, "#FFD9B0", 0.45],

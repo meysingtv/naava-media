@@ -84,7 +84,7 @@ function SchilderJagdHandy() {
           <View style={{ padding: 16, gap: 14 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
               <View style={{ width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center", backgroundColor: l.lilaZart }}>
-                {komplett ? <TrophyIcon size={23} color="#8C7AE6" weight="fill" /> : <CrosshairIcon size={23} color="#8C7AE6" weight="bold" />}
+                {komplett ? <TrophyIcon size={23} color="#7C4DFF" weight="fill" /> : <CrosshairIcon size={23} color="#7C4DFF" weight="bold" />}
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ ...lilaSchrift.titel, fontSize: 22, lineHeight: 25, color: l.tinte }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
@@ -100,7 +100,7 @@ function SchilderJagdHandy() {
               </Text>
             </View>
             <View style={{ height: 10, borderRadius: 5, backgroundColor: l.spur, overflow: "hidden" }}>
-              <View style={{ width: `${Math.max(anteil > 0 ? 2 : 0, anteil * 100)}%`, height: "100%", borderRadius: 5, backgroundColor: "#8C7AE6" }} />
+              <View style={{ width: `${Math.max(anteil > 0 ? 2 : 0, anteil * 100)}%`, height: "100%", borderRadius: 5, backgroundColor: "#7C4DFF" }} />
             </View>
             <View style={{ flexDirection: "row", gap: 8 }}>
               {GRUPPEN.map((g) => {
@@ -139,8 +139,8 @@ function SchilderJagdHandy() {
               </View>
               <View style={{ flex: 1, gap: 1 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                  <TargetIcon size={14} color="#8C7AE6" weight="bold" />
-                  <Text style={{ ...lilaSchrift.textHalb, fontSize: 12.5, color: "#8C7AE6" }}>Heutiges Ziel</Text>
+                  <TargetIcon size={14} color="#7C4DFF" weight="bold" />
+                  <Text style={{ ...lilaSchrift.textHalb, fontSize: 12.5, color: "#7C4DFF" }}>Heutiges Ziel</Text>
                 </View>
                 <Text style={{ ...lilaSchrift.fett, fontSize: 19, color: l.tinte }} numberOfLines={1}>
                   {ziel.kurz ?? ziel.name}
@@ -167,7 +167,7 @@ function SchilderJagdHandy() {
                 }}
                 accessibilityRole="button"
                 accessibilityState={{ selected: an }}
-                style={{ flex: 1, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: an ? "#8C7AE6" : "transparent" }}
+                style={{ flex: 1, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: an ? "#7C4DFF" : "transparent" }}
               >
                 <Text style={{ ...lilaSchrift.textHalb, fontSize: 14, color: an ? "#FFFFFF" : l.tinte }}>{o.titel}</Text>
               </Pressable>
@@ -204,7 +204,7 @@ function SchilderJagdHandy() {
                           </View>
                           {!fund ? (
                             <View style={{ position: "absolute", width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: l.lilaZart }}>
-                              <LockSimpleIcon size={14} color="#8C7AE6" weight="fill" />
+                              <LockSimpleIcon size={14} color="#7C4DFF" weight="fill" />
                             </View>
                           ) : null}
                         </View>
@@ -213,8 +213,8 @@ function SchilderJagdHandy() {
                         </Text>
                         {fund ? (
                           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                            <CheckCircleIcon size={12} color="#8C7AE6" weight="fill" />
-                            <Text style={{ ...lilaSchrift.textHalb, fontSize: 11, color: "#8C7AE6" }}>{datumKurz(fund)}</Text>
+                            <CheckCircleIcon size={12} color="#7C4DFF" weight="fill" />
+                            <Text style={{ ...lilaSchrift.textHalb, fontSize: 11, color: "#7C4DFF" }}>{datumKurz(fund)}</Text>
                           </View>
                         ) : null}
                       </View>
@@ -230,7 +230,7 @@ function SchilderJagdHandy() {
         <LilaKarte style={{ marginTop: 6 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14 }}>
             <View style={{ width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: l.lilaZart }}>
-              <ShieldWarningIcon size={20} color="#8C7AE6" weight="fill" />
+              <ShieldWarningIcon size={20} color="#7C4DFF" weight="fill" />
             </View>
             <Text style={{ ...lilaSchrift.text, flex: 1, fontSize: 13, lineHeight: 18, color: l.tinte2 }}>
               Scanne nur zu Fuß oder als Beifahrer – nie selbst am Steuer. Die Fotos werden nur auf deinem Handy ausgewertet und nicht gespeichert.
@@ -251,8 +251,8 @@ function SchilderJagdHandy() {
                 </View>
               </View>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 28, paddingHorizontal: 12, borderRadius: 14, backgroundColor: l.lilaZart }}>
-                {stand.schilder[offen.key] ? <CheckCircleIcon size={15} color="#8C7AE6" weight="fill" /> : <LockSimpleIcon size={14} color="#8C7AE6" weight="fill" />}
-                <Text style={{ ...lilaSchrift.textHalb, fontSize: 13, color: "#6D5BC9" }}>{stand.schilder[offen.key] ? `Gefunden am ${datumLang(new Date(stand.schilder[offen.key]))}` : "Noch nicht gefunden"}</Text>
+                {stand.schilder[offen.key] ? <CheckCircleIcon size={15} color="#7C4DFF" weight="fill" /> : <LockSimpleIcon size={14} color="#7C4DFF" weight="fill" />}
+                <Text style={{ ...lilaSchrift.textHalb, fontSize: 13, color: "#5B2ED6" }}>{stand.schilder[offen.key] ? `Gefunden am ${datumLang(new Date(stand.schilder[offen.key]))}` : "Noch nicht gefunden"}</Text>
               </View>
               <View style={{ gap: 6, alignSelf: "stretch" }}>
                 <Text style={{ ...lilaSchrift.titel, fontSize: 28, lineHeight: 31, color: l.tinte, textAlign: "center" }}>{offen.name}</Text>
@@ -260,9 +260,9 @@ function SchilderJagdHandy() {
               </View>
               <LilaKarte style={{ alignSelf: "stretch" }}>
                 <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12, padding: 14 }}>
-                  <MapPinIcon size={20} color="#8C7AE6" weight="fill" />
+                  <MapPinIcon size={20} color="#7C4DFF" weight="fill" />
                   <View style={{ flex: 1, gap: 2 }}>
-                    <Text style={{ ...lilaSchrift.textHalb, fontSize: 13, color: "#8C7AE6" }}>Wo findest du es?</Text>
+                    <Text style={{ ...lilaSchrift.textHalb, fontSize: 13, color: "#7C4DFF" }}>Wo findest du es?</Text>
                     <Text style={{ ...lilaSchrift.text, fontSize: 13.5, lineHeight: 18, color: l.tinte2 }}>{offen.fundort}</Text>
                   </View>
                 </View>

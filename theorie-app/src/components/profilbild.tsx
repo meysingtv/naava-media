@@ -20,7 +20,7 @@ function kuerzelVon(name: string): string {
  * Eigenes rundes Profilbild mit heller Kante – ohne Foto schlicht grau mit
  * Initialen, wie bei den iOS-Kontakten.
  */
-export function ProfilBild({ name, groesse = 52, rand = 2, farbe = "#8C7AE6" }: { name: string; groesse?: number; rand?: number; /** Hintergrund hinter den Initialen. */ farbe?: string }) {
+export function ProfilBild({ name, groesse = 52, rand = 2, farbe = "#7C4DFF" }: { name: string; groesse?: number; rand?: number; /** Hintergrund hinter den Initialen. */ farbe?: string }) {
   const lokal = useProfilbild();
   const { profil } = useKonto();
   const uri = lokal ?? (profil?.bild_pfad ? profilbildUrl(profil.bild_pfad) : null);

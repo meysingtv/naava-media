@@ -47,12 +47,12 @@ export function ClipsKnopf({ titel, icon, onPress, zart }: { titel: string; icon
       accessibilityLabel={titel}
       style={({ pressed }) => [
         { height: 58, borderRadius: 29, overflow: "hidden", transform: [{ scale: pressed ? 0.98 : 1 }] },
-        zart ? { backgroundColor: l.karte, borderWidth: 1.5, borderColor: l.linie } : { shadowColor: "#6D5BC9", shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },
+        zart ? { backgroundColor: l.karte, borderWidth: 1.5, borderColor: l.linie } : { shadowColor: "#5B2ED6", shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },
       ]}
     >
-      {zart ? null : <LinearGradient colors={["#9C8CEC", "#7B68DA"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 29 }} />}
+      {zart ? null : <LinearGradient colors={["#9466FF", "#6A35F0"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 29 }} />}
       <View style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 }}>
-        {icon ? <Icon name={icon} size={24} color={zart ? "#8C7AE6" : "#FFFFFF"} /> : null}
+        {icon ? <Icon name={icon} size={24} color={zart ? "#7C4DFF" : "#FFFFFF"} /> : null}
         <Text style={{ ...lilaSchrift.titel, fontSize: 23, color: zart ? l.tinte : "#FFFFFF" }}>{titel}</Text>
       </View>
     </Pressable>
@@ -71,7 +71,7 @@ function Funken({ x, y }: { x: number; y: number }) {
         { l: 2, t: 22, w: 26, r: 25 },
         { l: 0, t: 48, w: 22, r: 0 },
       ].map((f, i) => (
-        <View key={i} style={{ position: "absolute", left: f.l, top: f.t, width: f.w, height: 6, borderRadius: 3, backgroundColor: "#8C7AE6", transform: [{ rotate: `${f.r}deg` }] }} />
+        <View key={i} style={{ position: "absolute", left: f.l, top: f.t, width: f.w, height: 6, borderRadius: 3, backgroundColor: "#7C4DFF", transform: [{ rotate: `${f.r}deg` }] }} />
       ))}
     </View>
   );

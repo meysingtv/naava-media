@@ -351,7 +351,7 @@ export function ThemenRad({
 
       <View pointerEvents="box-none" style={{ flex: 1, paddingTop: oben + 10, alignItems: "center" }}>
         {/* Kopf */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: "rgba(140,122,230,0.16)", borderWidth: 1, borderColor: "rgba(140,122,230,0.45)" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: "rgba(124,77,255,0.16)", borderWidth: 1, borderColor: "rgba(124,77,255,0.45)" }}>
           <Icon name="sparkles" size={13} color={ORANGE_HELL} />
           <Text style={{ ...schrift.textFett, fontSize: 12, letterSpacing: 1.6, color: ORANGE_HELL }}>THEMENRAD</Text>
         </View>
@@ -410,7 +410,7 @@ export function ThemenRad({
           <RNAnimated.View style={{ alignItems: "center", opacity: ergebnis, transform: [{ scale: ergebnis.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }] }}>
             {fertig ? (
               <>
-                <Text style={{ ...schrift.titel, fontSize: 34, letterSpacing: 0.5, color: "#FFFFFF", textShadowColor: "rgba(140,122,230,0.85)", textShadowRadius: 22, textAlign: "center" }}>{radName(thema).toUpperCase()}</Text>
+                <Text style={{ ...schrift.titel, fontSize: 34, letterSpacing: 0.5, color: "#FFFFFF", textShadowColor: "rgba(124,77,255,0.85)", textShadowRadius: 22, textAlign: "center" }}>{radName(thema).toUpperCase()}</Text>
                 <Text style={{ ...schrift.textHalb, fontSize: 14, color: "rgba(255,255,255,0.72)", marginTop: 4, textAlign: "center" }}>{gastgeber ? "Starte eine Frage aus diesem Thema" : "Gleich kommt eine Frage aus diesem Thema"}</Text>
               </>
             ) : null}

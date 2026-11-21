@@ -49,7 +49,7 @@ export function SchilderJagdKarte() {
           <LinearGradient colors={verlauf.balken} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ width: `${Math.max(anteil > 0 ? 3 : 0, anteil * 100)}%`, height: "100%", borderRadius: 3 }} />
         </View>
       </View>
-      <View style={[{ width: 42, height: 42, borderRadius: 21, overflow: "hidden" }, leuchten("#8C7AE6", 0.4, 10, 3)]}>
+      <View style={[{ width: 42, height: 42, borderRadius: 21, overflow: "hidden" }, leuchten("#7C4DFF", 0.4, 10, 3)]}>
         <LinearGradient colors={verlauf.knopf} style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <CameraIcon size={20} color="#FFFFFF" weight="fill" />
         </LinearGradient>

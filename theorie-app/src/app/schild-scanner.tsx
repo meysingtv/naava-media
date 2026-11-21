@@ -41,7 +41,7 @@ function quizErstellen(key: ZeichenKey): Quiz | null {
 const MASKE = "rgba(0,0,0,0.46)";
 /** Feste dunkle Flächen für Knöpfe und Anzeige oben (kein Glas). */
 const FLAECHE = "#1E1C33";
-const FLAECHE_RAND = "rgba(180,168,244,0.22)";
+const FLAECHE_RAND = "rgba(183,148,255,0.22)";
 /** Breite des Abdunklungs-Rands – groß genug für jeden Bildschirm. */
 const RAND_MASKE = 1400;
 
@@ -63,7 +63,7 @@ function RundTaste({ icon, label, onPress, gross, aktiv }: { icon: IconName; lab
       accessibilityLabel={label}
     >
       {({ pressed }) => (
-        <View style={{ width: g, height: g, borderRadius: g / 2, alignItems: "center", justifyContent: "center", backgroundColor: aktiv ? "#8C7AE6" : FLAECHE, borderWidth: 1.5, borderColor: aktiv ? "#8C7AE6" : FLAECHE_RAND, opacity: pressed ? 0.8 : 1 }}>
+        <View style={{ width: g, height: g, borderRadius: g / 2, alignItems: "center", justifyContent: "center", backgroundColor: aktiv ? "#7C4DFF" : FLAECHE, borderWidth: 1.5, borderColor: aktiv ? "#7C4DFF" : FLAECHE_RAND, opacity: pressed ? 0.8 : 1 }}>
           <Icon name={icon} size={gross ? 22 : 19} color="#FFFFFF" weight="semibold" />
         </View>
       )}
@@ -239,7 +239,7 @@ export default function SchildScanner() {
       <RundTaste icon="close" label="Schließen" onPress={zumAlbum} />
       <View style={{ height: 40, borderRadius: 20, paddingLeft: 6, paddingRight: 14, flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: FLAECHE, borderWidth: 1.5, borderColor: FLAECHE_RAND }}>
         {/* Symbol in einem lila Kreis, Text genau auf gleicher Höhe */}
-        <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: "#8C7AE6", alignItems: "center", justifyContent: "center" }}>
+        <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: "#7C4DFF", alignItems: "center", justifyContent: "center" }}>
           <Icon name="scan" size={15} color="#FFFFFF" weight="semibold" />
         </View>
         <Text style={{ ...startSchrift.fett, fontSize: 18, lineHeight: 22, includeFontPadding: false, textAlignVertical: "center", color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>

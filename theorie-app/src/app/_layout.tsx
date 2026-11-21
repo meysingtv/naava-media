@@ -93,7 +93,7 @@ function ErfolgHinweis() {
           borderRadius: 27,
           backgroundColor: desktop ? B.flaeche : hell ? "#FFFFFF" : "#1A2128",
           borderWidth: desktop ? 1.5 : 1,
-          borderColor: desktop ? B.linie : hell ? "rgba(140,122,230,0.22)" : "rgba(140,122,230,0.42)",
+          borderColor: desktop ? B.linie : hell ? "rgba(124,77,255,0.22)" : "rgba(124,77,255,0.42)",
         },
         desktop ? null : hell ? leuchten("#3C2C18", 0.16, 18, 6) : leuchten("#000000", 0.55, 18, 6),
       ]}
@@ -108,7 +108,7 @@ function ErfolgHinweis() {
         </LinearGradient>
       )}
       <View style={{ flexShrink: 1 }}>
-        <Text style={{ ...schrift.textFett, fontSize: 10.5, letterSpacing: 1, color: desktop ? B.orangeKante : hell ? "#8C7AE6" : farben.orange }}>{desktop ? "Abzeichen freigeschaltet" : "ABZEICHEN FREIGESCHALTET"}</Text>
+        <Text style={{ ...schrift.textFett, fontSize: 10.5, letterSpacing: 1, color: desktop ? B.orangeKante : hell ? "#7C4DFF" : farben.orange }}>{desktop ? "Abzeichen freigeschaltet" : "ABZEICHEN FREIGESCHALTET"}</Text>
         <Text style={{ ...schrift.textHalb, fontSize: 15, color: desktop ? B.text : hell ? "#14171B" : "#FFFFFF" }} numberOfLines={1}>
           {e.titel}
         </Text>

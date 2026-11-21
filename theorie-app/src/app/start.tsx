@@ -282,7 +282,7 @@ function StartHandy() {
                   ).map((o) => (
                     <WahlKarte key={o.id} aktiv={rolle === o.id} onPress={() => setRolle(o.id)} label={o.titel}>
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 16 }}>
-                        <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: "#EEEBFB", alignItems: "center", justifyContent: "center" }}>
+                        <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: "#EEE6FF", alignItems: "center", justifyContent: "center" }}>
                           <Icon name={o.icon} size={24} color={START.lila} />
                         </View>
                         <View style={{ flex: 1, gap: 2 }}>
@@ -364,7 +364,7 @@ function StartHandy() {
                   <View style={{ borderRadius: 40, backgroundColor: "#E9E6F4", paddingTop: 18, paddingBottom: 60, paddingHorizontal: 14, marginHorizontal: 10 }}>
                     <Text style={{ ...startSchrift.textHalb, fontSize: 14, color: HELL.tinte, marginLeft: 22 }}>18:00</Text>
                     <View style={{ marginTop: 34, marginHorizontal: -24, flexDirection: "row", gap: 12, padding: 14, borderRadius: 22, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: HELL.linie }}>
-                      <View style={{ width: 44, height: 44, borderRadius: 11, backgroundColor: "#EEEBFB", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                      <View style={{ width: 44, height: 44, borderRadius: 11, backgroundColor: "#EEE6FF", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
                         <Image source={FIGUR.kopf} style={{ width: 40, height: 40 }} resizeMode="contain" />
                       </View>
                       <View style={{ flex: 1, gap: 2 }}>
@@ -535,7 +535,7 @@ function QuellenZeichen({ q }: { q: Quelle }) {
     );
   }
   return (
-    <View style={{ width: 40, height: 40, borderRadius: 11, backgroundColor: "#EEEBFB", alignItems: "center", justifyContent: "center" }}>
+    <View style={{ width: 40, height: 40, borderRadius: 11, backgroundColor: "#EEE6FF", alignItems: "center", justifyContent: "center" }}>
       <Icon name={q.icon ?? "chatbubble-ellipses-outline"} size={21} color={START.lila} />
     </View>
   );

@@ -12,9 +12,9 @@ import { tippen } from "@/lib/haptik";
 // lila Farbwelt mit schmaler, kräftiger Überschrift und Knöpfen mit Kante.
 
 export const START = {
-  lila: "#8C7AE6",
-  lilaHell: "#B4A8F4",
-  lilaKante: "#6D5BC9",
+  lila: "#7C4DFF",
+  lilaHell: "#B794FF",
+  lilaKante: "#5B2ED6",
   lilaTief: "#1F1B45",
   lilaGeraet: "#35305F",
   grund: "#0B0C16",
@@ -338,7 +338,7 @@ export function WahlKarte({ aktiv, onPress, children, style, label }: { aktiv: b
       accessibilityLabel={label}
       style={({ pressed }) => [
         {
-          backgroundColor: aktiv ? "#F1EEFF" : HELL.karte,
+          backgroundColor: aktiv ? "#F3ECFF" : HELL.karte,
           borderRadius: 18,
           borderWidth: 2,
           borderBottomWidth: 4,

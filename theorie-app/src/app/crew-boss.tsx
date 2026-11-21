@@ -127,7 +127,7 @@ function BossMedaillon({ emoji, hp, max, besiegt }: { emoji: string; hp: number;
             alignItems: "center",
             justifyContent: "center",
             borderWidth: 1,
-            borderColor: f.hell ? "rgba(140,122,230,0.18)" : "rgba(255,140,70,0.28)",
+            borderColor: f.hell ? "rgba(124,77,255,0.18)" : "rgba(255,140,70,0.28)",
           }}
         >
           <Svg width={scheibe} height={scheibe} style={{ position: "absolute" }}>
@@ -398,7 +398,7 @@ function KaempferZeile({ k, rang, max }: { k: Kaempfer; rang: number; max: numbe
         gap: 12,
         paddingVertical: 12,
         paddingHorizontal: 14,
-        backgroundColor: k.m.ich ? (f.hell ? "rgba(140,122,230,0.05)" : "rgba(140,122,230,0.07)") : undefined,
+        backgroundColor: k.m.ich ? (f.hell ? "rgba(124,77,255,0.05)" : "rgba(124,77,255,0.07)") : undefined,
       }}
     >
       <RangMarke rang={aktiv ? rang : 0} />

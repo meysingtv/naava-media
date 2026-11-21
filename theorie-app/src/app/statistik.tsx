@@ -259,7 +259,7 @@ function MeinFortschrittHandy() {
         />
 
         <View style={{ flexDirection: "row", gap: 10 }}>
-          <Kennzahl symbol={FlameIcon} farbe="#8C7AE6" wert={String(serieAktuell(stand))} label={serieAktuell(stand) === 1 ? "Tag in Folge" : "Tage in Folge"} />
+          <Kennzahl symbol={FlameIcon} farbe="#7C4DFF" wert={String(serieAktuell(stand))} label={serieAktuell(stand) === 1 ? "Tag in Folge" : "Tage in Folge"} />
           <Kennzahl symbol={ClockIcon} farbe="#4DA3FF" wert={lernzeitText(daten.sekunden)} label="Lernzeit" />
           <Kennzahl symbol={trendPositiv ? TrendUpIcon : TrendDownIcon} farbe={trendPositiv ? gruen : rot} wert={trendText} wertFarbe={trendPositiv ? gruen : rot} label={trendLabel} />
         </View>
