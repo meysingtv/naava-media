@@ -43,6 +43,8 @@ export type Registrierung = {
   geburtsdatum: string | null;
   klasse: string;
   bundesland: string | null;
+  /** Wie man von der App erfahren hat (optional, z. B. „tiktok“). */
+  quelle?: string | null;
 };
 
 /**
@@ -170,6 +172,7 @@ export function KontoProvider({ children }: { children: ReactNode }) {
               geburtsdatum: neu.geburtsdatum,
               klasse: neu.klasse,
               bundesland: neu.bundesland,
+              quelle: neu.quelle ?? null,
             },
           }
         : { shouldCreateUser: false },

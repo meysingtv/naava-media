@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/icon";
+import { MarkenLogo, type Marke } from "@/components/marken-logos";
 import { FIGUR, FigurBlase, FrageKopf, GrosseFigur, HELL, START, StartKnopf, startSchrift, WahlKarte } from "@/components/start-teile";
 import { BUNDESLAENDER } from "@/lib/bundeslaender";
 import { useDarstellung } from "@/lib/darstellung";
@@ -23,7 +24,7 @@ import { serverVerbunden } from "@/lib/supabase";
 // – damit entsteht das Konto bzw. man meldet sich an. Mit ?modus=anmelden
 // geht es direkt zur E-Mail.
 
-type Schritt = "darstellung" | "name" | "hallo" | "rolle" | "land" | "klasse" | "termin" | "mitteilung" | "email" | "code" | "fertig";
+type Schritt = "darstellung" | "name" | "hallo" | "quelle" | "rolle" | "land" | "klasse" | "termin" | "mitteilung" | "email" | "code" | "fertig";
 type Wahl = "hell" | "dunkel" | "system";
 
 const MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
@@ -59,10 +60,11 @@ function StartHandy() {
   const { benutzernameFrei, alsGast, session } = useKonto();
   const ablauf = useCodeAblauf();
 
-  const reihe: Schritt[] = anmelden ? ["email", "code"] : ["darstellung", "name", "hallo", "rolle", "land", "klasse", "termin", "mitteilung", "email", "code", "fertig"];
+  const reihe: Schritt[] = anmelden ? ["email", "code"] : ["darstellung", "name", "hallo", "quelle", "rolle", "land", "klasse", "termin", "mitteilung", "email", "code", "fertig"];
   const [schritt, setSchritt] = useState<Schritt>(reihe[0]);
   const [wahl, setWahl] = useState<Wahl | null>(null);
   const [name, setName] = useState("");
+  const [quelle, setQuelle] = useState<string | null>(null);
   const [rolle, setRolle] = useState<Rolle | null>(null);
   const [land, setLand] = useState<string | null>(null);
   const [landOffen, setLandOffen] = useState(false);
@@ -151,7 +153,7 @@ function StartHandy() {
     if (!anmelden) {
       let benutzername = benutzerVorschlag(vorname);
       for (let i = 0; i < 3 && (await benutzernameFrei(benutzername)) === false; i++) benutzername = benutzerVorschlag(vorname);
-      neu = { rolle: rolle ?? "schueler", vorname: vorname || "Fahrschüler", nachname: "", benutzername, telefon: null, geburtsdatum: null, klasse: klasse ?? "B", bundesland: land };
+      neu = { rolle: rolle ?? "schueler", vorname: vorname || "Fahrschüler", nachname: "", benutzername, telefon: null, geburtsdatum: null, klasse: klasse ?? "B", bundesland: land, quelle };
     }
     if (await ablauf.senden(email, neu)) wechseln("code");
   }
@@ -174,6 +176,8 @@ function StartHandy() {
         return <StartKnopf titel="Weiter" art="lila" deaktiviert={!wahl} onPress={weiter} />;
       case "name":
         return <StartKnopf titel="Weiter" art="lila" deaktiviert={vorname.length < 2} onPress={weiter} />;
+      case "quelle":
+        return <StartKnopf titel="Weiter" art="lila" deaktiviert={!quelle} onPress={weiter} />;
       case "rolle":
         return <StartKnopf titel="Weiter" art="lila" deaktiviert={!rolle} onPress={weiter} />;
       case "land":
@@ -298,6 +302,26 @@ function StartHandy() {
                 </Text>
                 <GrosseFigur figur="freude" groesse={240} />
               </Pressable>
+            ) : null}
+
+            {schritt === "quelle" ? (
+              <>
+                <FigurBlase figur="neugierig" teile={["Wie hast du von ", ["Fahrschul Pro"], " erfahren?"]} />
+                <Text style={{ ...startSchrift.textHalb, fontSize: 15, color: HELL.tinte2, textAlign: "center", marginTop: 22, marginBottom: 12 }}>Bitte wähle eine Antwort</Text>
+                <View style={{ gap: 10 }}>
+                  {QUELLEN.map((q) => (
+                    <WahlKarte key={q.id} aktiv={quelle === q.id} onPress={() => setQuelle(q.id)} label={q.titel}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 11, paddingHorizontal: 14 }}>
+                        <QuellenZeichen q={q} />
+                        <Text style={{ ...startSchrift.textHalb, fontSize: 16.5, color: HELL.tinte, flex: 1 }}>{q.titel}</Text>
+                        <View style={{ width: 24, height: 24, borderRadius: 12, borderWidth: 2.5, borderColor: quelle === q.id ? START.lila : "#CFCADF", backgroundColor: quelle === q.id ? START.lila : "transparent", alignItems: "center", justifyContent: "center" }}>
+                          {quelle === q.id ? <Icon name="checkmark" size={14} color="#FFFFFF" /> : null}
+                        </View>
+                      </View>
+                    </WahlKarte>
+                  ))}
+                </View>
+              </>
             ) : null}
 
             {schritt === "rolle" ? (
@@ -529,6 +553,44 @@ function StartHandy() {
       </KeyboardAvoidingView>
 
       <LandWahl offen={landOffen} wert={land} onWahl={(l) => setLand(l)} onSchliessen={() => setLandOffen(false)} />
+    </View>
+  );
+}
+
+type Quelle = { id: string; titel: string; marke?: Marke; farbe?: string; icon?: "car-outline" | "people-outline" | "chatbubble-ellipses-outline" };
+
+/** Antworten auf „Wie hast du von uns erfahren?“ (Logos: Simple Icons, CC0). */
+const QUELLEN: Quelle[] = [
+  { id: "fahrschule", titel: "Meine Fahrschule", icon: "car-outline" },
+  { id: "freunde", titel: "Familie / Freunde", icon: "people-outline" },
+  { id: "tiktok", titel: "TikTok", marke: "tiktok", farbe: "#000000" },
+  { id: "instagram", titel: "Instagram", marke: "instagram", farbe: "#FF0069" },
+  { id: "youtube", titel: "YouTube", marke: "youtube", farbe: "#FF0000" },
+  { id: "facebook", titel: "Facebook", marke: "facebook", farbe: "#0866FF" },
+  { id: "appstore", titel: "App Store", marke: "appstore", farbe: "#0D96F6" },
+  { id: "google", titel: "Google-Suche", marke: "google" },
+  { id: "andere", titel: "Woanders", icon: "chatbubble-ellipses-outline" },
+];
+
+/** Logo bzw. Symbol links in der Zeile. */
+function QuellenZeichen({ q }: { q: Quelle }) {
+  if (q.marke === "google") {
+    return (
+      <View style={{ width: 40, height: 40, borderRadius: 11, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: HELL.linie, alignItems: "center", justifyContent: "center" }}>
+        <MarkenLogo marke="google" groesse={20} farbe="#4285F4" />
+      </View>
+    );
+  }
+  if (q.marke) {
+    return (
+      <View style={{ width: 40, height: 40, borderRadius: 11, backgroundColor: q.farbe, alignItems: "center", justifyContent: "center" }}>
+        <MarkenLogo marke={q.marke} groesse={21} farbe="#FFFFFF" />
+      </View>
+    );
+  }
+  return (
+    <View style={{ width: 40, height: 40, borderRadius: 11, backgroundColor: "#EEEBFB", alignItems: "center", justifyContent: "center" }}>
+      <Icon name={q.icon ?? "chatbubble-ellipses-outline"} size={21} color={START.lila} />
     </View>
   );
 }

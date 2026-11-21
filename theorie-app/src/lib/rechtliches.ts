@@ -113,7 +113,7 @@ export const DATENSCHUTZ: Abschnitt[] = [
         liste: [
           "E-Mail-Adresse – angemeldet wird ohne Passwort mit einem Code, den wir dir per E-Mail schicken",
           "Vorname, Benutzername und Rolle (Fahrschüler oder Fahrlehrer) – Vorname und Benutzername sind für andere sichtbar",
-          "freiwillig: Nachname, Telefonnummer, Geburtsdatum, Führerscheinklasse und Bundesland – Nachname, Telefon und Geburtsdatum sind nicht öffentlich",
+          "freiwillig: Nachname, Telefonnummer, Geburtsdatum, Führerscheinklasse, Bundesland und wie du von der App erfahren hast (z. B. Fahrschule, Freunde, TikTok) – Nachname, Telefon, Geburtsdatum und diese Angabe sind nicht öffentlich",
           "Lernstand und Einstellungen (zur Synchronisierung zwischen deinen Geräten)",
           "freiwillig: ein Profilbild",
         ],
