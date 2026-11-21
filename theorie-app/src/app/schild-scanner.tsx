@@ -8,7 +8,6 @@ import { useIsFocused } from "@react-navigation/native";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Glas } from "@/components/glas";
 import { START, StartKnopf, startSchrift } from "@/components/start-teile";
 import { Icon, type IconName } from "@/components/icon";
 import { Lader } from "@/components/lader";
@@ -40,6 +39,9 @@ function quizErstellen(key: ZeichenKey): Quiz | null {
 }
 
 const MASKE = "rgba(0,0,0,0.46)";
+/** Feste dunkle Flächen für Knöpfe und Anzeige oben (kein Glas). */
+const FLAECHE = "#1E1C33";
+const FLAECHE_RAND = "rgba(180,168,244,0.22)";
 /** Breite des Abdunklungs-Rands – groß genug für jeden Bildschirm. */
 const RAND_MASKE = 1400;
 
@@ -61,9 +63,9 @@ function RundTaste({ icon, label, onPress, gross, aktiv }: { icon: IconName; lab
       accessibilityLabel={label}
     >
       {({ pressed }) => (
-        <Glas interaktiv toenung={aktiv ? "rgba(140,122,230,0.55)" : undefined} style={{ width: g, height: g, borderRadius: g / 2, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
+        <View style={{ width: g, height: g, borderRadius: g / 2, alignItems: "center", justifyContent: "center", backgroundColor: aktiv ? "#8C7AE6" : FLAECHE, borderWidth: 1.5, borderColor: aktiv ? "#8C7AE6" : FLAECHE_RAND, opacity: pressed ? 0.8 : 1 }}>
           <Icon name={icon} size={gross ? 22 : 19} color="#FFFFFF" weight="semibold" />
-        </Glas>
+        </View>
       )}
     </Pressable>
   );
@@ -235,12 +237,12 @@ export default function SchildScanner() {
   const oben = (
     <View style={{ position: "absolute", top: insets.top + 6, left: 16, right: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
       <RundTaste icon="close" label="Schließen" onPress={zumAlbum} />
-      <Glas style={{ height: 36, borderRadius: 18, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 7 }}>
+      <View style={{ height: 38, borderRadius: 19, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", gap: 7, backgroundColor: FLAECHE, borderWidth: 1.5, borderColor: FLAECHE_RAND }}>
         <Icon name="scan" size={15} color={farben.orange} weight="semibold" />
         <Text style={{ ...schrift.textHalb, fontSize: 14, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>
           {gefunden} / {ALBUM.length} gefunden
         </Text>
-      </Glas>
+      </View>
       {erlaubnis?.granted && !kameraFehler ? <RundTaste icon={licht ? "flashlight" : "flashlight-outline"} label={licht ? "Licht aus" : "Licht an"} aktiv={licht} onPress={() => setLicht(!licht)} /> : <View style={{ width: 44 }} />}
     </View>
   );
