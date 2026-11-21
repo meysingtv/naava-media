@@ -13,15 +13,8 @@ import { useDarstellung } from "@/lib/darstellung";
 import { useDesktop } from "@/lib/fenster";
 import { FOTOS } from "@/lib/fotos";
 import { tippen } from "@/lib/haptik";
-import { leuchten, mitDeckkraft, RAND, schrift } from "@/lib/theme";
+import { leuchten, RAND, schrift } from "@/lib/theme";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
-
-/** Farbton je Gruppe für die Kacheln. */
-const GRUPPEN_TON: Record<ZeichenInfo["gruppe"], string> = {
-  gefahr: "#F59E0B",
-  vorschrift: "#EF4444",
-  richt: "#3B82F6",
-};
 
 const GRUPPEN: { id: "alle" | ZeichenInfo["gruppe"]; titel: string }[] = [
   { id: "alle", titel: "Alle" },
@@ -52,38 +45,33 @@ function ZeichenHandy() {
           ))}
         </ScrollView>
         <View style={{ paddingHorizontal: RAND, flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-          {liste.map((z) => {
-            const ton = GRUPPEN_TON[z.gruppe];
-            return (
-              <Pressable
-                key={z.key}
-                onPress={() => {
-                  tippen();
-                  setOffen(z);
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={z.name}
-                style={({ pressed }) => [
-                  { width: "31%", flexGrow: 1, maxWidth: "32%", borderRadius: 22, transform: [{ scale: pressed ? 0.96 : 1 }] },
-                  f.hell ? { backgroundColor: "#FFFFFF", ...leuchten("#3C2C18", 0.07, 12, 4) } : { backgroundColor: f.flaeche },
-                ]}
-              >
-                <View style={{ borderRadius: 22, overflow: "hidden", borderWidth: 1, borderColor: mitDeckkraft(ton, f.hell ? 0.16 : 0.26) }}>
-                  <LinearGradient
-                    colors={[mitDeckkraft(ton, f.hell ? 0.16 : 0.24), mitDeckkraft(ton, f.hell ? 0.03 : 0.04)]}
-                    locations={[0, 0.75]}
-                    style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-                  />
-                  <View style={{ alignItems: "center", gap: 10, paddingTop: 18, paddingBottom: 14, paddingHorizontal: 8 }}>
-                    <Verkehrszeichen zeichen={z.key} groesse={62} />
-                    <Text numberOfLines={2} style={{ ...schrift.textMittel, fontSize: 12, lineHeight: 16, color: f.text, textAlign: "center" }}>
-                      {z.kurz ?? z.name}
-                    </Text>
-                  </View>
+          {liste.map((z) => (
+            <Pressable
+              key={z.key}
+              onPress={() => {
+                tippen();
+                setOffen(z);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={z.name}
+              style={({ pressed }) => [
+                { width: "31%", flexGrow: 1, maxWidth: "32%", borderRadius: 24, transform: [{ scale: pressed ? 0.96 : 1 }] },
+                f.hell ? { backgroundColor: "#FFFFFF", ...leuchten("#3C2C18", 0.06, 16, 6) } : { backgroundColor: "#16181C" },
+              ]}
+            >
+              <View style={{ borderRadius: 24, overflow: "hidden" }}>
+                {/* Ruhiger Verlauf: oben etwas heller, wie Licht von oben */}
+                <LinearGradient colors={f.hell ? ["#FFFFFF", "#F8F6F2"] : ["#24272D", "#16181C"]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+                {f.hell ? null : <View style={{ position: "absolute", top: 0, left: 18, right: 18, height: 1, backgroundColor: "rgba(255,255,255,0.08)" }} />}
+                <View style={{ alignItems: "center", gap: 12, paddingTop: 20, paddingBottom: 16, paddingHorizontal: 8 }}>
+                  <Verkehrszeichen zeichen={z.key} groesse={62} />
+                  <Text numberOfLines={2} style={{ ...schrift.textMittel, fontSize: 12, lineHeight: 16, color: f.text2, textAlign: "center" }}>
+                    {z.kurz ?? z.name}
+                  </Text>
                 </View>
-              </Pressable>
-            );
-          })}
+              </View>
+            </Pressable>
+          ))}
         </View>
       </ScrollView>
 
