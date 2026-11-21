@@ -20,7 +20,7 @@ function kuerzelVon(name: string): string {
  * Eigenes rundes Profilbild mit heller Kante – ohne Foto schlicht grau mit
  * Initialen, wie bei den iOS-Kontakten.
  */
-export function ProfilBild({ name, groesse = 52, rand = 2 }: { name: string; groesse?: number; rand?: number }) {
+export function ProfilBild({ name, groesse = 52, rand = 2, farbe = "#8E939B" }: { name: string; groesse?: number; rand?: number; /** Hintergrund hinter den Initialen. */ farbe?: string }) {
   const lokal = useProfilbild();
   const { profil } = useKonto();
   const uri = lokal ?? (profil?.bild_pfad ? profilbildUrl(profil.bild_pfad) : null);
@@ -39,7 +39,7 @@ export function ProfilBild({ name, groesse = 52, rand = 2 }: { name: string; gro
       {uri ? (
         <Image source={{ uri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
       ) : (
-        <View style={{ flex: 1, backgroundColor: "#8E939B", alignItems: "center", justifyContent: "center" }}>
+        <View style={{ flex: 1, backgroundColor: farbe, alignItems: "center", justifyContent: "center" }}>
           <Text style={{ ...schrift.textHalb, fontSize: groesse * 0.4, color: "#FFFFFF", letterSpacing: 0.3 }}>{kuerzelVon(name)}</Text>
         </View>
       )}

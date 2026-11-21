@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { Image, Pressable, ScrollView, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
@@ -10,6 +10,8 @@ import { HomeWeb } from "@/components/web/home-web";
 import { CrewBereich } from "@/components/crew";
 import { FokusKarte, GRUSS, Handschrift, HeldWerte, heldHoehe, KinoHeld, Kopfzeile, PruefungKarte, Schnellstart, StartKnopf, tageszeit, ThemenKarussell, ZitatKarte } from "@/components/home";
 import { Icon } from "@/components/icon";
+import { LilaBanner, LilaKachel, LilaKarte, LilaKopf, LILA_RAND, lilaSchrift, useLila } from "@/components/lila-teile";
+import { FOTOS } from "@/lib/fotos";
 import { ProfilBild } from "@/components/profilbild";
 import { useInhaltUnten } from "@/components/tab-leiste";
 import { TourZiel, useTourBlatt } from "@/components/tour";
@@ -48,7 +50,119 @@ export default function Home() {
   return useDesktop() ? <HomeWeb /> : <HomeHandy />;
 }
 
+/** Begrüßung je Tageszeit (mit Komma, darunter der Name). */
+const GRUSS_LILA: Record<ReturnType<typeof tageszeit>, string> = { morgen: "Guten Morgen", tag: "Hallo", abend: "Guten Abend", nacht: "Hey" };
+
+/**
+ * Startseite im lila Design (solange die Fragen aus sind): Begrüßung, Bild mit
+ * der Figur, Countdown bis zur Prüfung, Lernvideos und Schnellzugriffe.
+ */
+function HomeLila() {
+  const insets = useSafeAreaInsets();
+  const { width } = useFenster();
+  const inhaltUnten = useInhaltUnten();
+  const tourBlatt = useTourBlatt("/heute");
+  const fokus = useIsFocused();
+  const l = useLila();
+  const { stand } = useStand();
+  const { anzeigeName } = useKonto();
+  const vorname = anzeigeName.split(" ")[0] || "du";
+  const zeit = tageszeit(new Date().getHours());
+  const termin = terminDatum(stand.pruefungstermin);
+  const tage = termin ? tageBis(termin) : null;
+  const kommend = tage !== null && tage >= 0 ? tage : null;
+  const glockePunkt = !stand.erinnerung.an;
+  const innen = Math.min(width, 560) - 2 * LILA_RAND;
+
+  const countdown =
+    kommend === null
+      ? { titel: "Termin eintragen", unter: "Dann zähle ich die Tage runter" }
+      : kommend === 0
+        ? { titel: "Heute ist Prüfung!", unter: "Du schaffst das" }
+        : kommend === 1
+          ? { titel: "Morgen ist es so weit", unter: "bis zu deiner Prüfung" }
+          : { titel: `Noch ${kommend} Tage`, unter: "bis zu deiner Prüfung" };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: l.grund }}>
+      {fokus ? <StatusBar style={l.hell ? "dark" : "light"} /> : null}
+      <ScrollView {...tourBlatt} contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: inhaltUnten + 8, paddingHorizontal: LILA_RAND, width: "100%", maxWidth: 560, alignSelf: "center" }} showsVerticalScrollIndicator={false}>
+        {/* Begrüßung */}
+        <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+          <Text style={{ flex: 1, ...lilaSchrift.titel, fontSize: 40, lineHeight: 43, letterSpacing: -0.6, color: l.tinte }} numberOfLines={2}>
+            {GRUSS_LILA[zeit]},{"\n"}
+            <Text style={{ color: l.lila }}>{vorname}</Text>!
+          </Text>
+          <Pressable
+            onPress={() => {
+              tippen();
+              router.push("/einstellungen");
+            }}
+            accessibilityLabel="Erinnerungen"
+            hitSlop={8}
+            style={{ marginTop: 10, marginRight: 16 }}
+          >
+            <Icon name="notifications-outline" size={26} color={l.tinte} />
+            {glockePunkt ? <View style={{ position: "absolute", top: -1, right: -1, width: 9, height: 9, borderRadius: 5, backgroundColor: l.lila, borderWidth: 1.5, borderColor: l.grund }} /> : null}
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              tippen();
+              router.navigate("/profil");
+            }}
+            accessibilityLabel="Profil"
+            style={{ marginTop: 2 }}
+          >
+            <ProfilBild name={anzeigeName} groesse={46} rand={0} farbe={l.lila} />
+          </Pressable>
+        </View>
+
+        {/* Bild mit der Figur */}
+        <View style={{ marginTop: 14, borderRadius: 22, overflow: "hidden", borderWidth: 1.5, borderColor: l.linie }}>
+          <Image source={FOTOS.heldAuto} style={{ width: "100%", height: Math.round((innen - 3) * (576 / 1100)) }} resizeMode="cover" accessibilityLabel="Die Figur sagt: Mach heute einen Schritt näher zum Führerschein!" />
+        </View>
+
+        {/* Countdown */}
+        <LilaKarte onPress={() => router.push("/pruefungstermin")} label={countdown.titel} style={{ marginTop: 14 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 13, paddingHorizontal: 14 }}>
+            <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: l.lilaZart, alignItems: "center", justifyContent: "center" }}>
+              <Icon name="calendar-outline" size={25} color={l.lila} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ ...lilaSchrift.titel, fontSize: 24, lineHeight: 27, color: l.tinte }}>{countdown.titel}</Text>
+              <Text style={{ ...lilaSchrift.textMittel, fontSize: 14, color: l.tinte2 }}>{countdown.unter}</Text>
+            </View>
+            <Icon name="chevron-forward" size={22} color={l.tinte} />
+          </View>
+        </LilaKarte>
+
+        <TourZiel id="home-start" style={{ marginTop: 14 }}>
+          <LilaBanner titel="Lernvideos ansehen" unter="Alle Themen kurz und einfach erklärt" onPress={() => router.navigate("/lernen")} />
+        </TourZiel>
+
+        <LilaKopf titel="Schnellzugriffe" style={{ marginTop: 22 }} />
+        <TourZiel id="home-schnell" style={{ gap: 10 }}>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <LilaKachel titel="Lernvideos" icon="play-outline" onPress={() => router.navigate("/lernen")} style={{ flex: 1 }} />
+            <LilaKachel titel="Kurz erklärt" icon="bulb" iconFarbe="#F5B400" onPress={() => router.push("/kurz-erklaert")} style={{ flex: 1 }} />
+          </View>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <LilaKachel titel="Verkehrszeichen" icon="warning-outline" onPress={() => router.push("/zeichen")} style={{ flex: 1 }} />
+            <LilaKachel titel="Formeln" icon="calculator-outline" onPress={() => router.push("/formeln")} style={{ flex: 1 }} />
+          </View>
+          <LilaKachel titel="Schilder-Jagd" icon="scan-outline" gross onPress={() => router.push("/schilder-jagd")} />
+        </TourZiel>
+      </ScrollView>
+    </View>
+  );
+}
+
 function HomeHandy() {
+  if (!FRAGEN_AKTIV) return <HomeLila />;
+  return <HomeMitFragen />;
+}
+
+function HomeMitFragen() {
   const insets = useSafeAreaInsets();
   const { width } = useFenster();
   const inhaltUnten = useInhaltUnten();

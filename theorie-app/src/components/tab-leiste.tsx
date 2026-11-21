@@ -18,6 +18,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon, type IconName } from "@/components/icon";
+import { LEISTE_HOEHE } from "@/components/lila-leiste";
 import { istHelleSeite, TAG, useDarstellung } from "@/lib/darstellung";
 import { useDesktop } from "@/lib/fenster";
 import { tippen } from "@/lib/haptik";
@@ -57,7 +58,8 @@ export function useLeistenHoehe(): number {
   // Am PC im Browser steht die Seitenleiste links (web/rahmen.tsx) – unten bleibt nichts belegt.
   const desktop = useDesktop();
   if (desktop) return 0;
-  return Platform.OS === "ios" ? insets.bottom + 58 : insets.bottom + UNTEN + KAPSEL;
+  // Die lila Leiste (lila-leiste.tsx) steht fest unten – auf allen Handys gleich.
+  return insets.bottom + LEISTE_HOEHE;
 }
 
 /** Platz unter dem Inhalt einer Tab-Seite, damit nichts unter der Leiste endet. */

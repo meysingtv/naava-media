@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
@@ -9,6 +9,8 @@ import { Glas } from "@/components/glas";
 import { GlasGrund } from "@/components/glas-flaeche";
 import { Kopfzeile, StartKnopf } from "@/components/home";
 import { Icon } from "@/components/icon";
+import { LilaFigurBlase, LilaKachel, LilaKarte, LilaKopf, LILA_RAND, LilaTitel, lilaSchrift, useLila } from "@/components/lila-teile";
+import { FIGUR } from "@/components/start-teile";
 import {
   GrundstoffKarte,
   LernStand,
@@ -64,84 +66,73 @@ export default function Lernen() {
 }
 
 /**
- * Ohne Fragen (bis die Lizenz da ist): Themen als Poster mit ihren Videos,
- * dazu Schilder-Jagd, Kurz erklärt, Verkehrszeichen und Formeln.
+ * Ohne Fragen (bis die Lizenz da ist), im lila Design: Figur mit Sprechblase,
+ * Lernhilfen und alle Themen aus dem Manager mit ihren Videos.
  */
 function LernenNurVideos() {
   const insets = useSafeAreaInsets();
   const inhaltUnten = useInhaltUnten();
-  const leistenScroll = useLeistenScroll();
   const tourBlatt = useTourBlatt("/lernen");
   const fokus = useIsFocused();
-  const { farbwelt: f } = useDarstellung();
-  const { stand } = useStand();
+  const l = useLila();
   const { zuThema } = useLernvideos();
   const lernthemen = useLernthemen();
-  const [kopfHoehe, setKopfHoehe] = useState(0);
-
-  const gefunden = ALBUM.filter((k) => stand.schilder[k]);
-  const letztesSchild: ZeichenKey = [...gefunden].sort((a, b) => (stand.schilder[b] ?? "").localeCompare(stand.schilder[a] ?? ""))[0] ?? "z206";
-  // Themen legt der Inhaber im Manager an (eigener Titel, eigenes Bild).
-  const themen: ThemaPosterDaten[] = lernthemen.themen.map((t) => ({ id: t.id, titel: t.titel, bild: themaBild(t), anteil: 0, anzahl: 0, stufe: "mittel", videos: zuThema(t.id).length }));
-  const alleVideos = themen.reduce((s, t) => s + (t.videos ?? 0), 0);
-  const kopfText = f.hell ? "#14171B" : "#FFFFFF";
+  const themen = lernthemen.themen;
   const themenText = themen.length === 1 ? "1 Thema" : `${themen.length} Themen`;
-  const unterText = themen.length ? `${themenText}${alleVideos > 0 ? ` · ${alleVideos} Videos` : ""} · Klasse ${stand.klasse}` : `Klasse ${stand.klasse}`;
-  const zumThema = (id: string) => router.push({ pathname: "/thema/[id]", params: { id } });
-
-  const schilderJagd = (
-    <ModusKarte
-      titel="Schilder-Jagd"
-      unter={gefunden.length > 0 ? `${gefunden.length} von ${ALBUM.length} gefunden` : "Schilder scannen"}
-      akzent="#4DA3FF"
-      bild={<SucherSchild zeichen={letztesSchild} groesse={28} />}
-      anteil={gefunden.length / ALBUM.length}
-      onPress={() => router.push("/schilder-jagd")}
-    />
-  );
-  const kurzErklaert = (
-    <ModusKarte titel="Kurz erklärt" unter="Regeln in 30 Sekunden" akzent="#FF4D6D" bild={<Icon name="bulb" sf="lightbulb.fill" size={28} color="#FF4D6D" />} onPress={() => router.push("/kurz-erklaert")} />
-  );
-  const zeichen: Modus = { titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", akzent: "#4DA3FF", icon: "warning", bild: <Verkehrszeichen zeichen="z205" groesse={27} />, onPress: () => router.push("/zeichen") };
-  const formeln: Modus = { titel: "Formeln", unter: "Anhalteweg & Co.", akzent: "#E0A100", icon: "calculator", sf: "function", onPress: () => router.push("/formeln") };
-  const clips: Modus = { titel: "Clips", unter: "Kurze Videos aus der Community", akzent: "#9B7BFF", icon: "film", onPress: () => router.push("/clips") };
 
   return (
-    <FarbweltBereich farbwelt={f}>
-      {fokus ? <StatusBar style={f.hell ? "dark" : "light"} /> : null}
-      <View style={{ flex: 1, backgroundColor: f.grund }}>
-        <ScrollView {...leistenScroll} {...tourBlatt} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
-          {kopfHoehe > 0 ? <GlasGrund ab={kopfHoehe} dezent /> : null}
-          <View onLayout={(e) => setKopfHoehe(Math.round(e.nativeEvent.layout.height))}>
-            <Themenwand>
-              <View style={{ paddingTop: insets.top + 4, paddingHorizontal: RAND, paddingBottom: 30 }}>
-                <Text style={{ ...schrift.titel, fontSize: 34, lineHeight: 40, color: kopfText, letterSpacing: -0.5 }}>Lernen</Text>
-                <Text style={{ ...schrift.textMittel, fontSize: 15, color: f.hell ? "rgba(20,23,27,0.66)" : "rgba(255,255,255,0.78)", marginTop: 1 }}>{unterText}</Text>
-              </View>
-            </Themenwand>
+    <View style={{ flex: 1, backgroundColor: l.grund }}>
+      {fokus ? <StatusBar style={l.hell ? "dark" : "light"} /> : null}
+      <ScrollView {...tourBlatt} contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: inhaltUnten + 8, paddingHorizontal: LILA_RAND, width: "100%", maxWidth: 560, alignSelf: "center" }} showsVerticalScrollIndicator={false}>
+        <LilaTitel>Lernen</LilaTitel>
+        <LilaFigurBlase text="Wähle ein Thema und leg los!" style={{ marginTop: 6 }} />
+
+        <LilaKopf titel="Lernhilfen" style={{ marginTop: 14 }} />
+        <TourZiel id="lernen-modi" style={{ gap: 10 }}>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <LilaKachel titel="Schilder-Jagd" icon="scan-outline" onPress={() => router.push("/schilder-jagd")} style={{ flex: 1 }} />
+            <LilaKachel titel="Kurz erklärt" icon="bulb" iconFarbe="#F5B400" onPress={() => router.push("/kurz-erklaert")} style={{ flex: 1 }} />
           </View>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <LilaKachel titel="Verkehrszeichen" icon="warning-outline" onPress={() => router.push("/zeichen")} style={{ flex: 1 }} />
+            <LilaKachel titel="Formeln" icon="calculator-outline" onPress={() => router.push("/formeln")} style={{ flex: 1 }} />
+          </View>
+        </TourZiel>
 
-          <Kopfzeile titel="Lernhilfen" style={{ marginTop: 20 }} />
-          <TourZiel id="lernen-modi" style={{ flexDirection: "row", gap: 10, marginHorizontal: RAND }}>
-            {schilderJagd}
-            {kurzErklaert}
-          </TourZiel>
-          <ModusRaster modi={[zeichen, formeln]} style={{ marginTop: 10 }} />
-
-          {themen.length ? (
-            <>
-              <Kopfzeile titel="Alle Themen" link={themenText} style={{ marginTop: 32 }} />
-              <ThemenRaster themen={themen} onThema={zumThema} />
-            </>
-          ) : lernthemen.geladen ? (
-            <View style={{ marginHorizontal: RAND, marginTop: 32, paddingVertical: 32, paddingHorizontal: 24, borderRadius: 22, alignItems: "center", gap: 10, backgroundColor: f.flaeche, borderWidth: 1, borderColor: f.linie }}>
-              <Icon name="film-outline" size={28} color={f.text3} />
-              <Text style={{ ...schrift.textHalb, fontSize: 16, lineHeight: 22, color: f.text, textAlign: "center" }}>Videos zu den Themen folgen bald.</Text>
+        <LilaKopf titel="Alle Themen" rechts={themen.length ? themenText : undefined} style={{ marginTop: 24 }} />
+        {themen.length ? (
+          <View style={{ gap: 10 }}>
+            {themen.map((t) => {
+              const n = zuThema(t.id).length;
+              return (
+                <LilaKarte key={t.id} onPress={() => router.push({ pathname: "/thema/[id]", params: { id: t.id } })} label={t.titel}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 10, paddingRight: 14 }}>
+                    <Image source={themaBild(t)} style={{ width: 96, height: 64, borderRadius: 12 }} resizeMode="cover" />
+                    <View style={{ flex: 1, gap: 4 }}>
+                      <Text style={{ ...lilaSchrift.titel, fontSize: 21, lineHeight: 24, color: l.tinte }} numberOfLines={2}>
+                        {t.titel}
+                      </Text>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <Icon name="videocam-outline" size={16} color={l.lila} />
+                        <Text style={{ ...lilaSchrift.textMittel, fontSize: 13.5, color: l.tinte2 }}>{n === 1 ? "1 Video" : n ? `${n} Videos` : "Videos folgen"}</Text>
+                      </View>
+                    </View>
+                    <Icon name="chevron-forward" size={21} color={l.tinte} />
+                  </View>
+                </LilaKarte>
+              );
+            })}
+          </View>
+        ) : lernthemen.geladen ? (
+          <LilaKarte>
+            <View style={{ alignItems: "center", paddingVertical: 24, paddingHorizontal: 20, gap: 8 }}>
+              <Image source={FIGUR.denken} style={{ width: 96, height: 96 }} resizeMode="contain" />
+              <Text style={{ ...lilaSchrift.titel, fontSize: 21, color: l.tinte, textAlign: "center" }}>Videos zu den Themen folgen bald.</Text>
             </View>
-          ) : null}
-        </ScrollView>
-      </View>
-    </FarbweltBereich>
+          </LilaKarte>
+        ) : null}
+      </ScrollView>
+    </View>
   );
 }
 

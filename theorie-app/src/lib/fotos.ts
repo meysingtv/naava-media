@@ -36,6 +36,8 @@ export const FOTOS = {
   heldTag: require("../../assets/images/home/held-tag.jpg"),
   heldAbend: require("../../assets/images/home/held-abend.jpg"),
   heldNacht: require("../../assets/images/home/held-nacht.jpg"),
+  // Startseite im lila Design: die Figur auf der Straße (eigene Grafik)
+  heldAuto: require("../../assets/images/home/held-auto.jpg"),
   // Hintergrund oben im Profil (eigene Grafik, dunkel und hell)
   heldProfilDunkel: require("../../assets/images/home/held-profil-dunkel.jpg"),
   heldProfilHell: require("../../assets/images/home/held-profil-hell.jpg"),
