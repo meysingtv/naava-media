@@ -378,7 +378,7 @@ function StartHandy() {
 
             {schritt === "termin" ? (
               <>
-                <FigurBlase figur="grund" teile={["Wann ist deine ", ["Prüfung"], "?"]} />
+                <FigurBlase figur="kalender" teile={["Wann ist deine ", ["Prüfung"], "?"]} />
                 <View style={{ marginTop: 18 }}>
                   <Kalender wert={termin} onWahl={setTermin} />
                 </View>
@@ -388,14 +388,14 @@ function StartHandy() {
 
             {schritt === "mitteilung" ? (
               <>
-                <FigurBlase figur="neugierig" teile={["Soll ich dich ans ", ["Lernen"], " erinnern?"]} />
+                <FigurBlase figur="glocke" teile={["Soll ich dich ans ", ["Lernen"], " erinnern?"]} />
                 <Text style={{ ...startSchrift.text, fontSize: 16, lineHeight: 23, color: HELL.tinte2, textAlign: "center", marginTop: 22 }}>Der Trick ist Regelmäßigkeit. Und jemand, der dran denkt.</Text>
                 <View style={{ flex: 1, justifyContent: "center", paddingVertical: 20 }}>
                   <View style={{ borderRadius: 40, backgroundColor: "#E9E6F4", paddingTop: 18, paddingBottom: 60, paddingHorizontal: 14, marginHorizontal: 10 }}>
                     <Text style={{ ...startSchrift.textHalb, fontSize: 14, color: HELL.tinte, marginLeft: 22 }}>18:00</Text>
                     <View style={{ marginTop: 34, marginHorizontal: -24, flexDirection: "row", gap: 12, padding: 14, borderRadius: 22, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: HELL.linie }}>
                       <View style={{ width: 44, height: 44, borderRadius: 11, backgroundColor: "#EEEBFB", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                        <Image source={FIGUR.grund} style={{ width: 42, height: 42 }} resizeMode="contain" />
+                        <Image source={FIGUR.kopf} style={{ width: 40, height: 40 }} resizeMode="contain" />
                       </View>
                       <View style={{ flex: 1, gap: 2 }}>
                         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
@@ -414,7 +414,7 @@ function StartHandy() {
 
             {schritt === "email" ? (
               <>
-                <FigurBlase figur="grund" teile={anmelden ? ["Schön, dass du ", ["wieder da"], " bist!"] : ["Fast geschafft! Wohin schicke ich deinen ", ["Code"], "?"]} />
+                <FigurBlase figur="brief" teile={anmelden ? ["Schön, dass du ", ["wieder da"], " bist!"] : ["Fast geschafft! Wohin schicke ich deinen ", ["Code"], "?"]} />
                 <View style={{ flex: 1, justifyContent: "center", paddingVertical: 24, gap: 14 }}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 12, height: 64, paddingHorizontal: 18, borderRadius: 20, backgroundColor: HELL.karte, borderWidth: 2, borderBottomWidth: 5, borderColor: email ? START.lila : HELL.linie }}>
                     <Icon name="mail-outline" size={22} color={START.lila} />
@@ -467,7 +467,7 @@ function StartHandy() {
 
             {schritt === "code" ? (
               <>
-                <FigurBlase figur="neugierig" teile={["Check deine ", ["Mails"], "!"]} />
+                {ablauf.fehler ? <FigurBlase figur="traurig" teile={["Hm, das hat ", ["nicht geklappt"], "."]} /> : <FigurBlase figur="code" teile={["Check deine ", ["Mails"], "!"]} />}
                 <View style={{ flex: 1, justifyContent: "center", paddingVertical: 24, gap: 18 }}>
                   <Text style={{ ...startSchrift.text, fontSize: 15.5, lineHeight: 22, color: HELL.tinte2, textAlign: "center" }}>
                     Ich habe dir einen Code an <Text style={{ ...startSchrift.textHalb, color: HELL.tinte }}>{ablauf.gesendetAn}</Text> geschickt.
@@ -514,7 +514,7 @@ function StartHandy() {
 
             {schritt === "fertig" ? (
               <View style={{ flex: 1, justifyContent: "center", gap: 24 }}>
-                <GrosseFigur figur="freude" groesse={230} />
+                <GrosseFigur figur="feiern" groesse={250} />
                 <Text style={{ ...startSchrift.titel, fontSize: 40, lineHeight: 42, letterSpacing: -0.6, color: HELL.tinte, textAlign: "center" }}>
                   Alles bereit{vorname ? ", " : ""}
                   <Text style={{ color: START.lila }}>{vorname}</Text>!

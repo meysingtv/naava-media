@@ -265,6 +265,13 @@ export const FIGUR = {
   winken: require("../../assets/images/figur/winken.png"),
   freude: require("../../assets/images/figur/freude.png"),
   denken: require("../../assets/images/figur/denken.png"),
+  kopf: require("../../assets/images/figur/kopf.png"),
+  code: require("../../assets/images/figur/code.png"),
+  kalender: require("../../assets/images/figur/kalender.png"),
+  brief: require("../../assets/images/figur/brief.png"),
+  traurig: require("../../assets/images/figur/traurig.png"),
+  glocke: require("../../assets/images/figur/glocke.png"),
+  feiern: require("../../assets/images/figur/feiern.png"),
 } satisfies Record<string, ImageSourcePropType>;
 
 export type FigurName = keyof typeof FIGUR;
