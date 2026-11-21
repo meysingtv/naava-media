@@ -497,7 +497,16 @@ export default function Clips() {
       {video ? <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.45)", "rgba(0,0,0,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top + KOPF + 40 }} /> : null}
       <View pointerEvents="box-none" style={{ position: "absolute", top: insets.top + 4, left: 0, right: 0, paddingHorizontal: 16, gap: 12 }}>
         <View pointerEvents="box-none" style={{ height: 50, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          {rechte.ersteller || darfLiveJetzt ? <BildTaste bild={CLIPS_BILD.plus} label={darfLiveJetzt ? "Erstellen" : "Clip hochladen"} onPress={erstellen} /> : <View style={{ width: 48 }} />}
+          {/* Plus immer sichtbar: wer darf, lädt hoch bzw. geht live – alle anderen landen bei der Creator-Bewerbung (ohne Konto bei der Anmeldung) */}
+          <BildTaste
+            bild={CLIPS_BILD.plus}
+            label={rechte.ersteller || darfLiveJetzt ? (darfLiveJetzt ? "Erstellen" : "Clip hochladen") : "Creator werden"}
+            onPress={() => {
+              if (rechte.ersteller || darfLiveJetzt) erstellen();
+              else if (ich) router.push("/creator-bewerbung");
+              else router.push({ pathname: "/start", params: { modus: "anmelden" } });
+            }}
+          />
           <Text style={{ ...lilaSchrift.titel, fontSize: 38, color: video ? "#FFFFFF" : l.tinte, textShadowColor: video ? "rgba(0,0,0,0.4)" : "transparent", textShadowRadius: 8 }}>Clips</Text>
           <BildTaste bild={CLIPS_BILD.ton} durchgestrichen={stumm} label={stumm ? "Ton an" : "Ton aus"} onPress={() => setStumm((s) => !s)} />
         </View>
