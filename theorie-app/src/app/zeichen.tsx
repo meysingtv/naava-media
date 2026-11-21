@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AktionsLeiste, HauptKnopf, NebenKnopf } from "@/components/frage-rahmen";
-import { GlasGrund } from "@/components/glas-flaeche";
 import { FotoKopf, Seite } from "@/components/seite";
 import { Chip, Knopf, T } from "@/components/ui";
 import { ZeichenWeb } from "@/components/web/zeichen-web";
@@ -50,9 +49,19 @@ function ZeichenHandy() {
 
   return (
     <Seite>
+      {/* Dunkel: das Kopfbild stark verschwommen als Grund der ganzen Seite –
+          die Kacheln aus Mattglas nehmen so seine warmen Farben auf. */}
+      {f.hell ? null : (
+        <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+          <Image source={FOTOS.schilder} blurRadius={40} resizeMode="cover" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }} />
+          <LinearGradient colors={[mitDeckkraft(f.grund, 0.72), mitDeckkraft(f.grund, 0.58), mitDeckkraft(f.grund, 0.78)]} locations={[0, 0.55, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+        </View>
+      )}
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
-        {/* Dunkel: weicher Lichtgrund unter dem Foto */}
-        {f.hell ? null : <GlasGrund ab={insets.top + 300} dezent />}
+        {/* Unter dem Foto weich in den verschwommenen Grund – keine Kante */}
+        {f.hell ? null : (
+          <LinearGradient pointerEvents="none" colors={[f.grund, mitDeckkraft(f.grund, 0)]} style={{ position: "absolute", top: insets.top + 300, left: 0, right: 0, height: 280 }} />
+        )}
         <FotoKopf bild={FOTOS.schilder} hoehe={300} titel="Verkehrszeichen" unter={`${ZEICHEN_INFO.length} Zeichen mit Bedeutung`} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: RAND, gap: 8, paddingTop: 8, paddingBottom: 16 }}>
           {GRUPPEN.map((g) => (
