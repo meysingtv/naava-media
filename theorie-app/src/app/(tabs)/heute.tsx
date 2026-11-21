@@ -94,8 +94,8 @@ function HomeLila() {
       <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", backgroundColor: l.grund }} />
       <ScrollView {...tourBlatt} contentContainerStyle={{ paddingBottom: inhaltUnten + 8 }} showsVerticalScrollIndicator={false}>
         {/* Begrüßung auf dem Himmel – das Bild darunter setzt ihn nahtlos fort */}
-        <View style={{ paddingTop: insets.top + 10, paddingHorizontal: LILA_RAND, paddingBottom: 6, flexDirection: "row", alignItems: "flex-start" }}>
-          <LinearGradient pointerEvents="none" colors={[l.grund, HIMMEL]} locations={[0.35, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+        <View style={{ paddingTop: insets.top + 10, paddingHorizontal: LILA_RAND, paddingBottom: 22, flexDirection: "row", alignItems: "flex-start" }}>
+          <LinearGradient pointerEvents="none" colors={[l.grund, HIMMEL]} locations={[0.2, 0.85]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
           <Text style={{ flex: 1, ...lilaSchrift.titel, fontSize: 40, lineHeight: 43, letterSpacing: -0.6, color: l.tinte }} numberOfLines={2}>
             {GRUSS_LILA[zeit]},{"\n"}
             <Text style={{ color: l.lilaKante }}>{vorname}</Text>!
@@ -128,7 +128,7 @@ function HomeLila() {
         <View>
           <Image source={FOTOS.heldAuto} style={{ width: "100%", height: heldH, backgroundColor: HIMMEL }} resizeMode="cover" accessibilityLabel="Die Figur sagt: Mach heute einen Schritt näher zum Führerschein!" />
           {/* Ganz oben weich aus dem Himmel heraus – keine Kante */}
-          <LinearGradient pointerEvents="none" colors={[HIMMEL, mitDeckkraft(HIMMEL, 0)]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 26 }} />
+          <LinearGradient pointerEvents="none" colors={[HIMMEL, mitDeckkraft(HIMMEL, 0)]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 8 }} />
         </View>
 
         {/* Inhalt als Blatt mit runden Ecken, das über dem Bild liegt */}
