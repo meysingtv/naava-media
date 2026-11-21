@@ -52,7 +52,15 @@ export default function Home() {
 }
 
 /** Himmelfarbe oben im Bild – oben auf der Startseite geht sie nahtlos weiter. */
-const HIMMEL = "#D3D2FE";
+const HIMMEL = "#D3CDFD";
+
+/** Zwei „#RRGGBB“-Farben mischen (0 = a, 1 = b). */
+function mischen(a: string, b: string, t: number): string {
+  const x = parseInt(a.slice(1), 16);
+  const y = parseInt(b.slice(1), 16);
+  const k = (s: number) => Math.round(((x >> s) & 255) * (1 - t) + ((y >> s) & 255) * t);
+  return `rgb(${k(16)},${k(8)},${k(0)})`;
+}
 
 /** Begrüßung je Tageszeit (mit Komma, darunter der Name). */
 const GRUSS_LILA: Record<ReturnType<typeof tageszeit>, string> = { morgen: "Guten Morgen", tag: "Hallo", abend: "Guten Abend", nacht: "Hey" };
@@ -76,7 +84,7 @@ function HomeLila() {
   const tage = termin ? tageBis(termin) : null;
   const kommend = tage !== null && tage >= 0 ? tage : null;
   const glockePunkt = !stand.erinnerung.an;
-  const heldH = Math.round(width * (586 / 1100));
+  const heldH = Math.round(width * (619 / 1100));
 
   const countdown =
     kommend === null
@@ -94,8 +102,8 @@ function HomeLila() {
       <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", backgroundColor: l.grund }} />
       <ScrollView {...tourBlatt} contentContainerStyle={{ paddingBottom: inhaltUnten + 8 }} showsVerticalScrollIndicator={false}>
         {/* Begrüßung auf dem Himmel – das Bild darunter setzt ihn nahtlos fort */}
-        <View style={{ paddingTop: insets.top + 10, paddingHorizontal: LILA_RAND, paddingBottom: 22, flexDirection: "row", alignItems: "flex-start" }}>
-          <LinearGradient pointerEvents="none" colors={[l.grund, HIMMEL]} locations={[0.2, 0.85]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+        <View style={{ paddingTop: insets.top + 10, paddingHorizontal: LILA_RAND, paddingBottom: 2, flexDirection: "row", alignItems: "flex-start" }}>
+          <LinearGradient pointerEvents="none" colors={[l.grund, mischen(l.grund, HIMMEL, 0.25), mischen(l.grund, HIMMEL, 0.6), mischen(l.grund, HIMMEL, 0.88), HIMMEL]} locations={[0.1, 0.4, 0.68, 0.9, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
           <Text style={{ flex: 1, ...lilaSchrift.titel, fontSize: 40, lineHeight: 43, letterSpacing: -0.6, color: l.tinte }} numberOfLines={2}>
             {GRUSS_LILA[zeit]},{"\n"}
             <Text style={{ color: l.lilaKante }}>{vorname}</Text>!
@@ -128,7 +136,7 @@ function HomeLila() {
         <View>
           <Image source={FOTOS.heldAuto} style={{ width: "100%", height: heldH, backgroundColor: HIMMEL }} resizeMode="cover" accessibilityLabel="Die Figur sagt: Mach heute einen Schritt näher zum Führerschein!" />
           {/* Ganz oben weich aus dem Himmel heraus – keine Kante */}
-          <LinearGradient pointerEvents="none" colors={[HIMMEL, mitDeckkraft(HIMMEL, 0)]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 8 }} />
+          <LinearGradient pointerEvents="none" colors={[HIMMEL, mitDeckkraft(HIMMEL, 0)]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 12 }} />
         </View>
 
         {/* Inhalt als Blatt mit runden Ecken, das über dem Bild liegt */}
