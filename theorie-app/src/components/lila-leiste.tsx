@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import { Pressable, Text, View } from "react-native";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { router } from "expo-router";
@@ -14,6 +15,24 @@ import { useLive } from "@/lib/live";
 // (am PC navigiert die Seitenleiste links).
 
 export const LEISTE_HOEHE = 64;
+
+// Clips meldet, ob gerade ein Video im Vollbild läuft – nur dann ist die Leiste dunkel.
+let clipsVideo = false;
+const clipsHoerer = new Set<() => void>();
+export function clipsVideoSetzen(an: boolean) {
+  if (an === clipsVideo) return;
+  clipsVideo = an;
+  clipsHoerer.forEach((h) => h());
+}
+function useClipsVideo(): boolean {
+  return useSyncExternalStore(
+    (h) => {
+      clipsHoerer.add(h);
+      return () => clipsHoerer.delete(h);
+    },
+    () => clipsVideo,
+  );
+}
 
 type Reiter = { name: string; titel: string; an: IconName; aus: IconName };
 
@@ -64,10 +83,11 @@ export function LilaLeiste({ aktiv, onWahl, dunkel }: { aktiv: string; onWahl: (
 /** Für den Tab-Navigator. */
 export function LilaTabLeiste({ state, navigation }: BottomTabBarProps) {
   const aktiv = state.routes[state.index]?.name ?? "heute";
+  const video = useClipsVideo();
   return (
     <LilaLeiste
       aktiv={aktiv}
-      dunkel={aktiv === "clips"}
+      dunkel={false && video}
       onWahl={(name) => {
         const route = state.routes.find((r) => r.name === name);
         if (!route) return;

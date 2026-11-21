@@ -9,6 +9,7 @@ import { auswahlBlatt } from "@/components/auswahl-blatt";
 import { dialog } from "@/components/dialog";
 import { Glas } from "@/components/glas";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
+import { ClipsHinweis, ClipsKnopf } from "@/components/clips-grund";
 import { Icon } from "@/components/icon";
 import { Lader } from "@/components/lader";
 import { LiveBildEbene } from "@/components/live-bild";
@@ -410,61 +411,32 @@ export function LiveAnsicht({
       text = "Prüfe deine Internetverbindung und versuche es nochmal.";
     }
     return (
-      <View style={{ flex: 1, backgroundColor: "#000000" }}>
-        <LinearGradient colors={["#2A0A12", "#000000"]} locations={[0, 0.7]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+      <View style={{ flex: 1, backgroundColor: onSchliessen ? "#F4F2FC" : "transparent" }}>
         {schliessen}
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 34, paddingTop: oben, paddingBottom: unten, gap: 10 }}>
-          <View style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: "rgba(255,45,85,0.12)", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
-            <Icon name="radio-outline" sf="dot.radiowaves.left.and.right" size={36} color={LIVE_ROT} />
-          </View>
-          <Text style={{ ...schrift.titelFett, fontSize: 22, color: "#FFFFFF", textAlign: "center" }}>{titel}</Text>
-          <Text style={{ ...schrift.text, fontSize: 15, lineHeight: 21, color: "#AEB3BA", textAlign: "center" }}>{text}</Text>
-          <View style={{ alignSelf: "stretch", gap: 10, marginTop: 18 }}>
-            {fehler === "verbindung" ? <Knopf titel="Nochmal versuchen" onPress={() => setVersuch((v) => v + 1)} /> : null}
-            {rechte.darf && fehler !== "nicht_eingerichtet" ? (
-              <Pressable
-                onPress={() => {
-                  tippen();
-                  router.push("/live-senden");
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="Live gehen"
-                style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.98 : 1 }] }, leuchten(LIVE_ROT, 0.5, 18, 4)]}
-              >
-                <LinearGradient colors={LIVE_VERLAUF} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 56, borderRadius: 28, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                  <Icon name="radio" sf="dot.radiowaves.left.and.right" size={21} color="#FFFFFF" />
-                  <Text style={{ ...schrift.textFett, fontSize: 17, color: "#FFFFFF" }}>Live gehen</Text>
-                </LinearGradient>
-              </Pressable>
-            ) : null}
-            {!rechte.inhaber && fehler !== "nicht_eingerichtet" ? (
-              ich ? (
-                <Knopf
-                  titel={abo ? "Live-Mitteilung ist an" : "Bei Lives Bescheid geben"}
-                  icon={abo ? "notifications" : "notifications-outline"}
-                  art={abo ? "sekundaer" : undefined}
-                  onPress={aboUmschalten}
-                />
-              ) : (
-                <Knopf titel="Anmelden für Live-Mitteilungen" art="sekundaer" onPress={() => router.push("/anmelden")} />
-              )
-            ) : null}
-            {/* Selbst live gehen: als Creator bewerben (Inhaber und Creator brauchen das nicht) */}
-            {!rechte.darf && fehler !== "nicht_eingerichtet" ? (
-              <Pressable
-                onPress={() => {
-                  tippen();
-                  router.push(ich ? "/creator-bewerbung" : "/anmelden");
-                }}
-                accessibilityRole="button"
-                hitSlop={8}
-                style={{ alignSelf: "center", paddingVertical: 8 }}
-              >
-                <Text style={{ ...schrift.textHalb, fontSize: 14, color: "#FFB27A" }}>Selbst live gehen? Als Creator bewerben</Text>
-              </Pressable>
-            ) : null}
-          </View>
-        </View>
+        <ClipsHinweis bild="liveKachel" bildBreite={140} deko="funken" titel={titel} text={text} oben={oben} unten={onSchliessen ? unten : 16}>
+          {fehler === "verbindung" ? <ClipsKnopf titel="Nochmal versuchen" icon="refresh" onPress={() => setVersuch((v) => v + 1)} /> : null}
+          {rechte.darf && fehler !== "nicht_eingerichtet" ? <ClipsKnopf titel="Live gehen" icon="radio-outline" onPress={() => router.push("/live-senden")} /> : null}
+          {!rechte.inhaber && fehler !== "nicht_eingerichtet" ? (
+            ich ? (
+              <ClipsKnopf titel={abo ? "Live-Mitteilung ist an" : "Bei Lives Bescheid geben"} zart={Boolean(abo)} onPress={aboUmschalten} />
+            ) : (
+              <ClipsKnopf titel="Anmelden für Live-Mitteilungen" zart onPress={() => router.push({ pathname: "/start", params: { modus: "anmelden" } })} />
+            )
+          ) : null}
+          {!rechte.darf && fehler !== "nicht_eingerichtet" ? (
+            <Pressable
+              onPress={() => {
+                tippen();
+                router.push(ich ? "/creator-bewerbung" : { pathname: "/start", params: { modus: "anmelden" } });
+              }}
+              accessibilityRole="button"
+              hitSlop={8}
+              style={{ alignSelf: "center", paddingVertical: 8 }}
+            >
+              <Text style={{ ...schrift.textHalb, fontSize: 14, color: "#6D5BC9" }}>Selbst live gehen? Als Creator bewerben</Text>
+            </Pressable>
+          ) : null}
+        </ClipsHinweis>
         <HinweisAnzeige wert={hinweis.wert} inhalt={hinweis.inhalt} oben={oben + 52} />
       </View>
     );

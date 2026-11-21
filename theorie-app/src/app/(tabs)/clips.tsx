@@ -1,24 +1,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Animated, AppState, FlatList, Pressable, RefreshControl, Text, useWindowDimensions, View, type ViewToken } from "react-native";
+import { Animated, AppState, FlatList, Image, Pressable, RefreshControl, Text, useWindowDimensions, View, type ImageSourcePropType, type ViewToken } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { SFSymbol } from "expo-symbols";
 
 import { AufklappMenue } from "@/components/aufklapp-menue";
 import { dialog } from "@/components/dialog";
 import { ClipSeite } from "@/components/clip-seite";
-import { Glas } from "@/components/glas";
 import { Icon, type IconName } from "@/components/icon";
+import { ClipsGrund, ClipsHinweis, ClipsKnopf, CLIPS_BILD } from "@/components/clips-grund";
+import { clipsVideoSetzen } from "@/components/lila-leiste";
+import { lilaSchrift, useLila } from "@/components/lila-teile";
 import { KommentarBlatt } from "@/components/kommentar-blatt";
 import { Lader } from "@/components/lader";
 import { LIVE_ROT } from "@/components/live";
 import { LiveAnsicht } from "@/components/live-ansicht";
 import { LiveFeed } from "@/components/live-feed";
 import { useLeistenHoehe } from "@/components/tab-leiste";
-import { Knopf } from "@/components/ui";
 import { useClipAktionen } from "@/lib/clip-aktionen";
 import { useBlockiert } from "@/lib/blockieren";
 import { beiNeuenClips, feedLaden, useClipRechte, type ClipEintrag, type FeedArt } from "@/lib/clips-server";
@@ -29,13 +29,15 @@ import { istTablet, useDesktop } from "@/lib/fenster";
 import { ClipsWeb } from "@/components/web/clips-web";
 import { useLive } from "@/lib/live";
 import { serverVerbunden } from "@/lib/supabase";
-import { farben, schrift } from "@/lib/theme";
+import { farben } from "@/lib/theme";
 
 type Feed = { eintraege: ClipEintrag[]; laedt: boolean; mehr: boolean; fehler: string | null; geladen: boolean };
 
 const LEER: Feed = { eintraege: [], laedt: false, mehr: true, fehler: null, geladen: false };
 const SEITE = 8;
 const SICHTBAR = { itemVisiblePercentThreshold: 70 };
+/** Höhe von Titelzeile und Umschalter oben. */
+const KOPF = 128;
 
 type Kategorie = FeedArt | "live";
 
@@ -50,46 +52,45 @@ function LivePunkt() {
   return <Animated.View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: LIVE_ROT, opacity: puls.interpolate({ inputRange: [0, 1], outputRange: [1, 0.35] }) }} />;
 }
 
-/** Umschalter „Live / Entdecken / Folge ich“ als Glas-Kapsel. Läuft ein Live, pulsiert ein roter Punkt. */
+/** Umschalter „Live / Entdecken / Folge ich“: weiße Leiste über die ganze Breite, die Wahl lila gefüllt. Läuft ein Live, pulsiert ein roter Punkt. */
 function Umschalter({ wert, live, onWechsel }: { wert: Kategorie; live: boolean; onWechsel: (k: Kategorie) => void }) {
-  const optionen: { id: Kategorie; titel: string }[] = [
-    { id: "live", titel: "Live" },
-    { id: "entdecken", titel: "Entdecken" },
-    { id: "folge_ich", titel: "Folge ich" },
+  const l = useLila();
+  const optionen: { id: Kategorie; titel: string; icon: IconName }[] = [
+    { id: "live", titel: "Live", icon: "radio-outline" },
+    { id: "entdecken", titel: "Entdecken", icon: "compass-outline" },
+    { id: "folge_ich", titel: "Folge ich", icon: "people-outline" },
   ];
   return (
-    <Glas style={{ flexDirection: "row", padding: 3, borderRadius: 21, gap: 2 }}>
+    <View style={{ flexDirection: "row", padding: 5, borderRadius: 20, gap: 4, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: l.linie, shadowColor: "#6D5BC9", shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } }}>
       {optionen.map((o) => {
         const aktiv = o.id === wert;
-        const istLive = o.id === "live";
         return (
           <Pressable
             key={o.id}
-            onPress={() => !aktiv && onWechsel(o.id)}
+            onPress={() => {
+              if (aktiv) return;
+              tippen();
+              onWechsel(o.id);
+            }}
             accessibilityRole="tab"
             accessibilityState={{ selected: aktiv }}
-            accessibilityLabel={istLive && live ? "Live – gerade läuft ein Live" : o.titel}
-            style={{
-              height: 34,
-              paddingHorizontal: 13,
-              borderRadius: 17,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 5,
-              backgroundColor: aktiv ? (istLive ? LIVE_ROT : farben.orange) : "transparent",
-            }}
+            accessibilityLabel={o.id === "live" && live ? "Live – gerade läuft ein Live" : o.titel}
+            style={{ flex: 1, height: 42, borderRadius: 15, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, backgroundColor: aktiv ? "#8C7AE6" : "transparent" }}
           >
-            {istLive && live && !aktiv ? <LivePunkt /> : null}
-            <Text style={{ ...(aktiv ? schrift.textFett : schrift.textHalb), fontSize: 14, color: aktiv ? "#FFFFFF" : "rgba(255,255,255,0.78)" }}>{o.titel}</Text>
+            <Icon name={o.icon} size={19} color={aktiv ? "#FFFFFF" : l.tinte} />
+            <Text style={{ ...lilaSchrift.textHalb, fontSize: 15, color: aktiv ? "#FFFFFF" : l.tinte }} numberOfLines={1}>
+              {o.titel}
+            </Text>
+            {o.id === "live" && live && !aktiv ? <LivePunkt /> : null}
           </Pressable>
         );
       })}
-    </Glas>
+    </View>
   );
 }
 
-function RundTaste({ icon, sf, label, onPress }: { icon: IconName; sf: SFSymbol; label: string; onPress: () => void }) {
+/** Runder Knopf oben (Plus, Ton) – als Bild. */
+function BildTaste({ bild, label, onPress, durchgestrichen }: { bild: ImageSourcePropType; label: string; onPress: () => void; durchgestrichen?: boolean }) {
   return (
     <Pressable
       onPress={() => {
@@ -99,26 +100,11 @@ function RundTaste({ icon, sf, label, onPress }: { icon: IconName; sf: SFSymbol;
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={label}
+      style={({ pressed }) => ({ width: 48, height: 48, borderRadius: 24, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center", shadowColor: "#6D5BC9", shadowOpacity: 0.14, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, transform: [{ scale: pressed ? 0.92 : 1 }] })}
     >
-      {({ pressed }) => (
-        <Glas interaktiv style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
-          <Icon name={icon} sf={sf} size={18} color="#FFFFFF" weight="semibold" />
-        </Glas>
-      )}
+      <Image source={bild} style={{ width: 40, height: 40 }} resizeMode="contain" />
+      {durchgestrichen ? <View pointerEvents="none" style={{ position: "absolute", left: 12, top: 22, width: 24, height: 3.5, borderRadius: 2, backgroundColor: "#4B2E9E", transform: [{ rotate: "-45deg" }] }} /> : null}
     </Pressable>
-  );
-}
-
-function Hinweis({ icon, sf, titel, text, children }: { icon: IconName; sf: SFSymbol; titel: string; text: string; children?: ReactNode }) {
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 36, gap: 10 }}>
-      <View style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: "rgba(255,255,255,0.06)", alignItems: "center", justifyContent: "center", marginBottom: 6 }}>
-        <Icon name={icon} sf={sf} size={32} color={farben.orange} />
-      </View>
-      <Text style={{ ...schrift.titelFett, fontSize: 21, color: "#FFFFFF", textAlign: "center" }}>{titel}</Text>
-      <Text style={{ ...schrift.text, fontSize: 15, lineHeight: 21, color: "#AEB3BA", textAlign: "center" }}>{text}</Text>
-      {children ? <View style={{ alignSelf: "stretch", gap: 10, marginTop: 14 }}>{children}</View> : null}
-    </View>
   );
 }
 
@@ -359,6 +345,13 @@ export default function Clips() {
 
   const kommentarClip = kommentarId ? (feed.eintraege.find((c) => c.id === kommentarId) ?? null) : null;
 
+  const l = useLila();
+  // Video im Vollbild (Clips oder Live) – sonst heller Grund mit Wolken und Welle.
+  const video = liveAn ? alle.length > 0 : serverVerbunden && !(art === "folge_ich" && !ich) && feed.eintraege.length > 0;
+  useEffect(() => {
+    clipsVideoSetzen(fokus && video);
+  }, [fokus, video]);
+
   if (desktop) {
     return (
       <View style={{ flex: 1 }}>
@@ -418,45 +411,47 @@ export default function Clips() {
       />
     );
   } else if (liveAn) {
-    inhalt = <LiveAnsicht oben={insets.top + 58} unten={leiste + 10} aktiv={fokus && vordergrund} stumm={stumm} />;
+    inhalt = <LiveAnsicht oben={insets.top + KOPF} unten={leiste + 10} aktiv={fokus && vordergrund} stumm={stumm} />;
   } else if (!serverVerbunden) {
     inhalt = (
-      <Hinweis icon="film-outline" sf="play.rectangle.on.rectangle" titel="Clips kommen bald" text="Sobald die App mit dem Server verbunden ist, findest du hier kurze Videos rund um die Theorie." />
+      <ClipsHinweis oben={insets.top + KOPF} unten={16} bild="klappe" bildBreite={130} titel="Clips kommen bald" text="Sobald die App mit dem Server verbunden ist, findest du hier kurze Videos rund um die Theorie." />
     );
   } else if (art === "folge_ich" && !ich) {
     inhalt = (
-      <Hinweis icon="people-outline" sf="person.2.fill" titel="Folge deinen Lieblings-Erklärern" text="Mit einem kostenlosen Konto kannst du Erstellern folgen, liken und kommentieren.">
-        <Knopf titel="Konto erstellen" onPress={() => router.push("/registrieren")} />
-        <Knopf titel="Ich habe schon ein Konto" art="sekundaer" onPress={() => router.push("/anmelden")} />
-      </Hinweis>
+      <ClipsHinweis oben={insets.top + KOPF} unten={16} bild="freunde" bildBreite={150} titel="Folge deinen Lieblings-Erklärern" text="Mit einem kostenlosen Konto kannst du Erstellern folgen, liken und kommentieren.">
+        <ClipsKnopf titel="Konto erstellen" icon="person-add-outline" onPress={() => router.push("/start")} />
+        <ClipsKnopf titel="Ich habe schon ein Konto" zart onPress={() => router.push({ pathname: "/start", params: { modus: "anmelden" } })} />
+      </ClipsHinweis>
     );
   } else if (feed.eintraege.length === 0 && feed.fehler) {
     inhalt = (
-      <Hinweis icon="cloud-offline-outline" sf="wifi.exclamationmark" titel="Clips laden gerade nicht" text={feed.fehler}>
-        <Knopf titel="Nochmal versuchen" onPress={() => laden(art, true)} />
-      </Hinweis>
+      <ClipsHinweis oben={insets.top + KOPF} unten={16} bild="wolke" bildBreite={170} titel="Clips laden gerade nicht" text={feed.fehler}>
+        <ClipsKnopf titel="Nochmal versuchen" icon="refresh" onPress={() => laden(art, true)} />
+      </ClipsHinweis>
     );
   } else if (!feed.geladen || (feed.laedt && feed.eintraege.length === 0)) {
     inhalt = (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <Lader color="#FFFFFF" />
+        <Lader color="#8C7AE6" />
       </View>
     );
   } else if (feed.eintraege.length === 0) {
     inhalt =
       art === "folge_ich" ? (
-        <Hinweis icon="people-outline" sf="person.2" titel="Du folgst noch niemandem" text="Tippe bei einem Clip auf „Folgen“ – dann landen neue Videos dieser Person hier.">
-          <Knopf titel="Clips entdecken" onPress={() => wechseln("entdecken")} />
-        </Hinweis>
+        <ClipsHinweis oben={insets.top + KOPF} unten={16} bild="figur" bildBreite={200} deko="klappe" titel="Du folgst noch niemandem" text="Tippe bei einem Clip auf „Folgen“ – dann landen neue Videos dieser Person hier.">
+          <ClipsKnopf titel="Clips entdecken" icon="compass-outline" onPress={() => wechseln("entdecken")} />
+        </ClipsHinweis>
       ) : (
-        <Hinweis
-          icon="film-outline"
-          sf="play.rectangle.on.rectangle"
+        <ClipsHinweis
+          oben={insets.top + KOPF}
+          unten={16}
+          bild="figur"
+          bildBreite={200}
           titel="Noch keine Clips"
           text={rechte.ersteller ? "Lade den ersten Clip hoch – kurze Hochkant-Videos wirken am besten." : "Hier erscheinen bald kurze Videos rund um die Theorie."}
         >
-          {rechte.ersteller ? <Knopf titel="Clip hochladen" icon="add" onPress={() => router.push("/clip-hochladen")} /> : null}
-        </Hinweis>
+          {rechte.ersteller ? <ClipsKnopf titel="Clip hochladen" icon="add" onPress={() => router.push("/clip-hochladen")} /> : null}
+        </ClipsHinweis>
       );
   } else if (masse) {
     inhalt = (
@@ -488,7 +483,8 @@ export default function Clips() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#000000" }}>
+    <View style={{ flex: 1, backgroundColor: video ? "#000000" : l.grund }}>
+      {video ? null : <ClipsGrund />}
       {/* Am PC läuft der Feed in einer Hochkant-Spalte in der Mitte – wie Clips am Handy */}
       <View
         style={desktop ? { flex: 1, width: Math.min(Math.round((fensterHoehe * 9) / 16), 620), alignSelf: "center" } : { flex: 1 }}
@@ -497,30 +493,20 @@ export default function Clips() {
         {inhalt}
       </View>
 
-      {/* Kopf über dem Video */}
-      <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.42)", "rgba(0,0,0,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top + 90 }} />
-      <View
-        pointerEvents="box-none"
-        style={{ position: "absolute", top: insets.top + 4, left: 0, right: 0, height: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12 }}
-      >
-        <View style={{ flex: 1, flexDirection: "row", gap: 8 }}>
-          {rechte.ersteller || darfLiveJetzt ? <RundTaste icon="add" sf="plus" label={darfLiveJetzt ? "Erstellen" : "Clip hochladen"} onPress={erstellen} /> : null}
+      {/* Kopf: Plus, Titel, Ton – darunter der Umschalter. Über dem Video ein leichter Schatten. */}
+      {video ? <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.45)", "rgba(0,0,0,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top + KOPF + 40 }} /> : null}
+      <View pointerEvents="box-none" style={{ position: "absolute", top: insets.top + 4, left: 0, right: 0, paddingHorizontal: 16, gap: 12 }}>
+        <View pointerEvents="box-none" style={{ height: 50, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          {rechte.ersteller || darfLiveJetzt ? <BildTaste bild={CLIPS_BILD.plus} label={darfLiveJetzt ? "Erstellen" : "Clip hochladen"} onPress={erstellen} /> : <View style={{ width: 48 }} />}
+          <Text style={{ ...lilaSchrift.titel, fontSize: 38, color: video ? "#FFFFFF" : l.tinte, textShadowColor: video ? "rgba(0,0,0,0.4)" : "transparent", textShadowRadius: 8 }}>Clips</Text>
+          <BildTaste bild={CLIPS_BILD.ton} durchgestrichen={stumm} label={stumm ? "Ton an" : "Ton aus"} onPress={() => setStumm((s) => !s)} />
         </View>
         <Umschalter wert={liveAn ? "live" : art} live={alle.length > 0} onWechsel={wechseln} />
-        <View style={{ flex: 1, alignItems: "flex-end" }}>
-          <RundTaste
-            icon={stumm ? "volume-mute" : "volume-high"}
-            sf={stumm ? "speaker.slash.fill" : "speaker.wave.2.fill"}
-            label={stumm ? "Ton an" : "Ton aus"}
-            onPress={() => setStumm((s) => !s)}
-          />
-        </View>
       </View>
-
 
       <AufklappMenue
         offen={menueOffen}
-        oben={insets.top + 54}
+        oben={insets.top + 58}
         links={12}
         onSchliessen={() => setMenueOffen(false)}
         punkte={[
