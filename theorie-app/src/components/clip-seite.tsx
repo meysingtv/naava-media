@@ -274,9 +274,9 @@ function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eig
 
       <LinearGradient
         pointerEvents="none"
-        colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.32)", "rgba(0,0,0,0.7)"]}
+        colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.28)", "rgba(0,0,0,0.62)"]}
         locations={[0, 0.45, 1]}
-        style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: unten + 300 }}
+        style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: unten + 230 }}
       />
 
       {!bereit && aktiv && !fehler ? (
@@ -322,7 +322,7 @@ function ClipSeiteInnen({ clip, hoehe, breite, unten, aktiv, spielen, stumm, eig
         </View>
       ) : (
       // Unten: Ersteller, Titel, Beschreibung, Aktionen, Fortschritt
-      <View pointerEvents="box-none" style={{ position: "absolute", left: RAND_SEITE, right: RAND_SEITE, bottom: unten + 12, gap: 8 }}>
+      <View pointerEvents="box-none" style={{ position: "absolute", left: RAND_SEITE, right: RAND_SEITE, bottom: unten + 14, gap: 8 }}>
         <View pointerEvents="box-none" style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Pressable
             disabled={!onProfil}
