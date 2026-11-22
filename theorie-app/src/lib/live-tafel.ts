@@ -12,7 +12,7 @@ export type TafelGrund = "bild" | "leer" | "kreuzung" | "kreisverkehr";
 export type Strich = { f: string; a?: boolean; p: number[] };
 export type LiveTafel = { an: boolean; grund: TafelGrund; striche: Strich[] };
 
-export const TAFEL_FARBEN = ["#FF6A1A", "#FFFFFF", "#FFD43B", "#FF3B5C", "#4DA3FF"] as const;
+export const TAFEL_FARBEN = ["#8A5FFF", "#2E2650", "#FFB400", "#FF3B5C", "#2F80FF"] as const;
 export const MAX_STRICHE = 80;
 const MAX_PUNKTE = 200;
 

@@ -11,7 +11,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFenster } from "@/lib/fenster";
 import { auswahlBlatt } from "@/components/auswahl-blatt";
 import { dialog } from "@/components/dialog";
-import { Glas } from "@/components/glas";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { Icon, type IconName } from "@/components/icon";
 import { Lader } from "@/components/lader";
@@ -63,7 +62,9 @@ import { FRAGEN_AKTIV } from "@/lib/funktionen";
 
 type Phase = "start" | "bereit" | "countdown" | "live" | "ende" | "fehler";
 
-const LIVE_VERLAUF = ["#FF5A5F", "#FF2D55", "#E0124A"] as const;
+const LIVE_VERLAUF = ["#9B74FF", "#7A4BF2"] as const;
+/** Weiße Pille im lila Design – liest sich über jedem Kamerabild. */
+const PILLE = { backgroundColor: "rgba(255,255,255,0.94)", shadowColor: "#1B1440", shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } } as const;
 
 function dauerText(ms: number): string {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -89,9 +90,9 @@ function Werkzeug({ icon, sf, label, aus, aktiv, laedt, kompakt, onPress }: { ic
     >
       {({ pressed }) => (
         <>
-          <Glas interaktiv style={{ width: groesse, height: groesse, borderRadius: groesse / 2, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
-            {laedt ? <Lader color="#FFFFFF" /> : <Icon name={icon} sf={sf as never} size={kompakt ? 18 : 20} color={aus ? LIVE_ROT : aktiv ? "#FFB27A" : "#FFFFFF"} weight="semibold" />}
-          </Glas>
+          <View style={{ width: groesse, height: groesse, borderRadius: groesse / 2, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1, ...PILLE, ...(aktiv ? { backgroundColor: "#8A5FFF" } : null) }}>
+            {laedt ? <Lader color="#8A5FFF" /> : <Icon name={icon} sf={sf as never} size={kompakt ? 18 : 20} color={aus ? LIVE_ROT : aktiv ? "#FFFFFF" : "#2E2650"} weight="semibold" />}
+          </View>
           {kompakt ? null : <Text style={{ ...schrift.textHalb, fontSize: 11, color: "#FFFFFF", textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 4 }}>{label}</Text>}
         </>
       )}
@@ -792,7 +793,7 @@ export default function LiveSenden() {
   return (
     // Eigene Wurzel für Gesten: Die Seite ist ein Vollbild-Modal.
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: "#000000" }}>
-      <StatusBar style="light" />
+      <StatusBar style={radOffen || tafelOffen ? "dark" : "light"} />
 
       {/* Kamera – während Quiz oder Prüfung nur oben (bleibt dabei verbunden) */}
       <Reanimated.View style={[{ position: "absolute", top: 0, left: 0, right: 0, overflow: "hidden" }, videoStil]}>
@@ -886,31 +887,32 @@ export default function LiveSenden() {
         {phase === "live" && start ? (
           <>
             <LiveSchild />
-            <View style={{ height: 22, paddingHorizontal: 8, borderRadius: 6, backgroundColor: "rgba(0,0,0,0.38)", justifyContent: "center" }}>
-              <Text style={{ ...schrift.textFett, fontSize: 11.5, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{dauerText(jetzt - start)}</Text>
+            <View style={{ height: 22, paddingHorizontal: 9, borderRadius: 11, justifyContent: "center", ...PILLE }}>
+              <Text style={{ ...schrift.textFett, fontSize: 11.5, color: "#2E2650", fontVariant: ["tabular-nums"] }}>{dauerText(jetzt - start)}</Text>
             </View>
             <ZuschauerZahl anzahl={zuschauer} />
           </>
         ) : phase === "bereit" || phase === "countdown" ? (
-          <Glas style={{ height: 32, paddingHorizontal: 12, borderRadius: 16, justifyContent: "center" }}>
-            <Text style={{ ...schrift.textHalb, fontSize: 13, color: "#FFFFFF" }}>Vorschau – noch nicht live</Text>
-          </Glas>
+          <View style={{ height: 32, paddingHorizontal: 13, borderRadius: 16, flexDirection: "row", alignItems: "center", gap: 7, ...PILLE }}>
+            <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: "#8A5FFF" }} />
+            <Text style={{ ...schrift.textFett, fontSize: 13, color: "#2E2650" }}>Vorschau – noch nicht live</Text>
+          </View>
         ) : null}
         <View style={{ flex: 1 }} />
         {phase === "live" ? (
           <Pressable onPress={beenden} accessibilityRole="button" accessibilityLabel="Live beenden" hitSlop={6}>
             {({ pressed }) => (
-              <Glas interaktiv style={{ height: 40, paddingHorizontal: 16, borderRadius: 20, justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
-                <Text style={{ ...schrift.textFett, fontSize: 14, color: "#FF6B85" }}>Beenden</Text>
-              </Glas>
+              <View style={{ height: 40, paddingHorizontal: 16, borderRadius: 20, justifyContent: "center", opacity: pressed ? 0.8 : 1, ...PILLE }}>
+                <Text style={{ ...schrift.textFett, fontSize: 14, color: "#E5304F" }}>Beenden</Text>
+              </View>
             )}
           </Pressable>
         ) : phase !== "ende" ? (
           <Pressable onPress={schliessen} accessibilityRole="button" accessibilityLabel="Schließen" hitSlop={8}>
             {({ pressed }) => (
-              <Glas interaktiv style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
-                <Icon name="close" sf="xmark" size={18} color="#FFFFFF" weight="semibold" />
-              </Glas>
+              <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1, ...PILLE }}>
+                <Icon name="close" sf="xmark" size={18} color="#2E2650" weight="semibold" />
+              </View>
             )}
           </Pressable>
         ) : null}
@@ -993,21 +995,21 @@ export default function LiveSenden() {
       {phase === "bereit" ? (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>
           <View style={{ paddingHorizontal: 16, paddingBottom: Math.max(insets.bottom, 14) + 6, gap: 12 }}>
-            <Glas style={{ height: 50, borderRadius: 25, paddingHorizontal: 18, justifyContent: "center" }}>
+            <View style={{ height: 52, borderRadius: 26, paddingHorizontal: 18, justifyContent: "center", ...PILLE }}>
               <TextInput
                 value={titel}
                 onChangeText={setTitel}
                 placeholder="Worum geht's? (z. B. Vorfahrt-Fragen)"
-                placeholderTextColor="rgba(255,255,255,0.6)"
+                placeholderTextColor="#A19CB6"
                 maxLength={80}
                 returnKeyType="done"
-                style={{ color: "#FFFFFF", ...schrift.textHalb, fontSize: 15.5, height: 50 }}
+                style={{ color: "#2E2650", ...schrift.textHalb, fontSize: 15.5, height: 52 }}
               />
-            </Glas>
-            <Pressable onPress={losGehen} accessibilityRole="button" accessibilityLabel="Live gehen" style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.98 : 1 }] }, leuchten(LIVE_ROT, 0.5, 18, 4)]}>
+            </View>
+            <Pressable onPress={losGehen} accessibilityRole="button" accessibilityLabel="Live gehen" style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.98 : 1 }] }, leuchten("#6A3FE6", 0.4, 16, 6)]}>
               <LinearGradient colors={LIVE_VERLAUF} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 58, borderRadius: 29, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
                 <Icon name="radio" sf="dot.radiowaves.left.and.right" size={22} color="#FFFFFF" />
-                <Text style={{ ...schrift.textFett, fontSize: 17.5, color: "#FFFFFF" }}>Live gehen</Text>
+                <Text style={{ fontFamily: "BarlowCondensed_800ExtraBold", fontSize: 24, color: "#FFFFFF" }}>Live gehen</Text>
               </LinearGradient>
             </Pressable>
             <Text style={{ ...schrift.textMittel, fontSize: 12, color: "rgba(255,255,255,0.7)", textAlign: "center" }}>Alle mit eingeschalteter Live-Mitteilung bekommen Bescheid.</Text>
@@ -1023,7 +1025,7 @@ export default function LiveSenden() {
               ...schrift.titel,
               fontSize: 150,
               color: "#FFFFFF",
-              textShadowColor: "rgba(255,45,85,0.8)",
+              textShadowColor: "rgba(138,95,255,0.9)",
               textShadowRadius: 30,
               opacity: countdownWert.interpolate({ inputRange: [0, 0.2, 0.8, 1], outputRange: [0, 1, 1, 0] }),
               transform: [{ scale: countdownWert.interpolate({ inputRange: [0, 1], outputRange: [1.4, 0.8] }) }],

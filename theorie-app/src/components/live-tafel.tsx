@@ -2,11 +2,11 @@ import { memo, useEffect, useRef, useState } from "react";
 import { Animated, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Svg, { Circle, G, Path, Polygon } from "react-native-svg";
+import Svg, { Circle, G, Line, Path, Polygon, Rect } from "react-native-svg";
 
 import { useFenster } from "@/lib/fenster";
 import { Icon, type IconName } from "@/components/icon";
-import { Kreuzung, KreisverkehrLeer } from "@/components/lagen";
+import { lilaSchrift } from "@/components/lila-teile";
 import { tippen } from "@/lib/haptik";
 import { liveBildUrl, type LiveBild } from "@/lib/live-bild";
 import {
@@ -22,7 +22,7 @@ import {
   type Strich,
   type TafelGrund,
 } from "@/lib/live-tafel";
-import { farben, leuchten, schrift, verlauf } from "@/lib/theme";
+import { leuchten } from "@/lib/theme";
 
 // Tafel im Live: große Zeichenfläche (Bild aus der Galerie oder Vorlage), darauf
 // Striche und Pfeile. Der Gastgeber malt mit dem Finger, alle sehen jeden Strich
@@ -36,9 +36,9 @@ export const StricheSvg = memo(function StricheSvg({ striche, zug, seite }: { st
   const spitze = SPITZE * w;
   const zeichnen = (s: Strich, key: string) => (
     <G key={key}>
-      <Path d={strichPfad(s.p, seite, 1)} stroke="rgba(0,0,0,0.38)" strokeWidth={breite * 1.7} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <Path d={strichPfad(s.p, seite, 1)} stroke="rgba(255,255,255,0.75)" strokeWidth={breite * 1.7} strokeLinecap="round" strokeLinejoin="round" fill="none" />
       <Path d={strichPfad(s.p, seite, 1)} stroke={s.f} strokeWidth={breite} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      {s.a && s.p.length >= 4 ? <Polygon points={pfeilSpitze(s.p, seite, 1, spitze)} fill={s.f} stroke="rgba(0,0,0,0.38)" strokeWidth={breite * 0.35} strokeLinejoin="round" /> : null}
+      {s.a && s.p.length >= 4 ? <Polygon points={pfeilSpitze(s.p, seite, 1, spitze)} fill={s.f} stroke="rgba(255,255,255,0.75)" strokeWidth={breite * 0.35} strokeLinejoin="round" /> : null}
     </G>
   );
   return (
@@ -51,6 +51,52 @@ export const StricheSvg = memo(function StricheSvg({ striche, zug, seite }: { st
   );
 });
 
+// Vorlagen im hellen lila Stil (wie „Kurz erklärt“).
+const T = { grund: "#EFE8FF", gehweg: "#FBF9FF", strasse: "#D8CCF6", rand: "#C4B5F0", linie: "#FFFFFF", insel: "#C8E8D2", inselRand: "#A9D9B8" };
+
+function KreuzungHell() {
+  return (
+    <G>
+      <Rect x={0} y={0} width={300} height={220} fill={T.grund} />
+      <Rect x={0} y={0} width={109} height={74} rx={14} fill={T.gehweg} />
+      <Rect x={191} y={0} width={109} height={74} rx={14} fill={T.gehweg} />
+      <Rect x={0} y={156} width={109} height={64} rx={14} fill={T.gehweg} />
+      <Rect x={191} y={156} width={109} height={64} rx={14} fill={T.gehweg} />
+      <Rect x={115} y={0} width={70} height={220} fill={T.strasse} />
+      <Rect x={0} y={80} width={300} height={70} fill={T.strasse} />
+      <G stroke={T.linie} strokeWidth={2.6} strokeDasharray="10 9" strokeLinecap="round">
+        <Line x1={150} y1={2} x2={150} y2={72} />
+        <Line x1={150} y1={158} x2={150} y2={218} />
+        <Line x1={2} y1={115} x2={107} y2={115} />
+        <Line x1={193} y1={115} x2={298} y2={115} />
+      </G>
+    </G>
+  );
+}
+
+function KreisverkehrHell() {
+  const cx = 150;
+  const cy = 112;
+  return (
+    <G>
+      <Rect x={0} y={0} width={300} height={220} fill={T.grund} />
+      <Rect x={125} y={0} width={50} height={60} fill={T.strasse} />
+      <Rect x={125} y={164} width={50} height={56} fill={T.strasse} />
+      <Rect x={0} y={87} width={98} height={50} fill={T.strasse} />
+      <Rect x={202} y={87} width={98} height={50} fill={T.strasse} />
+      <Circle cx={cx} cy={cy} r={68} fill={T.strasse} />
+      <Circle cx={cx} cy={cy} r={33} fill={T.insel} stroke={T.inselRand} strokeWidth={3} />
+      <Circle cx={cx} cy={cy} r={50} fill="none" stroke={T.linie} strokeWidth={2.4} strokeDasharray="9 9" />
+      <G stroke={T.linie} strokeWidth={2.6} strokeDasharray="8 8" strokeLinecap="round">
+        <Line x1={150} y1={2} x2={150} y2={40} />
+        <Line x1={150} y1={184} x2={150} y2={218} />
+        <Line x1={2} y1={112} x2={78} y2={112} />
+        <Line x1={222} y1={112} x2={298} y2={112} />
+      </G>
+    </G>
+  );
+}
+
 /** Hintergrund der Tafel. */
 function Grund({ grund, bild }: { grund: TafelGrund; bild: LiveBild | null }) {
   if (grund === "bild" && bild) return <Image source={{ uri: liveBildUrl(bild.pfad) }} resizeMode="cover" style={StyleSheet.absoluteFill} />;
@@ -58,20 +104,20 @@ function Grund({ grund, bild }: { grund: TafelGrund; bild: LiveBild | null }) {
     return (
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <Svg width="100%" height="100%" viewBox="0 0 300 220" preserveAspectRatio="none">
-          {grund === "kreuzung" ? <Kreuzung /> : <KreisverkehrLeer />}
+          {grund === "kreuzung" ? <KreuzungHell /> : <KreisverkehrHell />}
         </Svg>
       </View>
     );
   }
-  // Leere Tafel: dunkel mit feinem Punktraster
+  // Leere Tafel: weiß mit feinem lila Punktraster
   const w = 1000 * VORLAGE_SEITE.leer;
   const punkte: { x: number; y: number }[] = [];
   for (let x = 40; x < w; x += 62) for (let y = 40; y < 1000; y += 62) punkte.push({ x, y });
   return (
-    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: "#15181E" }]}>
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: "#FFFFFF" }]}>
       <Svg width="100%" height="100%" viewBox={`0 0 ${w} 1000`} preserveAspectRatio="none">
         {punkte.map((p, i) => (
-          <Circle key={i} cx={p.x} cy={p.y} r={2.6} fill="rgba(255,255,255,0.13)" />
+          <Circle key={i} cx={p.x} cy={p.y} r={2.6} fill="#DCD2F7" />
         ))}
       </Svg>
     </View>
@@ -95,13 +141,13 @@ function Chip({ titel, aktiv, onPress }: { titel: string; aktiv: boolean; onPres
         paddingHorizontal: 14,
         borderRadius: 17,
         justifyContent: "center",
-        backgroundColor: aktiv ? "rgba(138,95,255,0.2)" : "rgba(255,255,255,0.08)",
-        borderWidth: 1,
-        borderColor: aktiv ? farben.orange : "rgba(255,255,255,0.12)",
+        backgroundColor: aktiv ? "#EEE6FF" : "#FFFFFF",
+        borderWidth: 1.5,
+        borderColor: aktiv ? "#8A5FFF" : "#E1DDF0",
         opacity: pressed ? 0.75 : 1,
       })}
     >
-      <Text style={{ ...schrift.textFett, fontSize: 13, color: aktiv ? "#FFB27A" : "#FFFFFF" }}>{titel}</Text>
+      <Text style={{ ...lilaSchrift.textFett, fontSize: 13, color: aktiv ? "#6A3FE6" : "#2E2650" }}>{titel}</Text>
     </Pressable>
   );
 }
@@ -124,11 +170,11 @@ function Werkzeug({ icon, label, aktiv, aus, onPress }: { icon: IconName; label:
         borderRadius: 19,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: aktiv ? "rgba(255,255,255,0.16)" : "transparent",
+        backgroundColor: aktiv ? "#8A5FFF" : "transparent",
         opacity: aus ? 0.35 : pressed ? 0.7 : 1,
       })}
     >
-      <Icon name={icon} size={19} color={aktiv ? "#FFFFFF" : "rgba(255,255,255,0.8)"} />
+      <Icon name={icon} size={19} color={aktiv ? "#FFFFFF" : "#6E6888"} />
     </Pressable>
   );
 }
@@ -251,19 +297,19 @@ export function TafelBuehne({
   const spitze = laufend && laufend.p.length >= 2 ? { x: (laufend.p[laufend.p.length - 2] / 1000) * bw, y: (laufend.p[laufend.p.length - 1] / 1000) * bh } : null;
 
   const flaeche = (
-    <View style={{ width: bw, height: bh, borderRadius: 18, overflow: "hidden", backgroundColor: "#0E1014" }}>
+    <View style={{ width: bw, height: bh, borderRadius: 18, overflow: "hidden", backgroundColor: "#FFFFFF" }}>
       <Grund grund={tafel.grund} bild={bild} />
       <StricheSvg striche={tafel.striche} zug={laufend} seite={seite} />
       {/* Stiftspitze: Zuschauer sehen, wo gerade gemalt wird */}
       {!bearbeitbar && spitze ? (
-        <View pointerEvents="none" style={{ position: "absolute", left: spitze.x - 9, top: spitze.y - 9, width: 18, height: 18, borderRadius: 9, backgroundColor: "rgba(255,255,255,0.25)", borderWidth: 2, borderColor: laufend?.f ?? "#FFFFFF" }} />
+        <View pointerEvents="none" style={{ position: "absolute", left: spitze.x - 9, top: spitze.y - 9, width: 18, height: 18, borderRadius: 9, backgroundColor: "rgba(138,95,255,0.18)", borderWidth: 2, borderColor: laufend?.f ?? "#8A5FFF" }} />
       ) : null}
     </View>
   );
 
   return (
     <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-      <LinearGradient pointerEvents="none" colors={["rgba(3,4,7,0.62)", "rgba(3,4,7,0.8)", "rgba(3,4,7,0.9)"]} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: "#F4F2FC" }]} />
 
       {/* Kopf: Hintergrund wählen + Fertig (Gastgeber) bzw. Hinweis (Zuschauer) */}
       {bearbeitbar ? (
@@ -280,19 +326,19 @@ export function TafelBuehne({
             }}
             accessibilityRole="button"
             accessibilityLabel="Tafel fertig"
-            style={({ pressed }) => [{ marginRight: 12, borderRadius: 17, transform: [{ scale: pressed ? 0.96 : 1 }] }, leuchten(farben.orange, 0.4, 10, 2)]}
+            style={({ pressed }) => [{ marginRight: 12, borderRadius: 17, transform: [{ scale: pressed ? 0.96 : 1 }] }, leuchten("#6A3FE6", 0.3, 10, 4)]}
           >
-            <LinearGradient colors={verlauf.knopf} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 34, borderRadius: 17, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <LinearGradient colors={["#9B74FF", "#7A4BF2"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 34, borderRadius: 17, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", gap: 5 }}>
               <Icon name="checkmark" size={15} color="#FFFFFF" />
-              <Text style={{ ...schrift.textFett, fontSize: 14, color: "#FFFFFF" }}>Fertig</Text>
+              <Text style={{ ...lilaSchrift.textFett, fontSize: 14, color: "#FFFFFF" }}>Fertig</Text>
             </LinearGradient>
           </Pressable>
         </View>
       ) : (
         <View pointerEvents="none" style={{ position: "absolute", top: Math.max(oben + 8, flaecheOben - 42), left: 0, right: 0, alignItems: "center" }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 7, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: "rgba(255,255,255,0.1)", borderWidth: 1, borderColor: "rgba(255,255,255,0.14)" }}>
-            <Icon name="brush" size={13} color="#FFB27A" />
-            <Text style={{ ...schrift.textFett, fontSize: 12.5, color: "#FFFFFF" }}>{zug ? `${name ?? "Gastgeber"} zeichnet …` : "Tafel"}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 7, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: "#E1DDF0" }}>
+            <Icon name="brush" size={13} color="#8A5FFF" />
+            <Text style={{ ...lilaSchrift.textFett, fontSize: 12.5, color: "#2E2650" }}>{zug ? `${name ?? "Gastgeber"} zeichnet …` : "Tafel"}</Text>
           </View>
         </View>
       )}
@@ -301,18 +347,18 @@ export function TafelBuehne({
       <Animated.View
         style={[
           { position: "absolute", top: flaecheOben, left: (width - bw) / 2, borderRadius: 18 },
-          leuchten("#000000", 0.55, 22, 10),
+          leuchten("#6A3FE6", 0.16, 22, 10),
           { opacity: auftritt, transform: [{ scale: auftritt.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] }) }] },
         ]}
       >
         {bearbeitbar ? <GestureDetector gesture={malen}>{flaeche}</GestureDetector> : flaeche}
-        <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 18, borderWidth: 1.5, borderColor: "rgba(255,255,255,0.14)" }} />
+        <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 18, borderWidth: 1.5, borderColor: "#E1DDF0" }} />
       </Animated.View>
 
       {/* Werkzeuge (Gastgeber) */}
       {bearbeitbar ? (
         <View style={{ position: "absolute", bottom: unten, left: 0, right: 0, alignItems: "center" }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 2, height: LEISTE, paddingHorizontal: 8, borderRadius: LEISTE / 2, backgroundColor: "rgba(28,30,36,0.92)", borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 2, height: LEISTE, paddingHorizontal: 8, borderRadius: LEISTE / 2, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: "#E1DDF0", ...leuchten("#6A3FE6", 0.14, 16, 6) }}>
             {TAFEL_FARBEN.map((f) => {
               const gewaehlt = f === farbe;
               return (
@@ -328,14 +374,14 @@ export function TafelBuehne({
                   accessibilityState={{ selected: gewaehlt }}
                   style={{ width: 32, height: 36, alignItems: "center", justifyContent: "center" }}
                 >
-                  <View style={{ width: gewaehlt ? 26 : 20, height: gewaehlt ? 26 : 20, borderRadius: 13, backgroundColor: f, borderWidth: gewaehlt ? 3 : 1.5, borderColor: gewaehlt ? "#FFFFFF" : "rgba(255,255,255,0.25)" }} />
+                  <View style={{ width: gewaehlt ? 26 : 20, height: gewaehlt ? 26 : 20, borderRadius: 13, backgroundColor: f, borderWidth: gewaehlt ? 3 : 0, borderColor: "#FFFFFF", ...(gewaehlt ? { shadowColor: f, shadowOpacity: 0.6, shadowRadius: 5, shadowOffset: { width: 0, height: 0 }, elevation: 3 } : null) }} />
                 </Pressable>
               );
             })}
-            <View style={{ width: 1, height: 26, backgroundColor: "rgba(255,255,255,0.14)", marginHorizontal: 4 }} />
+            <View style={{ width: 1, height: 26, backgroundColor: "#E1DDF0", marginHorizontal: 4 }} />
             <Werkzeug icon="brush" label="Stift" aktiv={!pfeil} onPress={() => setPfeil(false)} />
             <Werkzeug icon="arrow-forward" label="Pfeil" aktiv={pfeil} onPress={() => setPfeil(true)} />
-            <View style={{ width: 1, height: 26, backgroundColor: "rgba(255,255,255,0.14)", marginHorizontal: 4 }} />
+            <View style={{ width: 1, height: 26, backgroundColor: "#E1DDF0", marginHorizontal: 4 }} />
             <Werkzeug icon="arrow-undo" label="Rückgängig" aus={!tafel.striche.length} onPress={() => onRueckgaengig?.()} />
             <Werkzeug icon="trash-outline" label="Alles löschen" aus={!tafel.striche.length} onPress={() => onLeeren?.()} />
           </View>

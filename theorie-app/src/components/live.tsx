@@ -33,6 +33,7 @@ export function LiveSchild({ klein, style }: { klein?: boolean; style?: StylePro
     <View
       style={[
         { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: klein ? 6 : 8, height: klein ? 18 : 22, borderRadius: klein ? 5 : 6, backgroundColor: LIVE_ROT },
+        klein ? null : { borderRadius: 11 },
         style,
       ]}
     >
@@ -79,9 +80,9 @@ export function LiveRing({ gastgeber, groesse = 40 }: { gastgeber: LiveInfo["gas
 /** Zuschauerzahl mit Auge, z. B. „23“. */
 export function ZuschauerZahl({ anzahl }: { anzahl: number }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 22, paddingHorizontal: 8, borderRadius: 6, backgroundColor: "rgba(0,0,0,0.38)" }}>
-      <Icon name="eye" sf="eye.fill" size={12} color="#FFFFFF" />
-      <Text style={{ ...schrift.textFett, fontSize: 11.5, color: "#FFFFFF", fontVariant: ["tabular-nums"] }}>{anzahl}</Text>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 22, paddingHorizontal: 9, borderRadius: 11, backgroundColor: "rgba(255,255,255,0.94)" }}>
+      <Icon name="eye" sf="eye.fill" size={12} color="#8A5FFF" />
+      <Text style={{ ...schrift.textFett, fontSize: 11.5, color: "#2E2650", fontVariant: ["tabular-nums"] }}>{anzahl}</Text>
     </View>
   );
 }

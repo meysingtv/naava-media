@@ -10,15 +10,20 @@ import { DekoSvg } from "@/components/grafik";
 import { Icon } from "@/components/icon";
 import { erfolg, tippen } from "@/lib/haptik";
 import { radBisStart, radFortschritt, radName, radWinkel, type LiveRad } from "@/lib/live-rad";
-import { farben, leuchten, schrift, verlauf } from "@/lib/theme";
+import { leuchten } from "@/lib/theme";
+import { ClipsGrund } from "@/components/clips-grund";
+import { lilaSchrift } from "@/components/lila-teile";
 
 // Das Themenrad im Live: Glücksrad mit den Lernthemen, Lichterkranz, Zeiger, der
 // an jedem Feld anschlägt, und Konfetti, wenn es steht. Gastgeber und Zuschauer
 // sehen dasselbe Rad zur selben Zeit (Winkel nach der Serverzeit).
 
-const ORANGE_HELL = "#FF9A45";
-const GOLD = "#FFD43B";
-const KONFETTI_FARBEN = [farben.orange, GOLD, "#FFFFFF", "#FF3B5C", "#FF9A45", "#4DA3FF"];
+const LILA = "#8A5FFF";
+const LILA_KANTE = "#6A3FE6";
+const TINTE = "#2E2650";
+const TINTE2 = "#6E6888";
+const GOLD = "#FFB400";
+const KONFETTI_FARBEN = [LILA, GOLD, "#C0A6FF", "#FF7A59", "#2F80FF", "#22B573"];
 const LAMPEN = 20;
 
 const bogen = (grad: number) => (grad * Math.PI) / 180;
@@ -26,8 +31,8 @@ const bogen = (grad: number) => (grad * Math.PI) / 180;
 const xy = (c: number, r: number, grad: number): [number, number] => [c + r * Math.cos(bogen(grad - 90)), c + r * Math.sin(bogen(grad - 90))];
 const punkt = (c: number, r: number, grad: number) => xy(c, r, grad).join(",");
 
-/** Felder abwechselnd orange/dunkel – bei ungerader Zahl ist das letzte gold (sonst lägen zwei gleiche nebeneinander). */
-const feldFarbe = (i: number, n: number) => (n % 2 === 1 && i === n - 1 ? "gold" : i % 2 === 0 ? "orange" : "dunkel");
+/** Felder abwechselnd lila/hell – bei ungerader Zahl ist das letzte zartlila (sonst lägen zwei gleiche nebeneinander). */
+const feldFarbe = (i: number, n: number) => (n % 2 === 1 && i === n - 1 ? "mitte" : i % 2 === 0 ? "lila" : "hell");
 
 /** Ein Feld von a bis b (Grad im Uhrzeigersinn ab 12 Uhr). */
 function feldPfad(c: number, r: number, a: number, b: number) {
@@ -45,26 +50,25 @@ const Scheibe = memo(function Scheibe({ themen, d }: { themen: string[]; d: numb
   return (
     <DekoSvg width={d} height={d}>
       <Defs>
-        <SvgVerlauf id="rad-orange" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={ORANGE_HELL} />
-          <Stop offset="0.55" stopColor={farben.orange} />
-          <Stop offset="1" stopColor="#D9400A" />
+        <SvgVerlauf id="rad-lila" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor="#A684FF" />
+          <Stop offset="1" stopColor="#7A4BF2" />
         </SvgVerlauf>
-        <SvgVerlauf id="rad-dunkel" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#2A2C34" />
-          <Stop offset="1" stopColor="#111217" />
+        <SvgVerlauf id="rad-hell" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor="#FFFFFF" />
+          <Stop offset="1" stopColor="#F1EAFF" />
         </SvgVerlauf>
-        <SvgVerlauf id="rad-gold" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#FFE07A" />
-          <Stop offset="1" stopColor="#F2A31E" />
+        <SvgVerlauf id="rad-mitte" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor="#DCCBFF" />
+          <Stop offset="1" stopColor="#C0A6FF" />
         </SvgVerlauf>
         <SvgVerlauf id="rad-nabe" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#30323A" />
-          <Stop offset="1" stopColor="#0E0F13" />
+          <Stop offset="0" stopColor="#FFFFFF" />
+          <Stop offset="1" stopColor="#EEE6FF" />
         </SvgVerlauf>
         <RadialGradient id="rad-tiefe" cx="50%" cy="50%" r="50%">
-          <Stop offset="0.55" stopColor="#000000" stopOpacity={0} />
-          <Stop offset="1" stopColor="#000000" stopOpacity={0.38} />
+          <Stop offset="0.6" stopColor={LILA_KANTE} stopOpacity={0} />
+          <Stop offset="1" stopColor={LILA_KANTE} stopOpacity={0.14} />
         </RadialGradient>
       </Defs>
       {themen.map((t, i) => (
@@ -75,7 +79,7 @@ const Scheibe = memo(function Scheibe({ themen, d }: { themen: string[]; d: numb
       {/* Trennlinien */}
       {themen.map((t, i) => {
         const [x, y] = xy(c, r, i * feld);
-        return <Line key={`l${i}`} x1={c} y1={c} x2={x} y2={y} stroke="rgba(255,255,255,0.22)" strokeWidth={1.5} />;
+        return <Line key={`l${i}`} x1={c} y1={c} x2={x} y2={y} stroke="#FFFFFF" strokeWidth={2} />;
       })}
       {/* Beschriftung quer zum Radius – das Gewinnerfeld liest sich oben ganz normal */}
       {themen.map((t, i) => {
@@ -84,21 +88,21 @@ const Scheibe = memo(function Scheibe({ themen, d }: { themen: string[]; d: numb
         const groesse = Math.min(13, (bogenLaenge * 0.9) / (name.length * 0.68));
         return (
           <G key={`t${i}`} transform={`rotate(${i * feld + feld / 2} ${c} ${c})`}>
-            <SvgText x={c} y={c - r * 0.72 + groesse * 0.36} textAnchor="middle" fontFamily="Inter_800ExtraBold" fontSize={groesse} letterSpacing={0.4} fill={feldFarbe(i, n) === "gold" ? "#3A2405" : "#FFFFFF"} opacity={0.96}>
+            <SvgText x={c} y={c - r * 0.72 + groesse * 0.36} textAnchor="middle" fontFamily="Inter_800ExtraBold" fontSize={groesse} letterSpacing={0.4} fill={feldFarbe(i, n) === "lila" ? "#FFFFFF" : TINTE}>
               {name}
             </SvgText>
           </G>
         );
       })}
       {/* Innenkante */}
-      <Circle cx={c} cy={c} r={r} fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth={2} />
+      <Circle cx={c} cy={c} r={r} fill="none" stroke="#FFFFFF" strokeWidth={2} />
       {/* Nabe mit Lenkrad */}
-      <Circle cx={c} cy={c} r={nabe} fill="url(#rad-nabe)" stroke={farben.orange} strokeWidth={3} />
-      <Circle cx={c} cy={c} r={lenkrad} fill="none" stroke="#FFFFFF" strokeWidth={3.2} />
-      <Circle cx={c} cy={c} r={lenkrad * 0.26} fill="#FFFFFF" />
-      <Line x1={c - lenkrad} y1={c} x2={c - lenkrad * 0.26} y2={c} stroke="#FFFFFF" strokeWidth={3.2} strokeLinecap="round" />
-      <Line x1={c + lenkrad * 0.26} y1={c} x2={c + lenkrad} y2={c} stroke="#FFFFFF" strokeWidth={3.2} strokeLinecap="round" />
-      <Line x1={c} y1={c + lenkrad * 0.26} x2={c} y2={c + lenkrad} stroke="#FFFFFF" strokeWidth={3.2} strokeLinecap="round" />
+      <Circle cx={c} cy={c} r={nabe} fill="url(#rad-nabe)" stroke={LILA} strokeWidth={3} />
+      <Circle cx={c} cy={c} r={lenkrad} fill="none" stroke={LILA} strokeWidth={3.2} />
+      <Circle cx={c} cy={c} r={lenkrad * 0.26} fill={LILA} />
+      <Line x1={c - lenkrad} y1={c} x2={c - lenkrad * 0.26} y2={c} stroke={LILA} strokeWidth={3.2} strokeLinecap="round" />
+      <Line x1={c + lenkrad * 0.26} y1={c} x2={c + lenkrad} y2={c} stroke={LILA} strokeWidth={3.2} strokeLinecap="round" />
+      <Line x1={c} y1={c + lenkrad * 0.26} x2={c} y2={c + lenkrad} stroke={LILA} strokeWidth={3.2} strokeLinecap="round" />
     </DekoSvg>
   );
 });
@@ -111,20 +115,20 @@ function Kranz({ d, takt, fertig }: { d: number; takt: number; fertig: boolean }
     <DekoSvg width={d} height={d} style={{ position: "absolute", top: 0, left: 0 }}>
       <Defs>
         <SvgVerlauf id="kranz" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#4A4D57" />
-          <Stop offset="0.5" stopColor="#1C1D23" />
-          <Stop offset="1" stopColor="#3A3C45" />
+          <Stop offset="0" stopColor="#FFFFFF" />
+          <Stop offset="1" stopColor="#F4EEFF" />
         </SvgVerlauf>
       </Defs>
       <Circle cx={c} cy={c} r={rMitte} fill="none" stroke="url(#kranz)" strokeWidth={22} />
-      <Circle cx={c} cy={c} r={d / 2 - 1} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={1.5} />
+      <Circle cx={c} cy={c} r={d / 2 - 1} fill="none" stroke="#E1DDF0" strokeWidth={1.5} />
+      <Circle cx={c} cy={c} r={d / 2 - 22} fill="none" stroke="#E1DDF0" strokeWidth={1.5} />
       {Array.from({ length: LAMPEN }, (_, i) => {
         const an = fertig ? (i + takt) % 2 === 0 : (i + takt) % 3 === 0;
         const [x, y] = xy(c, rMitte, (i * 360) / LAMPEN);
         return (
           <G key={i}>
-            {an ? <Circle cx={x} cy={y} r={6.5} fill={GOLD} opacity={0.35} /> : null}
-            <Circle cx={x} cy={y} r={3.6} fill={an ? "#FFF6D5" : "rgba(255,255,255,0.22)"} />
+            {an ? <Circle cx={x} cy={y} r={6.5} fill={GOLD} opacity={0.3} /> : null}
+            <Circle cx={x} cy={y} r={3.6} fill={an ? GOLD : "#DCD2F7"} />
           </G>
         );
       })}
@@ -152,7 +156,7 @@ function Gewinner({ d, n, versatz }: { d: number; n: number; versatz: number }) 
   return (
     <RNAnimated.View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, opacity: puls.interpolate({ inputRange: [0, 1], outputRange: [0.45, 1] }) }}>
       <DekoSvg width={d} height={d}>
-        <Path d={feldPfad(c, r, a, a + feld)} fill="rgba(255,255,255,0.16)" stroke="#FFFFFF" strokeWidth={3} strokeLinejoin="round" />
+        <Path d={feldPfad(c, r, a, a + feld)} fill="rgba(255,255,255,0.18)" stroke={GOLD} strokeWidth={4} strokeLinejoin="round" />
       </DekoSvg>
     </RNAnimated.View>
   );
@@ -206,11 +210,11 @@ function KnopfHaupt({ titel, icon, onPress, aus }: { titel: string; icon: "flash
       }}
       accessibilityRole="button"
       accessibilityLabel={titel}
-      style={({ pressed }) => [{ borderRadius: 27, opacity: aus ? 0.5 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }, leuchten(farben.orange, 0.45, 16, 4)]}
+      style={({ pressed }) => [{ borderRadius: 27, opacity: aus ? 0.5 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }, leuchten(LILA_KANTE, 0.3, 14, 6)]}
     >
-      <LinearGradient colors={verlauf.knopf} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 54, borderRadius: 27, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 22 }}>
+      <LinearGradient colors={["#9B74FF", "#7A4BF2"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 54, borderRadius: 27, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 22 }}>
         <Icon name={icon} size={18} color="#FFFFFF" />
-        <Text style={{ ...schrift.textFett, fontSize: 16.5, color: "#FFFFFF" }} numberOfLines={1}>
+        <Text style={{ ...lilaSchrift.titel, fontSize: 21, color: "#FFFFFF" }} numberOfLines={1}>
           {titel}
         </Text>
       </LinearGradient>
@@ -228,10 +232,10 @@ function KnopfLeise({ titel, icon, onPress, aus }: { titel: string; icon: "refre
       }}
       accessibilityRole="button"
       accessibilityLabel={titel}
-      style={({ pressed }) => ({ height: 48, borderRadius: 24, paddingHorizontal: 18, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, backgroundColor: "rgba(255,255,255,0.1)", borderWidth: 1, borderColor: "rgba(255,255,255,0.14)", opacity: aus ? 0.5 : pressed ? 0.75 : 1 })}
+      style={({ pressed }) => ({ height: 48, borderRadius: 24, paddingHorizontal: 18, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: "#E1DDF0", opacity: aus ? 0.5 : pressed ? 0.75 : 1 })}
     >
-      <Icon name={icon} size={16} color="#FFFFFF" />
-      <Text style={{ ...schrift.textFett, fontSize: 15, color: "#FFFFFF" }}>{titel}</Text>
+      <Icon name={icon} size={17} color={LILA} />
+      <Text style={{ ...lilaSchrift.titel, fontSize: 19, color: TINTE }}>{titel}</Text>
     </Pressable>
   );
 }
@@ -346,16 +350,16 @@ export function ThemenRad({
   const strahlD = d * 1.9;
   return (
     <View pointerEvents="box-none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
-      {/* Abdunkeln, damit das Rad die Bühne hat */}
-      <LinearGradient pointerEvents="none" colors={["rgba(3,4,7,0.55)", "rgba(3,4,7,0.78)", "rgba(3,4,7,0.92)"]} locations={[0, 0.5, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+      {/* Heller lila Grund, damit das Rad die Bühne hat */}
+      <ClipsGrund />
 
       <View pointerEvents="box-none" style={{ flex: 1, paddingTop: oben + 10, alignItems: "center" }}>
         {/* Kopf */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: "rgba(138,95,255,0.16)", borderWidth: 1, borderColor: "rgba(138,95,255,0.45)" }}>
-          <Icon name="sparkles" size={13} color={ORANGE_HELL} />
-          <Text style={{ ...schrift.textFett, fontSize: 12, letterSpacing: 1.6, color: ORANGE_HELL }}>THEMENRAD</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: "#EEE6FF" }}>
+          <Icon name="sparkles" size={13} color={LILA} />
+          <Text style={{ ...lilaSchrift.textFett, fontSize: 12, letterSpacing: 1.4, color: LILA_KANTE }}>THEMENRAD</Text>
         </View>
-        <Text style={{ ...schrift.titel, fontSize: 21, color: "#FFFFFF", marginTop: 10, textAlign: "center" }}>{fertig ? "Das Thema steht!" : "Welches Thema kommt dran?"}</Text>
+        <Text style={{ ...lilaSchrift.titel, fontSize: 30, color: TINTE, marginTop: 8, textAlign: "center" }}>{fertig ? "Das Thema steht!" : "Welches Thema kommt dran?"}</Text>
 
         {/* Rad */}
         <Reanimated.View style={[{ width: d, height: d + 26, marginTop: 18, alignItems: "center" }, rein]}>
@@ -364,9 +368,9 @@ export function ThemenRad({
             <DekoSvg width={strahlD} height={strahlD}>
               <Defs>
                 <RadialGradient id="rad-schein" cx="50%" cy="50%" r="50%">
-                  <Stop offset="0" stopColor={farben.orange} stopOpacity={0.55} />
-                  <Stop offset="0.45" stopColor={farben.orange} stopOpacity={0.16} />
-                  <Stop offset="1" stopColor={farben.orange} stopOpacity={0} />
+                  <Stop offset="0" stopColor={LILA} stopOpacity={0.35} />
+                  <Stop offset="0.45" stopColor={LILA} stopOpacity={0.1} />
+                  <Stop offset="1" stopColor={LILA} stopOpacity={0} />
                 </RadialGradient>
               </Defs>
               <Circle cx={strahlD / 2} cy={strahlD / 2} r={strahlD / 2} fill="url(#rad-schein)" />
@@ -375,11 +379,11 @@ export function ThemenRad({
                 const s = strahlD / 2;
                 const p1 = punkt(s, s, a - 3.2);
                 const p2 = punkt(s, s, a + 3.2);
-                return <Polygon key={i} points={`${s},${s} ${p1} ${p2}`} fill="#FFFFFF" opacity={0.05} />;
+                return <Polygon key={i} points={`${s},${s} ${p1} ${p2}`} fill={LILA} opacity={0.05} />;
               })}
             </DekoSvg>
           </Reanimated.View>
-          <View style={{ position: "absolute", top: 26, left: 0, width: d, height: d, borderRadius: d / 2, ...leuchten("#000000", 0.6, 24, 12) }}>
+          <View style={{ position: "absolute", top: 26, left: 0, width: d, height: d, borderRadius: d / 2, ...leuchten(LILA_KANTE, 0.22, 24, 12) }}>
             <Reanimated.View style={[{ width: d, height: d }, scheibe]}>
               <Scheibe themen={rad.themen} d={d} />
             </Reanimated.View>
@@ -387,16 +391,16 @@ export function ThemenRad({
             <Kranz d={d} takt={takt} fertig={fertig} />
           </View>
           {/* Zeiger oben */}
-          <Reanimated.View pointerEvents="none" style={[{ position: "absolute", top: 4, width: 40, height: 52, alignItems: "center", transformOrigin: "50% 22%" }, zeiger, leuchten(farben.orange, 0.7, 10, 0)]}>
+          <Reanimated.View pointerEvents="none" style={[{ position: "absolute", top: 4, width: 40, height: 52, alignItems: "center", transformOrigin: "50% 22%" }, zeiger]}>
             <DekoSvg width={40} height={52}>
               <Defs>
                 <SvgVerlauf id="zeiger" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor="#FFFFFF" />
-                  <Stop offset="1" stopColor="#FFE0C8" />
+                  <Stop offset="0" stopColor="#9B74FF" />
+                  <Stop offset="1" stopColor="#7A4BF2" />
                 </SvgVerlauf>
               </Defs>
-              <Path d="M20 50 L6 18 A15 15 0 1 1 34 18 Z" fill="url(#zeiger)" stroke={farben.orange} strokeWidth={2.5} strokeLinejoin="round" />
-              <Circle cx={20} cy={14} r={5} fill={farben.orange} />
+              <Path d="M20 50 L6 18 A15 15 0 1 1 34 18 Z" fill="url(#zeiger)" stroke="#FFFFFF" strokeWidth={2.5} strokeLinejoin="round" />
+              <Circle cx={20} cy={14} r={5} fill="#FFFFFF" />
             </DekoSvg>
           </Reanimated.View>
           {fertig ? <Konfetti breite={d} /> : null}
@@ -405,13 +409,13 @@ export function ThemenRad({
         {/* Ergebnis */}
         <View style={{ marginTop: 18, minHeight: 74, alignItems: "center" }}>
           {fertig ? null : (
-            <Text style={{ ...schrift.textHalb, fontSize: 14, color: "rgba(255,255,255,0.55)", marginTop: 10, textAlign: "center" }}>{gastgeber ? "Alle sehen das Rad gleichzeitig drehen …" : "Gleich steht das Thema fest …"}</Text>
+            <Text style={{ ...lilaSchrift.textHalb, fontSize: 14, color: TINTE2, marginTop: 10, textAlign: "center" }}>{gastgeber ? "Alle sehen das Rad gleichzeitig drehen …" : "Gleich steht das Thema fest …"}</Text>
           )}
           <RNAnimated.View style={{ alignItems: "center", opacity: ergebnis, transform: [{ scale: ergebnis.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }] }}>
             {fertig ? (
               <>
-                <Text style={{ ...schrift.titel, fontSize: 34, letterSpacing: 0.5, color: "#FFFFFF", textShadowColor: "rgba(138,95,255,0.85)", textShadowRadius: 22, textAlign: "center" }}>{radName(thema).toUpperCase()}</Text>
-                <Text style={{ ...schrift.textHalb, fontSize: 14, color: "rgba(255,255,255,0.72)", marginTop: 4, textAlign: "center" }}>{gastgeber ? "Starte eine Frage aus diesem Thema" : "Gleich kommt eine Frage aus diesem Thema"}</Text>
+                <Text style={{ ...lilaSchrift.titel, fontSize: 44, letterSpacing: 0.5, color: LILA_KANTE, textAlign: "center" }}>{radName(thema).toUpperCase()}</Text>
+                <Text style={{ ...lilaSchrift.textHalb, fontSize: 14, color: TINTE2, marginTop: 2, textAlign: "center" }}>{gastgeber ? "Starte eine Frage aus diesem Thema" : "Gleich kommt eine Frage aus diesem Thema"}</Text>
               </>
             ) : null}
           </RNAnimated.View>

@@ -7,7 +7,6 @@ import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from
 
 import { auswahlBlatt } from "@/components/auswahl-blatt";
 import { dialog } from "@/components/dialog";
-import { Glas } from "@/components/glas";
 import { HinweisAnzeige, useHinweis } from "@/components/hinweis";
 import { ClipsHinweis, ClipsKnopf } from "@/components/clips-grund";
 import { Icon } from "@/components/icon";
@@ -60,6 +59,8 @@ import { blockierenFragen } from "@/lib/blockieren-fragen";
 // es bei allen gleichzeitig; malt er an der Tafel, sieht man jeden Strich live.
 
 const LIVE_VERLAUF = ["#FF5A5F", "#FF2D55", "#E0124A"] as const;
+/** Weiße Pille im lila Design – liest sich über jedem Kamerabild. */
+const PILLE = { backgroundColor: "rgba(255,255,255,0.94)", shadowColor: "#1B1440", shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } } as const;
 
 function RundTaste({ icon, sf, label, onPress, aktiv }: { icon: "close" | "notifications" | "notifications-outline"; sf: "xmark" | "bell.fill" | "bell"; label: string; onPress: () => void; aktiv?: boolean }) {
   return (
@@ -73,9 +74,9 @@ function RundTaste({ icon, sf, label, onPress, aktiv }: { icon: "close" | "notif
       accessibilityLabel={label}
     >
       {({ pressed }) => (
-        <Glas interaktiv style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
-          <Icon name={icon} sf={sf} size={18} color={aktiv ? "#FFB27A" : "#FFFFFF"} weight="semibold" />
-        </Glas>
+        <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.8 : 1, ...PILLE }}>
+          <Icon name={icon} sf={sf} size={18} color={aktiv ? "#8A5FFF" : "#2E2650"} weight="semibold" />
+        </View>
       )}
     </Pressable>
   );
@@ -492,19 +493,19 @@ export function LiveAnsicht({
 
       {/* Kopf: Gastgeber, LIVE, Zuschauer, Mitteilung, Schließen */}
       <View style={{ position: "absolute", top: oben, left: 12, right: 12, flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <Glas style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingLeft: 3, paddingRight: 12, height: 44, borderRadius: 22, flexShrink: 1 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingLeft: 3, paddingRight: 12, height: 44, borderRadius: 22, flexShrink: 1, ...PILLE }}>
           <LiveRing gastgeber={live.gastgeber} groesse={30} />
           <View style={{ flexShrink: 1 }}>
-            <Text style={{ ...schrift.textFett, fontSize: 14, color: "#FFFFFF" }} numberOfLines={1}>
+            <Text style={{ ...schrift.textFett, fontSize: 14, color: "#2E2650" }} numberOfLines={1}>
               {name}
             </Text>
             {live.titel ? (
-              <Text style={{ ...schrift.textMittel, fontSize: 11.5, color: "rgba(255,255,255,0.75)" }} numberOfLines={1}>
+              <Text style={{ ...schrift.textMittel, fontSize: 11.5, color: "#6E6888" }} numberOfLines={1}>
                 {live.titel}
               </Text>
             ) : null}
           </View>
-        </Glas>
+        </View>
         <LiveSchild />
         <ZuschauerZahl anzahl={zuschauer} />
         <View style={{ flex: 1 }} />
@@ -519,9 +520,9 @@ export function LiveAnsicht({
             hitSlop={6}
           >
             {({ pressed }) => (
-              <Glas interaktiv style={{ height: 40, paddingHorizontal: 14, borderRadius: 20, justifyContent: "center", opacity: pressed ? 0.8 : 1 }}>
-                <Text style={{ ...schrift.textFett, fontSize: 13.5, color: "#FF6B85" }}>Beenden</Text>
-              </Glas>
+              <View style={{ height: 40, paddingHorizontal: 14, borderRadius: 20, justifyContent: "center", opacity: pressed ? 0.8 : 1, ...PILLE }}>
+                <Text style={{ ...schrift.textFett, fontSize: 13.5, color: "#E5304F" }}>Beenden</Text>
+              </View>
             )}
           </Pressable>
         ) : null}
