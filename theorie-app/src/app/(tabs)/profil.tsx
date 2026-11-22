@@ -1,4 +1,4 @@
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from "react-native";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useIsFocused } from "@react-navigation/native";
@@ -12,9 +12,12 @@ import { dialog } from "@/components/dialog";
 import { Glas } from "@/components/glas";
 import { GlasGrund } from "@/components/glas-flaeche";
 import { GlasLeiste, KinoHeld, Kopfzeile } from "@/components/home";
-import { Icon } from "@/components/icon";
+import { Icon, type IconName } from "@/components/icon";
+import { LilaKnopf, LILA_RAND, LilaTitel, lilaSchrift, SYMBOLE, useLila } from "@/components/lila-teile";
+import { FIGUR } from "@/components/start-teile";
 import { Fuehrerscheinweg, LigaKarte, Medaillen, MenueGruppe, MenueZeile, ProfilRing, ZahlenRaster, type Meilenstein } from "@/components/profil";
 import { ProfilBild } from "@/components/profilbild";
+import { useProfilbild } from "@/lib/profilbild";
 import { useInhaltUnten } from "@/components/tab-leiste";
 import { CLIPS } from "@/lib/clips";
 import { useCrew } from "@/lib/crew";
@@ -31,7 +34,7 @@ import { tageBis, terminDatum } from "@/lib/pruefungstag";
 import { ligaVon } from "@/lib/rangliste";
 import { ALBUM } from "@/lib/schilder-jagd";
 import { auswertung, fortschritt, lernzeitText, serieAktuell, tagVerschoben, useStand } from "@/lib/stand";
-import { leuchten, RAND, schrift, verlauf } from "@/lib/theme";
+import { leuchten, mitDeckkraft, RAND, schrift, verlauf } from "@/lib/theme";
 
 const MONATE_KURZ = ["Jan.", "Feb.", "März", "Apr.", "Mai", "Juni", "Juli", "Aug.", "Sep.", "Okt.", "Nov.", "Dez."];
 
@@ -40,7 +43,219 @@ export default function Profil() {
   return useDesktop() ? <ProfilWeb /> : <ProfilHandy />;
 }
 
+const WELLE: ImageSourcePropType = require("../../../assets/images/profil/karte-welle.jpg");
+
+/** Fläche mit der lila Wellengrafik dahinter, feinem Rand und weichem Schatten. */
+function WellenKarte({ children, style, onPress, label }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void; label?: string }) {
+  const inhalt = (
+    <View style={[{ borderRadius: 22, overflow: "hidden", borderWidth: 1.5, borderColor: "#FFFFFF", backgroundColor: "#F6F2FE" }, style]}>
+      <Image source={WELLE} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }} resizeMode="stretch" />
+      {children}
+    </View>
+  );
+  const schatten: ViewStyle = { borderRadius: 22, shadowColor: "#6A3FE6", shadowOpacity: 0.09, shadowRadius: 14, shadowOffset: { width: 0, height: 5 } };
+  if (!onPress) return <View style={schatten}>{inhalt}</View>;
+  return (
+    <Pressable
+      onPress={() => {
+        tippen();
+        onPress();
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => [schatten, { transform: [{ scale: pressed ? 0.985 : 1 }] }]}
+    >
+      {inhalt}
+    </Pressable>
+  );
+}
+
+/** Schlichte weiße Karte mit feinem Rand und weichem Schatten. */
+function WeisseKarte({ children, onPress, label }: { children: React.ReactNode; onPress: () => void; label?: string }) {
+  return (
+    <Pressable
+      onPress={() => {
+        tippen();
+        onPress();
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => ({ borderRadius: 22, backgroundColor: pressed ? "#FBF9FF" : "rgba(255,255,255,0.86)", borderWidth: 1.5, borderColor: "#FFFFFF", shadowColor: "#6A3FE6", shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, transform: [{ scale: pressed ? 0.985 : 1 }] })}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
+type ProfilPunkt = { titel: string; unter?: string; bild?: ImageSourcePropType; icon?: IconName; farbe?: string; gefahr?: boolean; onPress: () => void };
+
+/** Eine Zeile wie im Entwurf: Symbol im zarten Kreis, Titel, Unterzeile, Pfeil. */
+function ProfilZeile({ p }: { p: ProfilPunkt }) {
+  const rot = "#E0483D";
+  const farbe = p.gefahr ? rot : p.farbe ?? "#8A5FFF";
+  return (
+    <WeisseKarte onPress={p.onPress} label={p.unter ? `${p.titel}, ${p.unter}` : p.titel}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 14, minHeight: 72, paddingVertical: 12, paddingLeft: 12, paddingRight: 18 }}>
+        <View style={{ width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center", backgroundColor: mitDeckkraft(farbe, 0.12) }}>
+          {p.bild ? <Image source={p.bild} style={{ width: 28, height: 28 }} resizeMode="contain" /> : p.icon ? <Icon name={p.icon} size={23} color={farbe} /> : null}
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={{ ...lilaSchrift.textHalb, fontSize: 17, color: p.gefahr ? rot : "#2E2650" }} numberOfLines={1}>
+            {p.titel}
+          </Text>
+          {p.unter ? (
+            <Text style={{ ...lilaSchrift.text, fontSize: 14, color: "#8A85A0" }} numberOfLines={1}>
+              {p.unter}
+            </Text>
+          ) : null}
+        </View>
+        {p.gefahr ? null : <Icon name="chevron-forward" size={19} color="#8A85A0" />}
+      </View>
+    </WeisseKarte>
+  );
+}
+
+/** Profil im lila Design (solange die Fragen aus sind). */
+function ProfilLila() {
+  const insets = useSafeAreaInsets();
+  const inhaltUnten = useInhaltUnten();
+  const fokus = useIsFocused();
+  const l = useLila();
+  const { stand } = useStand();
+  const { profil, gast, anzeigeName, session } = useKonto();
+  const { bildAendern, abmeldenFragen } = useProfilAktionen();
+  const lokalesBild = useProfilbild();
+  const profilFoto = Boolean(lokalesBild || profil?.bild_pfad);
+  const gemerkteClips = CLIPS.filter((c) => stand.clips.gemerkt.includes(c.id)).length;
+  const schilderGefunden = ALBUM.filter((k) => stand.schilder[k]).length;
+  const termin = terminDatum(stand.pruefungstermin);
+  const tage = termin ? tageBis(termin) : null;
+  const unterzeile = [profil ? `@${profil.benutzername}` : gast ? "Gastmodus" : session?.user.email ?? null, profil?.rolle === "fahrlehrer" ? "Fahrlehrer" : `Klasse ${stand.klasse}`, profil?.bundesland ?? null]
+    .filter(Boolean)
+    .join(" · ");
+
+  const werte = [
+    { bild: SYMBOLE.scan, wert: `${schilderGefunden}/${ALBUM.length}`, label: "Schilder", onPress: () => router.push("/schilder-jagd") },
+    { bild: SYMBOLE.kalender, wert: tage !== null && tage >= 0 ? `${tage}` : "–", label: tage === 1 ? "Tag bis Prüfung" : "Tage bis Prüfg.", onPress: () => router.push("/pruefungstermin") },
+    { bild: SYMBOLE.birne, wert: `${gemerkteClips}`, label: "Gemerkt", onPress: () => router.push("/kurz-erklaert") },
+  ];
+
+  const lernhilfen: ProfilPunkt[] = [
+    { titel: "Videokurse", unter: "Dein Coach mit kurzen Videos", bild: SYMBOLE.play, onPress: () => router.navigate("/coach") },
+    { titel: "Schilder-Jagd", unter: schilderGefunden > 0 ? `${schilderGefunden} von ${ALBUM.length} gefunden` : "Echte Schilder sammeln", bild: SYMBOLE.scan, onPress: () => router.push("/schilder-jagd") },
+    { titel: "Kurz erklärt", unter: gemerkteClips > 0 ? `${gemerkteClips} gemerkt` : "Regeln in 30 Sekunden", bild: SYMBOLE.birne, farbe: "#F5B400", onPress: () => router.push("/kurz-erklaert") },
+    { titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", bild: SYMBOLE.warnung, onPress: () => router.push("/zeichen") },
+    { titel: "Formeln", unter: "Anhalteweg & Co.", bild: SYMBOLE.rechner, onPress: () => router.push("/formeln") },
+  ];
+  const konto: ProfilPunkt[] = [
+    { titel: "Einstellungen & Konto", unter: gast ? "Gastmodus" : undefined, icon: "settings", farbe: "#6E6888", onPress: () => router.push("/einstellungen") },
+    { titel: "Premium", unter: "Bald verfügbar", icon: "diamond", onPress: () => router.push("/premium") },
+    { titel: "Bildnachweise", icon: "images", farbe: "#D9A100", onPress: () => router.push("/bildnachweise") },
+    { titel: "Impressum", icon: "document-text-outline", farbe: "#6E6888", onPress: () => router.push("/impressum") },
+    { titel: "Datenschutz", icon: "shield-checkmark-outline", farbe: "#4D8DF5", onPress: () => router.push("/datenschutz") },
+    { titel: "Nutzungsbedingungen", icon: "reader-outline", farbe: "#6E6888", onPress: () => router.push("/nutzungsbedingungen") },
+    ...(session || gast ? [{ titel: gast ? "Gastmodus beenden" : "Abmelden", icon: "log-out-outline" as IconName, gefahr: true, onPress: abmeldenFragen }] : []),
+  ];
+
+  return (
+    <View style={{ flex: 1, backgroundColor: l.grund }}>
+      {fokus ? <StatusBar style="dark" /> : null}
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: inhaltUnten + 8, paddingHorizontal: LILA_RAND, width: "100%", maxWidth: 560, alignSelf: "center" }} showsVerticalScrollIndicator={false}>
+        {/* Kopf */}
+        <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <View style={{ flex: 1 }}>
+            <LilaTitel>Profil</LilaTitel>
+            <Text style={{ ...lilaSchrift.text, fontSize: 16, color: l.tinte2, marginTop: 2 }}>Dein Bereich in der Fahrschul-App</Text>
+          </View>
+          <Pressable
+            onPress={() => {
+              tippen();
+              router.push("/einstellungen");
+            }}
+            accessibilityLabel="Einstellungen"
+            hitSlop={8}
+            style={({ pressed }) => ({ width: 46, height: 46, borderRadius: 23, backgroundColor: pressed ? l.lilaZart : "#FFFFFF", alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: l.linie })}
+          >
+            <Icon name="settings-outline" size={22} color={l.tinte} />
+          </Pressable>
+        </View>
+
+        {/* Profilkarte: Bild links, Name rechts, Welle dahinter */}
+        <WellenKarte style={{ marginTop: 18 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 18, paddingVertical: 22, paddingHorizontal: 22 }}>
+            <Pressable onPress={bildAendern} accessibilityRole="button" accessibilityLabel="Profilbild ändern">
+              <View style={{ width: 84, height: 84, borderRadius: 42, backgroundColor: "#ECE5FF", borderWidth: 2, borderColor: "#FFFFFF", alignItems: "center", justifyContent: "center", overflow: "hidden", shadowColor: "#6A3FE6", shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } }}>
+                {profilFoto ? <ProfilBild name={anzeigeName} groesse={84} rand={0} farbe="#ECE5FF" /> : <Icon name="person-outline" size={40} color="#5B3FD0" />}
+              </View>
+            </Pressable>
+            <View style={{ flex: 1, gap: 3 }}>
+              <Text style={{ ...lilaSchrift.textFett, fontSize: 26, color: l.tinte }} numberOfLines={1}>
+                {anzeigeName}
+              </Text>
+              <Text style={{ ...lilaSchrift.textMittel, fontSize: 16, color: l.tinte2 }} numberOfLines={2}>
+                {unterzeile || "Fahrschul Pro"}
+              </Text>
+            </View>
+          </View>
+        </WellenKarte>
+
+        {/* Zahlen */}
+        <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
+          {werte.map((w) => (
+            <View key={w.label} style={{ flex: 1 }}>
+              <WeisseKarte onPress={w.onPress} label={`${w.wert} ${w.label}`}>
+                <View style={{ alignItems: "center", gap: 3, paddingVertical: 12, paddingHorizontal: 6 }}>
+                  <Image source={w.bild} style={{ width: 26, height: 26 }} resizeMode="contain" />
+                  <Text style={{ ...lilaSchrift.textFett, fontSize: 20, color: l.tinte }}>{w.wert}</Text>
+                  <Text style={{ ...lilaSchrift.textMittel, fontSize: 12, color: l.tinte2 }} numberOfLines={1}>
+                    {w.label}
+                  </Text>
+                </View>
+              </WeisseKarte>
+            </View>
+          ))}
+        </View>
+
+        {!session ? (
+          <View style={{ marginTop: 14, borderRadius: 22, backgroundColor: "rgba(255,255,255,0.86)", borderWidth: 1.5, borderColor: "#FFFFFF" }}>
+            <View style={{ padding: 16, gap: 12 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                <Image source={FIGUR.winken} style={{ width: 56, height: 56 }} resizeMode="contain" />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ ...lilaSchrift.titel, fontSize: 22, color: l.tinte }}>Kostenloses Konto</Text>
+                  <Text style={{ ...lilaSchrift.text, fontSize: 13.5, lineHeight: 18, color: l.tinte2 }}>Fortschritt sichern, Profilbild, Clips und Kommentare.</Text>
+                </View>
+              </View>
+              <LilaKnopf titel="Konto erstellen" onPress={() => router.push("/start")} />
+            </View>
+          </View>
+        ) : null}
+
+        <Text style={{ ...lilaSchrift.textFett, fontSize: 24, color: l.tinte, marginTop: 26, marginBottom: 12 }}>Lernhilfen</Text>
+        <View style={{ gap: 10 }}>
+          {lernhilfen.map((p) => (
+            <ProfilZeile key={p.titel} p={p} />
+          ))}
+        </View>
+
+        <Text style={{ ...lilaSchrift.textFett, fontSize: 24, color: l.tinte, marginTop: 26, marginBottom: 12 }}>Konto</Text>
+        <View style={{ gap: 10 }}>
+          {konto.map((p) => (
+            <ProfilZeile key={p.titel} p={p} />
+          ))}
+        </View>
+        <Text style={{ ...lilaSchrift.text, fontSize: 12.5, color: l.tinte3, textAlign: "center", marginTop: 18 }}>Fahrschul Pro · Version 1.0</Text>
+      </ScrollView>
+    </View>
+  );
+}
+
 function ProfilHandy() {
+  if (!FRAGEN_AKTIV) return <ProfilLila />;
+  return <ProfilMitFragen />;
+}
+
+function ProfilMitFragen() {
   const insets = useSafeAreaInsets();
   const { width } = useFenster();
   const inhaltUnten = useInhaltUnten();
