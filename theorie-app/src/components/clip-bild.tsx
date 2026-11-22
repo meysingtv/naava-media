@@ -727,9 +727,168 @@ function Reissverschluss({ breite, aktiv }: { breite: number; aktiv: boolean }) 
   );
 }
 
+// ---------------------------------------------------------------------------
+// Neuer Stil (Vorschau): helle lila Welt, runde Autos mit Schatten,
+// Erklär-Pillen, Leuchtring für den, der Vorfahrt hat.
+// ---------------------------------------------------------------------------
+
+const NEU = {
+  grund: "#EFE8FF",
+  gehweg: "#FBF9FF",
+  strasse: "#D8CCF6",
+  strassenRand: "#C4B5F0",
+  linie: "#FFFFFF",
+  du: "#8A5FFF",
+  duDunkel: "#6A3FE6",
+  andere: "#FF7A59",
+  andereDunkel: "#E0553A",
+  tinte: "#2E2650",
+  gruen: "#22B573",
+};
+
+/** Rundliches Auto von oben mit Schatten, Scheiben, Lichtern. Front oben. */
+function AutoNeu({ farbe, dunkel, groesse }: { farbe: string; dunkel: string; groesse: number }) {
+  return (
+    <Svg width={groesse} height={groesse} viewBox="-30 -30 60 60">
+      <Rect x={-15} y={-22} width={30} height={48} rx={13} fill="#2E2650" opacity={0.16} />
+      <Rect x={-14} y={-25} width={28} height={48} rx={12} fill={dunkel} />
+      <Rect x={-14} y={-26} width={28} height={44} rx={12} fill={farbe} />
+      <Path d="M-10,-9 L10,-9 L8,-17 L-8,-17 Z" fill="#2E2650" opacity={0.55} />
+      <Path d="M-9,10 L9,10 L7.5,15 L-7.5,15 Z" fill="#2E2650" opacity={0.45} />
+      <Rect x={-9} y={-7} width={18} height={15} rx={4} fill="#FFFFFF" opacity={0.22} />
+      <Rect x={-11} y={-26} width={6} height={3} rx={1.5} fill="#FFF6D6" />
+      <Rect x={5} y={-26} width={6} height={3} rx={1.5} fill="#FFF6D6" />
+      <Rect x={-11} y={17} width={5} height={2.5} rx={1.2} fill="#FF5A6E" />
+      <Rect x={6} y={17} width={5} height={2.5} rx={1.2} fill="#FF5A6E" />
+    </Svg>
+  );
+}
+
+/** Weiße Pille mit Text (und optional Häkchen/Kreuz), blendet ein und aus. */
+function Pille({ k, x, y, text, sichtbar, art = "info" }: { k: number; x: number; y: number; text: string; sichtbar: Animated.AnimatedInterpolation<number>; art?: "info" | "ok" | "warten" }) {
+  const farbe = art === "ok" ? NEU.gruen : art === "warten" ? NEU.andere : NEU.du;
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        left: x * k,
+        top: y * k,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        paddingVertical: 6,
+        paddingLeft: 7,
+        paddingRight: 12,
+        borderRadius: 16,
+        backgroundColor: "#FFFFFF",
+        shadowColor: "#6A3FE6",
+        shadowOpacity: 0.18,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 4 },
+        opacity: sichtbar,
+        transform: [{ translateY: sichtbar.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }, { scale: sichtbar.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) }],
+      }}
+    >
+      <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: farbe, alignItems: "center", justifyContent: "center" }}>
+        <Text style={{ fontSize: 12, color: "#FFFFFF", fontFamily: "Inter_700Bold", lineHeight: 14 }}>{art === "ok" ? "✓" : art === "warten" ? "!" : "i"}</Text>
+      </View>
+      <Text numberOfLines={1} style={{ fontFamily: "BarlowCondensed_700Bold", fontSize: 15, color: NEU.tinte }}>
+        {text}
+      </Text>
+    </Animated.View>
+  );
+}
+
+function RechtsVorLinksNeu({ breite, aktiv }: { breite: number; aktiv: boolean }) {
+  const k = breite / SB;
+  const g = 58 * k;
+  const v = useSchleife(aktiv, 6800, 900, LINEAR);
+  // Ablauf: 0–0.18 heranfahren · 0.18–0.34 erklären · 0.34–0.56 rechts fährt · 0.6–0.92 du fährst
+  const ring = v.interpolate({ inputRange: [0.16, 0.22, 0.28, 0.34, 0.4, 0.5], outputRange: [0, 1, 0.55, 1, 0.55, 0] , extrapolate: "clamp" });
+  const ringGross = v.interpolate({ inputRange: [0.16, 0.5], outputRange: [0.8, 1.3], extrapolate: "clamp" });
+  const andereX = lage(v, [0, 0.16, 0.34, 0.58], [330, 222, 222, -50], k, g);
+  const duY = lage(v, [0, 0.16, 0.6, 0.92], [250, 186, 186, -50], k, g);
+  const spur = v.interpolate({ inputRange: [0.34, 0.4, 0.52, 0.58], outputRange: [0, 0.8, 0.8, 0], extrapolate: "clamp" });
+  const spurDu = v.interpolate({ inputRange: [0.62, 0.68, 0.86, 0.92], outputRange: [0, 0.8, 0.8, 0], extrapolate: "clamp" });
+  const ein = (von: number, bis: number) => v.interpolate({ inputRange: [von, von + 0.04, bis - 0.04, bis], outputRange: [0, 1, 1, 0], extrapolate: "clamp" });
+  return (
+    <View style={{ flex: 1, backgroundColor: NEU.grund }}>
+      <Szene breite={breite}>
+        <Rect x={0} y={0} width={SB} height={SH} fill={NEU.grund} />
+        {/* Gehwege als weiche Inseln */}
+        <Rect x={0} y={0} width={110} height={76} rx={18} fill={NEU.gehweg} />
+        <Rect x={190} y={0} width={110} height={76} rx={18} fill={NEU.gehweg} />
+        <Rect x={0} y={154} width={110} height={66} rx={18} fill={NEU.gehweg} />
+        <Rect x={190} y={154} width={110} height={66} rx={18} fill={NEU.gehweg} />
+        {/* Straßen */}
+        <Rect x={117} y={0} width={66} height={SH} fill={NEU.strasse} />
+        <Rect x={0} y={82} width={SB} height={66} fill={NEU.strasse} />
+        <G stroke={NEU.linie} strokeWidth={2.5} strokeDasharray="10 9" strokeLinecap="round">
+          <Line x1={150} y1={0} x2={150} y2={74} />
+          <Line x1={150} y1={156} x2={150} y2={220} />
+          <Line x1={0} y1={115} x2={109} y2={115} />
+          <Line x1={191} y1={115} x2={300} y2={115} />
+        </G>
+        {/* Deko: Bäume auf den Gehwegen */}
+        {[
+          [86, 52],
+          [262, 34],
+          [240, 190],
+          [40, 192],
+        ].map(([x, y], i) => (
+          <G key={i}>
+            <Circle cx={x} cy={y + 3} r={11} fill="#2E2650" opacity={0.08} />
+            <Circle cx={x} cy={y} r={11} fill={i % 2 ? "#9FD8A8" : "#7CCB8D"} />
+            <Circle cx={x - 3} cy={y - 3} r={4} fill="#FFFFFF" opacity={0.35} />
+          </G>
+        ))}
+        {/* Geplante Wege als gepunktete Linien */}
+        <Path d="M222,99 L60,99" stroke={NEU.andere} strokeWidth={3} strokeDasharray="1 7" strokeLinecap="round" opacity={0.6} />
+        <Path d="M167,170 L167,40" stroke={NEU.du} strokeWidth={3} strokeDasharray="1 7" strokeLinecap="round" opacity={0.6} />
+      </Szene>
+
+      {/* Leuchtring um das Auto mit Vorfahrt */}
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          left: 222 * k - 34 * k,
+          top: 99 * k - 34 * k,
+          width: 68 * k,
+          height: 68 * k,
+          borderRadius: 34 * k,
+          borderWidth: 3,
+          borderColor: NEU.andere,
+          backgroundColor: "rgba(255,122,89,0.12)",
+          opacity: ring,
+          transform: [{ scale: ringGross }],
+        }}
+      />
+
+      {/* Leuchtende Spur hinter den Autos */}
+      <Animated.View pointerEvents="none" style={{ position: "absolute", left: 0, top: 96 * k, width: 60 * k, height: 6 * k, borderRadius: 3 * k, backgroundColor: NEU.andere, opacity: spur, transform: [{ translateX: Animated.add(andereX, new Animated.Value(g / 2)) }] }} />
+      <Animated.View pointerEvents="none" style={{ position: "absolute", left: 164 * k, top: 0, width: 6 * k, height: 60 * k, borderRadius: 3 * k, backgroundColor: NEU.du, opacity: spurDu, transform: [{ translateY: Animated.add(duY, new Animated.Value(g / 2)) }] }} />
+
+      {/* Autos */}
+      <Animated.View pointerEvents="none" style={{ position: "absolute", left: 0, top: 99 * k - g / 2, width: g, height: g, transform: [{ translateX: andereX }, { rotate: "-90deg" }] }}>
+        <AutoNeu farbe={NEU.andere} dunkel={NEU.andereDunkel} groesse={g} />
+      </Animated.View>
+      <Animated.View pointerEvents="none" style={{ position: "absolute", left: 167 * k - g / 2, top: 0, width: g, height: g, transform: [{ translateY: duY }] }}>
+        <AutoNeu farbe={NEU.du} dunkel={NEU.duDunkel} groesse={g} />
+      </Animated.View>
+
+      {/* Erklärung Schritt für Schritt */}
+      <Pille k={k} x={8} y={8} text="Von rechts = Vorfahrt" sichtbar={ein(0.18, 0.56)} />
+      <Pille k={k} x={190} y={176} text="Du wartest" art="warten" sichtbar={ein(0.2, 0.58)} />
+      <Pille k={k} x={190} y={176} text="Jetzt du!" art="ok" sichtbar={ein(0.6, 0.95)} />
+    </View>
+  );
+}
+
 const BILDER: Record<ClipBildKey, (p: { breite: number; aktiv: boolean }) => React.JSX.Element> = {
   leuchten: Leuchten,
-  rechts_vor_links: RechtsVorLinks,
+  rechts_vor_links: RechtsVorLinksNeu,
   anhalteweg: Anhalteweg,
   rettungsgasse: Rettungsgasse,
   kreisverkehr: Kreisverkehr,
