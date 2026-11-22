@@ -5,7 +5,7 @@ import Svg, { Circle, G, Line, Path, Polygon, Rect, Text as SvgText } from "reac
 import type { ClipBildKey } from "@/lib/clips";
 import type { LeuchteKey } from "@/lib/fragen";
 import { farben, schrift, svgSchrift } from "@/lib/theme";
-import { ANDERE, ASPHALT, Auto, DU, GEHWEG, GRUND, Kreuzung, MARKIERUNG, NEUTRAL, RAND, Radfahrer } from "./lagen";
+import { Radfahrer } from "./lagen";
 import { Kontrollleuchte, LEUCHTE_NAME } from "./leuchten";
 import { Verkehrszeichen, ZeichenGrafik } from "./zeichen";
 import type { ZeichenKey } from "@/lib/fragen";
@@ -13,6 +13,76 @@ import type { ZeichenKey } from "@/lib/fragen";
 // Bewegte Grafiken für die Clips. Gezeichnet wird in Szenen-Koordinaten
 // (300 × 220) und auf die Breite skaliert; Fahrzeuge fahren als eigene
 // Ebenen darüber (Animationen laufen nativ).
+
+// Farben im App-Stil: helle lila Welt, du in Lila, andere in Koralle.
+const P = {
+  grund: "#EFE8FF",
+  gehweg: "#FBF9FF",
+  strasse: "#D8CCF6",
+  rand: "#C4B5F0",
+  linie: "#FFFFFF",
+  du: "#8A5FFF",
+  andere: "#FF7A59",
+  neutral: "#B7AED6",
+  tinte: "#2E2650",
+  tinte2: "#6E6888",
+  gelb: "#FFB400",
+  gruen: "#22B573",
+};
+const GRUND = P.grund;
+const GEHWEG = P.gehweg;
+const ASPHALT = P.strasse;
+const RAND = P.rand;
+const MARKIERUNG = P.linie;
+const DU = P.du;
+const ANDERE = P.andere;
+const NEUTRAL = P.neutral;
+
+/** Etwas dunklere Fassung einer Farbe (für die Seiten der Autos). */
+function dunkler(hex: string): string {
+  const n = parseInt(hex.slice(1), 16);
+  const f = (s: number) => Math.round(((n >> s) & 255) * 0.78);
+  return `rgb(${f(16)},${f(8)},${f(0)})`;
+}
+
+/** Rundliches Auto von oben (Front bei Winkel 0 oben) – gleiche Größe wie früher. */
+function Auto({ x, y, winkel = 0, farbe }: { x: number; y: number; winkel?: number; farbe: string }) {
+  return (
+    <G transform={`translate(${x} ${y}) rotate(${winkel}) scale(0.84)`}>
+      <Rect x={-15} y={-22} width={30} height={48} rx={13} fill={P.tinte} opacity={0.16} />
+      <Rect x={-14} y={-25} width={28} height={48} rx={12} fill={dunkler(farbe)} />
+      <Rect x={-14} y={-26} width={28} height={44} rx={12} fill={farbe} />
+      <Path d="M-10,-9 L10,-9 L8,-17 L-8,-17 Z" fill={P.tinte} opacity={0.55} />
+      <Path d="M-9,10 L9,10 L7.5,15 L-7.5,15 Z" fill={P.tinte} opacity={0.45} />
+      <Rect x={-9} y={-7} width={18} height={15} rx={4} fill="#FFFFFF" opacity={0.22} />
+      <Rect x={-11} y={-26} width={6} height={3} rx={1.5} fill="#FFF6D6" />
+      <Rect x={5} y={-26} width={6} height={3} rx={1.5} fill="#FFF6D6" />
+      <Rect x={-11} y={17} width={5} height={2.5} rx={1.2} fill="#FF5A6E" />
+      <Rect x={6} y={17} width={5} height={2.5} rx={1.2} fill="#FF5A6E" />
+    </G>
+  );
+}
+
+/** Kreuzung im neuen Stil, Mitte bei (150, 115). */
+function Kreuzung() {
+  return (
+    <G>
+      <Rect x={0} y={0} width={300} height={220} fill={GRUND} />
+      <Rect x={0} y={0} width={109} height={74} rx={16} fill={GEHWEG} />
+      <Rect x={191} y={0} width={109} height={74} rx={16} fill={GEHWEG} />
+      <Rect x={0} y={156} width={109} height={64} rx={16} fill={GEHWEG} />
+      <Rect x={191} y={156} width={109} height={64} rx={16} fill={GEHWEG} />
+      <Rect x={115} y={0} width={70} height={220} fill={ASPHALT} />
+      <Rect x={0} y={80} width={300} height={70} fill={ASPHALT} />
+      <G stroke={MARKIERUNG} strokeWidth={2.5} strokeDasharray="10 9" strokeLinecap="round">
+        <Line x1={150} y1={0} x2={150} y2={74} />
+        <Line x1={150} y1={156} x2={150} y2={220} />
+        <Line x1={0} y1={115} x2={109} y2={115} />
+        <Line x1={191} y1={115} x2={300} y2={115} />
+      </G>
+    </G>
+  );
+}
 
 const SB = 300;
 const SH = 220;
@@ -82,7 +152,7 @@ function Leuchten({ breite, aktiv }: { breite: number; aktiv: boolean }) {
   const liste: LeuchteKey[] = ["leuchte_oel", "leuchte_batterie", "leuchte_bremse", "leuchte_kuehlmittel", "leuchte_motor", "leuchte_fernlicht"];
   const g = breite * 0.2;
   return (
-    <View style={{ flex: 1, backgroundColor: "#060708", flexDirection: "row", flexWrap: "wrap", alignContent: "center", justifyContent: "center", paddingHorizontal: breite * 0.04 }}>
+    <View style={{ flex: 1, backgroundColor: "#1E1638", flexDirection: "row", flexWrap: "wrap", alignContent: "center", justifyContent: "center", paddingHorizontal: breite * 0.04 }}>
       {liste.map((l, i) => (
         <View key={l} style={{ width: "33%", alignItems: "center", marginVertical: breite * 0.02 }}>
           <View style={{ width: g, height: g }}>
@@ -93,7 +163,7 @@ function Leuchten({ breite, aktiv }: { breite: number; aktiv: boolean }) {
               <Kontrollleuchte leuchte={l} groesse={g} />
             </Animated.View>
           </View>
-          <Text style={{ ...schrift.textHalb, fontSize: 11, color: farben.text3, marginTop: 2 }} numberOfLines={1}>
+          <Text style={{ ...schrift.textHalb, fontSize: 11, color: "#C9C0EC", marginTop: 2 }} numberOfLines={1}>
             {LEUCHTE_NAME[l]}
           </Text>
         </View>
@@ -167,12 +237,12 @@ function Anhalteweg({ breite, aktiv }: { breite: number; aktiv: boolean }) {
         <Line x1={0} y1={122} x2={SB} y2={122} stroke={RAND} strokeWidth={2} />
         <Line x1={0} y1={178} x2={SB} y2={178} stroke={RAND} strokeWidth={2} />
         <Line x1={0} y1={150} x2={SB} y2={150} stroke={MARKIERUNG} strokeWidth={2} strokeDasharray="12 10" />
-        <Line x1={start} y1={80} x2={start} y2={110} stroke={farben.text3} strokeWidth={1.5} />
-        <Line x1={start + reaktion + bremsen} y1={80} x2={start + reaktion + bremsen} y2={110} stroke={farben.text3} strokeWidth={1.5} />
-        <SvgText x={start} y={206} fill={farben.text3} fontSize={11} fontFamily={svgSchrift.text} textAnchor="middle">
+        <Line x1={start} y1={80} x2={start} y2={110} stroke={P.tinte2} strokeWidth={1.5} />
+        <Line x1={start + reaktion + bremsen} y1={80} x2={start + reaktion + bremsen} y2={110} stroke={P.tinte2} strokeWidth={1.5} />
+        <SvgText x={start} y={206} fill={P.tinte2} fontSize={11} fontFamily={svgSchrift.text} textAnchor="middle">
           Gefahr erkannt
         </SvgText>
-        <SvgText x={start + reaktion + bremsen} y={206} fill={farben.text3} fontSize={11} fontFamily={svgSchrift.text} textAnchor="middle">
+        <SvgText x={start + reaktion + bremsen} y={206} fill={P.tinte2} fontSize={11} fontFamily={svgSchrift.text} textAnchor="middle">
           Stillstand
         </SvgText>
       </Szene>
@@ -196,7 +266,7 @@ function Rettungsgasse({ breite, aktiv }: { breite: number; aktiv: boolean }) {
       <Szene breite={breite}>
         <Rect x={0} y={0} width={SB} height={SH} fill={GRUND} />
         <Rect x={58} y={0} width={196} height={SH} fill={ASPHALT} />
-        <Rect x={212} y={0} width={42} height={SH} fill="#30343C" />
+        <Rect x={212} y={0} width={42} height={SH} fill="#C9BCEF" />
         <Line x1={61} y1={0} x2={61} y2={SH} stroke={MARKIERUNG} strokeWidth={2.4} />
         <Line x1={211} y1={0} x2={211} y2={SH} stroke={MARKIERUNG} strokeWidth={2.4} />
         <Line x1={110} y1={0} x2={110} y2={SH} stroke={MARKIERUNG} strokeWidth={2} strokeDasharray="14 12" />
@@ -247,8 +317,8 @@ function Kreisverkehr({ breite, aktiv }: { breite: number; aktiv: boolean }) {
         <Rect x={0} y={87} width={98} height={50} fill={ASPHALT} />
         <Rect x={202} y={87} width={98} height={50} fill={ASPHALT} />
         <Circle cx={cx} cy={cy} r={68} fill={ASPHALT} />
-        <Circle cx={cx} cy={cy} r={33} fill="#1B1E23" stroke={RAND} strokeWidth={2} />
-        <Circle cx={cx} cy={cy} r={20} fill="#232730" />
+        <Circle cx={cx} cy={cy} r={33} fill="#9FD8A8" stroke={P.gehweg} strokeWidth={3} />
+        <Circle cx={cx} cy={cy} r={14} fill="#7CCB8D" />
       </Szene>
       {/* Drehteller: das Auto fährt gegen den Uhrzeigersinn im Kreis */}
       <Animated.View
@@ -275,7 +345,7 @@ function Kreisverkehr({ breite, aktiv }: { breite: number; aktiv: boolean }) {
               width: 8 * k,
               height: 8 * k,
               borderRadius: 4 * k,
-              backgroundColor: farben.orange,
+              backgroundColor: P.gelb,
               opacity: v.interpolate({ inputRange: [0, 0.7, 0.72, 0.77, 0.79, 0.84, 0.86, 0.91, 0.93, 1], outputRange: [0, 0, 1, 1, 0, 1, 0, 1, 0, 0] }),
             }}
           />
@@ -303,7 +373,7 @@ function Abstand({ breite, aktiv }: { breite: number; aktiv: boolean }) {
         <SvgText x={148} y={56} fill={farben.orange} fontSize={16} fontFamily={svgSchrift.schild} fontWeight="800" textAnchor="middle">
           50 m
         </SvgText>
-        <SvgText x={62} y={210} fill={farben.text3} fontSize={11} fontFamily={svgSchrift.text} textAnchor="middle">
+        <SvgText x={62} y={210} fill={P.tinte2} fontSize={11} fontFamily={svgSchrift.text} textAnchor="middle">
           100 km/h
         </SvgText>
       </Szene>
@@ -368,7 +438,7 @@ function Schulbus({ breite, aktiv }: { breite: number; aktiv: boolean }) {
             width: 16 * k,
             height: 16 * k,
             borderRadius: 8 * k,
-            backgroundColor: farben.orange,
+            backgroundColor: P.gelb,
             opacity: blink.interpolate({ inputRange: [0, 0.5, 0.51, 1], outputRange: [1, 1, 0.15, 0.15] }),
           }}
         />
@@ -513,9 +583,7 @@ function Stopp({ breite, aktiv }: { breite: number; aktiv: boolean }) {
       <Fahrzeug k={k} farbe={ANDERE} winkel={-90} x={lage(v, [0, 0.25, 0.5], [340, 340, -40], k, g)} y={97 * k - g / 2} />
       <Fahrzeug k={k} farbe={NEUTRAL} winkel={90} x={lage(v, [0, 0.3, 0.58], [-40, -40, 340], k, g)} y={133 * k - g / 2} />
       <Fahrzeug k={k} farbe={DU} x={167 * k - g / 2} y={lage(v, [0, 0.22, 0.62, 0.9], [230, 178, 178, -40], k, g)} />
-      <Animated.View pointerEvents="none" style={{ position: "absolute", left: 10 * k, top: 170 * k, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: "rgba(0,0,0,0.55)", opacity: steht }}>
-        <Text style={{ ...schrift.titelFett, fontSize: 13, color: "#FFFFFF" }}>Räder stehen still</Text>
-      </Animated.View>
+      <Pille k={k} x={8} y={170} text="Räder stehen still" art="ok" sichtbar={steht} />
     </View>
   );
 }
@@ -595,7 +663,7 @@ function Strassenbahn({ breite, aktiv }: { breite: number; aktiv: boolean }) {
         <Line x1={0} y1={100} x2={SB} y2={100} stroke="#8A8F99" strokeWidth={2} />
         <Line x1={0} y1={116} x2={SB} y2={116} stroke="#8A8F99" strokeWidth={2} />
         {/* Haltende Straßenbahn */}
-        <Rect x={150} y={90} width={140} height={36} rx={8} fill="#E9EDF5" />
+        <Rect x={150} y={90} width={140} height={36} rx={8} fill="#FFFFFF" stroke={P.rand} strokeWidth={1.5} />
         <Rect x={150} y={112} width={140} height={8} fill="#FFC857" />
         {[0, 1, 2, 3, 4].map((i) => (
           <Rect key={i} x={160 + i * 26} y={96} width={18} height={10} rx={2} fill="#0B0C0F" opacity={0.55} />
@@ -642,14 +710,14 @@ function Tempolimits({ breite, aktiv }: { breite: number; aktiv: boolean }) {
   ];
   const g = breite * 0.2;
   return (
-    <View style={{ flex: 1, backgroundColor: "#0E1014", flexDirection: "row", alignItems: "center", justifyContent: "space-around", paddingHorizontal: breite * 0.03 }}>
+    <View style={{ flex: 1, backgroundColor: P.grund, flexDirection: "row", alignItems: "center", justifyContent: "space-around", paddingHorizontal: breite * 0.03 }}>
       {spalten.map((sp, i) => {
         const ein = v.interpolate({ inputRange: [i * 0.25, i * 0.25 + 0.2], outputRange: [0, 1], extrapolate: "clamp" });
         return (
           <Animated.View key={sp.zeichen} style={{ alignItems: "center", gap: 6, opacity: ein, transform: [{ scale: ein.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }] }}>
-            <Text style={{ ...schrift.titelFett, fontSize: 14, color: "#FFFFFF" }}>{sp.titel}</Text>
+            <Text style={{ fontFamily: "BarlowCondensed_700Bold", fontSize: 17, color: P.tinte }}>{sp.titel}</Text>
             <Verkehrszeichen zeichen={sp.zeichen} groesse={g} />
-            <Text style={{ ...schrift.textHalb, fontSize: 11, color: farben.text3 }}>{sp.unter}</Text>
+            <Text style={{ ...schrift.textHalb, fontSize: 11, color: P.tinte2 }}>{sp.unter}</Text>
           </Animated.View>
         );
       })}
@@ -670,23 +738,23 @@ function Naesse({ breite, aktiv }: { breite: number; aktiv: boolean }) {
       <Szene breite={breite}>
         <Rect x={0} y={0} width={SB} height={SH} fill={GRUND} />
         <Rect x={0} y={30} width={SB} height={60} fill={ASPHALT} />
-        <Rect x={0} y={130} width={SB} height={60} fill="#2B3646" />
+        <Rect x={0} y={130} width={SB} height={60} fill="#B9CBF7" />
         {Array.from({ length: 22 }, (_, i) => (
-          <Line key={i} x1={10 + ((i * 47) % 290)} y1={134 + ((i * 23) % 50)} x2={6 + ((i * 47) % 290)} y2={142 + ((i * 23) % 50)} stroke="#7FB4FF" strokeWidth={1.4} opacity={0.6} />
+          <Line key={i} x1={10 + ((i * 47) % 290)} y1={134 + ((i * 23) % 50)} x2={6 + ((i * 47) % 290)} y2={142 + ((i * 23) % 50)} stroke="#4F7FE8" strokeWidth={1.4} opacity={0.7} />
         ))}
-        <SvgText x={8} y={24} fill={farben.text3} fontSize={11} fontFamily={svgSchrift.text}>
+        <SvgText x={8} y={24} fill={P.tinte2} fontSize={11} fontFamily={svgSchrift.text}>
           trocken
         </SvgText>
-        <SvgText x={8} y={124} fill="#7FB4FF" fontSize={11} fontFamily={svgSchrift.text}>
+        <SvgText x={8} y={124} fill="#4F7FE8" fontSize={11} fontFamily={svgSchrift.text}>
           nass
         </SvgText>
-        <Line x1={start} y1={28} x2={start} y2={192} stroke={farben.text3} strokeWidth={1.2} strokeDasharray="4 4" />
-        <SvgText x={start} y={210} fill={farben.text3} fontSize={10} fontFamily={svgSchrift.text} textAnchor="middle">
+        <Line x1={start} y1={28} x2={start} y2={192} stroke={P.tinte2} strokeWidth={1.2} strokeDasharray="4 4" />
+        <SvgText x={start} y={210} fill={P.tinte2} fontSize={10} fontFamily={svgSchrift.text} textAnchor="middle">
           Bremsbeginn
         </SvgText>
       </Szene>
-      <Animated.Text style={{ position: "absolute", left: (start + trocken) * k - 20, top: 92 * k, ...schrift.titelFett, fontSize: 13, color: "#FFFFFF", opacity: v.interpolate({ inputRange: [0.6, 0.7], outputRange: [0, 1], extrapolate: "clamp" }) }}>1×</Animated.Text>
-      <Animated.Text style={{ position: "absolute", left: (start + nass) * k - 30, top: 192 * k, ...schrift.titelFett, fontSize: 13, color: "#7FB4FF", opacity: v.interpolate({ inputRange: [0.9, 0.98], outputRange: [0, 1], extrapolate: "clamp" }) }}>bis 2×</Animated.Text>
+      <Animated.Text style={{ position: "absolute", left: (start + trocken) * k - 20, top: 92 * k, ...schrift.titelFett, fontSize: 13, color: P.tinte, opacity: v.interpolate({ inputRange: [0.6, 0.7], outputRange: [0, 1], extrapolate: "clamp" }) }}>1×</Animated.Text>
+      <Animated.Text style={{ position: "absolute", left: (start + nass) * k - 30, top: 192 * k, ...schrift.titelFett, fontSize: 13, color: "#4F7FE8", opacity: v.interpolate({ inputRange: [0.9, 0.98], outputRange: [0, 1], extrapolate: "clamp" }) }}>bis 2×</Animated.Text>
       <Fahrzeug k={k} farbe={NEUTRAL} winkel={90} x={bremse(60, trocken)} y={60 * k - g / 2} />
       <Fahrzeug k={k} farbe={DU} winkel={90} x={bremse(160, nass)} y={160 * k - g / 2} />
     </View>
@@ -707,7 +775,7 @@ function Reissverschluss({ breite, aktiv }: { breite: number; aktiv: boolean }) 
         <Line x1={0} y1={110} x2={200} y2={110} stroke={MARKIERUNG} strokeWidth={2} strokeDasharray="12 10" />
         <Line x1={0} y1={50} x2={SB} y2={50} stroke={RAND} strokeWidth={2} />
         <Path d="M0,170 L200,170 L240,110 L300,110" stroke={RAND} strokeWidth={2} fill="none" />
-        <SvgText x={150} y={200} fill={farben.text3} fontSize={11} fontFamily={svgSchrift.text} textAnchor="middle">
+        <SvgText x={150} y={200} fill={P.tinte2} fontSize={11} fontFamily={svgSchrift.text} textAnchor="middle">
           Fahrstreifen endet
         </SvgText>
       </Szene>
@@ -886,6 +954,281 @@ function RechtsVorLinksNeu({ breite, aktiv }: { breite: number; aktiv: boolean }
   );
 }
 
+// ---------------------------------------------------------------------------
+// Paket 2: Autobahn, Überholen und Abbiegen, besondere Lagen
+// ---------------------------------------------------------------------------
+
+/** Mehrspurige Straße waagerecht; `streifen` Fahrstreifen ab y = oben, je 44 hoch. */
+function Fahrbahn({ oben, streifen, mitte = true }: { oben: number; streifen: number; mitte?: boolean }) {
+  const h = streifen * 44;
+  return (
+    <G>
+      <Rect x={0} y={oben} width={SB} height={h} fill={ASPHALT} />
+      <Line x1={0} y1={oben} x2={SB} y2={oben} stroke={MARKIERUNG} strokeWidth={2.5} />
+      <Line x1={0} y1={oben + h} x2={SB} y2={oben + h} stroke={MARKIERUNG} strokeWidth={2.5} />
+      {mitte
+        ? Array.from({ length: streifen - 1 }, (_, i) => <Line key={i} x1={0} y1={oben + 44 * (i + 1)} x2={SB} y2={oben + 44 * (i + 1)} stroke={MARKIERUNG} strokeWidth={2.5} strokeDasharray="14 12" strokeLinecap="round" />)
+        : null}
+    </G>
+  );
+}
+
+/** Lkw von oben, Front zeigt nach rechts. */
+function Lkw({ k, x, y }: { k: number; x: Wert; y: number }) {
+  const b = 88 * k;
+  const h = 30 * k;
+  return (
+    <Animated.View pointerEvents="none" style={{ position: "absolute", left: 0, top: y * k - h / 2, width: b, height: h, transform: [{ translateX: x }] }}>
+      <View style={{ position: "absolute", left: 0, top: 2, width: b * 0.76, height: h - 2, borderRadius: 5, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: P.rand }} />
+      <View style={{ position: "absolute", right: 0, top: 3, width: b * 0.22, height: h - 4, borderRadius: 6, backgroundColor: P.neutral }} />
+    </Animated.View>
+  );
+}
+
+function Auffahren({ breite, aktiv }: { breite: number; aktiv: boolean }) {
+  const k = breite / SB;
+  const g = 46 * k;
+  const v = useSchleife(aktiv, 5200, 700, LINEAR);
+  return (
+    <View style={{ flex: 1 }}>
+      <Szene breite={breite}>
+        <Rect x={0} y={0} width={SB} height={SH} fill={GRUND} />
+        <Fahrbahn oben={56} streifen={2} />
+        {/* Beschleunigungsstreifen */}
+        <Polygon points="0,144 230,144 280,144 0,188" fill={ASPHALT} />
+        <Line x1={0} y1={144} x2={230} y2={144} stroke={MARKIERUNG} strokeWidth={2.5} strokeDasharray="6 6" />
+        <SvgText x={20} y={204} fill={P.tinte2} fontSize={11} fontFamily={svgSchrift.text}>
+          Beschleunigungsstreifen
+        </SvgText>
+      </Szene>
+      <Fahrzeug k={k} farbe={NEUTRAL} winkel={90} x={lage(v, [0, 1], [-60, 330], k, g)} y={122 * k - g / 2} />
+      <Fahrzeug k={k} farbe={NEUTRAL} winkel={90} x={lage(v, [0, 1], [-200, 190], k, g)} y={122 * k - g / 2} />
+      <DrehFahrzeug
+        k={k}
+        farbe={DU}
+        x={lage(v, [0, 0.55, 0.7, 1], [-20, 180, 225, 330], k, g)}
+        y={lage(v, [0, 0.55, 0.7, 1], [164, 160, 122, 122], k, g)}
+        dreh={v.interpolate({ inputRange: [0, 0.55, 0.62, 0.7], outputRange: ["90deg", "90deg", "62deg", "90deg"], extrapolate: "clamp" })}
+        blinker={{ seite: "links", an: blinkVon(v, 0.35, 0.7) }}
+      />
+    </View>
+  );
+}
+
+function Rechtsfahren({ breite, aktiv }: { breite: number; aktiv: boolean }) {
+  const k = breite / SB;
+  const g = 46 * k;
+  const v = useSchleife(aktiv, 6000, 700, LINEAR);
+  return (
+    <View style={{ flex: 1 }}>
+      <Szene breite={breite}>
+        <Rect x={0} y={0} width={SB} height={SH} fill={GRUND} />
+        <Fahrbahn oben={44} streifen={3} />
+      </Szene>
+      <Lkw k={k} x={lage(v, [0, 1], [70, 200], k, 0)} y={154} />
+      <DrehFahrzeug
+        k={k}
+        farbe={DU}
+        x={lage(v, [0, 0.2, 0.32, 0.62, 0.74, 1], [-20, 40, 80, 260, 300, 360], k, g)}
+        y={lage(v, [0, 0.2, 0.32, 0.62, 0.74, 1], [154, 154, 110, 110, 154, 154], k, g)}
+        dreh={v.interpolate({ inputRange: [0, 0.2, 0.26, 0.32, 0.62, 0.68, 0.74], outputRange: ["90deg", "90deg", "64deg", "90deg", "90deg", "116deg", "90deg"], extrapolate: "clamp" })}
+        blinker={{ seite: "links", an: blinkVon(v, 0.08, 0.3) }}
+      />
+    </View>
+  );
+}
+
+function Stauende({ breite, aktiv }: { breite: number; aktiv: boolean }) {
+  const k = breite / SB;
+  const g = 46 * k;
+  const v = useSchleife(aktiv, 5000, 900, Easing.out(Easing.quad));
+  const blink = useSchleife(aktiv, 800, 0, LINEAR);
+  const warn = blink.interpolate({ inputRange: [0, 0.5, 0.51, 1], outputRange: [1, 1, 0, 0] });
+  const duX = lage(v, [0, 0.7, 1], [-30, 150, 160], k, g);
+  return (
+    <View style={{ flex: 1 }}>
+      <Szene breite={breite}>
+        <Rect x={0} y={0} width={SB} height={SH} fill={GRUND} />
+        <Fahrbahn oben={66} streifen={2} />
+      </Szene>
+      {[214, 262, 310].map((x) => (
+        <Fahrzeug key={`a${x}`} k={k} farbe={NEUTRAL} winkel={90} x={x * k - g / 2} y={88 * k - g / 2} />
+      ))}
+      {[220, 268].map((x) => (
+        <Fahrzeug key={`b${x}`} k={k} farbe={NEUTRAL} winkel={90} x={x * k - g / 2} y={132 * k - g / 2} />
+      ))}
+      <Fahrzeug k={k} farbe={DU} winkel={90} x={duX} y={132 * k - g / 2} />
+      {/* Warnblinker: alle vier Ecken */}
+      {[
+        [-14, -10],
+        [-14, 10],
+        [14, -10],
+        [14, 10],
+      ].map(([dx, dy], i) => (
+        <Animated.View
+          key={i}
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left: 0,
+            top: (132 + dy) * k - 3.5 * k,
+            width: 7 * k,
+            height: 7 * k,
+            borderRadius: 3.5 * k,
+            backgroundColor: P.gelb,
+            opacity: v.interpolate({ inputRange: [0.35, 0.4], outputRange: [0, 1], extrapolate: "clamp" }),
+            transform: [{ translateX: Animated.add(duX, new Animated.Value(g / 2 + dx * k - 3.5 * k)) }, { scale: warn }],
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+function Ueberholverbot({ breite, aktiv }: { breite: number; aktiv: boolean }) {
+  const k = breite / SB;
+  const g = 46 * k;
+  const v = useSchleife(aktiv, 6200, 700, LINEAR);
+  return (
+    <View style={{ flex: 1 }}>
+      <Szene breite={breite}>
+        <Rect x={0} y={0} width={SB} height={SH} fill={GRUND} />
+        <Fahrbahn oben={70} streifen={2} />
+        <SchildAmPfosten zeichen="z276" x={258} y={160} groesse={26} />
+      </Szene>
+      {/* Radfahrer wird überholt (erlaubt), dann bleibst du hinter dem Auto */}
+      <Fahrzeug k={k} farbe={ANDERE} rad winkel={90} x={lage(v, [0, 1], [60, 130], k, g)} y={136 * k - g / 2} />
+      <Fahrzeug k={k} farbe={NEUTRAL} winkel={90} x={lage(v, [0, 1], [190, 330], k, g)} y={136 * k - g / 2} />
+      <DrehFahrzeug
+        k={k}
+        farbe={DU}
+        x={lage(v, [0, 0.15, 0.22, 0.45, 0.52, 1], [-30, 20, 50, 130, 160, 250], k, g)}
+        y={lage(v, [0, 0.15, 0.22, 0.45, 0.52, 1], [136, 136, 92, 92, 136, 136], k, g)}
+        dreh={v.interpolate({ inputRange: [0, 0.15, 0.185, 0.22, 0.45, 0.485, 0.52], outputRange: ["90deg", "90deg", "64deg", "90deg", "90deg", "116deg", "90deg"], extrapolate: "clamp" })}
+        blinker={{ seite: "links", an: blinkVon(v, 0.05, 0.2) }}
+      />
+      <Pille k={k} x={8} y={176} text="Auto: nicht überholen" art="warten" sichtbar={v.interpolate({ inputRange: [0.58, 0.63, 0.95, 1], outputRange: [0, 1, 1, 0], extrapolate: "clamp" })} />
+      <Pille k={k} x={8} y={176} text="Rad: erlaubt" art="ok" sichtbar={v.interpolate({ inputRange: [0.18, 0.23, 0.5, 0.55], outputRange: [0, 1, 1, 0], extrapolate: "clamp" })} />
+    </View>
+  );
+}
+
+function Schulterblick({ breite, aktiv }: { breite: number; aktiv: boolean }) {
+  const k = breite / SB;
+  const g = 46 * k;
+  const v = useSchleife(aktiv, 5600, 700, LINEAR);
+  const winkel = v.interpolate({ inputRange: [0.08, 0.14, 0.5, 0.55], outputRange: [0, 1, 1, 0], extrapolate: "clamp" });
+  return (
+    <View style={{ flex: 1 }}>
+      <Szene breite={breite}>
+        <Rect x={0} y={0} width={SB} height={SH} fill={GRUND} />
+        <Rect x={0} y={150} width={SB} height={70} fill={GEHWEG} />
+        <Fahrbahn oben={62} streifen={2} />
+      </Szene>
+      {/* Toter Winkel links hinten */}
+      <Animated.View pointerEvents="none" style={{ position: "absolute", left: 18 * k, top: 66 * k, width: 112 * k, height: 50 * k, borderRadius: 14 * k, backgroundColor: "rgba(255,122,89,0.18)", borderWidth: 2, borderColor: "rgba(255,122,89,0.6)", borderStyle: "dashed", opacity: winkel }}>
+        <Text style={{ position: "absolute", left: 8, top: 4, fontFamily: "BarlowCondensed_700Bold", fontSize: 13, color: P.andere }}>toter Winkel</Text>
+      </Animated.View>
+      <Fahrzeug k={k} farbe={ANDERE} rad winkel={90} x={lage(v, [0, 0.12, 0.5], [-30, -30, 340], k, g)} y={88 * k - g / 2} />
+      <DrehFahrzeug
+        k={k}
+        farbe={DU}
+        x={lage(v, [0, 0.56, 0.68, 1], [150, 150, 200, 340], k, g)}
+        y={lage(v, [0, 0.56, 0.68, 1], [130, 130, 106, 106], k, g)}
+        dreh={v.interpolate({ inputRange: [0, 0.56, 0.62, 0.68], outputRange: ["90deg", "90deg", "66deg", "90deg"], extrapolate: "clamp" })}
+        blinker={{ seite: "links", an: blinkVon(v, 0.02, 0.62) }}
+      />
+      <Pille k={k} x={160} y={162} text="Schulterblick!" art="warten" sichtbar={winkel} />
+    </View>
+  );
+}
+
+function Rechtsabbiegen({ breite, aktiv }: { breite: number; aktiv: boolean }) {
+  const k = breite / SB;
+  const g = 46 * k;
+  const v = useSchleife(aktiv, 6000, 700, LINEAR);
+  return (
+    <View style={{ flex: 1 }}>
+      <Szene breite={breite}>
+        <Kreuzung />
+        {/* Radweg rechts neben der Fahrbahn */}
+        <Rect x={186} y={150} width={14} height={70} fill="#F7C6B8" />
+        <Rect x={186} y={0} width={14} height={80} fill="#F7C6B8" />
+        <Rect x={186} y={80} width={14} height={70} fill="#F7C6B8" opacity={0.55} />
+      </Szene>
+      <Fahrzeug k={k} farbe={ANDERE} rad x={193 * k - g / 2} y={lage(v, [0, 0.15, 0.55], [250, 250, -40], k, g)} />
+      <DrehFahrzeug
+        k={k}
+        farbe={DU}
+        x={lage(v, [0, 0.12, 0.56, 0.7, 0.95], [167, 167, 167, 205, 340], k, g)}
+        y={lage(v, [0, 0.12, 0.56, 0.7, 0.95], [240, 178, 178, 133, 133], k, g)}
+        dreh={v.interpolate({ inputRange: [0, 0.56, 0.7], outputRange: ["0deg", "0deg", "90deg"], extrapolate: "clamp" })}
+        blinker={{ seite: "rechts", an: blinkVon(v, 0.02, 0.7) }}
+      />
+      <Pille k={k} x={196} y={180} text="Warten!" art="warten" sichtbar={v.interpolate({ inputRange: [0.15, 0.2, 0.5, 0.55], outputRange: [0, 1, 1, 0], extrapolate: "clamp" })} />
+    </View>
+  );
+}
+
+function Bahnuebergang({ breite, aktiv }: { breite: number; aktiv: boolean }) {
+  const k = breite / SB;
+  const g = 46 * k;
+  const v = useSchleife(aktiv, 6400, 700, LINEAR);
+  const blink = useSchleife(aktiv, 900, 0, LINEAR);
+  const rot = Animated.multiply(blink.interpolate({ inputRange: [0, 0.5, 0.51, 1], outputRange: [1, 1, 0.15, 0.15] }), v.interpolate({ inputRange: [0, 0.05, 0.58, 0.62], outputRange: [0, 1, 1, 0], extrapolate: "clamp" }));
+  return (
+    <View style={{ flex: 1 }}>
+      <Szene breite={breite}>
+        <Rect x={0} y={0} width={SB} height={SH} fill={GRUND} />
+        <Rect x={118} y={0} width={64} height={SH} fill={ASPHALT} />
+        {/* Gleise */}
+        <Rect x={0} y={84} width={SB} height={34} fill="#E4DAF8" />
+        {Array.from({ length: 16 }, (_, i) => (
+          <Rect key={i} x={i * 20 + 4} y={86} width={8} height={30} rx={1} fill="#BFB2E3" />
+        ))}
+        <Line x1={0} y1={92} x2={SB} y2={92} stroke="#8F86AE" strokeWidth={2.5} />
+        <Line x1={0} y1={110} x2={SB} y2={110} stroke="#8F86AE" strokeWidth={2.5} />
+        <SchildAmPfosten zeichen="z201" x={190} y={132} groesse={26} />
+        <Rect x={186} y={168} width={34} height={14} rx={7} fill={P.tinte} />
+      </Szene>
+      {[196, 210].map((x) => (
+        <Animated.View key={x} pointerEvents="none" style={{ position: "absolute", left: (x - 4) * k, top: 171 * k, width: 8 * k, height: 8 * k, borderRadius: 4 * k, backgroundColor: "#FF3B30", opacity: rot }} />
+      ))}
+      {/* Zug */}
+      <Animated.View pointerEvents="none" style={{ position: "absolute", left: 0, top: 88 * k, width: 230 * k, height: 26 * k, flexDirection: "row", gap: 4 * k, transform: [{ translateX: v.interpolate({ inputRange: [0, 0.12, 0.55], outputRange: [-260 * k, -260 * k, SB * k + 10], extrapolate: "clamp" }) }] }}>
+        {[0, 1, 2].map((i) => (
+          <View key={i} style={{ flex: 1, borderRadius: 6 * k, backgroundColor: i === 2 ? P.du : "#FFFFFF", borderWidth: 1.5, borderColor: P.rand }} />
+        ))}
+      </Animated.View>
+      <Fahrzeug k={k} farbe={DU} x={164 * k - g / 2} y={lage(v, [0, 0.1, 0.62, 0.95], [250, 162, 162, -40], k, g)} />
+    </View>
+  );
+}
+
+function Zebrastreifen({ breite, aktiv }: { breite: number; aktiv: boolean }) {
+  const k = breite / SB;
+  const g = 46 * k;
+  const v = useSchleife(aktiv, 5600, 700, LINEAR);
+  const fuss = lage(v, [0, 0.15, 0.55], [196, 196, 38], k, 13 * k);
+  return (
+    <View style={{ flex: 1 }}>
+      <Szene breite={breite}>
+        <Rect x={0} y={0} width={SB} height={SH} fill={GRUND} />
+        <Rect x={0} y={20} width={SB} height={30} fill={GEHWEG} />
+        <Rect x={0} y={170} width={SB} height={30} fill={GEHWEG} />
+        <Fahrbahn oben={56} streifen={2} mitte={false} />
+        <Line x1={0} y1={100} x2={SB} y2={100} stroke={MARKIERUNG} strokeWidth={2.5} strokeDasharray="14 12" />
+        {Array.from({ length: 7 }, (_, i) => (
+          <Rect key={i} x={186} y={58 + i * 12.5} width={30} height={7} rx={1.5} fill="#FFFFFF" />
+        ))}
+        <SchildAmPfosten zeichen="z350" x={228} y={150} groesse={22} />
+      </Szene>
+      <Animated.View pointerEvents="none" style={{ position: "absolute", left: 201 * k - 6.5 * k, top: 0, width: 13 * k, height: 13 * k, borderRadius: 6.5 * k, backgroundColor: "#F2C9A5", borderWidth: 2, borderColor: ANDERE, transform: [{ translateY: fuss }] }} />
+      <Fahrzeug k={k} farbe={DU} winkel={90} x={lage(v, [0, 0.14, 0.58, 1], [-40, 140, 140, 340], k, g)} y={122 * k - g / 2} />
+    </View>
+  );
+}
+
 const BILDER: Record<ClipBildKey, (p: { breite: number; aktiv: boolean }) => React.JSX.Element> = {
   leuchten: Leuchten,
   rechts_vor_links: RechtsVorLinksNeu,
@@ -903,14 +1246,56 @@ const BILDER: Record<ClipBildKey, (p: { breite: number; aktiv: boolean }) => Rea
   tempolimits: Tempolimits,
   naesse: Naesse,
   reissverschluss: Reissverschluss,
+  auffahren: Auffahren,
+  rechtsfahren: Rechtsfahren,
+  stauende: Stauende,
+  ueberholverbot: Ueberholverbot,
+  schulterblick: Schulterblick,
+  rechtsabbiegen: Rechtsabbiegen,
+  bahnuebergang: Bahnuebergang,
+  zebrastreifen: Zebrastreifen,
 };
 
 /** Bewegte Grafik eines Clips (Seitenverhältnis 300 : 220). */
+/** Kurzer Merksatz oben links (Szenen mit eigenen Pillen haben keinen). */
+const MERKSATZ: Partial<Record<ClipBildKey, string>> = {
+  rettungsgasse: "Links nach links, alle anderen nach rechts",
+  kreisverkehr: "Blinken nur beim Rausfahren",
+  abstand: "Halber Tacho in Metern",
+  schulbus: "Schrittgeschwindigkeit – beide Richtungen",
+  radfahrer: "Innerorts 1,5 m · außerorts 2 m",
+  abknickend: "Folgst du ihr: blinken!",
+  gruenpfeil: "Erst halten, dann abbiegen",
+  linksabbiegen: "Gegenverkehr zuerst",
+  strassenbahn: "Fahrgäste haben Vorrang",
+  naesse: "Nass: bis doppelt so lang",
+  reissverschluss: "Bis zum Ende, dann abwechselnd",
+  auffahren: "Streifen nutzen, Tempo anpassen",
+  rechtsfahren: "Rechts fahren, links überholen",
+  stauende: "Warnblinker an, Abstand halten",
+  ueberholverbot: "Kein Auto überholen – Rad schon",
+  schulterblick: "Vor dem Losfahren: Schulterblick",
+  rechtsabbiegen: "Radfahrer geradeaus zuerst",
+  bahnuebergang: "Rotlicht = vor dem Kreuz warten",
+  zebrastreifen: "Fußgänger haben Vorrang",
+};
+
 export function ClipBild({ bild, breite, aktiv }: { bild: ClipBildKey; breite: number; aktiv: boolean }) {
   const Inhalt = BILDER[bild];
+  const merksatz = MERKSATZ[bild];
   return (
     <View style={{ width: breite, height: (breite * SH) / SB, backgroundColor: GRUND, overflow: "hidden" }}>
       <Inhalt breite={breite} aktiv={aktiv} />
+      {merksatz ? (
+        <View pointerEvents="none" style={{ position: "absolute", left: 8, top: 8, flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 5, paddingLeft: 6, paddingRight: 11, borderRadius: 14, backgroundColor: "#FFFFFF", shadowColor: "#6A3FE6", shadowOpacity: 0.18, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } }}>
+          <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: P.du, alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ fontSize: 11, lineHeight: 13, color: "#FFFFFF", fontFamily: "Inter_700Bold" }}>i</Text>
+          </View>
+          <Text numberOfLines={1} style={{ fontFamily: "BarlowCondensed_700Bold", fontSize: 14, color: P.tinte }}>
+            {merksatz}
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 }

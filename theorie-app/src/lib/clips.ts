@@ -16,7 +16,15 @@ export type ClipBildKey =
   | "strassenbahn"
   | "tempolimits"
   | "naesse"
-  | "reissverschluss";
+  | "reissverschluss"
+  | "auffahren"
+  | "rechtsfahren"
+  | "stauende"
+  | "ueberholverbot"
+  | "schulterblick"
+  | "rechtsabbiegen"
+  | "bahnuebergang"
+  | "zebrastreifen";
 
 export type Clip = {
   id: string;
@@ -206,6 +214,111 @@ export const CLIPS: Clip[] = [
       "Früh rüberziehen bringt nichts – es macht nur den Stau länger.",
     ],
     thema: "tempo",
+    basis: 0,
+  },
+  // Paket 2: Autobahn, Überholen und Abbiegen, besondere Lagen
+  {
+    id: "c-auffahren",
+    bild: "auffahren",
+    kategorie: "Autobahn",
+    titel: "Auffahren: den ganzen Streifen nutzen",
+    punkte: [
+      "Auf dem Beschleunigungsstreifen Gas geben und an das Tempo auf der Autobahn anpassen.",
+      "Der Verkehr auf der Autobahn hat Vorfahrt – du suchst dir eine Lücke.",
+      "Links blinken, Schulterblick, dann einfädeln.",
+    ],
+    thema: "autobahn",
+    basis: 0,
+  },
+  {
+    id: "c-rechtsfahren",
+    bild: "rechtsfahren",
+    kategorie: "Autobahn",
+    titel: "Rechts fahren, links überholen",
+    punkte: [
+      "Fahr so weit rechts wie möglich – auch auf der Autobahn.",
+      "Überholt wird links, rechts überholen ist grundsätzlich verboten.",
+      "Nach dem Überholen wieder nach rechts – mit Blinker.",
+    ],
+    thema: "autobahn",
+    basis: 0,
+  },
+  {
+    id: "c-stauende",
+    bild: "stauende",
+    kategorie: "Autobahn",
+    titel: "Stauende: warnen statt auffahren",
+    punkte: [
+      "Kommt ein Stau, früh bremsen und Abstand halten.",
+      "Warnblinker an – so warnst du die Autos hinter dir.",
+      "Steht alles, gleich eine Rettungsgasse bilden.",
+    ],
+    thema: "autobahn",
+    basis: 0,
+  },
+  {
+    id: "c-ueberholverbot",
+    bild: "ueberholverbot",
+    kategorie: "Überholen",
+    titel: "Überholverbot: Wen darfst du noch überholen?",
+    punkte: [
+      "Das Schild verbietet, mehrspurige Kraftfahrzeuge zu überholen – also Autos und Lkw.",
+      "Einspurige wie Fahrräder und Motorräder darfst du überholen.",
+      "Der Seitenabstand zum Rad gilt trotzdem: innerorts 1,5 m, außerorts 2 m.",
+    ],
+    thema: "manoever",
+    basis: 0,
+  },
+  {
+    id: "c-schulterblick",
+    bild: "schulterblick",
+    kategorie: "Überholen",
+    titel: "Schulterblick: der tote Winkel",
+    punkte: [
+      "Was im Spiegel fehlt, steckt im toten Winkel.",
+      "Schulterblick vor dem Anfahren, beim Spurwechsel und beim Abbiegen.",
+      "Erst wenn frei ist, losfahren.",
+    ],
+    thema: "manoever",
+    basis: 0,
+  },
+  {
+    id: "c-rechtsabbiegen",
+    bild: "rechtsabbiegen",
+    kategorie: "Abbiegen",
+    titel: "Rechts abbiegen: Radfahrer zuerst",
+    punkte: [
+      "Radfahrer und Fußgänger, die geradeaus wollen, haben Vorrang.",
+      "Vor dem Abbiegen rechts in den Spiegel und über die Schulter schauen.",
+      "Langsam abbiegen und notfalls warten.",
+    ],
+    thema: "manoever",
+    basis: 0,
+  },
+  {
+    id: "c-bahnuebergang",
+    bild: "bahnuebergang",
+    kategorie: "Besondere Lagen",
+    titel: "Bahnübergang: Der Zug hat Vorrang",
+    punkte: [
+      "Am Andreaskreuz haben Züge immer Vorrang.",
+      "Bei rotem Blinklicht oder sich senkenden Schranken: vor dem Kreuz warten.",
+      "Nie auf den Gleisen anhalten – erst losfahren, wenn hinter den Gleisen Platz ist.",
+    ],
+    thema: "gefahren",
+    basis: 0,
+  },
+  {
+    id: "c-zebrastreifen",
+    bild: "zebrastreifen",
+    kategorie: "Besondere Lagen",
+    titel: "Zebrastreifen: Fußgänger haben Vorrang",
+    punkte: [
+      "Will jemand erkennbar über den Zebrastreifen gehen, lässt du ihn gehen – wenn nötig, hältst du an.",
+      "Langsam heranfahren und bremsbereit sein.",
+      "Am Zebrastreifen nicht überholen.",
+    ],
+    thema: "gefahren",
     basis: 0,
   },
 ];
