@@ -200,7 +200,7 @@ export default function Coach() {
           </View>
 
           {/* Figur mit Sprechblase */}
-          <Image source={BLASE} style={{ width: breite, height: Math.round(breite * 0.336), marginTop: 14 }} resizeMode="contain" accessibilityLabel="Lerne mit kurzen Videos für Theorie und Praxis." />
+          <Image source={BLASE} style={{ width: breite, height: Math.round(breite * 0.388), marginTop: 14 }} resizeMode="contain" accessibilityLabel="Lerne mit kurzen Videos für Theorie und Praxis." />
 
           {weiter ? (
             <View style={{ marginTop: 22 }}>
