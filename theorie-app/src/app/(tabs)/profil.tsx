@@ -146,6 +146,7 @@ function ProfilLila() {
     { titel: "Kurz erklärt", unter: gemerkteClips > 0 ? `${gemerkteClips} gemerkt` : "Regeln in 30 Sekunden", bild: SYMBOLE.birne, farbe: "#F5B400", onPress: () => router.push("/kurz-erklaert") },
     { titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", bild: SYMBOLE.warnung, onPress: () => router.push("/zeichen") },
     { titel: "Formeln", unter: "Anhalteweg & Co.", bild: SYMBOLE.rechner, onPress: () => router.push("/formeln") },
+    { titel: "Kostenplaner", unter: "Was dein Führerschein kostet", icon: "wallet-outline", onPress: () => router.push("/kosten") },
   ];
   const konto: ProfilPunkt[] = [
     { titel: "Einstellungen & Konto", unter: gast ? "Gastmodus" : undefined, icon: "settings", farbe: "#6E6888", onPress: () => router.push("/einstellungen") },

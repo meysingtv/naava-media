@@ -102,7 +102,7 @@ export const DATENSCHUTZ: Abschnitt[] = [
   {
     titel: "3. Nutzung ohne Konto",
     inhalt: [
-      "Ohne Konto speichert die App deinen Namen, deine Einstellungen und deinen Lernfortschritt nur lokal auf deinem Gerät. Diese Daten erreichen uns nicht. Zum Laden öffentlicher Inhalte (z. B. Clips und Lernvideos) verbindet sich die App mit unserem Server; dabei wird technisch bedingt deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO – unser Interesse ist ein sicherer, funktionierender Betrieb).",
+      "Ohne Konto speichert die App deinen Namen, deine Einstellungen und deinen Lernfortschritt nur lokal auf deinem Gerät. Die Angaben im Kostenplaner (Preise, Zahlungen, Fahrstunden) bleiben immer nur auf deinem Gerät – auch mit Konto. Diese Daten erreichen uns nicht. Zum Laden öffentlicher Inhalte (z. B. Clips und Lernvideos) verbindet sich die App mit unserem Server; dabei wird technisch bedingt deine IP-Adresse verarbeitet (Art. 6 Abs. 1 lit. f DSGVO – unser Interesse ist ein sicherer, funktionierender Betrieb).",
     ],
   },
   {

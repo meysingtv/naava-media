@@ -13,6 +13,7 @@ import { FokusKarte, GRUSS, Handschrift, HeldWerte, heldHoehe, KinoHeld, Kopfzei
 import { Icon } from "@/components/icon";
 import { LilaBanner, LilaKachel, LilaKarte, LilaKopf, LILA_RAND, lilaSchrift, SYMBOLE, useLila } from "@/components/lila-teile";
 import { FOTOS } from "@/lib/fotos";
+import { euro, rechnen, useKosten } from "@/lib/kosten";
 import { ProfilBild } from "@/components/profilbild";
 import { useInhaltUnten } from "@/components/tab-leiste";
 import { TourZiel, useTourBlatt } from "@/components/tour";
@@ -84,6 +85,7 @@ function HomeLila() {
   const tage = termin ? tageBis(termin) : null;
   const kommend = tage !== null && tage >= 0 ? tage : null;
   const glockePunkt = !stand.erinnerung.an;
+  const kosten = rechnen(useKosten());
   const heldH = Math.round(width * (619 / 1100));
 
   const countdown =
@@ -149,6 +151,27 @@ function HomeLila() {
             <View style={{ flex: 1 }}>
               <Text style={{ ...lilaSchrift.titel, fontSize: 24, lineHeight: 27, color: l.tinte }}>{countdown.titel}</Text>
               <Text style={{ ...lilaSchrift.textMittel, fontSize: 14, color: l.tinte2 }}>{countdown.unter}</Text>
+            </View>
+            <Icon name="chevron-forward" size={22} color={l.tinte} />
+          </View>
+        </LilaKarte>
+
+        {/* Kosten */}
+        <LilaKarte onPress={() => router.push("/kosten")} label="Kostenplaner" style={{ marginTop: 12 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 13, paddingHorizontal: 14 }}>
+            <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: l.lilaZart, alignItems: "center", justifyContent: "center" }}>
+              <Icon name="wallet-outline" size={25} color="#6A3FE6" />
+            </View>
+            <View style={{ flex: 1, gap: 6 }}>
+              <Text style={{ ...lilaSchrift.titel, fontSize: 21, lineHeight: 24, color: l.tinte }} numberOfLines={1}>
+                {kosten.bezahlt > 0 ? `${euro(kosten.bezahlt)} bezahlt` : "Führerschein-Kosten"}
+              </Text>
+              <View style={{ height: 6, borderRadius: 3, backgroundColor: l.spur, overflow: "hidden" }}>
+                <View style={{ width: `${kosten.gesamt ? Math.min(100, (kosten.bezahlt / kosten.gesamt) * 100) : 0}%`, height: "100%", backgroundColor: "#8A5FFF" }} />
+              </View>
+              <Text style={{ ...lilaSchrift.textMittel, fontSize: 13.5, color: l.tinte2 }} numberOfLines={1}>
+                {kosten.bezahlt > 0 ? `noch ca. ${euro(kosten.offen)}` : `ca. ${euro(kosten.gesamt)} – jetzt planen`}
+              </Text>
             </View>
             <Icon name="chevron-forward" size={22} color={l.tinte} />
           </View>

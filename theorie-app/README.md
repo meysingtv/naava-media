@@ -92,6 +92,14 @@ Einrichten: `supabase/update-kurse.sql` ausführen (Abschnitt 31, auch in
 `schema.sql`). Ohne das Update läuft alles, nur ohne Kategorien, Kapitel und
 Lernende.
 
+## Kostenplaner
+
+`app/kosten.tsx`, Daten in `lib/kosten.ts` (nur auf dem Gerät): Preise der
+Fahrschule (ohne Eingabe Durchschnittswerte Klasse B), Zahlungen, gefahrene
+und geplante Fahrstunden, Pflicht-Sonderfahrten (5 Überland, 4 Autobahn,
+3 Nacht), Summe, offener Betrag und Sparziel pro Woche bis zum
+Prüfungstermin. Karte auf Home, Zeile im Profil unter Lernhilfen.
+
 ## Start (Willkommen, Fragen, Konto)
 
 Auf dem Handy beginnt die App mit vier Willkommens-Seiten zum Wischen
