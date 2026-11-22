@@ -348,8 +348,6 @@ export default function Clips() {
   const l = useLila();
   // Video im Vollbild (Clips oder Live) – sonst heller Grund mit Wolken und Welle.
   const video = liveAn ? alle.length > 0 : serverVerbunden && !(art === "folge_ich" && !ich) && feed.eintraege.length > 0;
-  // Clip-Feed (kein Live): Video als Fläche unter dem Kopf statt dahinter
-  const clipFeed = video && !liveAn && !desktop;
   useEffect(() => {
     clipsVideoSetzen(fokus && video);
   }, [fokus, video]);
@@ -485,17 +483,14 @@ export default function Clips() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: video && liveAn ? "#000000" : l.grund }}>
+    <View style={{ flex: 1, backgroundColor: video ? "#000000" : l.grund }}>
       {video ? null : <ClipsGrund />}
       {/* Am PC läuft der Feed in einer Hochkant-Spalte in der Mitte – wie Clips am Handy */}
       <View
         style={
           desktop
             ? { flex: 1, width: Math.min(Math.round((fensterHoehe * 9) / 16), 620), alignSelf: "center" }
-            : clipFeed
-              ? // Clips: unter Titel und Umschalter, bis zur Leiste – oben runde Ecken
-                { flex: 1, marginTop: insets.top + KOPF + 4, borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: "hidden", backgroundColor: "#000000" }
-              : { flex: 1 }
+            : { flex: 1 }
         }
         onLayout={(e) => setMasse({ breite: e.nativeEvent.layout.width, hoehe: e.nativeEvent.layout.height })}
       >
@@ -503,7 +498,7 @@ export default function Clips() {
       </View>
 
       {/* Kopf: Plus, Titel, Ton – darunter der Umschalter. Über dem Video ein leichter Schatten. */}
-      {video && liveAn ? <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.45)", "rgba(0,0,0,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top + KOPF + 40 }} /> : null}
+      {video ? <LinearGradient pointerEvents="none" colors={["rgba(0,0,0,0.45)", "rgba(0,0,0,0)"]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top + KOPF + 40 }} /> : null}
       <View pointerEvents="box-none" style={{ position: "absolute", top: insets.top + 4, left: 0, right: 0, paddingHorizontal: 16, gap: 12 }}>
         <View pointerEvents="box-none" style={{ height: 50, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           {/* Plus immer sichtbar: wer darf, lädt hoch bzw. geht live – alle anderen landen bei der Creator-Bewerbung (ohne Konto bei der Anmeldung) */}
@@ -516,7 +511,7 @@ export default function Clips() {
               else router.push({ pathname: "/start", params: { modus: "anmelden" } });
             }}
           />
-          <Text style={{ ...lilaSchrift.titel, fontSize: 38, color: video && liveAn ? "#FFFFFF" : l.tinte, textShadowColor: video && liveAn ? "rgba(0,0,0,0.4)" : "transparent", textShadowRadius: 8 }}>Clips</Text>
+          <Text style={{ ...lilaSchrift.titel, fontSize: 38, color: video ? "#FFFFFF" : l.tinte, textShadowColor: video ? "rgba(0,0,0,0.4)" : "transparent", textShadowRadius: 8 }}>Clips</Text>
           <BildTaste bild={CLIPS_BILD.ton} durchgestrichen={stumm} label={stumm ? "Ton an" : "Ton aus"} onPress={() => setStumm((s) => !s)} />
         </View>
         <Umschalter wert={liveAn ? "live" : art} live={alle.length > 0} onWechsel={wechseln} />
