@@ -85,6 +85,7 @@
       "./plugins/android-sicherheit",
       "./plugins/ios-pod-ziel",
       "./plugins/ios-scene",
+      "./plugins/ios-release-start",
       "expo-secure-store",
       "react-native-compressor",
       "@bacons/apple-targets",
