@@ -22,6 +22,7 @@ import { useDesktop, useFenster } from "@/lib/fenster";
 import { EinstellungenWeb } from "@/components/web/einstellungen-web";
 import { useEinstellungen, ZEITEN, ZIEL_STUFE, ZIELE } from "@/lib/einstellungen-aktionen";
 import { KLASSEN } from "@/lib/klassen";
+import { kostenSichtbarSetzen, useKosten } from "@/lib/kosten";
 import { tippen } from "@/lib/haptik";
 import { STATUS_TEXT } from "@/lib/creator";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
@@ -61,6 +62,7 @@ function EinstellungenHandy() {
   const { session, profil, gast, anzeigeName } = e.konto;
   const { belohnungen, belohnungenSetzen } = e.darstellung;
   const [blatt, setBlatt] = useState<Blatt>(null);
+  const kosten = useKosten();
   const klasse = KLASSEN.find((k) => k.id === stand.klasse);
   const zu = () => setBlatt(null);
 
@@ -110,6 +112,12 @@ function EinstellungenHandy() {
             {stand.erinnerung.an ? <LilaZeile icon="time-outline" titel="Uhrzeit der Erinnerung" unter={`${uhrzeit(stand.erinnerung.stunde, stand.erinnerung.minute)} Uhr`} onPress={() => setBlatt("zeit")} /> : null}
             {session ? <LilaZeile icon="radio-outline" titel="Live-Streams" unter={liveAbo ? "Mitteilung, sobald ein Live startet" : "Aus"} rechts={<LilaSchalter wert={liveAbo} onWechsel={liveAboAendern} />} /> : null}
             <LilaZeile icon="color-palette-outline" titel="App-Icon" unter={iconTitel} onPress={() => router.push("/app-icon")} />
+            <LilaZeile
+              icon="wallet-outline"
+              titel="Kostenplaner"
+              unter={kosten.sichtbar ? "Auf Home und im Profil sichtbar" : "Ausgeblendet – deine Zahlen bleiben gespeichert"}
+              rechts={<LilaSchalter wert={kosten.sichtbar} onWechsel={kostenSichtbarSetzen} />}
+            />
             {FRAGEN_AKTIV ? <LilaZeile icon="flash-outline" titel="XP, HP & Abzeichen" unter={belohnungen ? "Beim Lernen sichtbar" : "Aus"} rechts={<LilaSchalter wert={belohnungen} onWechsel={belohnungenSetzen} />} /> : null}
             <LilaZeile
               icon="sparkles-outline"

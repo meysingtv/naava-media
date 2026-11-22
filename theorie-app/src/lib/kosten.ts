@@ -32,6 +32,8 @@ export type Kosten = {
   stundenGeplant: number;
   erledigt: { fahrstunden: number; ueberland: number; autobahn: number; nacht: number };
   zahlungen: Zahlung[];
+  /** In den Einstellungen ausschaltbar: Karte auf Home und Zeile im Profil. */
+  sichtbar: boolean;
 };
 
 export const PREISE: { id: PreisId; titel: string; unter: string; gruppe: "fahrschule" | "pruefung" | "sonstiges" }[] = [
@@ -78,6 +80,7 @@ const LEER: Kosten = {
   stundenGeplant: STUNDEN_SCHNITT,
   erledigt: { fahrstunden: 0, ueberland: 0, autobahn: 0, nacht: 0 },
   zahlungen: [],
+  sichtbar: true,
 };
 
 let stand: Kosten = LEER;
@@ -121,6 +124,10 @@ export function useKosten(): Kosten {
 
 export function preisSetzen(id: PreisId, wert: number) {
   setzen({ ...stand, preise: { ...stand.preise, [id]: Math.max(0, Math.round(wert)) }, eigen: { ...stand.eigen, [id]: true } });
+}
+
+export function kostenSichtbarSetzen(an: boolean) {
+  setzen({ ...stand, sichtbar: an });
 }
 
 export function preiseZuruecksetzen() {

@@ -18,6 +18,7 @@ import { FIGUR } from "@/components/start-teile";
 import { Fuehrerscheinweg, LigaKarte, Medaillen, MenueGruppe, MenueZeile, ProfilRing, ZahlenRaster, type Meilenstein } from "@/components/profil";
 import { ProfilBild } from "@/components/profilbild";
 import { useProfilbild } from "@/lib/profilbild";
+import { useKosten } from "@/lib/kosten";
 import { useInhaltUnten } from "@/components/tab-leiste";
 import { CLIPS } from "@/lib/clips";
 import { useCrew } from "@/lib/crew";
@@ -125,6 +126,7 @@ function ProfilLila() {
   const { profil, gast, anzeigeName, session } = useKonto();
   const { bildAendern, abmeldenFragen } = useProfilAktionen();
   const lokalesBild = useProfilbild();
+  const kostenSichtbar = useKosten().sichtbar;
   const profilFoto = Boolean(lokalesBild || profil?.bild_pfad);
   const gemerkteClips = CLIPS.filter((c) => stand.clips.gemerkt.includes(c.id)).length;
   const schilderGefunden = ALBUM.filter((k) => stand.schilder[k]).length;
@@ -146,7 +148,7 @@ function ProfilLila() {
     { titel: "Kurz erklärt", unter: gemerkteClips > 0 ? `${gemerkteClips} gemerkt` : "Regeln in 30 Sekunden", bild: SYMBOLE.birne, farbe: "#F5B400", onPress: () => router.push("/kurz-erklaert") },
     { titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", bild: SYMBOLE.warnung, onPress: () => router.push("/zeichen") },
     { titel: "Formeln", unter: "Anhalteweg & Co.", bild: SYMBOLE.rechner, onPress: () => router.push("/formeln") },
-    { titel: "Kostenplaner", unter: "Was dein Führerschein kostet", icon: "wallet-outline", onPress: () => router.push("/kosten") },
+    ...(kostenSichtbar ? [{ titel: "Kostenplaner", unter: "Was dein Führerschein kostet", icon: "wallet-outline" as IconName, onPress: () => router.push("/kosten") }] : []),
   ];
   const konto: ProfilPunkt[] = [
     { titel: "Einstellungen & Konto", unter: gast ? "Gastmodus" : undefined, icon: "settings", farbe: "#6E6888", onPress: () => router.push("/einstellungen") },

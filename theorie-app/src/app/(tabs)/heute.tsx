@@ -85,7 +85,8 @@ function HomeLila() {
   const tage = termin ? tageBis(termin) : null;
   const kommend = tage !== null && tage >= 0 ? tage : null;
   const glockePunkt = !stand.erinnerung.an;
-  const kosten = rechnen(useKosten());
+  const kostenStand = useKosten();
+  const kosten = rechnen(kostenStand);
   const heldH = Math.round(width * (619 / 1100));
 
   const countdown =
@@ -156,7 +157,8 @@ function HomeLila() {
           </View>
         </LilaKarte>
 
-        {/* Kosten */}
+        {/* Kosten (in den Einstellungen ausschaltbar) */}
+        {kostenStand.sichtbar ? (
         <LilaKarte onPress={() => router.push("/kosten")} label="Kostenplaner" style={{ marginTop: 12 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 13, paddingHorizontal: 14 }}>
             <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: l.lilaZart, alignItems: "center", justifyContent: "center" }}>
@@ -176,6 +178,7 @@ function HomeLila() {
             <Icon name="chevron-forward" size={22} color={l.tinte} />
           </View>
         </LilaKarte>
+        ) : null}
 
         <TourZiel id="home-start" style={{ marginTop: 14 }}>
           <LilaBanner titel="Lernvideos ansehen" unter="Alle Themen kurz und einfach erklärt" onPress={() => router.navigate("/lernen")} />
