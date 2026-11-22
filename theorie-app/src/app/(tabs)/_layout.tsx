@@ -16,6 +16,7 @@ export default function TabsLayout() {
   return (
     <Tabs tabBar={(props) => (desktop ? null : <LilaTabLeiste {...props} />)} screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: l.grund } }}>
       <Tabs.Screen name="heute" options={{ title: "Home" }} />
+      <Tabs.Screen name="coach" options={{ title: "Coach" }} />
       <Tabs.Screen name="lernen" options={{ title: "Lernen" }} />
       <Tabs.Screen name="clips" options={{ title: "Clips" }} />
       <Tabs.Screen name="pruefen" options={{ title: "Prüfung", href: FRAGEN_AKTIV ? undefined : null }} />

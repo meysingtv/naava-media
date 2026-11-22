@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEvent } from "expo";
@@ -20,18 +21,34 @@ import { themaBild, useLernthemen } from "@/lib/lernthemen";
 import { frageVon, themaVon, type ThemaId } from "@/lib/fragen";
 import { RAND, schrift } from "@/lib/theme";
 import { themavideoUrl, useThemenvideos } from "@/lib/themenvideos";
+import { stelleVon, videoStelleMerken } from "@/lib/kurse";
 
 // Ein Lernvideo abspielen: Themenvideo (?id=), Erklärvideo einer Frage (?frage=)
 // oder eingebaute Animation (?lage=). Die Frage selbst wird hier nie gezeigt.
 
 const FUELLEN = { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 } as const;
 
-function Spieler({ url }: { url: string }) {
+function Spieler({ url, videoId }: { url: string; videoId?: string }) {
   const player = useVideoPlayer({ uri: url }, (p) => {
     p.loop = false;
+    // Kursvideos: dort weiter, wo man aufgehört hat; alle 2 s die Stelle merken
+    if (videoId) {
+      const stelle = stelleVon(videoId);
+      if (stelle > 3) p.currentTime = stelle;
+      p.timeUpdateEventInterval = 2;
+    }
     p.play();
   });
   const { status } = useEvent(player, "statusChange", { status: player.status });
+  useEffect(() => {
+    if (!videoId) return;
+    const zeit = player.addListener("timeUpdate", (e) => videoStelleMerken(videoId, e.currentTime, player.duration));
+    const ende = player.addListener("playToEnd", () => videoStelleMerken(videoId, player.duration, player.duration));
+    return () => {
+      zeit.remove();
+      ende.remove();
+    };
+  }, [player, videoId]);
   return (
     <View style={{ flex: 1, borderRadius: 24, overflow: "hidden", backgroundColor: "#000000" }}>
       <VideoView player={player} style={{ flex: 1 }} contentFit="contain" nativeControls allowsFullscreen allowsPictureInPicture={false} />
@@ -88,7 +105,7 @@ function ThemavideoHandy() {
       />
       <View style={{ flex: 1, paddingHorizontal: RAND, paddingBottom: insets.bottom + 12 }}>
         {url ? (
-          <Spieler url={url} />
+          <Spieler url={url} videoId={themavideo?.id} />
         ) : animation ? (
           <ScrollView style={{ marginHorizontal: -RAND }} contentContainerStyle={{ paddingHorizontal: RAND, paddingBottom: 12, alignItems: "center" }} showsVerticalScrollIndicator={false}>
             <View style={{ width: breite }}>

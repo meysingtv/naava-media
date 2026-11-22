@@ -71,6 +71,27 @@ in Expo Go) lässt sich auf der Seite nur auswählen, nicht wirklich wechseln. E
 drei Ordner legen, in `app.json` beim Plugin eintragen und in
 `src/lib/app-icon.ts` ergänzen.
 
+## Coach (Videokurse)
+
+Neuer Reiter **Coach** (`app/(tabs)/coach.tsx`): Figur mit Sprechblase,
+„Weiterlernen“ (zuletzt geschautes Video mit Restzeit), beliebte Videokurse
+(nach Lernenden) und Kurse nach Kategorie (Theorie, Praxis, Kurzvideos,
+Technik). Ein Tipp öffnet die Kursseite (`app/thema/[id].tsx`) mit Angaben,
+Fortschritt, „Videokurs starten“ bzw. „Weiterschauen“ und den Kapiteln.
+
+Kurse legt der Inhaber im Manager unter **Kurse & Videos** an: Titel,
+Beschreibung, Bild, Kategorie und Reihenfolge; Videos werden mit einem
+Kapitel hochgeladen (nachträglich änderbar). Kurse sind die Themen aus
+Abschnitt 30 – sie erscheinen weiter auch unter „Lernen“.
+
+Wie weit ein Video geschaut wurde, merkt sich das Gerät (`lib/kurse.ts`); ab
+90 % gilt es als gesehen und wird dem Server gemeldet. Daraus entstehen
+„x von y Videos angesehen“ und die Zahl der Lernenden je Kurs.
+
+Einrichten: `supabase/update-kurse.sql` ausführen (Abschnitt 31, auch in
+`schema.sql`). Ohne das Update läuft alles, nur ohne Kategorien, Kapitel und
+Lernende.
+
 ## Start (Willkommen, Fragen, Konto)
 
 Auf dem Handy beginnt die App mit vier Willkommens-Seiten zum Wischen

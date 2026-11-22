@@ -24,6 +24,7 @@ type Punkt = { pfad: string; titel: string; an: IconName; aus: IconName; ton: To
 
 const HAUPT: Punkt[] = [
   { pfad: "/heute", titel: "Home", an: "home", aus: "home-outline", ton: TOENE.orange },
+  { pfad: "/coach", titel: "Coach", an: "school", aus: "school-outline", ton: TOENE.lila },
   { pfad: "/lernen", titel: "Lernen", an: "book", aus: "book-outline", ton: TOENE.gruen },
   // Prüfung nur mit Fragen (lib/funktionen.ts)
   ...(FRAGEN_AKTIV ? [{ pfad: "/pruefen", titel: "Prüfung", an: "shield-checkmark", aus: "shield-checkmark-outline", ton: TOENE.blau } as Punkt] : []),

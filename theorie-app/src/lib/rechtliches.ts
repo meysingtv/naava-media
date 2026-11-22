@@ -115,6 +115,7 @@ export const DATENSCHUTZ: Abschnitt[] = [
           "Vorname, Benutzername und Rolle (Fahrschüler oder Fahrlehrer) – Vorname und Benutzername sind für andere sichtbar",
           "freiwillig: Nachname, Telefonnummer, Geburtsdatum, Führerscheinklasse, Bundesland und wie du von der App erfahren hast (z. B. Fahrschule, Freunde, TikTok) – Nachname, Telefon, Geburtsdatum und diese Angabe sind nicht öffentlich",
           "Lernstand und Einstellungen (zur Synchronisierung zwischen deinen Geräten)",
+          "welche Videos der Videokurse (Coach) du ganz angesehen hast – für deinen Fortschritt im Kurs; andere sehen davon nur die Gesamtzahl der Lernenden je Kurs, nie deinen Namen. Wie weit du ein Video geschaut hast, bleibt nur auf deinem Gerät",
           "freiwillig: ein Profilbild",
         ],
       },

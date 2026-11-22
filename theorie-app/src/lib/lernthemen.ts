@@ -19,7 +19,18 @@ export type Lernthema = {
   kurz: string;
   bild_pfad: string | null;
   position: number;
+  /** Kategorie des Videokurses (SQL Abschnitt 31); ohne Update „theorie“. */
+  kategorie: Kategorie;
 };
+
+export type Kategorie = "theorie" | "praxis" | "kurzvideos" | "technik";
+
+export const KATEGORIEN: { id: Kategorie; titel: string }[] = [
+  { id: "theorie", titel: "Theorie" },
+  { id: "praxis", titel: "Praxis" },
+  { id: "kurzvideos", titel: "Kurzvideos" },
+  { id: "technik", titel: "Technik" },
+];
 
 export const THEMENBILD_BUCKET = "lern-themenbilder";
 
@@ -60,9 +71,11 @@ export function lernthemenLaden(neu = false): Promise<void> {
   if (stand.geladen && !neu) return Promise.resolve();
   laedt = (async () => {
     try {
-      const { data, error } = await supabase.from("lern_thema").select("id, titel, kurz, bild_pfad, position").order("position").order("erstellt_am");
-      if (error) throw error;
-      setzen({ geladen: true, themen: (data ?? []) as Lernthema[] });
+      // Mit Kategorie (Abschnitt 31); fehlt das Update noch, ohne.
+      let antwort = await supabase.from("lern_thema").select("id, titel, kurz, bild_pfad, position, kategorie").order("position").order("erstellt_am");
+      if (antwort.error) antwort = (await supabase.from("lern_thema").select("id, titel, kurz, bild_pfad, position").order("position").order("erstellt_am")) as typeof antwort;
+      if (antwort.error) throw antwort.error;
+      setzen({ geladen: true, themen: ((antwort.data ?? []) as Partial<Lernthema>[]).map((t) => ({ ...t, kategorie: (t.kategorie ?? "theorie") as Kategorie }) as Lernthema) });
     } catch {
       // Ohne Netz oder ohne SQL-Update: einfach keine Themen
       if (!stand.geladen) setzen({ geladen: true, themen: [] });
@@ -125,6 +138,12 @@ export async function lernthemaAnlegen(titel: string, kurz: string): Promise<str
 export async function lernthemaAendern(id: string, titel: string, kurz: string): Promise<void> {
   const { error } = await supabase.rpc("lern_thema_aendern", { p_id: id, p_titel: titel, p_kurz: kurz });
   if (error) throw new Error(meldung(error));
+  await lernthemenLaden(true);
+}
+
+export async function lernthemaKategorie(id: string, kategorie: Kategorie): Promise<void> {
+  const { error } = await supabase.rpc("lern_thema_kategorie_setzen", { p_id: id, p_kategorie: kategorie });
+  if (error) throw new Error(/function|schema cache/i.test(error.message) ? "Das SQL-Update für Videokurse fehlt noch (supabase/update-kurse.sql, Abschnitt 31)." : meldung(error));
   await lernthemenLaden(true);
 }
 

@@ -38,6 +38,7 @@ type Reiter = { name: string; titel: string; an: IconName; aus: IconName };
 
 const REITER: Reiter[] = [
   { name: "heute", titel: "Home", an: "home", aus: "home-outline" },
+  { name: "coach", titel: "Coach", an: "school", aus: "school-outline" },
   { name: "lernen", titel: "Lernen", an: "book", aus: "book-outline" },
   { name: "clips", titel: "Clips", an: "tv", aus: "tv-outline" },
   ...(FRAGEN_AKTIV ? [{ name: "pruefen", titel: "Prüfung", an: "shield-checkmark", aus: "shield-checkmark-outline" } as Reiter] : []),
@@ -66,7 +67,7 @@ export function LilaLeiste({ aktiv, onWahl, dunkel }: { aktiv: string; onWahl: (
             accessibilityLabel={r.titel}
             style={{ flex: 1, alignItems: "center" }}
           >
-            <View style={{ width: 74, height: LEISTE_HOEHE - 14, borderRadius: 16, alignItems: "center", justifyContent: "center", gap: 2, backgroundColor: an ? l.lilaZart : "transparent" }}>
+            <View style={{ width: "92%", maxWidth: 74, height: LEISTE_HOEHE - 14, borderRadius: 16, alignItems: "center", justifyContent: "center", gap: 2, backgroundColor: an ? l.lilaZart : "transparent" }}>
               <View>
                 <Icon name={an ? r.an : r.aus} size={24} color={an ? l.lila : l.tinte2} />
                 {r.name === "clips" && live ? <View style={{ position: "absolute", top: -1, right: -3, width: 9, height: 9, borderRadius: 5, backgroundColor: "#FF3B30", borderWidth: 1.5, borderColor: l.karte }} /> : null}
