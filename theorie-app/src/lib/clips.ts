@@ -1,6 +1,22 @@
 import type { ThemaId } from "./fragen";
 
-export type ClipBildKey = "leuchten" | "rechts_vor_links" | "anhalteweg" | "rettungsgasse" | "kreisverkehr" | "abstand" | "schulbus" | "radfahrer";
+export type ClipBildKey =
+  | "leuchten"
+  | "rechts_vor_links"
+  | "anhalteweg"
+  | "rettungsgasse"
+  | "kreisverkehr"
+  | "abstand"
+  | "schulbus"
+  | "radfahrer"
+  | "abknickend"
+  | "stopp"
+  | "gruenpfeil"
+  | "linksabbiegen"
+  | "strassenbahn"
+  | "tempolimits"
+  | "naesse"
+  | "reissverschluss";
 
 export type Clip = {
   id: string;
@@ -86,5 +102,110 @@ export const CLIPS: Clip[] = [
     punkte: ["Innerorts mindestens 1,5 m Seitenabstand.", "Außerorts mindestens 2 m.", "Passt der Abstand nicht, bleibst du dahinter."],
     thema: "manoever",
     basis: 455,
+  },
+  // Paket 1: Vorfahrt und Tempo
+  {
+    id: "c-abknickend",
+    bild: "abknickend",
+    kategorie: "Vorfahrt",
+    titel: "Abknickende Vorfahrt: Wer blinkt?",
+    punkte: [
+      "Das Zusatzzeichen unter dem Vorfahrtsschild zeigt, wohin die Vorfahrtstraße abknickt.",
+      "Folgst du ihr, hast du Vorfahrt – musst aber blinken.",
+      "Auf den Nebenstraßen gilt untereinander rechts vor links.",
+    ],
+    thema: "vorfahrt",
+    basis: 0,
+  },
+  {
+    id: "c-stopp",
+    bild: "stopp",
+    kategorie: "Vorfahrt",
+    titel: "Stoppschild: Wirklich stehen bleiben",
+    punkte: [
+      "An der Haltlinie anhalten, bis die Räder stillstehen.",
+      "Ohne Haltlinie dort halten, wo du die Kreuzung einsehen kannst.",
+      "Dann Vorfahrt gewähren – in beide Richtungen.",
+    ],
+    thema: "vorfahrt",
+    basis: 0,
+  },
+  {
+    id: "c-gruenpfeil",
+    bild: "gruenpfeil",
+    kategorie: "Vorfahrt",
+    titel: "Grünpfeil-Schild: erst halten, dann abbiegen",
+    punkte: [
+      "Bei Rot mit grünem Pfeilschild darfst du rechts abbiegen – nach dem Anhalten an der Haltlinie.",
+      "Fußgänger und Radfahrer mit Grün haben Vorrang.",
+      "Nur vom rechten Fahrstreifen aus und ohne andere zu behindern.",
+    ],
+    thema: "vorfahrt",
+    basis: 0,
+  },
+  {
+    id: "c-linksabbiegen",
+    bild: "linksabbiegen",
+    kategorie: "Vorfahrt",
+    titel: "Linksabbiegen: Gegenverkehr geht vor",
+    punkte: [
+      "Gegenverkehr, der geradeaus fährt oder rechts abbiegt, darf zuerst.",
+      "Fahr bis zur Mitte der Kreuzung vor und warte dort.",
+      "Biegen zwei gegenüber links ab, fahrt ihr voreinander vorbei.",
+    ],
+    thema: "vorfahrt",
+    basis: 0,
+  },
+  {
+    id: "c-strassenbahn",
+    bild: "strassenbahn",
+    kategorie: "Besondere Lagen",
+    titel: "Straßenbahn hält: Fahrgäste haben Vorrang",
+    punkte: [
+      "Steigen an der Haltestelle Leute ein oder aus, rechts nur mit Schrittgeschwindigkeit vorbei.",
+      "Fahrgäste dürfen nicht behindert werden – wenn nötig: warten.",
+      "Achte auf Leute, die über die Fahrbahn zur Bahn laufen.",
+    ],
+    thema: "manoever",
+    basis: 0,
+  },
+  {
+    id: "c-tempolimits",
+    bild: "tempolimits",
+    kategorie: "Tempo",
+    titel: "50 · 100 · 130 – die Grundtempos",
+    punkte: [
+      "Innerorts gilt höchstens 50 km/h.",
+      "Außerorts gilt für Pkw höchstens 100 km/h.",
+      "Auf der Autobahn gibt es oft kein Limit – empfohlen sind 130 km/h (Richtgeschwindigkeit).",
+    ],
+    thema: "tempo",
+    basis: 0,
+  },
+  {
+    id: "c-naesse",
+    bild: "naesse",
+    kategorie: "Tempo",
+    titel: "Nasse Straße: Bremsweg wird länger",
+    punkte: [
+      "Auf nasser Fahrbahn kann der Bremsweg etwa doppelt so lang werden.",
+      "Bei Schnee und Eis noch viel länger.",
+      "Deshalb langsamer fahren und mehr Abstand halten.",
+    ],
+    thema: "tempo",
+    basis: 0,
+  },
+  {
+    id: "c-reissverschluss",
+    bild: "reissverschluss",
+    kategorie: "Tempo",
+    titel: "Reißverschluss: bis zum Ende fahren",
+    punkte: [
+      "Endet ein Fahrstreifen, fährst du bis kurz vor die Engstelle.",
+      "Dort wird abwechselnd eingefädelt: einer von links, einer von rechts.",
+      "Früh rüberziehen bringt nichts – es macht nur den Stau länger.",
+    ],
+    thema: "tempo",
+    basis: 0,
   },
 ];
