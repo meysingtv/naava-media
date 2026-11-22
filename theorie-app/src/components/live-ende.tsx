@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Image, Pressable, ScrollView, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
-import { Icon } from "@/components/icon";
 import { lilaSchrift } from "@/components/lila-teile";
 import { useFenster } from "@/lib/fenster";
 import { tippen } from "@/lib/haptik";
@@ -16,9 +16,7 @@ const BILD = {
   wellen: require("../../assets/images/live-ende/wellen.png"),
   figur: require("../../assets/images/live-ende/figur.png"),
   badge: require("../../assets/images/live-ende/badge.png"),
-  karte: require("../../assets/images/live-ende/karte.png"),
-  knopf: require("../../assets/images/live-ende/knopf.png"),
-  knopfZart: require("../../assets/images/live-ende/knopf-zart.png"),
+  haken: require("../../assets/images/live-ende/haken.png"),
   auge: require("../../assets/images/live-ende/auge.png"),
   herz: require("../../assets/images/live-ende/herz.png"),
   nachricht: require("../../assets/images/live-ende/nachricht.png"),
@@ -42,8 +40,8 @@ function Hochzaehlen({ wert, verzoegerung = 0, style }: { wert: number; verzoege
   return <Text style={style}>{anzeige.toLocaleString("de-DE")}</Text>;
 }
 
-/** Knopf als Grafik mit echtem Text darauf. */
-function BildKnopf({ bild, onPress, children, label }: { bild: number; onPress: () => void; children: React.ReactNode; label: string }) {
+/** Großer runder Knopf: „voll“ = lila Verlauf, sonst zartlila mit Rand. */
+function EndKnopf({ voll, onPress, children, label }: { voll?: boolean; onPress: () => void; children: React.ReactNode; label: string }) {
   const { width } = useFenster();
   const b = Math.min(width, 520) - 48;
   return (
@@ -54,10 +52,15 @@ function BildKnopf({ bild, onPress, children, label }: { bild: number; onPress: 
       }}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => ({ width: b, height: Math.round((b * 140) / 800), alignSelf: "center", transform: [{ scale: pressed ? 0.98 : 1 }] })}
+      style={({ pressed }) => [
+        { width: b, height: 62, borderRadius: 31, alignSelf: "center", overflow: "hidden", transform: [{ scale: pressed ? 0.98 : 1 }] },
+        voll
+          ? { shadowColor: "#6A3FE6", shadowOpacity: 0.32, shadowRadius: 14, shadowOffset: { width: 0, height: 6 } }
+          : { backgroundColor: "#F2EDFF", borderWidth: 1.5, borderColor: "#CDBFF6" },
+      ]}
     >
-      <Image source={bild} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} resizeMode="stretch" />
-      <View style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 }}>{children}</View>
+      {voll ? <LinearGradient colors={["#9A72FF", "#7448F0"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} /> : null}
+      <View style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 14 }}>{children}</View>
     </Pressable>
   );
 }
@@ -143,34 +146,38 @@ export function LiveEnde({
         </Animated.View>
 
         {/* Zahlen */}
-        <Animated.View style={[{ width: karteB, height: klein ? 140 : 156, marginTop: klein ? 18 : 26 }, auf(0.3)]}>
-          <Image source={BILD.karte} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} resizeMode="stretch" />
-          <View style={{ flex: 1, flexDirection: "row", alignItems: "center", paddingVertical: 10 }}>
-            {werte.map((w, i) => (
-              <View key={w.label} style={{ flex: 1, flexDirection: "row", alignItems: "center", alignSelf: "stretch" }}>
-                {i > 0 ? <View style={{ width: 1.5, alignSelf: "stretch", marginVertical: 22, backgroundColor: "#E4DDF6" }} /> : null}
-                <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 2 }}>
-                  <Image source={w.bild} style={{ width: klein ? 44 : 50, height: klein ? 44 : 50, marginBottom: 4 }} resizeMode="contain" />
-                  <Hochzaehlen wert={w.wert} verzoegerung={400 + i * 150} style={{ ...lilaSchrift.titel, fontSize: 34, lineHeight: 37, color: TINTE }} />
-                  <Text style={{ ...lilaSchrift.textMittel, fontSize: 15, color: "#5E5878" }}>{w.label}</Text>
+        <Animated.View
+          style={[
+            { width: karteB, marginTop: klein ? 18 : 26, flexDirection: "row", paddingVertical: klein ? 16 : 20, borderRadius: 28, backgroundColor: "rgba(255,255,255,0.88)", borderWidth: 1.5, borderColor: "#ECE6FB", shadowColor: "#6A3FE6", shadowOpacity: 0.1, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } },
+            auf(0.3),
+          ]}
+        >
+          {werte.map((w, i) => (
+            <View key={w.label} style={{ flex: 1, flexDirection: "row" }}>
+              {i > 0 ? <View style={{ width: 1.5, marginVertical: 10, backgroundColor: "#E6DFF8" }} /> : null}
+              <View style={{ flex: 1, alignItems: "center", gap: 2 }}>
+                <View style={{ width: klein ? 58 : 64, height: klein ? 52 : 58, borderRadius: 18, backgroundColor: "#EDE6FD", alignItems: "center", justifyContent: "center", marginBottom: 6 }}>
+                  <Image source={w.bild} style={{ width: klein ? 32 : 36, height: klein ? 32 : 36 }} resizeMode="contain" />
                 </View>
+                <Hochzaehlen wert={w.wert} verzoegerung={400 + i * 150} style={{ ...lilaSchrift.textFett, fontSize: klein ? 30 : 34, lineHeight: klein ? 35 : 40, color: TINTE }} />
+                <Text style={{ ...lilaSchrift.textMittel, fontSize: 15, color: "#5E5878" }}>{w.label}</Text>
               </View>
-            ))}
-          </View>
+            </View>
+          ))}
         </Animated.View>
 
         <View style={{ flex: 1, minHeight: 20 }} />
 
         {/* Knöpfe */}
         <Animated.View style={[{ gap: klein ? 10 : 14, marginTop: 10 }, auf(0.4)]}>
-          <BildKnopf bild={BILD.knopf} onPress={onFertig} label="Fertig">
-            <Icon name="checkmark" size={28} color="#FFFFFF" weight="bold" />
-            <Text style={{ ...lilaSchrift.titel, fontSize: 25, color: "#FFFFFF" }}>Fertig</Text>
-          </BildKnopf>
-          <BildKnopf bild={BILD.knopfZart} onPress={onNochmal} label="Nochmal live gehen">
-            <Image source={BILD.funk} style={{ width: 30, height: 30 }} resizeMode="contain" />
-            <Text style={{ ...lilaSchrift.titel, fontSize: 24, color: TINTE }}>Nochmal live gehen</Text>
-          </BildKnopf>
+          <EndKnopf voll onPress={onFertig} label="Fertig">
+            <Image source={BILD.haken} style={{ width: 28, height: 28 }} resizeMode="contain" />
+            <Text style={{ ...lilaSchrift.textFett, fontSize: 21, color: "#FFFFFF" }}>Fertig</Text>
+          </EndKnopf>
+          <EndKnopf onPress={onNochmal} label="Nochmal live gehen">
+            <Image source={BILD.funk} style={{ width: 32, height: 32 }} resizeMode="contain" />
+            <Text style={{ ...lilaSchrift.textFett, fontSize: 20, color: TINTE }}>Nochmal live gehen</Text>
+          </EndKnopf>
         </Animated.View>
       </ScrollView>
     </View>
