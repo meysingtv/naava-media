@@ -19,7 +19,8 @@ import { FotoKopf, Seite, StandKarte } from "@/components/seite";
 import { Knopf } from "@/components/ui";
 import { useDarstellung } from "@/lib/darstellung";
 import { useDesktop } from "@/lib/fenster";
-import { ThemaVideosWeb, ThemaWeb } from "@/components/web/thema-web";
+import { ThemaWeb } from "@/components/web/thema-web";
+import { KursWebLila } from "@/components/web/kurs-web-lila";
 import { fragenZuThema, themaVon, type ThemaId } from "@/lib/fragen";
 import { themaFoto } from "@/lib/fotos";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
@@ -79,7 +80,7 @@ export default function ThemaSeite() {
 function ThemaNurVideos() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const desktop = useDesktop();
-  if (desktop) return <ThemaVideosWeb id={id} />;
+  if (desktop) return <KursWebLila id={id} />;
   return <ThemaNurVideosHandy id={id} />;
 }
 

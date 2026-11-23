@@ -8,6 +8,7 @@ import { ThemenListe, ThemenVideoListe } from "@/components/web/home-web";
 import { WebSeite } from "@/components/web/rahmen";
 import { FRAGEN, THEMEN, fragenZuThema, themaVon, type ThemaId } from "@/lib/fragen";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
+import { LernenWebLila } from "@/components/web/lernen-web-lila";
 import { useLernthemen } from "@/lib/lernthemen";
 import { heuteDran } from "@/lib/karteikarten";
 import { useLernvideos } from "@/lib/lernvideos";
@@ -41,11 +42,11 @@ const VORSCHLAEGE = ["Kreisverkehr", "Rettungsgasse", "Promille", "Überholen", 
 type Modus = { titel: string; unter: string; icon: IconName; ton: Ton; zahl?: number; onPress: () => void };
 
 export function LernenWeb() {
-  return FRAGEN_AKTIV ? <LernenWebMitFragen /> : <LernenWebOhneFragen />;
+  return FRAGEN_AKTIV ? <LernenWebMitFragen /> : <LernenWebLila />;
 }
 
 /** Lernen am PC ohne Fragen: Lernhilfen als Kacheln und alle Themen mit ihren Videos. */
-function LernenWebOhneFragen() {
+export function LernenWebOhneFragen() {
   const { stand } = useStand();
   const { zuThema } = useLernvideos();
   const gefunden = ALBUM.filter((k) => stand.schilder[k]).length;
