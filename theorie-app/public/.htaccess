@@ -1,0 +1,12 @@
+# Web-Fassung von Fahrschul Pro auf Apache-Webspace (z. B. Strato):
+# Jede Adresse, zu der es keine Datei gibt (z. B. /manager, /lernen, /thema/vorfahrt),
+# liefert die App aus – die findet die richtige Seite dann selbst.
+Options -MultiViews
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
+
+# Immer über https
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

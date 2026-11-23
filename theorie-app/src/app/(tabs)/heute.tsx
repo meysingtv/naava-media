@@ -1,0 +1,394 @@
+import { useState } from "react";
+import { Image, Pressable, ScrollView, Text, View, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { router } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
+import { useIsFocused } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { useDesktop, useFenster } from "@/lib/fenster";
+import { HomeWeb } from "@/components/web/home-web";
+import { CrewBereich } from "@/components/crew";
+import { FokusKarte, GRUSS, Handschrift, HeldWerte, heldHoehe, KinoHeld, Kopfzeile, PruefungKarte, Schnellstart, StartKnopf, tageszeit, ThemenKarussell, ZitatKarte } from "@/components/home";
+import { Icon } from "@/components/icon";
+import { LilaBanner, LilaKachel, LilaKarte, LilaKopf, LILA_RAND, lilaSchrift, SYMBOLE, useLila } from "@/components/lila-teile";
+import { FOTOS } from "@/lib/fotos";
+import { euro, rechnen, useKosten } from "@/lib/kosten";
+import { ProfilBild } from "@/components/profilbild";
+import { useInhaltUnten } from "@/components/tab-leiste";
+import { TourZiel, useTourBlatt } from "@/components/tour";
+import { FarbweltBereich, useDarstellung } from "@/lib/darstellung";
+import { FRAGEN, THEMEN, type ThemaId } from "@/lib/fragen";
+import { tippen } from "@/lib/haptik";
+import { heuteDran } from "@/lib/karteikarten";
+import { useKonto } from "@/lib/konto";
+import { useLeistenScroll } from "@/lib/leisten-scroll";
+import { themaBild, useLernthemen } from "@/lib/lernthemen";
+import { useLernvideos } from "@/lib/lernvideos";
+import { tageBis, terminDatum } from "@/lib/pruefungstag";
+import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, serieAktuell, useStand } from "@/lib/stand";
+import { mitDeckkraft, RAND, schrift } from "@/lib/theme";
+import { FRAGEN_AKTIV } from "@/lib/funktionen";
+
+const ZITATE: [string, string][] = [
+  ["Kleine Schritte.", "Große Freiheit."],
+  ["Heute üben.", "Morgen bestehen."],
+  ["Jede Frage zählt.", "Du packst das."],
+  ["Dranbleiben.", "Die Straße wartet."],
+];
+
+/** Schnellziele, solange die Fragen aus sind: nur Inhalte ohne Prüfungsfragen. */
+const SCHNELL_OHNE_FRAGEN = [
+  { icon: "play-circle", farbe: "#4DA3FF", titel: "Lernvideos", unter: "Alle Themen erklärt", ziel: "/lernen" },
+  { icon: "bulb", farbe: "#FF4D6D", titel: "Kurz erklärt", unter: "Regeln in 30 Sekunden", ziel: "/kurz-erklaert" },
+  { icon: "warning", farbe: "#E5392C", titel: "Verkehrszeichen", unter: "Alle Zeichen erklärt", ziel: "/zeichen" },
+  { icon: "calculator", farbe: "#E0A100", titel: "Formeln", unter: "Anhalteweg & Co.", ziel: "/formeln" },
+  { icon: "camera", farbe: "#23A548", titel: "Schilder-Jagd", unter: "Schilder sammeln", ziel: "/schilder-jagd" },
+  { icon: "film", farbe: "#8B5CF6", titel: "Clips", unter: "Kurze Videos", ziel: "/clips" },
+] as const;
+
+export default function Home() {
+  // Im Browser am PC eine eigene Fassung (web/home-web.tsx).
+  return useDesktop() ? <HomeWeb /> : <HomeHandy />;
+}
+
+/** Himmelfarbe oben im Bild – oben auf der Startseite geht sie nahtlos weiter. */
+const HIMMEL = "#D3CDFD";
+
+/** Zwei „#RRGGBB“-Farben mischen (0 = a, 1 = b). */
+function mischen(a: string, b: string, t: number): string {
+  const x = parseInt(a.slice(1), 16);
+  const y = parseInt(b.slice(1), 16);
+  const k = (s: number) => Math.round(((x >> s) & 255) * (1 - t) + ((y >> s) & 255) * t);
+  return `rgb(${k(16)},${k(8)},${k(0)})`;
+}
+
+/** Begrüßung je Tageszeit (mit Komma, darunter der Name). */
+const GRUSS_LILA: Record<ReturnType<typeof tageszeit>, string> = { morgen: "Guten Morgen", tag: "Hallo", abend: "Guten Abend", nacht: "Hey" };
+
+/**
+ * Startseite im lila Design (solange die Fragen aus sind): Begrüßung, Bild mit
+ * der Figur, Countdown bis zur Prüfung, Lernvideos und Schnellzugriffe.
+ */
+function HomeLila() {
+  const insets = useSafeAreaInsets();
+  const { width } = useFenster();
+  const inhaltUnten = useInhaltUnten();
+  const tourBlatt = useTourBlatt("/heute");
+  const fokus = useIsFocused();
+  const l = useLila();
+  const { stand } = useStand();
+  const { anzeigeName } = useKonto();
+  const vorname = anzeigeName.split(" ")[0] || "du";
+  const zeit = tageszeit(new Date().getHours());
+  const termin = terminDatum(stand.pruefungstermin);
+  const tage = termin ? tageBis(termin) : null;
+  const kommend = tage !== null && tage >= 0 ? tage : null;
+  const glockePunkt = !stand.erinnerung.an;
+  const kostenStand = useKosten();
+  const kosten = rechnen(kostenStand);
+  const heldH = Math.round(width * (619 / 1100));
+
+  const countdown =
+    kommend === null
+      ? { titel: "Termin eintragen", unter: "Dann zähle ich die Tage runter" }
+      : kommend === 0
+        ? { titel: "Heute ist Prüfung!", unter: "Du schaffst das" }
+        : kommend === 1
+          ? { titel: "Morgen ist es so weit", unter: "bis zu deiner Prüfung" }
+          : { titel: `Noch ${kommend} Tage`, unter: "bis zu deiner Prüfung" };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: l.grund }}>
+      {fokus ? <StatusBar style="dark" /> : null}
+      {/* Himmel hinter dem oberen Teil – auch beim Überziehen nach unten */}
+      <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, height: "50%", backgroundColor: l.grund }} />
+      <ScrollView {...tourBlatt} contentContainerStyle={{ paddingBottom: inhaltUnten + 8 }} showsVerticalScrollIndicator={false}>
+        {/* Begrüßung auf dem Himmel – das Bild darunter setzt ihn nahtlos fort */}
+        <View style={{ paddingTop: insets.top + 10, paddingHorizontal: LILA_RAND, paddingBottom: 2, flexDirection: "row", alignItems: "flex-start" }}>
+          <LinearGradient pointerEvents="none" colors={[l.grund, mischen(l.grund, HIMMEL, 0.25), mischen(l.grund, HIMMEL, 0.6), mischen(l.grund, HIMMEL, 0.88), HIMMEL]} locations={[0.1, 0.4, 0.68, 0.9, 1]} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} />
+          <Text style={{ flex: 1, ...lilaSchrift.titel, fontSize: 40, lineHeight: 43, letterSpacing: -0.6, color: l.tinte }} numberOfLines={2}>
+            {GRUSS_LILA[zeit]},{"\n"}
+            <Text style={{ color: l.lilaKante }}>{vorname}</Text>!
+          </Text>
+          <Pressable
+            onPress={() => {
+              tippen();
+              router.push("/einstellungen");
+            }}
+            accessibilityLabel="Erinnerungen"
+            hitSlop={8}
+            style={{ marginTop: 10, marginRight: 16 }}
+          >
+            <Icon name="notifications-outline" size={26} color={l.tinte} />
+            {glockePunkt ? <View style={{ position: "absolute", top: -1, right: -1, width: 9, height: 9, borderRadius: 5, backgroundColor: l.lila, borderWidth: 1.5, borderColor: l.grund }} /> : null}
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              tippen();
+              router.navigate("/profil");
+            }}
+            accessibilityLabel="Profil"
+            style={{ marginTop: 2 }}
+          >
+            <ProfilBild name={anzeigeName} groesse={46} rand={0} farbe={l.lila} />
+          </Pressable>
+        </View>
+
+        {/* Bild mit der Figur über die ganze Breite */}
+        <View>
+          <Image source={FOTOS.heldAuto} style={{ width: "100%", height: heldH, backgroundColor: HIMMEL }} resizeMode="cover" accessibilityLabel="Die Figur sagt: Mach heute einen Schritt näher zum Führerschein!" />
+          {/* Ganz oben weich aus dem Himmel heraus – keine Kante */}
+          <LinearGradient pointerEvents="none" colors={[HIMMEL, mitDeckkraft(HIMMEL, 0)]} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 12 }} />
+        </View>
+
+        {/* Inhalt als Blatt mit runden Ecken, das über dem Bild liegt */}
+        <View style={{ marginTop: -10, backgroundColor: l.grund, borderTopLeftRadius: 10, borderTopRightRadius: 10, paddingHorizontal: LILA_RAND, paddingTop: 16 }}>
+        <LilaKarte onPress={() => router.push("/pruefungstermin")} label={countdown.titel}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 13, paddingHorizontal: 14 }}>
+            <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: l.lilaZart, alignItems: "center", justifyContent: "center" }}>
+              <Image source={SYMBOLE.kalender} style={{ width: 34, height: 34 }} resizeMode="contain" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ ...lilaSchrift.titel, fontSize: 24, lineHeight: 27, color: l.tinte }}>{countdown.titel}</Text>
+              <Text style={{ ...lilaSchrift.textMittel, fontSize: 14, color: l.tinte2 }}>{countdown.unter}</Text>
+            </View>
+            <Icon name="chevron-forward" size={22} color={l.tinte} />
+          </View>
+        </LilaKarte>
+
+        {/* Kosten (in den Einstellungen ausschaltbar) */}
+        {kostenStand.sichtbar ? (
+        <LilaKarte onPress={() => router.push("/kosten")} label="Kostenplaner" style={{ marginTop: 12 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 13, paddingHorizontal: 14 }}>
+            <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: l.lilaZart, alignItems: "center", justifyContent: "center" }}>
+              <Icon name="wallet-outline" size={25} color="#6A3FE6" />
+            </View>
+            <View style={{ flex: 1, gap: 6 }}>
+              <Text style={{ ...lilaSchrift.titel, fontSize: 21, lineHeight: 24, color: l.tinte }} numberOfLines={1}>
+                {kosten.bezahlt > 0 ? `${euro(kosten.bezahlt)} bezahlt` : "Führerschein-Kosten"}
+              </Text>
+              <View style={{ height: 6, borderRadius: 3, backgroundColor: l.spur, overflow: "hidden" }}>
+                <View style={{ width: `${kosten.gesamt ? Math.min(100, (kosten.bezahlt / kosten.gesamt) * 100) : 0}%`, height: "100%", backgroundColor: "#8A5FFF" }} />
+              </View>
+              <Text style={{ ...lilaSchrift.textMittel, fontSize: 13.5, color: l.tinte2 }} numberOfLines={1}>
+                {kosten.bezahlt > 0 ? `noch ca. ${euro(kosten.offen)}` : `ca. ${euro(kosten.gesamt)} – jetzt planen`}
+              </Text>
+            </View>
+            <Icon name="chevron-forward" size={22} color={l.tinte} />
+          </View>
+        </LilaKarte>
+        ) : null}
+
+        <TourZiel id="home-start" style={{ marginTop: 14 }}>
+          <LilaBanner titel="Lernvideos ansehen" unter="Alle Themen kurz und einfach erklärt" onPress={() => router.navigate("/lernen")} />
+        </TourZiel>
+
+        <LilaKopf titel="Schnellzugriffe" style={{ marginTop: 22 }} />
+        <TourZiel id="home-schnell" style={{ gap: 10 }}>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <LilaKachel titel="Lernvideos" bild={SYMBOLE.play} onPress={() => router.navigate("/lernen")} style={{ flex: 1 }} />
+            <LilaKachel titel="Kurz erklärt" bild={SYMBOLE.birne} onPress={() => router.push("/kurz-erklaert")} style={{ flex: 1 }} />
+          </View>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <LilaKachel titel="Verkehrszeichen" bild={SYMBOLE.warnung} onPress={() => router.push("/zeichen")} style={{ flex: 1 }} />
+            <LilaKachel titel="Formeln" bild={SYMBOLE.rechner} onPress={() => router.push("/formeln")} style={{ flex: 1 }} />
+          </View>
+          <LilaKachel titel="Schilder-Jagd" bild={SYMBOLE.scan} gross onPress={() => router.push("/schilder-jagd")} />
+        </TourZiel>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+function HomeHandy() {
+  if (!FRAGEN_AKTIV) return <HomeLila />;
+  return <HomeMitFragen />;
+}
+
+function HomeMitFragen() {
+  const insets = useSafeAreaInsets();
+  const { width } = useFenster();
+  const inhaltUnten = useInhaltUnten();
+  const leistenScroll = useLeistenScroll();
+  const tourBlatt = useTourBlatt("/heute");
+  const fokus = useIsFocused();
+  const { farbwelt: f } = useDarstellung();
+  const { stand } = useStand();
+  const { anzeigeName } = useKonto();
+  const [ueberFoto, setUeberFoto] = useState(true);
+
+  const jetzt = new Date();
+  const zeit = tageszeit(jetzt.getHours());
+  const vorname = anzeigeName.split(" ")[0] || "Gast";
+  const gesamt = fortschritt(stand);
+  const serie = serieAktuell(stand);
+  const heute = heuteBeantwortet(stand);
+  const rest = Math.max(0, stand.tagesziel - heute);
+  const termin = terminDatum(stand.pruefungstermin);
+  const tage = termin ? tageBis(termin) : null;
+  const kommend = tage !== null && tage >= 0 ? tage : null;
+
+  // Die Handschrift zählt bis zur Prüfung – ohne Termin der Slogan wie immer.
+  const zeilen =
+    kommend === null ? ["Mach", "deinen Führerschein", "möglich."] : kommend === 0 ? ["Heute ist", "dein Tag."] : kommend === 1 ? ["Morgen", "ist Prüfung."] : [`Noch ${kommend} Tage`, "bis zur Prüfung."];
+
+  // Stand je Thema; Fokus ist das schwächste bereits begonnene Thema.
+  const themen = THEMEN.map((t) => {
+    const liste = FRAGEN.filter((q) => q.thema === t.id);
+    const p = fortschritt(stand, liste);
+    const begonnen = liste.some((q) => stand.fragen[q.id]);
+    return { id: t.id as ThemaId, anteil: p.anteil, offen: p.gesamt - p.richtig, begonnen };
+  });
+  const offeneThemen = themen.filter((t) => t.offen > 0);
+  // Ohne Fragen: die Themen aus dem Manager (eigener Titel, eigenes Bild).
+  const lernthemen = useLernthemen();
+  const { zuThema } = useLernvideos();
+  const videoThemen = lernthemen.themen.map((t) => {
+    const n = zuThema(t.id).length;
+    return { id: t.id, anteil: 0, titel: t.titel, bild: themaBild(t), angabe: n === 1 ? "1 Video" : n ? `${n} Videos` : "Videos folgen" };
+  });
+  const fokusThema = [...offeneThemen.filter((t) => t.begonnen)].sort((a, b) => a.anteil - b.anteil)[0] ?? offeneThemen[0] ?? themen[0];
+
+  const letzte = stand.pruefungen[0] ?? null;
+  const zitat = ZITATE[jetzt.getDate() % ZITATE.length];
+  const glockePunkt = !stand.erinnerung.an;
+
+  // Über dem Foto hell, darunter (im hellen Modus) dunkle Statusleiste.
+  const schwelle = heldHoehe(width) - insets.top - 60;
+  function beimScrollen(e: NativeSyntheticEvent<NativeScrollEvent>) {
+    leistenScroll.onScroll?.(e);
+    const oben = e.nativeEvent.contentOffset.y < schwelle;
+    if (oben !== ueberFoto) setUeberFoto(oben);
+  }
+
+  return (
+    <FarbweltBereich farbwelt={f}>
+      {fokus ? <StatusBar style={f.hell && !ueberFoto ? "dark" : "light"} /> : null}
+      <View style={{ flex: 1, backgroundColor: f.grund }}>
+        <ScrollView {...tourBlatt} onScroll={beimScrollen} scrollEventThrottle={16} contentContainerStyle={{ paddingBottom: inhaltUnten + 12 }} showsVerticalScrollIndicator={false}>
+          <KinoHeld zeit={zeit}>
+            {/* Begrüßung */}
+            <View style={{ position: "absolute", top: insets.top + 2, left: 26, right: RAND, flexDirection: "row", alignItems: "flex-start" }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ ...schrift.text, fontSize: 17, color: "rgba(255,255,255,0.92)", textShadowColor: "rgba(0,0,0,0.35)", textShadowRadius: 6 }}>{GRUSS[zeit]}</Text>
+                <Text style={{ ...schrift.titel, fontSize: 38, lineHeight: 44, color: "#FFFFFF", letterSpacing: -0.5, textShadowColor: "rgba(0,0,0,0.35)", textShadowRadius: 8 }} numberOfLines={1}>
+                  {vorname}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => {
+                  tippen();
+                  router.push("/einstellungen");
+                }}
+                accessibilityLabel="Erinnerungen"
+                hitSlop={8}
+                style={{ marginTop: 20, marginRight: 18 }}
+              >
+                <Icon name="notifications" size={24} color="#FFFFFF" />
+                {glockePunkt ? (
+                  <View style={{ position: "absolute", top: -3, right: -3, width: 9, height: 9, borderRadius: 4.5, backgroundColor: f.orange, borderWidth: 1.5, borderColor: "rgba(0,0,0,0.4)" }} />
+                ) : null}
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  tippen();
+                  router.navigate("/profil");
+                }}
+                accessibilityLabel="Profil"
+                style={{ marginTop: 6 }}
+              >
+                <ProfilBild name={anzeigeName} groesse={50} />
+              </Pressable>
+            </View>
+
+            <Handschrift zeilen={zeilen} style={{ position: "absolute", left: 30, top: insets.top + 112 }} />
+
+            {FRAGEN_AKTIV ? (
+            <View style={{ position: "absolute", left: RAND, right: RAND, bottom: 104 }}>
+              <TourZiel id="home-werte">
+                <HeldWerte
+                  reife={gesamt.anteil}
+                  sicher={gesamt.richtig}
+                  gesamt={gesamt.gesamt}
+                  serie={serie}
+                  heute={heute}
+                  ziel={stand.tagesziel}
+                  onReife={() => router.push("/statistik")}
+                  onSerie={() => router.push("/statistik")}
+                  onHeute={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
+                />
+              </TourZiel>
+            </View>
+            ) : null}
+          </KinoHeld>
+
+          <TourZiel id="home-start" style={{ marginTop: -80, marginHorizontal: RAND }}>
+            {FRAGEN_AKTIV ? (
+              <StartKnopf
+                titel={heute > 0 ? "Weiterlernen" : "Lernen starten"}
+                unter={rest > 0 ? `Noch ${rest} Fragen bis zum Tagesziel` : "Tagesziel geschafft – jede Frage zählt extra"}
+                onPress={() => router.push({ pathname: "/training", params: { modus: "smart" } })}
+              />
+            ) : (
+              <StartKnopf titel="Lernvideos ansehen" unter="Alle Themen kurz und einfach erklärt" onPress={() => router.navigate("/lernen")} />
+            )}
+          </TourZiel>
+
+          <TourZiel id="home-schnell" style={{ marginTop: 18 }}>
+            <Schnellstart
+              ziele={
+                FRAGEN_AKTIV
+                  ? [
+                      { icon: "heart", titel: "Favoriten", zahl: gemerktIds(stand).length, onPress: () => router.push("/favoriten") },
+                      { icon: "refresh", titel: "Fehler üben", zahl: fehlerIds(stand).length, onPress: () => router.push({ pathname: "/training", params: { modus: "fehler" } }) },
+                      { icon: "albums-outline", titel: "Karteikarten", zahl: heuteDran(stand).gesamt, onPress: () => router.push("/karteikarten") },
+                      { icon: "camera", titel: "Schilder-Jagd", onPress: () => router.push("/schilder-jagd") },
+                      { icon: "flash", titel: "Duell", onPress: () => router.push("/duell") },
+                      { icon: "stats-chart", titel: "Statistik", onPress: () => router.push("/statistik") },
+                    ]
+                  : SCHNELL_OHNE_FRAGEN.map((z) => ({ icon: z.icon, titel: z.titel, onPress: () => router.push(z.ziel as never) }))
+              }
+            />
+          </TourZiel>
+
+          {FRAGEN_AKTIV ? (
+            <TourZiel id="home-fokus" style={{ marginTop: 30, marginHorizontal: RAND }}>
+              <Kopfzeile titel="Dein Fokus heute" style={{ paddingHorizontal: 0 }} />
+              <FokusKarte
+                thema={fokusThema.id}
+                anteil={fokusThema.anteil}
+                offen={fokusThema.offen}
+                onPress={() => router.push({ pathname: "/training", params: { modus: "thema", thema: fokusThema.id } })}
+              />
+            </TourZiel>
+          ) : null}
+
+          {FRAGEN_AKTIV || videoThemen.length ? (
+            <>
+              <Kopfzeile titel={FRAGEN_AKTIV ? "Deine Themen" : "Lernvideos nach Thema"} link="Alle ansehen" onLink={() => router.navigate("/lernen")} style={{ marginTop: 30 }} />
+              <ThemenKarussell themen={FRAGEN_AKTIV ? themen : videoThemen} ohneStand={!FRAGEN_AKTIV} onThema={(id) => router.push({ pathname: "/thema/[id]", params: { id } })} />
+            </>
+          ) : null}
+
+          {FRAGEN_AKTIV ? (
+            <>
+              <Kopfzeile titel="Deine Prüfung" style={{ marginTop: 30 }} />
+              <View style={{ paddingHorizontal: RAND }}>
+                <PruefungKarte tage={kommend} letzte={letzte} onPress={() => router.navigate("/pruefen")} onTermin={() => router.push("/pruefungstermin")} />
+              </View>
+
+              {/* Crew: gemeinsame Flamme und Wochen-Boss */}
+              <CrewBereich style={{ marginHorizontal: RAND }} kopf={<Kopfzeile titel="Deine Crew" link="Öffnen" onLink={() => router.push("/crew")} style={{ marginTop: 30, marginHorizontal: -RAND }} />} />
+            </>
+          ) : null}
+
+          <View style={{ paddingHorizontal: RAND, marginTop: 30 }}>
+            <ZitatKarte zeilen={zitat} />
+          </View>
+        </ScrollView>
+      </View>
+    </FarbweltBereich>
+  );
+}
