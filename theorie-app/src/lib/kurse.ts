@@ -181,6 +181,18 @@ export function weiterlernen(kurse: Kurs[]): { kurs: Kurs; video: KursVideo; res
   return erster ? { kurs: erster, video: erster.videos.find((x) => !istGesehen(x.id)) ?? erster.videos[0], rest: null } : null;
 }
 
+/** Lern-Aktivität aus dem Video-Fortschritt: Tage mit Videos, gelernte Sekunden, letzte Nutzung je Video. */
+export function lernAktivitaet(): { tage: Set<string>; sekunden: number; zuletzt: (id: string) => string | null } {
+  const tage = new Set<string>();
+  let sekunden = 0;
+  for (const f of Object.values(fortschritt.videos)) {
+    const d = new Date(f.am);
+    if (!Number.isNaN(d.getTime())) tage.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+    sekunden += f.fertig ? f.dauer || f.sek : f.sek;
+  }
+  return { tage, sekunden, zuletzt: (id) => fortschritt.videos[id]?.am ?? null };
+}
+
 /** „1 Std. 22 Min.“, „38 Min.“ */
 export function dauerLang(sek: number): string {
   const min = Math.max(1, Math.round(sek / 60));

@@ -1,11 +1,10 @@
 import { type ReactNode } from "react";
-import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { router, usePathname } from "expo-router";
 
-import { Logo } from "@/components/grafik";
 import { Icon, type IconName } from "@/components/icon";
 import { ProfilBild } from "@/components/profilbild";
-import { B, Balken, Kachel, Knopf, n, TOENE, Wert, zahlen, type Ton, type Zustand, webDunkel } from "@/components/web/bunt";
+import { B, Balken, Kachel, Knopf, n, TOENE, Wert, zahlen, type Ton, type Zustand } from "@/components/web/bunt";
 import { useClipRechte } from "@/lib/clips-server";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
 import { SEITENLEISTE, SEITENLEISTE_SCHMAL } from "@/lib/fenster";
@@ -21,6 +20,8 @@ import { heuteBeantwortet, serieAktuell, useStand } from "@/lib/stand";
 // eine Spalte mit Serie, XP, Tagesziel und Liga.
 
 type Punkt = { pfad: string; titel: string; an: IconName; aus: IconName; ton: Ton };
+
+const LOGO_APP = require("../../../assets/images/web/logo-app.png");
 
 const HAUPT: Punkt[] = [
   { pfad: "/heute", titel: "Home", an: "home", aus: "home-outline", ton: TOENE.orange },
@@ -61,18 +62,18 @@ export function LeistenPunkt({ titel, an, aus, ton, aktiv, schmal, punkt, zahl, 
         flexDirection: "row",
         alignItems: "center",
         justifyContent: schmal ? "center" : "flex-start",
-        gap: 16,
+        gap: 18,
         height: 46,
         paddingHorizontal: schmal ? 0 : 12,
-        borderRadius: 12,
-        backgroundColor: aktiv ? B.ton : z.hovered ? B.hover : "transparent",
+        borderRadius: 10,
+        backgroundColor: aktiv ? "#ECE4FC" : z.hovered ? "#F5F1FD" : "transparent",
       })}
     >
       <View>
-        <Icon name={aktiv ? an : aus} size={23} color={aktiv ? ton.farbe : B.text3} />
+        <Icon name={aktiv ? an : aus} size={23} color={aktiv ? "#7C3AED" : "#3B3350"} />
         {punkt ? <View style={{ position: "absolute", top: -2, right: -3, width: 10, height: 10, borderRadius: 5, backgroundColor: "#FF2D55", borderWidth: 2, borderColor: B.grund }} /> : null}
       </View>
-      {schmal ? null : <Text style={{ flex: 1, ...n.fett, fontSize: 15.5, color: aktiv ? B.text : B.text2 }}>{titel}</Text>}
+      {schmal ? null : <Text style={{ flex: 1, fontFamily: aktiv ? "Nunito_800ExtraBold" : "Nunito_700Bold", fontSize: 16.5, color: "#1F1530" }}>{titel}</Text>}
       {!schmal && zahl != null ? <Text style={{ ...n.fett, fontSize: 13.5, color: B.text3, fontVariant: ["tabular-nums"] }}>{zahl}</Text> : null}
     </Pressable>
   );
@@ -94,17 +95,22 @@ export function WebSeitenleiste() {
   const mehr = rechte.inhaber ? [...MEHR, { pfad: "/manager", titel: "Manager", an: "grid", aus: "grid-outline", ton: TOENE.gelb } as Punkt] : MEHR;
 
   return (
-    <View style={{ width: schmal ? SEITENLEISTE_SCHMAL : SEITENLEISTE, height: "100%", paddingHorizontal: schmal ? 12 : 16, paddingTop: 22, paddingBottom: 16, borderRightWidth: 1.5, borderRightColor: B.linie, backgroundColor: B.grund }}>
-      <Pressable onPress={() => router.navigate("/heute")} accessibilityLabel="Fahrschul Pro – Home" style={{ paddingHorizontal: schmal ? 0 : 10, alignItems: schmal ? "center" : "flex-start", marginBottom: 26 }}>
-        <Logo groesse={schmal ? 34 : 28} mitText={!schmal} hell={!webDunkel()} />
+    <View style={{ width: schmal ? SEITENLEISTE_SCHMAL : SEITENLEISTE, height: "100%", paddingHorizontal: schmal ? 12 : 20, paddingTop: 24, paddingBottom: 18, borderRightWidth: 1.5, borderRightColor: "#EEE8F7", backgroundColor: "#FDFCFF" }}>
+      <Pressable onPress={() => router.navigate("/heute")} accessibilityLabel="Fahrschul Pro – Home" style={{ flexDirection: "row", alignItems: "center", justifyContent: schmal ? "center" : "flex-start", gap: 10, paddingHorizontal: schmal ? 0 : 4, marginBottom: 34 }}>
+        <Image source={LOGO_APP} style={{ width: 40, height: 40 }} resizeMode="contain" />
+        {schmal ? null : (
+          <Text style={{ fontFamily: "Nunito_900Black", fontSize: 21, color: "#1F1530", letterSpacing: -0.3 }}>
+            Fahrschul<Text style={{ color: "#7C3AED" }}>Pro</Text>
+          </Text>
+        )}
       </Pressable>
-      <View style={{ gap: 2 }}>
+      <View style={{ gap: 4 }}>
         {HAUPT.map((p) => (
           <NavPunkt key={p.pfad} p={p} aktiv={bereich === p.pfad} schmal={schmal} punkt={p.pfad === "/clips" && Boolean(live)} />
         ))}
       </View>
-      <View style={{ height: 1.5, backgroundColor: B.linie, marginVertical: 14, marginHorizontal: 6 }} />
-      <View style={{ gap: 2 }}>
+      <View style={{ height: 1.5, backgroundColor: "#E6DFF2", marginVertical: 18, marginHorizontal: 4 }} />
+      <View style={{ gap: 4 }}>
         {mehr.map((p) => (
           <NavPunkt key={p.pfad} p={p} aktiv={bereich === p.pfad} schmal={schmal} />
         ))}
@@ -112,13 +118,16 @@ export function WebSeitenleiste() {
       <View style={{ flex: 1 }} />
       <Pressable
         onPress={() => router.navigate("/profil")}
-        style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", justifyContent: schmal ? "center" : "flex-start", gap: 12, padding: 8, borderRadius: 14, backgroundColor: z.hovered ? B.ton : "transparent" })}
+        style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", justifyContent: schmal ? "center" : "flex-start", gap: 14, padding: 6, borderRadius: 14, backgroundColor: z.hovered ? "#F5F1FD" : "transparent" })}
       >
-        <ProfilBild name={anzeigeName} groesse={38} rand={0} />
+        <ProfilBild name={anzeigeName} groesse={42} rand={0} />
         {schmal ? null : (
-          <Text style={{ flex: 1, ...n.fett, fontSize: 15, color: B.text }} numberOfLines={1}>
-            {anzeigeName}
-          </Text>
+          <>
+            <Text style={{ flex: 1, fontFamily: "Nunito_800ExtraBold", fontSize: 17, color: "#1F1530" }} numberOfLines={1}>
+              {anzeigeName}
+            </Text>
+            <Icon name="chevron-down" size={20} color="#1F1530" />
+          </>
         )}
       </Pressable>
     </View>

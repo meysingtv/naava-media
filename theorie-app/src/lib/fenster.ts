@@ -18,7 +18,7 @@ export const DESKTOP_AB = 1000;
 export const DESKTOP_SPALTE = 1180;
 
 /** Breite der Seitenleiste links am PC (schmal: nur Symbole). */
-export const SEITENLEISTE = 256;
+export const SEITENLEISTE = 240;
 export const SEITENLEISTE_SCHMAL = 88;
 /** Ab dieser Fensterbreite zeigt die Seitenleiste auch die Namen. */
 export const SEITENLEISTE_BREIT_AB = 1200;

@@ -5,6 +5,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { GRUSS, tageszeit } from "@/components/home";
 import { Abschnitt, B, Balken, DickRing, Kachel, Knopf, Leer, n, Raster, Symbol, THEMA_TON, themaTon, TOENE, Wert, zahlen, type Ton, type Zustand } from "@/components/web/bunt";
 import { WebSeite } from "@/components/web/rahmen";
+import { HomeWebLila } from "@/components/web/home-web-lila";
 import { FRAGEN, THEMEN, themaVon, type ThemaId } from "@/lib/fragen";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
 import { heuteDran } from "@/lib/karteikarten";
@@ -22,7 +23,7 @@ import { fehlerIds, fortschritt, gemerktIds, heuteBeantwortet, serieAktuell, use
 type Schnell = { icon: IconName; titel: string; ton: Ton; zahl?: number; onPress: () => void };
 
 export function HomeWeb() {
-  return FRAGEN_AKTIV ? <HomeWebMitFragen /> : <HomeWebOhneFragen />;
+  return FRAGEN_AKTIV ? <HomeWebMitFragen /> : <HomeWebLila />;
 }
 
 /**
@@ -30,7 +31,7 @@ export function HomeWeb() {
  * Mittelpunkt, Prüfungstermin, Schnellstart zu den Lernhilfen, Themen mit
  * ihren Videos.
  */
-function HomeWebOhneFragen() {
+export function HomeWebOhneFragen() {
   const { stand } = useStand();
   const { anzeigeName, gast } = useKonto();
   const { zuThema } = useLernvideos();
