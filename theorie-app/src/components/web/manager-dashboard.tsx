@@ -11,6 +11,7 @@ import { useKurse } from "@/lib/kurse";
 import { themaBild } from "@/lib/lernthemen";
 import type { ManagerNutzer } from "@/lib/manager";
 import { einladungenLaden, meldungenLaden, mitteilungenLaden, pruefungstermineLaden, type Einladung, type Meldungen, type Mitteilung, type Termin, type Zaehler } from "@/lib/verwaltung";
+import { karteHover, knopfHover, weich } from "@/components/web/hover";
 
 // Manager-Übersicht im lila Design (Vorlage 1:1): sechs Kennzahlen, Hero mit
 // Auto und Schnellzugriffen, vier Listen (Einladungen, Prüfungstermine,
@@ -48,7 +49,7 @@ const kuerzel = (name: string) =>
 
 function Kennzahl({ icon, farbe, grund, wert, titel, rechts, neben, onPress }: { icon: IconName; farbe: string; grund: string; wert: number; titel: string; rechts?: ReactNode; neben?: string; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} style={(z: Zustand) => [karte, { flex: 1, height: 132, padding: 16, paddingTop: 14, overflow: "hidden", borderColor: z.hovered ? "#D9CBF5" : "#EEE8F7" }]}>
+    <Pressable onPress={onPress} style={(z: Zustand) => [weich, karte, { flex: 1, height: 132, padding: 16, paddingTop: 14, overflow: "hidden", borderColor: z.hovered ? "#D9CBF5" : "#EEE8F7" }, karteHover(!!z.hovered, z.pressed)]}>
       <LinearGradient colors={["#FFFFFF", "#FAF7FF"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
       <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" }}>
         <View style={{ width: 46, height: 46, borderRadius: 13, backgroundColor: grund, alignItems: "center", justifyContent: "center" }}>
@@ -200,14 +201,14 @@ export function ManagerDashboard({ nutzer, zaehler, onBereich, onAnlegen }: { nu
           <View style={{ flexDirection: "row", gap: 10, marginTop: 12, flex: 1 }}>
             {SCHNELL.map((x) =>
               x.voll ? (
-                <Pressable key={x.titel} onPress={x.onPress} style={(z: Zustand) => ({ flex: 1, borderRadius: 14, opacity: z.pressed ? 0.85 : 1, shadowColor: "#7C3AED", shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } })}>
+                <Pressable key={x.titel} onPress={x.onPress} style={(z: Zustand) => ({ ...weich, flex: 1, borderRadius: 14, ...knopfHover(!!z.hovered, z.pressed), shadowColor: "#7C3AED", shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } })}>
                   <LinearGradient colors={["#8B5CF6", "#6D28D9"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1, borderRadius: 14, alignItems: "center", justifyContent: "center", gap: 8 }}>
                     <Icon name={x.icon} size={30} color="#FFFFFF" />
                     <Text style={{ ...s.fett, fontSize: 14, color: "#FFFFFF", textAlign: "center" }}>{x.titel}</Text>
                   </LinearGradient>
                 </Pressable>
               ) : (
-                <Pressable key={x.titel} onPress={x.onPress} style={(z: Zustand) => ({ flex: 1, borderRadius: 14, borderWidth: 1.5, borderColor: z.hovered ? "#D9CBF5" : "#EEE8F7", backgroundColor: z.hovered ? "#FAF7FF" : "#FFFFFF", alignItems: "center", justifyContent: "center", gap: 8, shadowColor: "#5B2BB5", shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } })}>
+                <Pressable key={x.titel} onPress={x.onPress} style={(z: Zustand) => ({ ...weich, flex: 1, borderRadius: 14, borderWidth: 1.5, borderColor: z.hovered ? "#D9CBF5" : "#EEE8F7", backgroundColor: z.hovered ? "#FAF7FF" : "#FFFFFF", alignItems: "center", justifyContent: "center", gap: 8, shadowColor: "#5B2BB5", shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } , ...karteHover(!!z.hovered, z.pressed) })}>
                   <Icon name={x.icon} size={30} color={L.lila} />
                   <Text style={{ ...s.halb, fontSize: 13.5, lineHeight: 17, color: L.tinte, textAlign: "center" }}>{x.titel}</Text>
                 </Pressable>
@@ -245,7 +246,7 @@ export function ManagerDashboard({ nutzer, zaehler, onBereich, onAnlegen }: { nu
           ) : (
             <Leer text="Noch keine aktiven Einladungen" />
           )}
-          <Pressable onPress={() => onBereich("einladungen")} style={(z: Zustand) => ({ marginTop: "auto", height: 42, borderRadius: 12, borderWidth: 1.5, borderColor: "#E3D8F8", backgroundColor: z.hovered ? "#F3ECFF" : "#F8F4FF", shadowColor: "#5B2BB5", shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 })}>
+          <Pressable onPress={() => onBereich("einladungen")} style={(z: Zustand) => ({ ...weich, marginTop: "auto", height: 42, borderRadius: 12, borderWidth: 1.5, borderColor: "#E3D8F8", backgroundColor: z.hovered ? "#F3ECFF" : "#F8F4FF", shadowColor: "#5B2BB5", shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 , ...knopfHover(!!z.hovered, z.pressed) })}>
             <Icon name="qr-code-outline" size={19} color={L.lila} />
             <Text style={{ ...s.fett, fontSize: 14.5, color: L.lila }}>QR-Code anzeigen</Text>
           </Pressable>
@@ -341,7 +342,7 @@ export function ManagerDashboard({ nutzer, zaehler, onBereich, onAnlegen }: { nu
               ["mitteilung", "Mitteilungen", "megaphone-outline"],
             ] as const
           ).map(([id, titel, icon]) => (
-            <Pressable key={id} onPress={() => setFilter(id)} style={(z: Zustand) => ({ height: 34, paddingHorizontal: 14, borderRadius: 10, flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1.5, borderColor: filter === id ? "#A47BF5" : z.hovered ? "#D9CBF5" : "#ECE6F6", backgroundColor: filter === id ? "#F4EEFF" : "#FFFFFF" })}>
+            <Pressable key={id} onPress={() => setFilter(id)} style={(z: Zustand) => ({ ...weich, height: 34, paddingHorizontal: 14, borderRadius: 10, flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1.5, borderColor: filter === id ? "#A47BF5" : z.hovered ? "#D9CBF5" : "#ECE6F6", backgroundColor: filter === id ? "#F4EEFF" : "#FFFFFF" , ...knopfHover(!!z.hovered, z.pressed) })}>
               {icon ? <Icon name={icon} size={15} color={L.tinte} /> : null}
               <Text style={{ ...s.halb, fontSize: 13.5, color: filter === id ? L.lilaDunkel : L.tinte }}>{titel}</Text>
             </Pressable>

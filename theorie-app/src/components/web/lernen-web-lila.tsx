@@ -10,6 +10,7 @@ import { type Zustand } from "@/components/web/bunt";
 import { L, LKarte } from "@/components/web/home-web-lila";
 import { istGesehen, useKurse, type Kurs } from "@/lib/kurse";
 import { themaBild } from "@/lib/lernthemen";
+import { karteHover, knopfHover, weich } from "@/components/web/hover";
 
 // Lernen am PC im lila Design (Vorlage 1:1): Kopf mit Auto und Kennzahlen,
 // vier Lernhilfen als Kacheln, darunter alle Themen (Videokurse) mit Suche,
@@ -37,7 +38,7 @@ const HILFEN: { titel: string; unter: string; icon: IconName; farbe: [string, st
 function Knopf({ titel, icon, art, onPress }: { titel: string; icon: IconName; art: "voll" | "zart" | "rand"; onPress: () => void }) {
   if (art === "voll")
     return (
-      <Pressable onPress={onPress} style={(z: Zustand) => ({ flex: 1, borderRadius: 12, opacity: z.pressed ? 0.85 : 1, shadowColor: "#7C3AED", shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } })}>
+      <Pressable onPress={onPress} style={(z: Zustand) => ({ ...weich, flex: 1, borderRadius: 12, ...knopfHover(!!z.hovered, z.pressed), shadowColor: "#7C3AED", shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } })}>
         <LinearGradient colors={["#8B5CF6", "#6D28D9"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 44, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}>
           <Icon name={icon} size={18} color="#FFFFFF" />
           <Text style={{ ...s.fett, fontSize: 15.5, color: "#FFFFFF" }}>{titel}</Text>
@@ -45,7 +46,7 @@ function Knopf({ titel, icon, art, onPress }: { titel: string; icon: IconName; a
       </Pressable>
     );
   return (
-    <Pressable onPress={onPress} style={(z: Zustand) => ({ flex: art === "zart" ? 1 : 0.78, height: 44, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: art === "zart" ? (z.hovered ? "#E6DAFD" : "#EFE6FD") : z.hovered ? "#FAF8FF" : "#FFFFFF", borderWidth: art === "rand" ? 1.5 : 0, borderColor: "#E6E0F0" })}>
+    <Pressable onPress={onPress} style={(z: Zustand) => ({ ...weich, flex: art === "zart" ? 1 : 0.78, height: 44, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: art === "zart" ? (z.hovered ? "#E6DAFD" : "#EFE6FD") : z.hovered ? "#FAF8FF" : "#FFFFFF", borderWidth: art === "rand" ? 1.5 : 0, borderColor: "#E6E0F0" , ...knopfHover(!!z.hovered, z.pressed) })}>
       <Icon name={icon} size={19} color={art === "zart" ? L.lila : L.tinte} />
       <Text style={{ ...s.fett, fontSize: 15.5, color: art === "zart" ? L.lila : L.tinte }}>{titel}</Text>
     </Pressable>
@@ -171,7 +172,7 @@ export function LernenWebLila() {
         {/* Lernhilfen */}
         <View style={{ flexDirection: "row", gap: 12, marginTop: 10 }}>
           {HILFEN.map((h) => (
-            <Pressable key={h.titel} onPress={() => router.push(h.pfad as never)} style={(z: Zustand) => ({ flex: 1, minHeight: 150, borderRadius: 20, borderWidth: 1.5, borderColor: z.hovered ? "#CDB8F5" : h.rand, overflow: "hidden", shadowColor: "#5B2BB5", shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } })}>
+            <Pressable key={h.titel} onPress={() => router.push(h.pfad as never)} style={(z: Zustand) => ({ ...weich, flex: 1, minHeight: 150, borderRadius: 20, borderWidth: 1.5, borderColor: z.hovered ? "#CDB8F5" : h.rand, overflow: "hidden", shadowColor: "#5B2BB5", shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } , ...karteHover(!!z.hovered, z.pressed) })}>
               <LinearGradient colors={h.grund} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
               <View style={{ flexDirection: "row", gap: 16, padding: 18, paddingBottom: 6 }}>
                 <LinearGradient colors={h.farbe} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 62, height: 62, borderRadius: 16, alignItems: "center", justifyContent: "center" }}>
@@ -199,7 +200,7 @@ export function LernenWebLila() {
           {FILTER.map((f) => {
             const an = filter === f.id;
             return (
-              <Pressable key={f.id} onPress={() => setFilter(f.id)} style={(z: Zustand) => ({ height: 46, paddingHorizontal: 16, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 9, borderWidth: an ? 2 : 1.5, borderColor: an ? "#A47BF5" : z.hovered ? "#D9CBF5" : "#E6E0F0", backgroundColor: an ? "#F4EEFF" : "#FFFFFF" })}>
+              <Pressable key={f.id} onPress={() => setFilter(f.id)} style={(z: Zustand) => ({ ...weich, height: 46, paddingHorizontal: 16, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 9, borderWidth: an ? 2 : 1.5, borderColor: an ? "#A47BF5" : z.hovered ? "#D9CBF5" : "#E6E0F0", backgroundColor: an ? "#F4EEFF" : "#FFFFFF" , ...knopfHover(!!z.hovered, z.pressed) })}>
                 {f.icon}
                 <Text style={{ ...s.halb, fontSize: 15, color: an ? L.lilaDunkel : L.tinte }}>
                   {f.titel} ({f.zahl})

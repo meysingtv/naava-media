@@ -14,6 +14,7 @@ import { tageBis, terminDatum } from "@/lib/pruefungstag";
 import { ligaVon } from "@/lib/rangliste";
 import { ALBUM } from "@/lib/schilder-jagd";
 import { heuteBeantwortet, serieAktuell, useStand } from "@/lib/stand";
+import { weich } from "@/components/web/hover";
 
 // Rahmen der Lern-App im Browser: links eine breite Leiste mit großen, bunten
 // Symbolen (bei schmalem Fenster nur die Symbole), rechts auf den Hauptseiten
@@ -119,7 +120,7 @@ export function WebSeitenleiste() {
       <View style={{ flex: 1 }} />
       <Pressable
         onPress={() => router.navigate("/profil")}
-        style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", justifyContent: schmal ? "center" : "flex-start", gap: 14, padding: 6, borderRadius: 14, backgroundColor: z.hovered ? "#F5F1FD" : "transparent" })}
+        style={(z: Zustand) => ({ ...weich, flexDirection: "row", alignItems: "center", justifyContent: schmal ? "center" : "flex-start", gap: 14, padding: 6, borderRadius: 14, backgroundColor: z.hovered ? "#F5F1FD" : "transparent" })}
       >
         <ProfilBild name={anzeigeName} groesse={42} rand={0} />
         {schmal ? null : (

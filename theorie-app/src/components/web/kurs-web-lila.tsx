@@ -10,6 +10,7 @@ import { L, LKarte } from "@/components/web/home-web-lila";
 import { istGesehen, stelleVon, useKurse, type Kurs, type KursVideo } from "@/lib/kurse";
 import { KATEGORIEN, themaBild } from "@/lib/lernthemen";
 import { useStand } from "@/lib/stand";
+import { karteHover, knopfHover, weich } from "@/components/web/hover";
 
 // Kursseite am PC im lila Design (Vorlage 1:1): Hero mit Kursbild, Reiter
 // „Videos“ und „Kursinhalt“, Videolektionen mit Stand, rechts Kurs-Infos,
@@ -35,7 +36,7 @@ const abspielen = (v: KursVideo) => router.push({ pathname: "/themavideo", param
 
 function RundKnopf({ icon, onPress, punkt }: { icon: IconName; onPress: () => void; punkt?: boolean }) {
   return (
-    <Pressable onPress={onPress} style={(z: Zustand) => ({ width: 46, height: 46, borderRadius: 14, borderWidth: 1.5, borderColor: L.rand, backgroundColor: z.hovered ? L.lilaZart : "#FFFFFF", alignItems: "center", justifyContent: "center", shadowColor: "#5B2BB5", shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } })}>
+    <Pressable onPress={onPress} style={(z: Zustand) => ({ ...weich, width: 46, height: 46, borderRadius: 14, borderWidth: 1.5, borderColor: L.rand, backgroundColor: z.hovered ? L.lilaZart : "#FFFFFF", alignItems: "center", justifyContent: "center", shadowColor: "#5B2BB5", shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } , ...knopfHover(!!z.hovered, z.pressed) })}>
       <Icon name={icon} size={21} color={L.tinte} />
       {punkt ? <View style={{ position: "absolute", top: 9, right: 11, width: 9, height: 9, borderRadius: 5, backgroundColor: L.lila, borderWidth: 1.5, borderColor: "#FFFFFF" }} /> : null}
     </Pressable>
@@ -45,7 +46,7 @@ function RundKnopf({ icon, onPress, punkt }: { icon: IconName; onPress: () => vo
 function VideoKarte({ v, untertitel, aktuell, quelle }: { v: KursVideo; untertitel: string; aktuell: boolean; quelle: ReturnType<typeof themaBild> }) {
   const lage = lageVon(v);
   return (
-    <Pressable onPress={() => abspielen(v)} style={(z: Zustand) => ({ flex: 1, height: 262, borderRadius: 18, borderWidth: aktuell ? 2 : 1.5, borderColor: aktuell ? "#C9B0F7" : z.hovered ? "#D9CBF5" : L.rand, backgroundColor: "#FFFFFF", overflow: "hidden", shadowColor: "#5B2BB5", shadowOpacity: aktuell ? 0.16 : 0.07, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } })}>
+    <Pressable onPress={() => abspielen(v)} style={(z: Zustand) => ({ ...weich, flex: 1, height: 262, borderRadius: 18, borderWidth: aktuell ? 2 : 1.5, borderColor: aktuell ? "#C9B0F7" : z.hovered ? "#D9CBF5" : L.rand, backgroundColor: "#FFFFFF", overflow: "hidden", shadowColor: "#5B2BB5", shadowOpacity: aktuell ? 0.16 : 0.07, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } , ...karteHover(!!z.hovered, z.pressed) })}>
       <VorschauBild v={v} quelle={quelle} />
       <View style={{ paddingHorizontal: 18, paddingTop: 10 }}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -156,13 +157,13 @@ export function KursWebLila({ id }: { id: string }) {
               {kurs.thema.kurz}
             </Text>
             <View style={{ flexDirection: "row", gap: 14, marginTop: 22 }}>
-              <Pressable onPress={() => (aktuell ? abspielen(aktuell) : kurs.videos[0] ? abspielen(kurs.videos[0]) : null)} style={(z: Zustand) => ({ borderRadius: 14, opacity: z.pressed ? 0.85 : 1, shadowColor: "#7C3AED", shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 5 } })}>
+              <Pressable onPress={() => (aktuell ? abspielen(aktuell) : kurs.videos[0] ? abspielen(kurs.videos[0]) : null)} style={(z: Zustand) => ({ ...weich, borderRadius: 14, ...knopfHover(!!z.hovered, z.pressed), shadowColor: "#7C3AED", shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 5 } })}>
                 <LinearGradient colors={["#8B5CF6", "#6D28D9"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 48, paddingHorizontal: 34, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 12 }}>
                   <Icon name="play" size={19} color="#FFFFFF" />
                   <Text style={{ ...s.fett, fontSize: 17.5, color: "#FFFFFF" }}>{kurs.gesehen === 0 ? "Starten" : naechstes ? "Fortsetzen" : "Wiederholen"}</Text>
                 </LinearGradient>
               </Pressable>
-              <Pressable onPress={() => setReiter("inhalt")} style={(z: Zustand) => ({ height: 48, paddingHorizontal: 20, borderRadius: 14, backgroundColor: z.hovered ? "#FAF7FF" : "#FFFFFF", borderWidth: 1.5, borderColor: "#ECE4FA", flexDirection: "row", alignItems: "center", gap: 10 })}>
+              <Pressable onPress={() => setReiter("inhalt")} style={(z: Zustand) => ({ ...weich, height: 48, paddingHorizontal: 20, borderRadius: 14, backgroundColor: z.hovered ? "#FAF7FF" : "#FFFFFF", borderWidth: 1.5, borderColor: "#ECE4FA", flexDirection: "row", alignItems: "center", gap: 10 , ...knopfHover(!!z.hovered, z.pressed) })}>
                 <Icon name="list" size={20} color={L.lila} />
                 <Text style={{ ...s.fett, fontSize: 15.5, color: L.tinte }}>Kursinhalt</Text>
               </Pressable>
@@ -219,7 +220,7 @@ export function KursWebLila({ id }: { id: string }) {
                   return (
                     <View key={v.id}>
                       {neuesKapitel ? <Text style={{ ...s.fett, fontSize: 13, letterSpacing: 0.6, color: L.lila, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 4 }}>{v.kapitel.trim().toUpperCase()}</Text> : null}
-                      <Pressable onPress={() => abspielen(v)} style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 20, height: 62, borderTopWidth: i && !neuesKapitel ? 1 : 0, borderTopColor: "#F0ECF6", backgroundColor: z.hovered ? "#FBF9FF" : "transparent" })}>
+                      <Pressable onPress={() => abspielen(v)} style={(z: Zustand) => ({ ...weich, flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 20, height: 62, borderTopWidth: i && !neuesKapitel ? 1 : 0, borderTopColor: "#F0ECF6", backgroundColor: z.hovered ? "#FBF9FF" : "transparent" })}>
                         <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: lage.art === "fertig" ? "#E3F6E8" : L.lilaZart, alignItems: "center", justifyContent: "center" }}>
                           {lage.art === "fertig" ? <Icon name="checkmark" size={19} color="#16A34A" /> : <Icon name="play" size={16} color={L.lila} style={{ marginLeft: 2 }} />}
                         </View>
@@ -272,7 +273,7 @@ export function KursWebLila({ id }: { id: string }) {
               <View style={{ height: 12, borderRadius: 6, backgroundColor: "#ECE7F5", marginTop: 10, overflow: "hidden" }}>
                 <LinearGradient colors={["#7C3AED", "#9F67FF"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ width: `${Math.round(anteil * 100)}%`, height: "100%", borderRadius: 6 }} />
               </View>
-              <Pressable onPress={() => (naechstes ? abspielen(naechstes) : kurs.videos[0] ? abspielen(kurs.videos[0]) : null)} style={(z: Zustand) => ({ marginTop: 18, flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: 14, backgroundColor: z.hovered ? "#EDE4FD" : "#F3EDFE" })}>
+              <Pressable onPress={() => (naechstes ? abspielen(naechstes) : kurs.videos[0] ? abspielen(kurs.videos[0]) : null)} style={(z: Zustand) => ({ ...weich, marginTop: 18, flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: 14, backgroundColor: z.hovered ? "#EDE4FD" : "#F3EDFE" })}>
                 <LinienIcon name="crosshair" size={30} color={L.lila} />
                 <View style={{ flex: 1 }}>
                   <Text style={{ ...s.fett, fontSize: 15.5, color: L.lilaDunkel }}>{naechstes ? "Nächster Schritt" : "Kurs abgeschlossen"}</Text>

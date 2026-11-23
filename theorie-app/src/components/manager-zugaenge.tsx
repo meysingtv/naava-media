@@ -38,6 +38,7 @@ import { HAUPT_KLASSEN } from "@/lib/klassen";
 import { LernstandTafel } from "@/components/manager-mehr";
 import { fahrlehrerEntscheiden } from "@/lib/verwaltung";
 import { passwortVorschlag, zugangAendern, zugangAnlegen, zugangLoeschen, zugangStatus, type Aenderung, type ManagerNutzer, type Rolle } from "@/lib/manager";
+import { weich } from "@/components/web/hover";
 
 // Zugänge im Manager: Liste als Tabelle mit Suche und Filtern, Details zum
 // Bearbeiten in einem Blatt von rechts und ein Fenster zum Anlegen.
@@ -258,7 +259,7 @@ function PasswortFeld({ wert, onWechsel, platzhalter = "mindestens 8 Zeichen" }:
       placeholder={platzhalter}
       style={{ fontVariant: ["tabular-nums"] }}
       rechts={
-        <Pressable onPress={() => onWechsel(passwortVorschlag())} accessibilityRole="button" style={(z: Zustand) => ({ height: 26, paddingHorizontal: 8, marginRight: -4, borderRadius: 6, justifyContent: "center", backgroundColor: z.hovered ? M.hover : "transparent" })}>
+        <Pressable onPress={() => onWechsel(passwortVorschlag())} accessibilityRole="button" style={(z: Zustand) => ({ ...weich, height: 26, paddingHorizontal: 8, marginRight: -4, borderRadius: 6, justifyContent: "center", backgroundColor: z.hovered ? M.hover : "transparent" })}>
           <Text style={{ ...nf.halb, fontSize: 13, color: M.text2 }}>Vorschlagen</Text>
         </Pressable>
       }
@@ -669,7 +670,7 @@ export function ZugangBlatt({ nutzer, alle, onSchliessen, onGeaendert }: { nutze
         </View>
 
         {geschuetzt ? null : (
-          <Pressable onPress={loeschen} disabled={laeuft === "loeschen"} style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "flex-start", height: 32, paddingHorizontal: 8, marginLeft: -8, marginTop: 4, borderRadius: 7, backgroundColor: z.hovered ? M.hover : "transparent" })}>
+          <Pressable onPress={loeschen} disabled={laeuft === "loeschen"} style={(z: Zustand) => ({ ...weich, flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "flex-start", height: 32, paddingHorizontal: 8, marginLeft: -8, marginTop: 4, borderRadius: 7, backgroundColor: z.hovered ? M.hover : "transparent" })}>
             <Icon name="trash-outline" size={15} color={M.rot} />
             <Text style={{ ...nf.halb, fontSize: 14, color: M.rot }}>{laeuft === "loeschen" ? "Wird gelöscht …" : "Konto löschen"}</Text>
           </Pressable>

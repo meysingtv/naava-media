@@ -11,6 +11,7 @@ import { L, LKarte } from "@/components/web/home-web-lila";
 import { istGesehen, restVon, stelleVon, useKurse, weiterlernen, type Kurs } from "@/lib/kurse";
 import { KATEGORIEN, themaBild, type Kategorie } from "@/lib/lernthemen";
 import { useStand } from "@/lib/stand";
+import { knopfHover, weich } from "@/components/web/hover";
 
 // Videokurse (Coach) am PC im lila Design nach Vorlage: Hero mit Auto und
 // Straße, „Weiterlernen“ mit dem zuletzt geschauten Video, „Beliebte
@@ -197,7 +198,7 @@ export function CoachWeb() {
 
 function PfeilKnopf({ icon, onPress }: { icon: IconName; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} style={(z: Zustand) => ({ width: 40, height: 40, borderRadius: 20, backgroundColor: z.hovered ? L.lilaZart : "#FFFFFF", borderWidth: 1.5, borderColor: L.rand, alignItems: "center", justifyContent: "center", shadowColor: "#5B2BB5", shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } })}>
+    <Pressable onPress={onPress} style={(z: Zustand) => ({ ...weich, width: 40, height: 40, borderRadius: 20, backgroundColor: z.hovered ? L.lilaZart : "#FFFFFF", borderWidth: 1.5, borderColor: L.rand, alignItems: "center", justifyContent: "center", shadowColor: "#5B2BB5", shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } , ...knopfHover(!!z.hovered, z.pressed) })}>
       <Icon name={icon} size={20} color={L.lila} />
     </Pressable>
   );
@@ -266,7 +267,7 @@ function WeiterKarte({ kurs, videoId, titel, klasse }: { kurs: Kurs; videoId: st
             <Path d="M26 3 L19 17" stroke={L.lila} strokeWidth={3.5} strokeLinecap="round" />
             <Path d="M36 18 L24 23" stroke={L.lila} strokeWidth={3.5} strokeLinecap="round" />
           </Svg>
-          <Pressable onPress={los} accessibilityRole="button" style={(z: Zustand) => ({ borderRadius: 28, opacity: z.pressed ? 0.85 : 1, shadowColor: "#7C3AED", shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 0, height: 6 } })}>
+          <Pressable onPress={los} accessibilityRole="button" style={(z: Zustand) => ({ ...weich, borderRadius: 28, ...knopfHover(!!z.hovered, z.pressed), shadowColor: "#7C3AED", shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 0, height: 6 } })}>
             <LinearGradient colors={["#8B5CF6", "#6D28D9"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 56, borderRadius: 28, paddingHorizontal: 34, flexDirection: "row", alignItems: "center", gap: 12 }}>
               <Icon name="play" size={22} color="#FFFFFF" />
               <Text style={{ ...s.fett, fontSize: 20, color: "#FFFFFF" }}>Weiterlernen</Text>

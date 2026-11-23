@@ -13,6 +13,7 @@ import { datumLang } from "@/lib/format";
 import type { ZeichenKey } from "@/lib/fragen";
 import { ALBUM, XP_JE_SCHILD } from "@/lib/schilder-jagd";
 import { useStand } from "@/lib/stand";
+import { karteHover, knopfHover, weich } from "@/components/web/hover";
 
 // Schilder-Jagd am PC im lila Design (Vorlage 1:1): Kopf mit Auto und Straße,
 // drei Karten (Album mit Level, Fortschritt je Kategorie, Tages-Challenge),
@@ -92,7 +93,7 @@ function SchildKarte({ z, art, onPress }: { z: ZeichenInfo; art: Zustandsart; on
         ? { grund: ["#FFFBEF", "#FFF4DA"] as const, rand: "#F2C94C" }
         : { grund: ["#FFFFFF", "#F8F6FB"] as const, rand: "#E7E2EF" };
   return (
-    <Pressable onPress={onPress} style={(st: Zustand) => ({ flex: 1, height: 184, borderRadius: 18, borderWidth: art === "ziel" ? 2 : 1.5, borderColor: st.hovered ? L.lila : farben.rand, overflow: "visible", shadowColor: "#5B2BB5", shadowOpacity: 0.07, shadowRadius: 14, shadowOffset: { width: 0, height: 5 } })}>
+    <Pressable onPress={onPress} style={(st: Zustand) => ({ ...weich, flex: 1, height: 184, borderRadius: 18, borderWidth: art === "ziel" ? 2 : 1.5, borderColor: st.hovered ? L.lila : farben.rand, overflow: "visible", shadowColor: "#5B2BB5", shadowOpacity: 0.07, shadowRadius: 14, shadowOffset: { width: 0, height: 5 } , ...karteHover(!!st.hovered, st.pressed) })}>
       <LinearGradient colors={farben.grund} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, borderRadius: 17 }} />
       {art === "ziel" ? (
         <View style={{ position: "absolute", top: -12, alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8, backgroundColor: "#FBD35A", zIndex: 2 }}>
@@ -294,7 +295,7 @@ export function SchilderJagdWeb() {
           <LinearGradient colors={["rgba(240,232,255,0)", "#F1E9FF", "rgba(240,232,255,0)"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: "absolute", left: 0, right: 0, top: 10, bottom: 6, borderRadius: 50 }} />
           <Image source={BILD.dekoLinks} style={{ position: "absolute", left: 30, width: 300, height: 90 }} resizeMode="contain" />
           <Image source={BILD.dekoRechts} style={{ position: "absolute", right: 30, width: 333, height: 90 }} resizeMode="contain" />
-          <Pressable onPress={scannen} accessibilityRole="button" style={(st: Zustand) => ({ borderRadius: 36, opacity: st.pressed ? 0.88 : 1, shadowColor: "#7C3AED", shadowOpacity: 0.4, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } })}>
+          <Pressable onPress={scannen} accessibilityRole="button" style={(st: Zustand) => ({ ...weich, borderRadius: 36, ...knopfHover(!!st.hovered, st.pressed), shadowColor: "#7C3AED", shadowOpacity: 0.4, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } })}>
             <LinearGradient colors={["#9D6BFF", "#6D28D9"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 390, height: 70, borderRadius: 35, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 16, borderWidth: 2, borderColor: "rgba(255,255,255,0.35)" }}>
               <Icon name="camera" size={32} color="#FFFFFF" />
               <Text style={{ ...s.fett, fontSize: 28, color: "#FFFFFF" }}>Schild scannen</Text>
@@ -316,7 +317,7 @@ export function SchilderJagdWeb() {
               </>
             );
             return (
-              <Pressable key={f.id} onPress={() => setGruppe(f.id)} style={(st: Zustand) => ({ height: 44, borderRadius: 12, overflow: "hidden", borderWidth: an ? 0 : 1.5, borderColor: st.hovered ? "#CDB8F5" : "#ECE6F6", backgroundColor: "#FFFFFF", shadowColor: "#5B2BB5", shadowOpacity: an ? 0.3 : 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } })}>
+              <Pressable key={f.id} onPress={() => setGruppe(f.id)} style={(st: Zustand) => ({ ...weich, height: 44, borderRadius: 12, overflow: "hidden", borderWidth: an ? 0 : 1.5, borderColor: st.hovered ? "#CDB8F5" : "#ECE6F6", backgroundColor: "#FFFFFF", shadowColor: "#5B2BB5", shadowOpacity: an ? 0.3 : 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } , ...knopfHover(!!st.hovered, st.pressed) })}>
                 {an ? (
                   <LinearGradient colors={["#8B5CF6", "#6D28D9"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 44, paddingHorizontal: 22, flexDirection: "row", alignItems: "center", gap: 10 }}>
                     {inhalt}
@@ -335,7 +336,7 @@ export function SchilderJagdWeb() {
           <Pressable
             onPress={() => setNur(nur === "alle" ? "gefunden" : nur === "gefunden" ? "offen" : "alle")}
             accessibilityLabel={nur === "alle" ? "Nur gefundene zeigen" : nur === "gefunden" ? "Nur offene zeigen" : "Alle zeigen"}
-            style={(st: Zustand) => ({ width: 44, height: 40, borderRadius: 12, borderWidth: 1.5, borderColor: nur !== "alle" ? L.lila : "#E6DFF1", backgroundColor: st.hovered || nur !== "alle" ? L.lilaZart : "#FFFFFF", alignItems: "center", justifyContent: "center" })}
+            style={(st: Zustand) => ({ ...weich, width: 44, height: 40, borderRadius: 12, borderWidth: 1.5, borderColor: nur !== "alle" ? L.lila : "#E6DFF1", backgroundColor: st.hovered || nur !== "alle" ? L.lilaZart : "#FFFFFF", alignItems: "center", justifyContent: "center" , ...knopfHover(!!st.hovered, st.pressed) })}
           >
             <LinienIcon name="filter" size={20} color={nur !== "alle" ? L.lila : L.tinte2} />
           </Pressable>
@@ -369,7 +370,7 @@ export function SchilderJagdWeb() {
               const art = artVon(z);
               const fund = stand.schilder[z.key];
               return (
-                <Pressable key={z.key} onPress={() => setOffen(z)} style={(st: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 16, paddingHorizontal: 18, height: 64, borderTopWidth: i ? 1 : 0, borderTopColor: "#F0ECF6", backgroundColor: st.hovered ? "#FBF9FF" : "transparent" })}>
+                <Pressable key={z.key} onPress={() => setOffen(z)} style={(st: Zustand) => ({ ...weich, flexDirection: "row", alignItems: "center", gap: 16, paddingHorizontal: 18, height: 64, borderTopWidth: i ? 1 : 0, borderTopColor: "#F0ECF6", backgroundColor: st.hovered ? "#FBF9FF" : "transparent" })}>
                   <View style={{ opacity: art === "offen" ? 0.35 : 1 }}>
                     <Verkehrszeichen zeichen={z.key} groesse={40} />
                   </View>
@@ -398,7 +399,7 @@ export function SchilderJagdWeb() {
         <Pressable onPress={() => setOffen(null)} style={{ flex: 1, backgroundColor: "rgba(31,21,48,0.35)", alignItems: "center", justifyContent: "center", padding: 24 }}>
           {offen ? (
             <Pressable onPress={() => {}} style={{ width: "100%", maxWidth: 480, borderRadius: 22, backgroundColor: "#FFFFFF", padding: 28, gap: 18, alignItems: "center" }}>
-              <Pressable onPress={() => setOffen(null)} accessibilityLabel="Schließen" style={(st: Zustand) => ({ position: "absolute", top: 14, right: 14, width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: st.hovered ? L.lilaZart : "transparent" })}>
+              <Pressable onPress={() => setOffen(null)} accessibilityLabel="Schließen" style={(st: Zustand) => ({ ...weich, position: "absolute", top: 14, right: 14, width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: st.hovered ? L.lilaZart : "transparent" })}>
                 <Icon name="close" size={20} color={L.tinte2} />
               </Pressable>
               <View style={{ width: 168, height: 168, borderRadius: 84, alignItems: "center", justifyContent: "center", backgroundColor: L.lilaZart }}>

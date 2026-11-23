@@ -12,6 +12,7 @@ import { n, type Zustand } from "@/components/web/bunt";
 import { useTasten } from "@/components/web/frage-web";
 import { dateiUrl, kurzeZahl, type ClipEintrag } from "@/lib/clips-server";
 import type { LiveInfo } from "@/lib/live";
+import { karteHover, knopfHover, weich } from "@/components/web/hover";
 
 // Clips am PC: oben die Bereiche (Entdecken, Folge ich, Live), in der Mitte
 // das Video hochkant, rechts daneben Ersteller, Text, die Aktionen als große
@@ -79,13 +80,13 @@ function Knopf({ titel, icon, onPress, art = "voll", klein }: { titel: string; i
   const h = klein ? 40 : 48;
   if (art === "rand")
     return (
-      <Pressable onPress={onPress} style={(z: Zustand) => ({ height: h, paddingHorizontal: 16, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 8, borderWidth: 1.5, borderColor: z.hovered ? "#CDB8F5" : "#E6DFF1", backgroundColor: z.hovered ? "#FAF7FF" : "#FFFFFF" })}>
+      <Pressable onPress={onPress} style={(z: Zustand) => ({ ...weich, height: h, paddingHorizontal: 16, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 8, borderWidth: 1.5, borderColor: z.hovered ? "#CDB8F5" : "#E6DFF1", backgroundColor: z.hovered ? "#FAF7FF" : "#FFFFFF" , ...knopfHover(!!z.hovered, z.pressed) })}>
         {icon ? <Icon name={icon} size={18} color={F.lila} /> : null}
         <Text style={{ ...n.fett, fontSize: 15, color: F.tinte }}>{titel}</Text>
       </Pressable>
     );
   return (
-    <Pressable onPress={onPress} style={(z: Zustand) => ({ borderRadius: 14, opacity: z.pressed ? 0.85 : 1, shadowColor: F.lila, shadowOpacity: 0.32, shadowRadius: 12, shadowOffset: { width: 0, height: 5 } })}>
+    <Pressable onPress={onPress} style={(z: Zustand) => ({ ...weich, borderRadius: 14, ...knopfHover(!!z.hovered, z.pressed), shadowColor: F.lila, shadowOpacity: 0.32, shadowRadius: 12, shadowOffset: { width: 0, height: 5 } })}>
       <LinearGradient colors={["#8B5CF6", "#6D28D9"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: h, paddingHorizontal: 20, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 8 }}>
         {icon ? <Icon name={icon} size={18} color="#FFFFFF" /> : null}
         <Text style={{ ...n.fett, fontSize: 15, color: "#FFFFFF" }}>{titel}</Text>
@@ -116,7 +117,7 @@ function Reiter<W extends string>({ optionen, wert, onWechsel }: { optionen: { i
       {optionen.map((o) => {
         const an = o.id === wert;
         return (
-          <Pressable key={o.id} onPress={() => onWechsel(o.id)} style={(z: Zustand) => ({ height: 40, paddingHorizontal: 18, borderRadius: 12, overflow: "hidden", flexDirection: "row", alignItems: "center", gap: 7, backgroundColor: an ? undefined : z.hovered ? "#F6F2FD" : "transparent" })}>
+          <Pressable key={o.id} onPress={() => onWechsel(o.id)} style={(z: Zustand) => ({ ...weich, height: 40, paddingHorizontal: 18, borderRadius: 12, overflow: "hidden", flexDirection: "row", alignItems: "center", gap: 7, backgroundColor: an ? undefined : z.hovered ? "#F6F2FD" : "transparent" , ...knopfHover(!!z.hovered, z.pressed) })}>
             {an ? <LinearGradient colors={["#8B5CF6", "#6D28D9"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} /> : null}
             {o.punkt ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#FF3B5C" }} /> : null}
             <Text style={{ ...n.fett, fontSize: 15, color: an ? "#FFFFFF" : F.tinte2 }}>{o.titel}</Text>
@@ -133,7 +134,7 @@ function RundKnopf({ icon, label, onPress, aus }: { icon: IconName; label: strin
       onPress={onPress}
       disabled={aus}
       accessibilityLabel={label}
-      style={(z: Zustand) => ({ width: 50, height: 50, borderRadius: 25, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: F.rand, backgroundColor: z.hovered && !aus ? "#F4EEFF" : "#FFFFFF", opacity: aus ? 0.35 : 1, ...schatten })}
+      style={(z: Zustand) => ({ ...weich, width: 50, height: 50, borderRadius: 25, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: F.rand, backgroundColor: z.hovered && !aus ? "#F4EEFF" : "#FFFFFF", opacity: aus ? 0.35 : 1, ...schatten , ...knopfHover(!!z.hovered, z.pressed) })}
     >
       <Icon name={icon} size={22} color={F.lila} />
     </Pressable>
@@ -145,7 +146,7 @@ function Aktion({ icon, text, aktiv, farbe, onPress, label }: { icon: IconName; 
     <Pressable
       onPress={onPress}
       accessibilityLabel={label}
-      style={(z: Zustand) => ({ flex: 1, alignItems: "center", gap: 6, paddingVertical: 12, borderRadius: 14, backgroundColor: z.hovered ? "#F6F2FD" : "transparent" })}
+      style={(z: Zustand) => ({ ...weich, flex: 1, alignItems: "center", gap: 6, paddingVertical: 12, borderRadius: 14, backgroundColor: z.hovered ? "#F6F2FD" : "transparent" })}
     >
       <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: aktiv ? "#FDE7F1" : F.zart, alignItems: "center", justifyContent: "center" }}>
         <Icon name={icon} size={23} color={aktiv ? (farbe ?? F.lila) : F.lila} />
@@ -197,7 +198,7 @@ export function ClipsWeb(p: ClipsWebProps) {
     inhalt = p.lives.length ? (
       <View style={{ flex: 1, gap: 14, maxWidth: 720, alignSelf: "center", width: "100%" }}>
         {p.lives.map((l) => (
-          <Pressable key={l.id} onPress={() => router.push({ pathname: "/live", params: { id: l.id } })} style={(z: Zustand) => ({ padding: 18, flexDirection: "row", alignItems: "center", gap: 14, borderRadius: 20, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: z.hovered ? "#CDB8F5" : F.rand, ...schatten })}>
+          <Pressable key={l.id} onPress={() => router.push({ pathname: "/live", params: { id: l.id } })} style={(z: Zustand) => ({ ...weich, padding: 18, flexDirection: "row", alignItems: "center", gap: 14, borderRadius: 20, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: z.hovered ? "#CDB8F5" : F.rand, ...schatten , ...karteHover(!!z.hovered, z.pressed) })}>
             <NutzerBild pfad={l.gastgeber?.bild_pfad ?? null} name={l.gastgeber?.name ?? "Live"} farbe={l.gastgeber?.avatar_farbe} groesse={48} />
             <View style={{ flex: 1 }}>
               <Text style={{ ...n.schwarz, fontSize: 17, color: F.tinte }}>{l.titel || "Live"}</Text>
@@ -284,7 +285,7 @@ export function ClipsWeb(p: ClipsWebProps) {
         <View style={{ width: 380, gap: 18 }}>
           <View style={{ padding: 22, gap: 14, borderRadius: 22, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: F.rand, ...schatten }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-              <Pressable onPress={() => p.aktionen.onProfil(clip)} style={(z: Zustand) => ({ flex: 1, flexDirection: "row", alignItems: "center", gap: 12, opacity: z.hovered ? 0.8 : 1 })}>
+              <Pressable onPress={() => p.aktionen.onProfil(clip)} style={(z: Zustand) => ({ ...weich, flex: 1, flexDirection: "row", alignItems: "center", gap: 12, opacity: z.hovered ? 0.8 : 1 })}>
                 <NutzerBild pfad={clip.autor_bild} name={name} farbe={clip.autor_farbe} groesse={50} />
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={{ ...n.schwarz, fontSize: 17, color: F.tinte }} numberOfLines={1}>
@@ -311,7 +312,7 @@ export function ClipsWeb(p: ClipsWebProps) {
             <View style={{ gap: 10 }}>
               <Text style={{ ...n.schwarz, fontSize: 18, color: F.tinte }}>Als Nächstes</Text>
               {naechste.map((c, i) => (
-                <Pressable key={c.id} onPress={() => setIndex(index + 1 + i)} style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 12, padding: 8, borderRadius: 16, backgroundColor: z.hovered ? "#FFFFFF" : "transparent", borderWidth: 1.5, borderColor: z.hovered ? F.rand : "transparent" })}>
+                <Pressable key={c.id} onPress={() => setIndex(index + 1 + i)} style={(z: Zustand) => ({ ...weich, flexDirection: "row", alignItems: "center", gap: 12, padding: 8, borderRadius: 16, backgroundColor: z.hovered ? "#FFFFFF" : "transparent", borderWidth: 1.5, borderColor: z.hovered ? F.rand : "transparent" })}>
                   <View style={{ width: 54, height: 80, borderRadius: 10, overflow: "hidden", backgroundColor: "#111418" }}>
                     {c.bild_pfad ? <Image source={{ uri: dateiUrl(c.bild_pfad) }} style={{ width: "100%", height: "100%" }} resizeMode="cover" /> : null}
                   </View>

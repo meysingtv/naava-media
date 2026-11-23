@@ -11,6 +11,7 @@ import { dauerLang, istGesehen, lernAktivitaet, useKurse, weiterlernen, type Kur
 import { KATEGORIEN, themaBild } from "@/lib/lernthemen";
 import { tageBis, terminDatum } from "@/lib/pruefungstag";
 import { useStand } from "@/lib/stand";
+import { karteHover, knopfHover, weich } from "@/components/web/hover";
 
 // Home am PC im lila Design (Vorlage 1:1): Begrüßung mit Suche, Glocke und
 // Hilfe, zwei Hero-Karten (Lernvideos mit Auto, Prüfungstermin mit Kalender),
@@ -47,7 +48,7 @@ export function LKarte({ children, style, onPress }: { children: ReactNode; styl
   const basis: ViewStyle = { backgroundColor: L.karte, borderRadius: 18, borderWidth: 1.5, borderColor: L.rand, ...schatten };
   if (!onPress) return <View style={[basis, style]}>{children}</View>;
   return (
-    <Pressable onPress={onPress} style={(z: Zustand) => [basis, style, z.hovered ? { borderColor: "#DCCFF4" } : null]}>
+    <Pressable onPress={onPress} style={(z: Zustand) => [weich, basis, style, z.hovered ? { borderColor: "#DCCFF4" } : null, karteHover(!!z.hovered, z.pressed)]}>
       {children}
     </Pressable>
   );
@@ -63,7 +64,7 @@ function IconKachel({ icon, farbe, grund, groesse = 40, iconGroesse = 22 }: { ic
 
 function KnopfVoll({ titel, icon, onPress, style }: { titel: string; icon: IconName; onPress: () => void; style?: ViewStyle }) {
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" style={(z: Zustand) => [{ borderRadius: 12, opacity: z.pressed ? 0.85 : 1 }, style]}>
+    <Pressable onPress={onPress} accessibilityRole="button" style={(z: Zustand) => [weich, { borderRadius: 12, ...knopfHover(!!z.hovered, z.pressed) }, style]}>
       <LinearGradient colors={["#8B5CF6", "#6D28D9"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 46, borderRadius: 12, paddingHorizontal: 28, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 14 }}>
         <Icon name={icon} size={18} color="#FFFFFF" />
         <Text style={{ ...schrift.halb, fontSize: 16.5, color: "#FFFFFF" }}>{titel}</Text>
@@ -77,7 +78,7 @@ function KnopfRand({ titel, icon, onPress, style, stark }: { titel: string; icon
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      style={(z: Zustand) => [{ height: 46, borderRadius: 12, borderWidth: 1.5, borderColor: z.hovered || stark ? L.lila : "#D9CBF5", backgroundColor: z.hovered ? L.lilaZart : "#FFFFFF", paddingHorizontal: 22, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 }, style]}
+      style={(z: Zustand) => [weich, { height: 46, borderRadius: 12, borderWidth: 1.5, borderColor: z.hovered || stark ? L.lila : "#D9CBF5", backgroundColor: z.hovered ? L.lilaZart : "#FFFFFF", paddingHorizontal: 22, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12 }, style, knopfHover(!!z.hovered, z.pressed)]}
     >
       <Icon name={icon} size={20} color={L.lila} />
       <Text style={{ ...schrift.halb, fontSize: 16.5, color: L.lila }}>{titel}</Text>
@@ -87,7 +88,7 @@ function KnopfRand({ titel, icon, onPress, style, stark }: { titel: string; icon
 
 function RundKnopf({ icon, punkt, onPress, label }: { icon: IconName; punkt?: boolean; onPress: () => void; label: string }) {
   return (
-    <Pressable onPress={onPress} accessibilityLabel={label} style={(z: Zustand) => ({ width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: L.rand, backgroundColor: z.hovered ? L.lilaZart : "#FFFFFF", alignItems: "center", justifyContent: "center", ...schatten })}>
+    <Pressable onPress={onPress} accessibilityLabel={label} style={(z: Zustand) => ({ ...weich, width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: L.rand, backgroundColor: z.hovered ? L.lilaZart : "#FFFFFF", alignItems: "center", justifyContent: "center", ...schatten , ...knopfHover(!!z.hovered, z.pressed) })}>
       <Icon name={icon} size={21} color={L.tinte} />
       {punkt ? <View style={{ position: "absolute", top: 8, right: 9, width: 9, height: 9, borderRadius: 5, backgroundColor: L.lila, borderWidth: 1.5, borderColor: "#FFFFFF" }} /> : null}
     </Pressable>
@@ -257,7 +258,7 @@ export function HomeWebLila() {
             <Pressable
               key={s.titel}
               onPress={() => router.navigate(s.pfad as never)}
-              style={(z: Zustand) => ({ flexGrow: s.titel === "Verkehrszeichen" || s.titel === "Schilder-Jagd" ? 1.35 : 1, flexBasis: 0, height: 56, borderRadius: 14, borderWidth: 1.5, borderColor: z.hovered ? s.farbe : s.rand, backgroundColor: s.grund, flexDirection: eng ? "column" : "row", alignItems: "center", justifyContent: "center", gap: eng ? 1 : 12, ...schatten })}
+              style={(z: Zustand) => ({ ...weich, flexGrow: s.titel === "Verkehrszeichen" || s.titel === "Schilder-Jagd" ? 1.35 : 1, flexBasis: 0, height: 56, borderRadius: 14, borderWidth: 1.5, borderColor: z.hovered ? s.farbe : s.rand, backgroundColor: s.grund, flexDirection: eng ? "column" : "row", alignItems: "center", justifyContent: "center", gap: eng ? 1 : 12, ...schatten , ...karteHover(!!z.hovered, z.pressed) })}
             >
               <Icon name={s.icon} size={eng ? 20 : 26} color={s.farbe} />
               <Text style={{ ...schrift.fett, fontSize: eng ? 13 : 16, color: L.tinte }} numberOfLines={1}>
@@ -384,7 +385,7 @@ export function HomeWebLila() {
               </View>
             </View>
             {empfehlungen.slice(0, 3).map((e, i) => (
-              <Pressable key={e.titel} onPress={e.onPress} style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 11, borderTopWidth: i ? 1 : 0, borderTopColor: L.rand, backgroundColor: z.hovered ? "#FBF9FF" : "transparent" })}>
+              <Pressable key={e.titel} onPress={e.onPress} style={(z: Zustand) => ({ ...weich, flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 11, borderTopWidth: i ? 1 : 0, borderTopColor: L.rand, backgroundColor: z.hovered ? "#FBF9FF" : "transparent" })}>
                 <IconKachel icon={e.icon} farbe={L.lila} grund={L.lilaZart} groesse={40} iconGroesse={20} />
                 <View style={{ flex: 1 }}>
                   <Text style={{ ...schrift.fett, fontSize: 15, color: L.tinte }} numberOfLines={1}>

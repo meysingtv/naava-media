@@ -21,6 +21,7 @@ import { useKonto } from "@/lib/konto";
 import { managerListe, type ManagerNutzer } from "@/lib/manager";
 import { adminZaehler, type Zaehler } from "@/lib/verwaltung";
 import { RAND } from "@/lib/theme";
+import { weich } from "@/components/web/hover";
 
 // Manager für den Inhaber (Web-Panel: localhost…/manager): Übersicht über die
 // Fahrschule, Zugänge anlegen und verwalten (Fahrschüler, Fahrlehrer, Pausen,
@@ -274,7 +275,7 @@ function Inhalt() {
 /** Runde weiße Taste oben rechts (Glocke, Hilfe, Aktualisieren). */
 function RundTaste({ icon, label, punkt, onPress }: { icon: IconName; label: string; punkt?: boolean; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} accessibilityLabel={label} style={(z: Zustand) => ({ width: 46, height: 46, borderRadius: 23, backgroundColor: z.hovered ? "#F4EEFF" : "#FFFFFF", borderWidth: 1.5, borderColor: "#EEE8F7", alignItems: "center", justifyContent: "center", shadowColor: "#5B2BB5", shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } })}>
+    <Pressable onPress={onPress} accessibilityLabel={label} style={(z: Zustand) => ({ ...weich, width: 46, height: 46, borderRadius: 23, backgroundColor: z.hovered ? "#F4EEFF" : "#FFFFFF", borderWidth: 1.5, borderColor: "#EEE8F7", alignItems: "center", justifyContent: "center", shadowColor: "#5B2BB5", shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } })}>
       <Icon name={icon} size={22} color="#1F1530" />
       {punkt ? <View style={{ position: "absolute", top: 7, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: "#7C3AED", borderWidth: 1.5, borderColor: "#FFFFFF" }} /> : null}
     </Pressable>
@@ -405,7 +406,7 @@ export function Uebersicht({
               ["gesperrt", "gesperrt"],
             ] as const
           ).map(([k, fi]) => (
-            <Pressable key={k} onPress={() => onZugaenge(fi)} style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 10, height: 40, marginHorizontal: -8, paddingHorizontal: 8, borderRadius: 10, backgroundColor: z.hovered ? B.hover : "transparent" })}>
+            <Pressable key={k} onPress={() => onZugaenge(fi)} style={(z: Zustand) => ({ ...weich, flexDirection: "row", alignItems: "center", gap: 10, height: 40, marginHorizontal: -8, paddingHorizontal: 8, borderRadius: 10, backgroundColor: z.hovered ? B.hover : "transparent" })}>
               <StatusPlakette status={k} />
               <View style={{ flex: 1 }} />
               <Text style={{ ...n.schwarz, fontSize: 17, color: B.text, fontVariant: ["tabular-nums"] }}>{anzahl[k]}</Text>
@@ -428,7 +429,7 @@ export function Uebersicht({
         <Text style={{ ...n.fett, fontSize: 14, color: B.text2, marginTop: 18, marginBottom: 6 }}>Am meisten gelernt</Text>
         {fleissig.length ? (
           fleissig.map((x, i) => (
-            <Pressable key={x.id} onPress={() => onWaehlen(x.id)} style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 12, height: 40, marginHorizontal: -8, paddingHorizontal: 8, borderRadius: 10, backgroundColor: z.hovered ? B.hover : "transparent" })}>
+            <Pressable key={x.id} onPress={() => onWaehlen(x.id)} style={(z: Zustand) => ({ ...weich, flexDirection: "row", alignItems: "center", gap: 12, height: 40, marginHorizontal: -8, paddingHorizontal: 8, borderRadius: 10, backgroundColor: z.hovered ? B.hover : "transparent" })}>
               <Text style={{ width: 18, ...n.schwarz, fontSize: 15, color: i === 0 ? B.orange : B.text3 }}>{i + 1}</Text>
               <MAvatar pfad={x.bild_pfad} name={nameVon(x)} groesse={28} />
               <Text style={{ flex: 1, ...n.fett, fontSize: 14.5, color: B.text }} numberOfLines={1}>

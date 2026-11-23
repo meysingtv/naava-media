@@ -10,6 +10,7 @@ import { useTasten } from "@/components/web/frage-web";
 import { L, LKarte } from "@/components/web/home-web-lila";
 import { CLIPS, type Clip } from "@/lib/clips";
 import { useStand } from "@/lib/stand";
+import { karteHover, knopfHover, weich } from "@/components/web/hover";
 
 // Kurz erklärt am PC im lila Design (Vorlage 1:1): oben die bewegte Grafik
 // als „Player“ und rechts die drei Sätze, darunter alle Kurz-Clips mit
@@ -37,7 +38,7 @@ const katVon = (k: string) => KAT[k] ?? { icon: "play-circle-outline" as IconNam
 
 function Aktion({ icon, text, aktiv, onPress, label }: { icon: IconName; text?: string; aktiv?: boolean; onPress: () => void; label: string }) {
   return (
-    <Pressable onPress={onPress} accessibilityLabel={label} style={(z: Zustand) => ({ height: 52, minWidth: 52, paddingHorizontal: text ? 16 : 0, borderRadius: 14, borderWidth: 1.5, borderColor: aktiv ? "#C9B0F7" : z.hovered ? "#D9CBF5" : "#ECE6F6", backgroundColor: aktiv ? L.lilaZart : "#FFFFFF", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9, shadowColor: "#5B2BB5", shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } })}>
+    <Pressable onPress={onPress} accessibilityLabel={label} style={(z: Zustand) => ({ ...weich, height: 52, minWidth: 52, paddingHorizontal: text ? 16 : 0, borderRadius: 14, borderWidth: 1.5, borderColor: aktiv ? "#C9B0F7" : z.hovered ? "#D9CBF5" : "#ECE6F6", backgroundColor: aktiv ? L.lilaZart : "#FFFFFF", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9, shadowColor: "#5B2BB5", shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } , ...knopfHover(!!z.hovered, z.pressed) })}>
       <Icon name={icon} size={22} color={aktiv ? L.lila : L.tinte} />
       {text ? <Text style={{ ...s.fett, fontSize: 16, color: L.tinte }}>{text}</Text> : null}
     </Pressable>
@@ -48,7 +49,7 @@ function ClipKarte({ clip, aktiv, gemerkt, onPress, onMerken }: { clip: Clip; ak
   const k = katVon(clip.kategorie);
   const [drueber, setDrueber] = useState(false);
   return (
-    <Pressable onPress={onPress} onHoverIn={() => setDrueber(true)} onHoverOut={() => setDrueber(false)} style={(z: Zustand) => ({ flex: 1, height: 122, borderRadius: 16, borderWidth: aktiv ? 2 : 1.5, borderColor: aktiv ? "#B78BFA" : z.hovered ? "#D9CBF5" : "#EEE8F7", backgroundColor: "#FFFFFF", flexDirection: "row", alignItems: "center", padding: 6, gap: 14, shadowColor: "#5B2BB5", shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 5 } })}>
+    <Pressable onPress={onPress} onHoverIn={() => setDrueber(true)} onHoverOut={() => setDrueber(false)} style={(z: Zustand) => ({ ...weich, flex: 1, height: 122, borderRadius: 16, borderWidth: aktiv ? 2 : 1.5, borderColor: aktiv ? "#B78BFA" : z.hovered ? "#D9CBF5" : "#EEE8F7", backgroundColor: "#FFFFFF", flexDirection: "row", alignItems: "center", padding: 6, gap: 14, shadowColor: "#5B2BB5", shadowOpacity: 0.08, shadowRadius: 14, shadowOffset: { width: 0, height: 5 } , ...karteHover(!!z.hovered, z.pressed) })}>
       <View style={{ width: 172, height: 108, borderRadius: 12, overflow: "hidden", justifyContent: "center", alignItems: "center", backgroundColor: "#EFE8FF" }}>
         <ClipBild bild={clip.bild} breite={172} aktiv={drueber} />
         <View style={{ position: "absolute", left: 8, bottom: 8, width: 30, height: 26, borderRadius: 8, backgroundColor: "rgba(15,10,25,0.7)", alignItems: "center", justifyContent: "center" }}>
@@ -175,7 +176,7 @@ export function KurzErklaertLila() {
               ))}
             </View>
             <View style={{ flexDirection: "row", gap: 12, marginTop: "auto", paddingTop: 18 }}>
-              <Pressable onPress={() => router.push({ pathname: "/thema/[id]", params: { id: clip.thema } })} style={(z: Zustand) => ({ borderRadius: 14, opacity: z.pressed ? 0.85 : 1, shadowColor: "#7C3AED", shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 5 } })}>
+              <Pressable onPress={() => router.push({ pathname: "/thema/[id]", params: { id: clip.thema } })} style={(z: Zustand) => ({ ...weich, borderRadius: 14, ...knopfHover(!!z.hovered, z.pressed), shadowColor: "#7C3AED", shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 5 } })}>
                 <LinearGradient colors={["#8B5CF6", "#6D28D9"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: 52, paddingHorizontal: 22, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 10 }}>
                   <Icon name="play" size={19} color="#FFFFFF" />
                   <Text style={{ ...s.fett, fontSize: 17, color: "#FFFFFF" }}>Videos zum Thema</Text>
@@ -195,7 +196,7 @@ export function KurzErklaertLila() {
             <Text style={{ ...s.schwarz, fontSize: 30, color: L.tinte }}>Passende Kurz-Clips</Text>
             <Text style={{ ...s.text, fontSize: 16, color: L.tinte2 }}>Kurze, verständliche Erklärungen zu allen Themen.</Text>
           </View>
-          <Pressable onPress={() => setKat(kat === "gemerkt" ? "alle" : "gemerkt")} style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 6, height: 36, paddingHorizontal: 12, borderRadius: 18, marginTop: 2, marginRight: 14, backgroundColor: kat === "gemerkt" ? "#F4EEFF" : z.hovered ? "#FAF7FF" : "transparent", borderWidth: 1.5, borderColor: kat === "gemerkt" ? "#A47BF5" : "#ECE6F6" })}>
+          <Pressable onPress={() => setKat(kat === "gemerkt" ? "alle" : "gemerkt")} style={(z: Zustand) => ({ ...weich, flexDirection: "row", alignItems: "center", gap: 6, height: 36, paddingHorizontal: 12, borderRadius: 18, marginTop: 2, marginRight: 14, backgroundColor: kat === "gemerkt" ? "#F4EEFF" : z.hovered ? "#FAF7FF" : "transparent", borderWidth: 1.5, borderColor: kat === "gemerkt" ? "#A47BF5" : "#ECE6F6" , ...knopfHover(!!z.hovered, z.pressed) })}>
             <Icon name={kat === "gemerkt" ? "bookmark" : "bookmark-outline"} size={17} color={L.lila} />
             <Text style={{ ...s.fett, fontSize: 14, color: L.lilaDunkel }}>Gemerkt{stand.clips.gemerkt.length ? ` (${stand.clips.gemerkt.length})` : ""}</Text>
           </Pressable>
@@ -207,7 +208,7 @@ export function KurzErklaertLila() {
             const icon = f.id === "alle" ? ("grid-outline" as IconName) : f.id === "gemerkt" ? ("bookmark-outline" as IconName) : katVon(f.id).icon;
             const farbe = f.id === "alle" || f.id === "gemerkt" ? L.lila : katVon(f.id).farbe;
             return (
-              <Pressable key={f.id} onPress={() => setKat(f.id)} style={(z: Zustand) => ({ height: 40, paddingHorizontal: 12, borderRadius: 20, flexDirection: "row", alignItems: "center", gap: 7, borderWidth: an ? 2 : 1.5, borderColor: an ? "#A47BF5" : z.hovered ? "#D9CBF5" : "#ECE6F6", backgroundColor: an ? "#F4EEFF" : "#FFFFFF", shadowColor: "#5B2BB5", shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } })}>
+              <Pressable key={f.id} onPress={() => setKat(f.id)} style={(z: Zustand) => ({ ...weich, height: 40, paddingHorizontal: 12, borderRadius: 20, flexDirection: "row", alignItems: "center", gap: 7, borderWidth: an ? 2 : 1.5, borderColor: an ? "#A47BF5" : z.hovered ? "#D9CBF5" : "#ECE6F6", backgroundColor: an ? "#F4EEFF" : "#FFFFFF", shadowColor: "#5B2BB5", shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } , ...knopfHover(!!z.hovered, z.pressed) })}>
                 <Icon name={icon} size={18} color={farbe} />
                 <Text style={{ ...s.fett, fontSize: 14, color: an ? L.lilaDunkel : L.tinte }}>{f.titel}</Text>
               </Pressable>
