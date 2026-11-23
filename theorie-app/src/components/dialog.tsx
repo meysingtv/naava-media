@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, Modal, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type AlertButton, type AlertOptions } from "react-native";
+import { Alert, Modal, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type AlertButton, type AlertOptions, type StyleProp, type ViewStyle } from "react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from "react-native-reanimated";
@@ -128,10 +128,10 @@ export function DialogHost() {
   if (desktop) {
     return (
       <Modal visible={aktuell != null} transparent animationType="fade" onRequestClose={zurueck}>
-        <Pressable onPress={zurueck} style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24, backgroundColor: "rgba(10,12,15,0.4)" }}>
+        <Pressable onPress={zurueck} style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24, backgroundColor: "rgba(245,241,255,0.55)" }}>
           {aktuell ? (
-            <Pressable onPress={() => {}} accessibilityRole="alert" style={{ width: "100%", maxWidth: 440, padding: 26, gap: 8, borderRadius: 22, backgroundColor: B.flaeche, borderWidth: 1.5, borderColor: B.linie, borderBottomWidth: 3, borderBottomColor: B.kante }}>
-              <Text style={{ ...n.schwarz, fontSize: 21, lineHeight: 27, color: B.text }}>{aktuell.titel}</Text>
+            <Pressable onPress={() => {}} accessibilityRole="alert" style={{ width: "100%", maxWidth: 440, padding: 28, gap: 8, borderRadius: 24, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: "#EEE8F7", shadowColor: "#2A1260", shadowOpacity: 0.2, shadowRadius: 40, shadowOffset: { width: 0, height: 16 } }}>
+              <Text style={{ ...n.schwarz, fontSize: 23, lineHeight: 29, color: "#1F1530" }}>{aktuell.titel}</Text>
               {aktuell.text ? <Text style={{ ...n.halb, fontSize: 15.5, lineHeight: 22, color: B.text2 }}>{aktuell.text}</Text> : null}
               <View style={{ marginTop: 16, gap: 10, flexDirection: nebeneinander ? "row" : "column" }}>
                 {knoepfe.map((k, i) => {
@@ -139,14 +139,21 @@ export function DialogHost() {
                   const abbrechen = k.style === "cancel";
                   const istHaupt = k === haupt || (knoepfe.length === 1 && !abbrechen);
                   return (
-                    <Knopf
+                    <Pressable
                       key={`${i}-${k.text}`}
-                      titel={k.text ?? "OK"}
-                      ton={gefahr ? "rot" : istHaupt ? "orange" : "blau"}
-                      art={gefahr || istHaupt ? "voll" : "rand"}
                       onPress={() => schliessen(k)}
-                      style={nebeneinander ? { flex: 1 } : undefined}
-                    />
+                      style={(z) => {
+                        const hovered = (z as { hovered?: boolean }).hovered;
+                        return [
+                        { height: 50, borderRadius: 14, alignItems: "center", justifyContent: "center", overflow: "hidden" },
+                        nebeneinander ? { flex: 1 } : null,
+                        gefahr || istHaupt ? { shadowColor: gefahr ? "#E5304F" : "#7C3AED", shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } } : { borderWidth: 1.5, borderColor: hovered ? "#CDB8F5" : "#E6DFF1", backgroundColor: hovered ? "#FAF7FF" : "#FFFFFF" },
+                      ] as StyleProp<ViewStyle>;
+                      }}
+                    >
+                      {gefahr || istHaupt ? <LinearGradient colors={gefahr ? ["#F04D66", "#D8203F"] : ["#8B5CF6", "#6D28D9"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} /> : null}
+                      <Text style={{ ...n.fett, fontSize: 16, color: gefahr || istHaupt ? "#FFFFFF" : abbrechen ? "#5E5670" : "#6D28D9" }}>{k.text ?? "OK"}</Text>
+                    </Pressable>
                   );
                 })}
               </View>

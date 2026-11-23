@@ -21,7 +21,8 @@ import { heuteBeantwortet, serieAktuell, useStand } from "@/lib/stand";
 
 type Punkt = { pfad: string; titel: string; an: IconName; aus: IconName; ton: Ton };
 
-const LOGO_APP = require("../../../assets/images/web/logo-app.png");
+const LOGO_QUER = require("../../../assets/images/web/logo-quer.png");
+const LOGO_RAD = require("../../../assets/images/web/logo-rad.png");
 
 const HAUPT: Punkt[] = [
   { pfad: "/heute", titel: "Home", an: "home", aus: "home-outline", ton: TOENE.orange },
@@ -102,12 +103,7 @@ export function WebSeitenleiste() {
   return (
     <View style={{ width: schmal ? SEITENLEISTE_SCHMAL : SEITENLEISTE, height: "100%", paddingHorizontal: schmal ? 12 : 20, paddingTop: 24, paddingBottom: 18, borderRightWidth: 1.5, borderRightColor: "#EEE8F7", backgroundColor: "#FDFCFF" }}>
       <Pressable onPress={() => router.navigate("/heute")} accessibilityLabel="Fahrschul Pro – Home" style={{ flexDirection: "row", alignItems: "center", justifyContent: schmal ? "center" : "flex-start", gap: 10, paddingHorizontal: schmal ? 0 : 4, marginBottom: 34 }}>
-        <Image source={LOGO_APP} style={{ width: 40, height: 40 }} resizeMode="contain" />
-        {schmal ? null : (
-          <Text style={{ fontFamily: "Nunito_900Black", fontSize: 21, color: "#1F1530", letterSpacing: -0.3 }}>
-            Fahrschul<Text style={{ color: "#7C3AED" }}>Pro</Text>
-          </Text>
-        )}
+        {schmal ? <Image source={LOGO_RAD} style={{ width: 44, height: 44 }} resizeMode="contain" /> : <Image source={LOGO_QUER} style={{ width: 196, height: 31 }} resizeMode="contain" />}
       </Pressable>
       <View style={{ gap: 4 }}>
         {HAUPT.map((p) => (

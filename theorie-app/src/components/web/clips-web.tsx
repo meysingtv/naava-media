@@ -6,7 +6,9 @@ import { ClipSeite } from "@/components/clip-seite";
 import { Icon, type IconName } from "@/components/icon";
 import { Lader } from "@/components/lader";
 import { NutzerBild } from "@/components/profilbild";
-import { B, Kachel, Knopf, Leer, n, Reiter, TOENE, type Zustand } from "@/components/web/bunt";
+import { LinearGradient } from "expo-linear-gradient";
+import { CLIPS_BILD } from "@/components/clips-grund";
+import { n, type Zustand } from "@/components/web/bunt";
 import { useTasten } from "@/components/web/frage-web";
 import { dateiUrl, kurzeZahl, type ClipEintrag } from "@/lib/clips-server";
 import type { LiveInfo } from "@/lib/live";
@@ -69,15 +71,71 @@ function useRad(onRad: (richtung: 1 | -1) => void) {
   return ref;
 }
 
+const F = { tinte: "#1F1530", tinte2: "#5E5670", tinte3: "#8C84A0", lila: "#7C3AED", lilaDunkel: "#6425D3", zart: "#EFE8FD", rand: "#EEE8F7", grund: "#FBF9FF", pink: "#EC4899" };
+const schatten = { shadowColor: "#5B2BB5", shadowOpacity: 0.1, shadowRadius: 18, shadowOffset: { width: 0, height: 6 } } as const;
+
+/** Lila Knopf: voll (Verlauf) oder hell mit Rand. */
+function Knopf({ titel, icon, onPress, art = "voll", klein }: { titel: string; icon?: IconName; onPress: () => void; art?: "voll" | "rand"; klein?: boolean; ton?: string; groesse?: string }) {
+  const h = klein ? 40 : 48;
+  if (art === "rand")
+    return (
+      <Pressable onPress={onPress} style={(z: Zustand) => ({ height: h, paddingHorizontal: 16, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 8, borderWidth: 1.5, borderColor: z.hovered ? "#CDB8F5" : "#E6DFF1", backgroundColor: z.hovered ? "#FAF7FF" : "#FFFFFF" })}>
+        {icon ? <Icon name={icon} size={18} color={F.lila} /> : null}
+        <Text style={{ ...n.fett, fontSize: 15, color: F.tinte }}>{titel}</Text>
+      </Pressable>
+    );
+  return (
+    <Pressable onPress={onPress} style={(z: Zustand) => ({ borderRadius: 14, opacity: z.pressed ? 0.85 : 1, shadowColor: F.lila, shadowOpacity: 0.32, shadowRadius: 12, shadowOffset: { width: 0, height: 5 } })}>
+      <LinearGradient colors={["#8B5CF6", "#6D28D9"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ height: h, paddingHorizontal: 20, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 8 }}>
+        {icon ? <Icon name={icon} size={18} color="#FFFFFF" /> : null}
+        <Text style={{ ...n.fett, fontSize: 15, color: "#FFFFFF" }}>{titel}</Text>
+      </LinearGradient>
+    </Pressable>
+  );
+}
+
+/** Leerer Zustand im lila Stil – mit Bild aus den Clips. */
+function Leer({ bild, titel, text, children }: { bild: number; titel: string; text: string; children?: React.ReactNode }) {
+  return (
+    <View style={{ flex: 1, alignItems: "center", paddingTop: 40 }}>
+      <View style={{ width: 560, maxWidth: "100%", alignItems: "center", paddingVertical: 36, paddingHorizontal: 32, borderRadius: 26, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: F.rand, ...schatten }}>
+        <View style={{ width: 140, height: 140, borderRadius: 70, backgroundColor: F.zart, alignItems: "center", justifyContent: "center" }}>
+          <Image source={bild} style={{ width: 112, height: 112 }} resizeMode="contain" />
+        </View>
+        <Text style={{ ...n.schwarz, fontSize: 25, color: F.tinte, marginTop: 20, textAlign: "center" }}>{titel}</Text>
+        <Text style={{ ...n.text, fontSize: 16, lineHeight: 23, color: F.tinte2, marginTop: 8, textAlign: "center" }}>{text}</Text>
+        {children ? <View style={{ flexDirection: "row", gap: 12, marginTop: 22 }}>{children}</View> : null}
+      </View>
+    </View>
+  );
+}
+
+function Reiter<W extends string>({ optionen, wert, onWechsel }: { optionen: { id: W; titel: string; punkt?: boolean }[]; wert: W; onWechsel: (w: W) => void }) {
+  return (
+    <View style={{ flexDirection: "row", gap: 4, padding: 5, borderRadius: 16, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: F.rand, ...schatten }}>
+      {optionen.map((o) => {
+        const an = o.id === wert;
+        return (
+          <Pressable key={o.id} onPress={() => onWechsel(o.id)} style={(z: Zustand) => ({ height: 40, paddingHorizontal: 18, borderRadius: 12, overflow: "hidden", flexDirection: "row", alignItems: "center", gap: 7, backgroundColor: an ? undefined : z.hovered ? "#F6F2FD" : "transparent" })}>
+            {an ? <LinearGradient colors={["#8B5CF6", "#6D28D9"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} /> : null}
+            {o.punkt ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#FF3B5C" }} /> : null}
+            <Text style={{ ...n.fett, fontSize: 15, color: an ? "#FFFFFF" : F.tinte2 }}>{o.titel}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 function RundKnopf({ icon, label, onPress, aus }: { icon: IconName; label: string; onPress: () => void; aus?: boolean }) {
   return (
     <Pressable
       onPress={onPress}
       disabled={aus}
       accessibilityLabel={label}
-      style={(z: Zustand) => ({ width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: B.linie, backgroundColor: z.hovered && !aus ? B.ton : B.flaeche, opacity: aus ? 0.35 : 1 })}
+      style={(z: Zustand) => ({ width: 50, height: 50, borderRadius: 25, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: F.rand, backgroundColor: z.hovered && !aus ? "#F4EEFF" : "#FFFFFF", opacity: aus ? 0.35 : 1, ...schatten })}
     >
-      <Icon name={icon} size={22} color={B.text} />
+      <Icon name={icon} size={22} color={F.lila} />
     </Pressable>
   );
 }
@@ -87,10 +145,12 @@ function Aktion({ icon, text, aktiv, farbe, onPress, label }: { icon: IconName; 
     <Pressable
       onPress={onPress}
       accessibilityLabel={label}
-      style={(z: Zustand) => ({ flex: 1, alignItems: "center", gap: 6, paddingVertical: 12, borderRadius: 14, backgroundColor: z.hovered ? B.ton : "transparent" })}
+      style={(z: Zustand) => ({ flex: 1, alignItems: "center", gap: 6, paddingVertical: 12, borderRadius: 14, backgroundColor: z.hovered ? "#F6F2FD" : "transparent" })}
     >
-      <Icon name={icon} size={26} color={aktiv ? (farbe ?? B.orange) : B.text2} />
-      <Text style={{ ...n.fett, fontSize: 13.5, color: aktiv ? (farbe ?? B.orange) : B.text2, fontVariant: ["tabular-nums"] }}>{text}</Text>
+      <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: aktiv ? "#FDE7F1" : F.zart, alignItems: "center", justifyContent: "center" }}>
+        <Icon name={icon} size={23} color={aktiv ? (farbe ?? F.lila) : F.lila} />
+      </View>
+      <Text style={{ ...n.fett, fontSize: 13.5, color: aktiv ? (farbe ?? F.lila) : F.tinte, fontVariant: ["tabular-nums"] }}>{text}</Text>
     </Pressable>
   );
 }
@@ -137,48 +197,50 @@ export function ClipsWeb(p: ClipsWebProps) {
     inhalt = p.lives.length ? (
       <View style={{ flex: 1, gap: 14, maxWidth: 720, alignSelf: "center", width: "100%" }}>
         {p.lives.map((l) => (
-          <Kachel key={l.id} onPress={() => router.push({ pathname: "/live", params: { id: l.id } })} style={{ padding: 18, flexDirection: "row", alignItems: "center", gap: 14 }}>
+          <Pressable key={l.id} onPress={() => router.push({ pathname: "/live", params: { id: l.id } })} style={(z: Zustand) => ({ padding: 18, flexDirection: "row", alignItems: "center", gap: 14, borderRadius: 20, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: z.hovered ? "#CDB8F5" : F.rand, ...schatten })}>
             <NutzerBild pfad={l.gastgeber?.bild_pfad ?? null} name={l.gastgeber?.name ?? "Live"} farbe={l.gastgeber?.avatar_farbe} groesse={48} />
             <View style={{ flex: 1 }}>
-              <Text style={{ ...n.schwarz, fontSize: 17, color: B.text }}>{l.titel || "Live"}</Text>
-              <Text style={{ ...n.halb, fontSize: 14, color: B.text2 }}>{l.gastgeber?.name ?? "Fahrschul Pro"} · gerade live</Text>
+              <Text style={{ ...n.schwarz, fontSize: 17, color: F.tinte }}>{l.titel || "Live"}</Text>
+              <Text style={{ ...n.halb, fontSize: 14, color: F.tinte2 }}>{l.gastgeber?.name ?? "Fahrschul Pro"} · gerade live</Text>
             </View>
-            <Knopf titel="Ansehen" icon="play" ton="rot" onPress={() => router.push({ pathname: "/live", params: { id: l.id } })} />
-          </Kachel>
+            <Knopf titel="Ansehen" icon="play" onPress={() => router.push({ pathname: "/live", params: { id: l.id } })} />
+          </Pressable>
         ))}
       </View>
     ) : (
-      <Leer icon="radio" ton={TOENE.rot} titel="Gerade ist niemand live" text="Sobald ein Fahrlehrer oder Creator live geht, siehst du es hier – und in der Seitenleiste blinkt ein roter Punkt bei Clips." />
+      <Leer bild={CLIPS_BILD.liveKachel} titel="Gerade ist niemand live" text="Sobald ein Fahrlehrer oder Creator live geht, siehst du es hier – und in der Seitenleiste blinkt ein roter Punkt bei Clips.">
+        {p.darfErstellen ? <Knopf titel="Selbst live gehen" icon="radio-outline" onPress={() => router.push("/live-senden")} /> : null}
+      </Leer>
     );
   } else if (!p.verbunden) {
-    inhalt = <Leer icon="film" ton={TOENE.pink} titel="Clips kommen bald" text="Sobald die App mit dem Server verbunden ist, findest du hier kurze Videos rund um die Theorie." />;
+    inhalt = <Leer bild={CLIPS_BILD.figur} titel="Clips kommen bald" text="Sobald die App mit dem Server verbunden ist, findest du hier kurze Videos rund um die Theorie." />;
   } else if (p.kategorie === "folge_ich" && !p.ich) {
     inhalt = (
-      <Leer icon="people" ton={TOENE.pink} titel="Folge deinen Lieblings-Erklärern" text="Mit einem kostenlosen Konto kannst du Erstellern folgen, liken und kommentieren.">
-        <Knopf titel="Ich habe schon ein Konto" art="rand" ton="blau" onPress={() => router.push("/anmelden")} />
-        <Knopf titel="Konto erstellen" ton="gruen" onPress={() => router.push("/registrieren")} />
+      <Leer bild={CLIPS_BILD.freunde} titel="Folge deinen Lieblings-Erklärern" text="Mit einem kostenlosen Konto kannst du Erstellern folgen, liken und kommentieren.">
+        <Knopf titel="Ich habe schon ein Konto" art="rand" onPress={() => router.push("/anmelden")} />
+        <Knopf titel="Konto erstellen" onPress={() => router.push("/registrieren")} />
       </Leer>
     );
   } else if (!eintraege.length && p.fehler) {
     inhalt = (
-      <Leer icon="cloud-offline" ton={TOENE.rot} titel="Clips laden gerade nicht" text={p.fehler}>
+      <Leer bild={CLIPS_BILD.klappe} titel="Clips laden gerade nicht" text={p.fehler}>
         <Knopf titel="Nochmal versuchen" onPress={p.onNeuLaden} />
       </Leer>
     );
   } else if (!p.geladen || (p.laedt && !eintraege.length)) {
     inhalt = (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <Lader color={B.text3} />
+        <Lader color={F.tinte3} />
       </View>
     );
   } else if (!eintraege.length || !clip) {
     inhalt =
       p.kategorie === "folge_ich" ? (
-        <Leer icon="people" ton={TOENE.pink} titel="Du folgst noch niemandem" text="Klick bei einem Clip auf „Folgen“ – dann landen neue Videos dieser Person hier.">
+        <Leer bild={CLIPS_BILD.freunde} titel="Du folgst noch niemandem" text="Klick bei einem Clip auf „Folgen“ – dann landen neue Videos dieser Person hier.">
           <Knopf titel="Clips entdecken" onPress={() => p.onWechsel("entdecken")} />
         </Leer>
       ) : (
-        <Leer icon="film" ton={TOENE.pink} titel="Noch keine Clips" text={p.darfHochladen ? "Lade den ersten Clip hoch – kurze Hochkant-Videos wirken am besten." : "Hier erscheinen bald kurze Videos rund um die Theorie."}>
+        <Leer bild={CLIPS_BILD.figur} titel="Noch keine Clips" text={p.darfHochladen ? "Lade den ersten Clip hoch – kurze Hochkant-Videos wirken am besten." : "Hier erscheinen bald kurze Videos rund um die Theorie."}>
           {p.darfHochladen ? <Knopf titel="Clip hochladen" icon="add" onPress={() => router.push("/clip-hochladen")} /> : null}
         </Leer>
       );
@@ -189,7 +251,7 @@ export function ClipsWeb(p: ClipsWebProps) {
         {/* Video */}
         <View ref={radRef} onLayout={(e) => setMasse({ breite: e.nativeEvent.layout.width, hoehe: e.nativeEvent.layout.height })} style={{ flexShrink: 0, width: breite || undefined, height: "100%", minWidth: 220 }}>
           {masse ? (
-            <View style={{ width: breite, height: hoehe, borderRadius: 22, overflow: "hidden", backgroundColor: "#000000" }}>
+            <View style={{ width: breite, height: hoehe, borderRadius: 26, overflow: "hidden", backgroundColor: "#000000", shadowColor: "#2A1260", shadowOpacity: 0.25, shadowRadius: 24, shadowOffset: { width: 0, height: 10 } }}>
               <ClipSeite
                 key={clip.id}
                 clip={clip}
@@ -220,44 +282,44 @@ export function ClipsWeb(p: ClipsWebProps) {
 
         {/* Ersteller, Text, Aktionen */}
         <View style={{ width: 380, gap: 18 }}>
-          <Kachel style={{ padding: 20, gap: 14 }}>
+          <View style={{ padding: 22, gap: 14, borderRadius: 22, backgroundColor: "#FFFFFF", borderWidth: 1.5, borderColor: F.rand, ...schatten }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
               <Pressable onPress={() => p.aktionen.onProfil(clip)} style={(z: Zustand) => ({ flex: 1, flexDirection: "row", alignItems: "center", gap: 12, opacity: z.hovered ? 0.8 : 1 })}>
-                <NutzerBild pfad={clip.autor_bild} name={name} farbe={clip.autor_farbe} groesse={46} />
+                <NutzerBild pfad={clip.autor_bild} name={name} farbe={clip.autor_farbe} groesse={50} />
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={{ ...n.schwarz, fontSize: 16.5, color: B.text }} numberOfLines={1}>
+                  <Text style={{ ...n.schwarz, fontSize: 17, color: F.tinte }} numberOfLines={1}>
                     {name}
                   </Text>
-                  <Text style={{ ...n.halb, fontSize: 13.5, color: B.text3 }} numberOfLines={1}>
+                  <Text style={{ ...n.halb, fontSize: 14, color: F.tinte3 }} numberOfLines={1}>
                     @{clip.autor_benutzername}
                   </Text>
                 </View>
               </Pressable>
-              {eigen ? null : <Knopf titel={clip.folge_ich ? "Folge ich" : "Folgen"} icon={clip.folge_ich ? "checkmark" : undefined} art={clip.folge_ich ? "rand" : "voll"} groesse="klein" onPress={() => p.aktionen.onFolgen(clip, !clip.folge_ich)} />}
+              {eigen ? null : <Knopf titel={clip.folge_ich ? "Folge ich" : "Folgen"} icon={clip.folge_ich ? "checkmark" : undefined} art={clip.folge_ich ? "rand" : "voll"} klein onPress={() => p.aktionen.onFolgen(clip, !clip.folge_ich)} />}
             </View>
-            {clip.titel ? <Text style={{ ...n.schwarz, fontSize: 19, lineHeight: 25, color: B.text }}>{clip.titel}</Text> : null}
-            {clip.beschreibung ? <Text style={{ ...n.halb, fontSize: 14.5, lineHeight: 21, color: B.text2 }}>{clip.beschreibung}</Text> : null}
-            <View style={{ flexDirection: "row", borderTopWidth: 1.5, borderTopColor: B.ton, paddingTop: 6 }}>
-              <Aktion icon={clip.gemocht ? "heart" : "heart-outline"} text={kurzeZahl(clip.likes)} aktiv={clip.gemocht} farbe={TOENE.pink.farbe} label="Gefällt mir (L)" onPress={() => p.aktionen.onLike(clip, !clip.gemocht)} />
+            {clip.titel ? <Text style={{ ...n.schwarz, fontSize: 21, lineHeight: 27, color: F.tinte }}>{clip.titel}</Text> : null}
+            {clip.beschreibung ? <Text style={{ ...n.text, fontSize: 15, lineHeight: 22, color: F.tinte2 }}>{clip.beschreibung}</Text> : null}
+            <View style={{ flexDirection: "row", borderTopWidth: 1.5, borderTopColor: "#F0ECF6", paddingTop: 8 }}>
+              <Aktion icon={clip.gemocht ? "heart" : "heart-outline"} text={kurzeZahl(clip.likes)} aktiv={clip.gemocht} farbe={F.pink} label="Gefällt mir (L)" onPress={() => p.aktionen.onLike(clip, !clip.gemocht)} />
               <Aktion icon="chatbubble-ellipses-outline" text={kurzeZahl(clip.kommentare)} label="Kommentare (C)" onPress={() => p.onKommentare(clip)} />
               <Aktion icon="share-outline" text={clip.geteilt > 0 ? kurzeZahl(clip.geteilt) : "Teilen"} label="Teilen" onPress={() => p.aktionen.onTeilen(clip)} />
               <Aktion icon="ellipsis-horizontal" text="Mehr" label="Mehr" onPress={() => p.aktionen.onMehr(clip)} />
             </View>
-          </Kachel>
+          </View>
 
           {naechste.length ? (
             <View style={{ gap: 10 }}>
-              <Text style={{ ...n.schwarz, fontSize: 16, color: B.text }}>Als Nächstes</Text>
+              <Text style={{ ...n.schwarz, fontSize: 18, color: F.tinte }}>Als Nächstes</Text>
               {naechste.map((c, i) => (
-                <Pressable key={c.id} onPress={() => setIndex(index + 1 + i)} style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 12, padding: 6, borderRadius: 14, backgroundColor: z.hovered ? B.ton : "transparent" })}>
+                <Pressable key={c.id} onPress={() => setIndex(index + 1 + i)} style={(z: Zustand) => ({ flexDirection: "row", alignItems: "center", gap: 12, padding: 8, borderRadius: 16, backgroundColor: z.hovered ? "#FFFFFF" : "transparent", borderWidth: 1.5, borderColor: z.hovered ? F.rand : "transparent" })}>
                   <View style={{ width: 54, height: 80, borderRadius: 10, overflow: "hidden", backgroundColor: "#111418" }}>
                     {c.bild_pfad ? <Image source={{ uri: dateiUrl(c.bild_pfad) }} style={{ width: "100%", height: "100%" }} resizeMode="cover" /> : null}
                   </View>
                   <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={{ ...n.fett, fontSize: 14.5, color: B.text }} numberOfLines={2}>
+                    <Text style={{ ...n.fett, fontSize: 15, color: F.tinte }} numberOfLines={2}>
                       {c.titel || c.beschreibung || "Clip"}
                     </Text>
-                    <Text style={{ ...n.halb, fontSize: 13, color: B.text3 }} numberOfLines={1}>
+                    <Text style={{ ...n.halb, fontSize: 13, color: F.tinte3 }} numberOfLines={1}>
                       {c.autor_name || c.autor_benutzername} · {kurzeZahl(c.likes)} Likes
                     </Text>
                   </View>
@@ -266,28 +328,40 @@ export function ClipsWeb(p: ClipsWebProps) {
             </View>
           ) : null}
 
-          <Text style={{ ...n.halb, fontSize: 13, lineHeight: 19, color: B.text3 }}>Tasten: ↑ ↓ blättern · M Ton · L gefällt mir · C Kommentare</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
+            {[["↑ ↓", "blättern"], ["M", "Ton"], ["L", "gefällt mir"], ["C", "Kommentare"]].map(([t, w]) => (
+              <View key={t} style={{ flexDirection: "row", alignItems: "center", gap: 5, marginRight: 6 }}>
+                <View style={{ minWidth: 24, height: 24, paddingHorizontal: 6, borderRadius: 7, borderWidth: 1.5, borderColor: "#E3DAF5", backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
+                  <Text style={{ ...n.fett, fontSize: 12, color: F.lilaDunkel }}>{t}</Text>
+                </View>
+                <Text style={{ ...n.halb, fontSize: 13, color: F.tinte3 }}>{w}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: B.grund, paddingHorizontal: 32, paddingTop: 24, paddingBottom: 24, gap: 20 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-        <Text style={{ ...n.schwarz, fontSize: 30, color: B.text }}>Clips</Text>
+    <View style={{ flex: 1, backgroundColor: F.grund, paddingHorizontal: 32, paddingTop: 22, paddingBottom: 24, gap: 20 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Image source={CLIPS_BILD.figur} style={{ width: 52, height: 52 }} resizeMode="contain" />
+          <Text style={{ ...n.schwarz, fontSize: 34, color: F.tinte, letterSpacing: -0.6 }}>Clips</Text>
+        </View>
         <Reiter<Kategorie>
           wert={p.kategorie}
           onWechsel={p.onWechsel}
           optionen={[
             { id: "entdecken", titel: "Entdecken" },
             { id: "folge_ich", titel: "Folge ich" },
-            { id: "live", titel: p.lives.length ? "Live ●" : "Live" },
+            { id: "live", titel: "Live", punkt: p.lives.length > 0 },
           ]}
         />
         <View style={{ flex: 1 }} />
-        <Knopf titel={p.stumm ? "Ton an" : "Ton aus"} icon={p.stumm ? "volume-mute" : "volume-high"} art="rand" ton="blau" groesse="klein" onPress={p.onStumm} />
-        {p.darfErstellen ? <Knopf titel="Erstellen" icon="add" groesse="klein" onPress={p.onErstellen} /> : null}
+        <Knopf titel={p.stumm ? "Ton an" : "Ton aus"} icon={p.stumm ? "volume-mute" : "volume-high"} art="rand" onPress={p.onStumm} />
+        {p.darfErstellen ? <Knopf titel="Erstellen" icon="add" onPress={p.onErstellen} /> : null}
       </View>
       {inhalt}
     </View>

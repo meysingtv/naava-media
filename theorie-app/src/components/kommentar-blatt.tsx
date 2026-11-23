@@ -383,9 +383,9 @@ export function KommentarBlatt({
   return (
     <Modal supportedOrientations={["portrait", "landscape"]} visible={clip != null} transparent animationType={desktop ? "fade" : "slide"} onRequestClose={onSchliessen} statusBarTranslucent>
       <View style={desktop ? { flex: 1, flexDirection: "row", justifyContent: "flex-end" } : { flex: 1, justifyContent: "flex-end" }}>
-        <Pressable style={[StyleSheet.absoluteFill, desktop ? { backgroundColor: "rgba(10,12,15,0.32)" } : null]} onPress={onSchliessen} accessibilityLabel="Kommentare schließen" />
+        <Pressable style={[StyleSheet.absoluteFill, desktop ? { backgroundColor: "transparent" } : null]} onPress={onSchliessen} accessibilityLabel="Kommentare schließen" />
         <KeyboardAvoidingView behavior="padding" style={desktop ? { width: 460, maxWidth: "100%", height: "100%" } : { width: "100%", maxWidth: SPALTE_MAX, alignSelf: "center" }}>
-          <View style={desktop ? { flex: 1, backgroundColor: c.blatt, borderLeftWidth: 1.5, borderLeftColor: c.linie, overflow: "hidden" } : { height: Math.round(height * 0.68), backgroundColor: c.blatt, borderTopLeftRadius: 18, borderTopRightRadius: 18, overflow: "hidden" }}>
+          <View style={desktop ? { flex: 1, backgroundColor: c.blatt, borderLeftWidth: 1.5, borderLeftColor: "#EEE8F7", overflow: "hidden", shadowColor: "#2A1260", shadowOpacity: 0.18, shadowRadius: 30, shadowOffset: { width: -8, height: 0 } } : { height: Math.round(height * 0.68), backgroundColor: c.blatt, borderTopLeftRadius: 18, borderTopRightRadius: 18, overflow: "hidden" }}>
             {/* Kopf */}
             <View style={{ height: desktop ? 64 : 50, alignItems: "center", justifyContent: "center", borderBottomWidth: 1, borderBottomColor: c.linie }}>
               {desktop ? null : <View style={{ position: "absolute", top: 6, width: 36, height: 4, borderRadius: 2, backgroundColor: c.griff }} />}

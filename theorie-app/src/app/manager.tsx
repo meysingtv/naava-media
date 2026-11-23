@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { Image, Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { ManagerDashboard } from "@/components/web/manager-dashboard";
 
-const LOGO_APP = require("../../assets/images/web/logo-app.png");
+const LOGO_QUER = require("../../assets/images/web/logo-quer.png");
+const LOGO_RAD = require("../../assets/images/web/logo-rad.png");
 import { router, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -169,13 +170,12 @@ function Inhalt() {
       {/* Seitenleiste im lila Design (wie die Lern-App) */}
       <View style={{ width: schmal ? SEITENLEISTE_SCHMAL : SEITENLEISTE, height: "100%", paddingHorizontal: schmal ? 12 : 16, paddingTop: 22, paddingBottom: 16, borderRightWidth: 1.5, borderRightColor: "#EEE8F7", backgroundColor: "#FDFCFF" }}>
         <Pressable onPress={() => router.navigate("/heute")} accessibilityLabel="Zur App" style={{ flexDirection: "row", alignItems: "center", justifyContent: schmal ? "center" : "flex-start", gap: 10, paddingHorizontal: schmal ? 0 : 6, marginBottom: 28 }}>
-          <Image source={LOGO_APP} style={{ width: 44, height: 44 }} resizeMode="contain" />
-          {schmal ? null : (
-            <View>
-              <Text style={{ fontFamily: "Nunito_900Black", fontSize: 21, lineHeight: 24, color: "#1F1530" }}>
-                Fahrschul<Text style={{ color: "#7C3AED" }}>Pro</Text>
-              </Text>
-              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 14, color: "#6F6783" }}>Manager</Text>
+          {schmal ? (
+            <Image source={LOGO_RAD} style={{ width: 44, height: 44 }} resizeMode="contain" />
+          ) : (
+            <View style={{ gap: 4 }}>
+              <Image source={LOGO_QUER} style={{ width: 196, height: 31 }} resizeMode="contain" />
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13, letterSpacing: 1.4, color: "#6F6783", marginLeft: 2 }}>MANAGER</Text>
             </View>
           )}
         </Pressable>
