@@ -24,6 +24,16 @@ const s = {
   text: { fontFamily: "Nunito_600SemiBold" },
 } as const;
 const T = { tinte: "#1F1530", tinte2: "#4B4362", lila: "#7C3AED", rand: "#ECE5F8" };
+/** Weicher Hover: leicht anheben, Schatten wächst, Rand wird lila – mit Übergang. */
+const weich = { transitionProperty: "transform, box-shadow, border-color, background-color", transitionDuration: "180ms", transitionTimingFunction: "ease-out" } as object;
+const hover = (an: boolean, gedrueckt?: boolean) =>
+  ({
+    ...weich,
+    transform: [{ translateY: gedrueckt ? 0 : an ? -3 : 0 }, { scale: gedrueckt ? 0.985 : 1 }],
+    shadowOpacity: an ? 0.18 : 0.1,
+    shadowRadius: an ? 28 : 22,
+    borderColor: an ? "#C9B2F8" : "#ECE5F8",
+  }) as object;
 const schatten = { shadowColor: "#5B2BB5", shadowOpacity: 0.1, shadowRadius: 22, shadowOffset: { width: 0, height: 8 } } as const;
 
 const BILD = {
@@ -37,7 +47,7 @@ const BILD = {
 
 function Zahl({ icon, farbe, kachel, grund, welle, wert, titel, onPress }: { icon: IconName; farbe: string; kachel: [string, string]; grund: [string, string]; welle: string; wert: string; titel: string; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} style={(z: Zustand) => ({ flex: 1, height: 122, borderRadius: 22, overflow: "hidden", borderWidth: 1.5, borderColor: z.hovered ? "#D9CBF5" : T.rand, ...schatten })}>
+    <Pressable onPress={onPress} style={(z: Zustand) => ({ flex: 1, height: 122, borderRadius: 22, overflow: "hidden", borderWidth: 1.5, ...schatten, ...hover(!!z.hovered, z.pressed) })}>
       <LinearGradient colors={grund} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
       <Svg width={220} height={90} viewBox="0 0 220 90" style={{ position: "absolute", right: 0, bottom: 0 }}>
         <Path d="M40 90 C 90 70, 120 30, 220 20 L 220 90 Z" fill={welle} opacity={0.35} />
@@ -58,7 +68,7 @@ function Zahl({ icon, farbe, kachel, grund, welle, wert, titel, onPress }: { ico
 
 function Hilfe({ titel, unter, icon, kachel, grund, bild, pfad }: { titel: string; unter: string; icon: IconName; kachel: [string, string]; grund: [string, string]; bild: ImageSourcePropType; pfad: string }) {
   return (
-    <Pressable onPress={() => router.push(pfad as never)} style={(z: Zustand) => ({ flex: 1, height: 212, borderRadius: 24, overflow: "hidden", borderWidth: 1.5, borderColor: z.hovered ? "#D9CBF5" : T.rand, transform: [{ translateY: z.hovered ? -2 : 0 }], ...schatten })}>
+    <Pressable onPress={() => router.push(pfad as never)} style={(z: Zustand) => ({ flex: 1, height: 212, borderRadius: 24, overflow: "hidden", borderWidth: 1.5, ...schatten, ...hover(!!z.hovered, z.pressed) })}>
       <LinearGradient colors={grund} start={{ x: 0, y: 0 }} end={{ x: 0.4, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
       <Image source={bild} style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 122 }} resizeMode="contain" />
       <View style={{ flexDirection: "row", alignItems: "center", gap: 16, padding: 22, paddingBottom: 0 }}>
@@ -80,7 +90,7 @@ function Hilfe({ titel, unter, icon, kachel, grund, bild, pfad }: { titel: strin
 
 function Pille({ titel, icon, farbe, onPress, art }: { titel: string; icon: IconName; farbe: string; onPress: () => void; art?: "lila" | "rot" }) {
   return (
-    <Pressable onPress={onPress} style={(z: Zustand) => ({ flexGrow: 1, height: 52, paddingHorizontal: 22, borderRadius: 26, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12, borderWidth: 1.5, borderColor: art === "lila" ? "#D9C6FA" : art === "rot" ? "#F6D5DA" : z.hovered ? "#D9CBF5" : T.rand, backgroundColor: art === "lila" ? (z.hovered ? "#EADFFE" : "#F2EBFF") : z.hovered ? "#FBF9FF" : "#FFFFFF", ...schatten, shadowOpacity: 0.07 })}>
+    <Pressable onPress={onPress} style={(z: Zustand) => ({ flexGrow: 1, height: 52, paddingHorizontal: 22, borderRadius: 26, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12, borderWidth: 1.5, ...schatten, ...hover(!!z.hovered, z.pressed), shadowOpacity: z.hovered ? 0.14 : 0.06, borderColor: art === "rot" ? (z.hovered ? "#F2A9B6" : "#F6D5DA") : z.hovered ? "#C9B2F8" : art === "lila" ? "#D9C6FA" : T.rand, backgroundColor: art === "lila" ? (z.hovered ? "#ECE1FF" : "#F2EBFF") : art === "rot" ? (z.hovered ? "#FFF5F7" : "#FFFFFF") : z.hovered ? "#FCFAFF" : "#FFFFFF" })}>
       <Icon name={icon} size={24} color={farbe} />
       <Text style={{ ...s.fett, fontSize: 18, color: art === "lila" ? "#6425D3" : art === "rot" ? "#E11D48" : T.tinte }}>{titel}</Text>
     </Pressable>
@@ -112,7 +122,7 @@ export function ProfilWebLila() {
             <Image source={BILD.held} style={{ width: 290, height: 226 }} resizeMode="contain" />
           </View>
           <View style={{ flex: 1, flexDirection: "row", alignItems: "center", paddingLeft: 40, paddingRight: 30, gap: 34 }}>
-            <Pressable onPress={bildAendern} accessibilityLabel="Profilbild ändern" style={(z: Zustand) => ({ opacity: z.hovered ? 0.9 : 1 })}>
+            <Pressable onPress={bildAendern} accessibilityLabel="Profilbild ändern" style={(z: Zustand) => ({ ...weich, transform: [{ scale: z.pressed ? 0.97 : z.hovered ? 1.03 : 1 }] }) as object}>
               <View style={{ width: 176, height: 176, borderRadius: 88, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center", borderWidth: 6, borderColor: "#EDE4FD", ...schatten, shadowOpacity: 0.16 }}>
                 <ProfilBild name={anzeigeName} groesse={150} rand={0} />
               </View>
@@ -128,7 +138,7 @@ export function ProfilWebLila() {
                 {unterzeile}
               </Text>
             </View>
-            <Pressable onPress={() => router.push("/einstellungen")} style={(z: Zustand) => ({ height: 62, paddingHorizontal: 28, borderRadius: 31, flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: z.hovered ? "#FFFFFF" : "rgba(255,255,255,0.85)", borderWidth: 2, borderColor: "#D8C6FB", ...schatten })}>
+            <Pressable onPress={() => router.push("/einstellungen")} style={(z: Zustand) => ({ height: 62, paddingHorizontal: 28, borderRadius: 31, flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: z.hovered ? "#FFFFFF" : "rgba(255,255,255,0.85)", borderWidth: 2, ...schatten, ...hover(!!z.hovered, z.pressed), borderColor: z.hovered ? "#A47BF5" : "#D8C6FB" })}>
               <Icon name="settings" size={26} color={T.lila} />
               <Text style={{ ...s.fett, fontSize: 21, color: "#6425D3" }}>Einstellungen</Text>
             </Pressable>
