@@ -63,7 +63,7 @@ const ROLLEN: { id: Rolle; titel: string }[] = [
 // ---------------------------------------------------------------------------
 
 /** Spalten der Tabelle: Zahl unter 10 = Anteil am Rest, sonst feste Breite. */
-const SPALTEN = { name: 2.4, rolle: 110, lehrer: 1.3, klasse: 64, status: 150, aktiv: 116, stand: 160 } as const;
+const SPALTEN = { name: 2.4, rolle: 130, lehrer: 1.1, klasse: 70, status: 120, aktiv: 130, stand: 170 } as const;
 
 export function ZugangListe({
   nutzer,
@@ -102,14 +102,14 @@ export function ZugangListe({
 
   const spalte = (w: number) => (w < 10 ? { flex: w, minWidth: 0 } : { width: w });
   const kopf = (titel: string, w: number) => (
-    <Text style={{ ...spalte(w), ...etikett }} numberOfLines={1}>
+    <Text style={{ ...spalte(w), ...etikett, fontSize: 14, color: "#5E5670" }} numberOfLines={1}>
       {titel}
     </Text>
   );
 
   return (
-    <View onLayout={(e) => setBreite(e.nativeEvent.layout.width)} style={[mFlaeche(), { overflow: "hidden" }]}>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: 16, rowGap: 8, paddingHorizontal: 16, paddingTop: 4, borderBottomWidth: 2, borderBottomColor: M.kante }}>
+    <View onLayout={(e) => setBreite(e.nativeEvent.layout.width)} style={[mFlaeche(), { padding: 8, paddingBottom: 4 }]}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: 16, rowGap: 8, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12 }}>
         <Reiter<ListenFilter>
           wert={filter}
           onWechsel={onFilter}
@@ -121,7 +121,7 @@ export function ZugangListe({
             { id: "gesperrt", titel: "Gesperrt", zahl: anzahl("gesperrt") },
           ]}
         />
-        <View style={{ width: 280, maxWidth: "100%", paddingVertical: 6 }}>
+        <View style={{ width: 310, maxWidth: "100%" }}>
           <MEingabe icon="search" placeholder="Name oder E-Mail" value={suche} onChangeText={setSuche} autoCapitalize="none" />
         </View>
       </View>
@@ -135,7 +135,7 @@ export function ZugangListe({
         </View>
       ) : null}
 
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 16, paddingHorizontal: 16, height: 36, borderBottomWidth: 1, borderBottomColor: M.linie, backgroundColor: M.flaeche2 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 16, paddingHorizontal: 16, height: 40, borderRadius: 12, backgroundColor: "#F5F2FA" }}>
         {kopf("Name", SPALTEN.name)}
         {kopf("Rolle", SPALTEN.rolle)}
         {kopf("Fahrlehrer", SPALTEN.lehrer)}
@@ -163,20 +163,21 @@ export function ZugangListe({
               alignItems: "center",
               gap: 16,
               paddingHorizontal: 16,
-              height: 56,
+              height: 58,
               borderTopWidth: i > 0 ? 1 : 0,
-              borderTopColor: M.linie,
-              backgroundColor: z.hovered ? M.hover : "transparent",
+              borderTopColor: "#F0ECF6",
+              borderRadius: 12,
+              backgroundColor: z.hovered ? "#FAF7FF" : "transparent",
             })}
           >
             <View style={{ ...spalte(SPALTEN.name), flexDirection: "row", alignItems: "center", gap: 11 }}>
-              <MAvatar pfad={n.bild_pfad} name={nameVon(n)} />
+              <MAvatar pfad={n.bild_pfad} name={nameVon(n)} groesse={40} />
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={{ ...nf.halb, fontSize: 14.5, color: M.text }} numberOfLines={1}>
+                <Text style={{ ...nf.fett, fontSize: 16, color: M.text }} numberOfLines={1}>
                   {nameVon(n)}
                   {n.ich ? <Text style={{ ...nf.text, color: M.text3 }}> · du</Text> : null}
                 </Text>
-                <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }} numberOfLines={1}>
+                <Text style={{ ...nf.text, fontSize: 14, color: M.text2 }} numberOfLines={1}>
                   {n.email}
                 </Text>
               </View>
@@ -196,15 +197,15 @@ export function ZugangListe({
               <StatusPlakette status={n.status} bis={n.pausiert_bis} />
             </View>
             {breit ? (
-              <Text style={{ ...spalte(SPALTEN.aktiv), ...nf.text, fontSize: 13.5, color: n.zuletzt_aktiv ? M.text2 : M.text3 }} numberOfLines={1}>
+              <Text style={{ ...spalte(SPALTEN.aktiv), ...nf.text, fontSize: 15, color: n.zuletzt_aktiv ? M.text : M.text3 }} numberOfLines={1}>
                 {wannText(n.zuletzt_aktiv)}
               </Text>
             ) : null}
             <View style={{ ...spalte(SPALTEN.stand), flexDirection: "row", alignItems: "center", gap: 10 }}>
               {n.fragen_gesamt ? (
                 <>
-                  <Balken anteil={anteil(n)} farbe={anteil(n) >= 0.75 ? M.gruen : M.orange} breite={56} hoehe={5} />
-                  <Text style={{ ...zahlSchrift(14), color: M.text, width: 40 }}>{Math.round(anteil(n) * 100)}%</Text>
+                  <Balken anteil={anteil(n)} farbe="#7C3AED" breite={64} hoehe={6} />
+                  <Text style={{ ...zahlSchrift(15), color: M.text, width: 44 }}>{Math.round(anteil(n) * 100)}%</Text>
                   <Text style={{ ...nf.text, fontSize: 12.5, color: M.text3, fontVariant: ["tabular-nums"] }} numberOfLines={1}>
                     {zahl(n.fragen_gesamt)}
                   </Text>
@@ -217,7 +218,7 @@ export function ZugangListe({
         ))
       )}
       {sichtbar.length ? (
-        <View style={{ paddingHorizontal: 16, height: 38, justifyContent: "center", borderTopWidth: 1, borderTopColor: M.linie, backgroundColor: M.flaeche2 }}>
+        <View style={{ paddingHorizontal: 16, height: 40, justifyContent: "center", borderTopWidth: 1, borderTopColor: "#F0ECF6" }}>
           <Text style={{ ...nf.text, fontSize: 13, color: M.text3 }}>
             {sichtbar.length === nutzer.length ? `${sichtbar.length} Zugänge` : `${sichtbar.length} von ${nutzer.length} Zugängen`} · Lernstand = Anteil richtig, dahinter beantwortete Fragen
           </Text>

@@ -103,7 +103,7 @@ export const zahl = (x: number) => x.toLocaleString("de-DE");
 // ---------------------------------------------------------------------------
 
 export function mFlaeche(): ViewStyle {
-  return { backgroundColor: B.flaeche, borderWidth: 1.5, borderColor: B.linie, borderBottomWidth: 3, borderBottomColor: B.kante, borderRadius: 18 };
+  return { backgroundColor: B.flaeche, borderWidth: 1.5, borderColor: "#EEE8F7", borderRadius: 20, shadowColor: "#5B2BB5", shadowOpacity: 0.09, shadowRadius: 20, shadowOffset: { width: 0, height: 8 } };
 }
 
 /** Karte mit Kopf (Titel, Zusatz, Aktion rechts). */
@@ -289,14 +289,14 @@ export function Feld({ titel, hinweis, children, style }: { titel: string; hinwe
 export function MEingabe({ icon, rechts, mehrzeilig, ...props }: TextInputProps & { icon?: IconName; rechts?: ReactNode; mehrzeilig?: boolean }) {
   const aus = props.editable === false;
   return (
-    <View style={{ flexDirection: "row", alignItems: mehrzeilig ? "flex-start" : "center", gap: 10, minHeight: mehrzeilig ? 96 : 46, paddingHorizontal: 14, paddingVertical: mehrzeilig ? 10 : 0, borderRadius: 12, borderWidth: 1.5, borderColor: B.linie, backgroundColor: aus ? B.flaeche : B.ton }}>
-      {icon ? <Icon name={icon} size={17} color={B.text3} /> : null}
+    <View style={{ flexDirection: "row", alignItems: mehrzeilig ? "flex-start" : "center", gap: 10, minHeight: mehrzeilig ? 96 : 46, paddingHorizontal: 14, paddingVertical: mehrzeilig ? 10 : 0, borderRadius: 14, borderWidth: 1.5, borderColor: "#E6DFF1", backgroundColor: aus ? B.ton : "#FFFFFF" }}>
+      {icon ? <Icon name={icon} size={18} color={B.text2} /> : null}
       <TextInput
         placeholderTextColor={B.text3}
         selectionColor={B.orange}
         multiline={mehrzeilig}
         {...props}
-        style={[{ flex: 1, minWidth: 0, ...n.halb, fontSize: 15, color: aus ? B.text3 : B.text, minHeight: mehrzeilig ? 76 : 44, outlineWidth: 0 }, mehrzeilig ? { textAlignVertical: "top" } : null, props.style]}
+        style={[{ flex: 1, minWidth: 0, ...n.halb, fontSize: 15.5, color: aus ? B.text3 : B.text, minHeight: mehrzeilig ? 76 : 44, outlineWidth: 0 }, mehrzeilig ? { textAlignVertical: "top" } : null, props.style]}
       />
       {rechts}
     </View>
@@ -480,8 +480,8 @@ export function SeitenBlatt({ offen, onSchliessen, children }: { offen: boolean;
   return (
     <Modal visible={offen} transparent animationType="fade" onRequestClose={onSchliessen}>
       <View style={{ flex: 1, flexDirection: "row" }}>
-        <Pressable onPress={onSchliessen} style={{ flex: 1, backgroundColor: "rgba(10,12,15,0.32)" }} accessibilityLabel="Schließen" />
-        <Animated.View style={{ width: 520, maxWidth: "100%", height: "100%", backgroundColor: B.flaeche, borderLeftWidth: 1.5, borderLeftColor: B.linie, transform: [{ translateX: x.interpolate({ inputRange: [0, 1], outputRange: [0, 540] }) }] }}>{children}</Animated.View>
+        <Pressable onPress={onSchliessen} style={{ flex: 1, backgroundColor: "transparent" }} accessibilityLabel="Schließen" />
+        <Animated.View style={{ width: 520, maxWidth: "100%", height: "100%", backgroundColor: B.flaeche, borderLeftWidth: 1.5, borderLeftColor: "#EEE8F7", shadowColor: "#2A1260", shadowOpacity: 0.18, shadowRadius: 30, shadowOffset: { width: -8, height: 0 }, transform: [{ translateX: x.interpolate({ inputRange: [0, 1], outputRange: [0, 540] }) }] }}>{children}</Animated.View>
       </View>
     </Modal>
   );
