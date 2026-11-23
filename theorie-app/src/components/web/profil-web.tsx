@@ -8,6 +8,7 @@ import { WebSeite } from "@/components/web/rahmen";
 import { CLIPS } from "@/lib/clips";
 import { useCrew } from "@/lib/crew";
 import { FRAGEN_AKTIV } from "@/lib/funktionen";
+import { ProfilWebLila } from "@/components/web/profil-web-lila";
 import { ERFOLGE } from "@/lib/erfolge";
 import { heuteDran } from "@/lib/karteikarten";
 import { useKonto } from "@/lib/konto";
@@ -25,6 +26,10 @@ const ABZEICHEN_TOENE: Ton[] = [TOENE.orange, TOENE.blau, TOENE.gruen, TOENE.lil
 const WOCHENTAGE = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
 export function ProfilWeb() {
+  return FRAGEN_AKTIV ? <ProfilWebAlt /> : <ProfilWebLila />;
+}
+
+function ProfilWebAlt() {
   const { stand } = useStand();
   const { daten: crewDaten } = useCrew();
   const { profil, gast, anzeigeName, session } = useKonto();
