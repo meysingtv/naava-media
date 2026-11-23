@@ -74,7 +74,11 @@ export function LeistenPunkt({ titel, an, aus, ton, aktiv, schmal, punkt, zahl, 
         {punkt ? <View style={{ position: "absolute", top: -2, right: -3, width: 10, height: 10, borderRadius: 5, backgroundColor: "#FF2D55", borderWidth: 2, borderColor: B.grund }} /> : null}
       </View>
       {schmal ? null : <Text style={{ flex: 1, fontFamily: aktiv ? "Nunito_800ExtraBold" : "Nunito_700Bold", fontSize: 16.5, color: "#1F1530" }}>{titel}</Text>}
-      {!schmal && zahl != null ? <Text style={{ ...n.fett, fontSize: 13.5, color: B.text3, fontVariant: ["tabular-nums"] }}>{zahl}</Text> : null}
+      {!schmal && zahl != null ? (
+        <View style={{ minWidth: 26, height: 26, paddingHorizontal: 7, borderRadius: 13, backgroundColor: "#EDE4FD", alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13.5, color: "#6D28D9", fontVariant: ["tabular-nums"] }}>{zahl}</Text>
+        </View>
+      ) : null}
     </Pressable>
   );
 }

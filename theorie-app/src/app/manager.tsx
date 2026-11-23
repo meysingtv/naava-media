@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { Image, Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { ManagerDashboard } from "@/components/web/manager-dashboard";
+
+const LOGO_APP = require("../../assets/images/web/logo-app.png");
 import { router, useLocalSearchParams } from "expo-router";
 
-import { Logo } from "@/components/grafik";
 import { GrossKopf, Seite } from "@/components/seite";
 import { Icon, type IconName } from "@/components/icon";
 import { Balken, Drehung, Hinweis, IconTaste, Kennzahlen, MAvatar, MKnopf, RollenMarke, statusFarbe, StatusPlakette, Tafel, wannText, zahl, Zeile, type Zustand } from "@/components/manager-teile";
@@ -141,12 +143,6 @@ function Inhalt() {
     );
   }
 
-  const zuZugaengen = (fi: ListenFilter, lehrer: string | null = null) => {
-    setFilter(fi);
-    setLehrerFilter(lehrer);
-    wechseln("zugaenge");
-  };
-
   const ich = nutzer.find((x) => x.ich);
   const name = ich ? nameVon(ich) : anzeigeName;
   const b = BEREICHE.find((x) => x.id === bereich) ?? BEREICHE[0];
@@ -170,56 +166,68 @@ function Inhalt() {
 
   return (
     <View style={{ flex: 1, flexDirection: "row" }}>
-      {/* Seitenleiste wie in der Lern-App */}
-      <View style={{ width: schmal ? SEITENLEISTE_SCHMAL : SEITENLEISTE, height: "100%", paddingHorizontal: schmal ? 12 : 16, paddingTop: 22, paddingBottom: 16, borderRightWidth: 1.5, borderRightColor: B.linie, backgroundColor: B.grund }}>
-        <Pressable onPress={() => router.navigate("/heute")} accessibilityLabel="Zur App" style={{ paddingHorizontal: schmal ? 0 : 10, alignItems: schmal ? "center" : "flex-start", marginBottom: 6 }}>
-          <Logo groesse={schmal ? 34 : 28} mitText={!schmal} hell={!webDunkel()} />
+      {/* Seitenleiste im lila Design (wie die Lern-App) */}
+      <View style={{ width: schmal ? SEITENLEISTE_SCHMAL : SEITENLEISTE, height: "100%", paddingHorizontal: schmal ? 12 : 16, paddingTop: 22, paddingBottom: 16, borderRightWidth: 1.5, borderRightColor: "#EEE8F7", backgroundColor: "#FDFCFF" }}>
+        <Pressable onPress={() => router.navigate("/heute")} accessibilityLabel="Zur App" style={{ flexDirection: "row", alignItems: "center", justifyContent: schmal ? "center" : "flex-start", gap: 10, paddingHorizontal: schmal ? 0 : 6, marginBottom: 28 }}>
+          <Image source={LOGO_APP} style={{ width: 44, height: 44 }} resizeMode="contain" />
+          {schmal ? null : (
+            <View>
+              <Text style={{ fontFamily: "Nunito_900Black", fontSize: 21, lineHeight: 24, color: "#1F1530" }}>
+                Fahrschul<Text style={{ color: "#7C3AED" }}>Pro</Text>
+              </Text>
+              <Text style={{ fontFamily: "Nunito_700Bold", fontSize: 14, color: "#6F6783" }}>Manager</Text>
+            </View>
+          )}
         </Pressable>
-        {schmal ? null : <Text style={{ ...n.fett, fontSize: 13, color: B.text3, paddingHorizontal: 10, marginBottom: 20 }}>Manager</Text>}
-        <View style={{ gap: 2, marginTop: schmal ? 20 : 0 }}>
+        <View style={{ gap: 4 }}>
           {BEREICHE.map((x) => (
             <View key={x.id}>
-              <LeistenPunkt titel={x.titel} an={x.an} aus={x.aus} ton={x.ton} aktiv={x.id === bereich} schmal={schmal} zahl={zahlen[x.id]} onPress={() => wechseln(x.id)} />
-              {GRUPPEN_ENDE.includes(x.id) ? <View style={{ height: 1.5, backgroundColor: B.linie, marginVertical: 10, marginHorizontal: 6 }} /> : null}
+              <LeistenPunkt titel={x.titel} an={x.an} aus={x.aus} ton={x.ton} aktiv={x.id === bereich} schmal={schmal} zahl={x.id === "meldungen" || x.id === "freigaben" ? zahlen[x.id] : undefined} onPress={() => wechseln(x.id)} />
+              {GRUPPEN_ENDE.includes(x.id) ? <View style={{ height: 1.5, backgroundColor: "#E6DFF2", marginVertical: 10, marginHorizontal: 4 }} /> : null}
             </View>
           ))}
         </View>
-        <View style={{ height: 1.5, backgroundColor: B.linie, marginVertical: 14, marginHorizontal: 6 }} />
+        <View style={{ height: 1.5, backgroundColor: "#E6DFF2", marginVertical: 12, marginHorizontal: 4 }} />
         <LeistenPunkt titel="Zur App" an="arrow-back" aus="arrow-back" ton={TOENE.orange} aktiv={false} schmal={schmal} onPress={() => router.navigate("/heute")} />
         <LeistenPunkt titel="Einstellungen" an="settings" aus="settings-outline" ton={TOENE.orange} aktiv={false} schmal={schmal} onPress={() => router.navigate("/einstellungen")} />
         <View style={{ flex: 1 }} />
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: schmal ? "center" : "flex-start", gap: 12, padding: 8 }}>
-          <MAvatar pfad={ich?.bild_pfad} name={name} groesse={38} />
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: schmal ? "center" : "flex-start", gap: 12, padding: 6 }}>
+          <MAvatar pfad={ich?.bild_pfad} name={name} groesse={42} />
           {schmal ? null : (
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={{ ...n.fett, fontSize: 15, color: B.text }} numberOfLines={1}>
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 16.5, color: "#1F1530" }} numberOfLines={1}>
                 {name}
               </Text>
-              <Text style={{ ...n.halb, fontSize: 12.5, color: B.text3 }}>Inhaber</Text>
+              <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 13, color: "#6F6783" }}>Inhaber</Text>
             </View>
           )}
         </View>
       </View>
 
       {/* Inhalt */}
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: width >= 1400 ? 48 : 32, paddingTop: 32, paddingBottom: 64 }}>
+      <ScrollView style={{ flex: 1, backgroundColor: "#FBF9FF" }} contentContainerStyle={{ paddingHorizontal: width >= 1400 ? 32 : 24, paddingTop: 26, paddingBottom: 64 }}>
         <View style={{ width: "100%", maxWidth: 1320, alignSelf: "center", gap: 28 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-            <Symbol icon={b.an} ton={b.ton} groesse={56} />
+          <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 14 }}>
             <View style={{ flex: 1, minWidth: 260 }}>
-              <Text style={{ ...n.schwarz, fontSize: 34, lineHeight: 40, color: B.text }}>{b.titel}</Text>
-              <Text style={{ ...n.halb, fontSize: 16, color: B.text2, marginTop: 2 }}>
-                {b.unter}
-                {stand ? ` · Stand ${stand.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr` : ""}
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13.5, letterSpacing: 1.2, color: "#6F6783" }}>FAHRSCHUL PRO · MANAGER</Text>
+              <Text style={{ fontFamily: "Nunito_900Black", fontSize: 38, lineHeight: 44, color: "#1F1530", letterSpacing: -0.6 }}>{bereich === "uebersicht" ? "Manager Dashboard" : b.titel}</Text>
+              <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 16, color: "#5E5670", marginTop: 2 }}>
+                {bereich === "uebersicht" ? "Alle wichtigen Informationen, Vorgänge und Aufgaben auf einen Blick." : b.unter}
               </Text>
             </View>
-            <IconTaste icon="refresh" label="Aktualisieren" onPress={laden} aus={laedt} groesse={40} />
-            {bereich === "uebersicht" || bereich === "zugaenge" ? <MKnopf titel="Zugang anlegen" icon="person-add" onPress={() => setAnlegen(true)} /> : null}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+              <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 15, color: "#5E5670" }}>
+                {(stand ?? new Date()).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "long", year: "numeric" })} · {(stand ?? new Date()).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr
+              </Text>
+              <IconTaste icon="refresh" label="Aktualisieren" onPress={laden} aus={laedt} groesse={44} />
+              <IconTaste icon="notifications-outline" label="Meldungen" onPress={() => wechseln("meldungen")} groesse={44} />
+              {bereich === "zugaenge" ? <MKnopf titel="Zugang anlegen" icon="person-add" onPress={() => setAnlegen(true)} /> : null}
+            </View>
           </View>
 
           {fehler ? <Hinweis art="fehler">{fehler}</Hinweis> : null}
           {bereich === "uebersicht" ? (
-            <Uebersicht nutzer={nutzer} videos={videos} zaehler={zaehler} onBereich={wechseln} onZugaenge={zuZugaengen} onWaehlen={setGewaehlt} onVideos={() => wechseln("videos")} />
+            <ManagerDashboard nutzer={nutzer} zaehler={zaehler} onBereich={wechseln} onAnlegen={() => setAnlegen(true)} />
           ) : bereich === "einladungen" ? (
             <EinladungenBereich fahrlehrer={fahrlehrer} tick={tick} />
           ) : bereich === "termine" ? (
@@ -266,7 +274,7 @@ function Mitte({ children }: { children: ReactNode }) {
 // Übersicht
 // ---------------------------------------------------------------------------
 
-function Uebersicht({
+export function Uebersicht({
   nutzer,
   videos,
   zaehler,
