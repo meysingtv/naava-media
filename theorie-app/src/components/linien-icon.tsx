@@ -21,6 +21,18 @@ const ICONS = {
   "leaf": "<path d=\"M20 4C7 4 4 8 4 14a6 6 0 0 0 6 6c6 0 10-5 10-16zM4 20c3-6 7-9 12-11\"/>",
   "road": "<path d=\"M8 2 3 22M16 2l5 20M12 2v4M12 10v4M12 18v4\"/>",
   "car": "<path d=\"M4 11 6 5h12l2 6M3 11h18v8H3zM6 19v2M18 19v2\"/><circle cx=\"7\" cy=\"15\" r=\"1\"/><circle cx=\"17\" cy=\"15\" r=\"1\"/>",
+  "stern": "<path d=\"m12 2 3 6.5 7 .9-5.1 5 1.2 7L12 18l-6.1 3.4 1.2-7L2 9.4l7-.9z\"/>",
+  "schloss": "<rect x=\"5\" y=\"10\" width=\"14\" height=\"11\" rx=\"2\"/><path d=\"M8 10V7a4 4 0 0 1 8 0v3\"/>",
+  "zielsymbol": "<circle cx=\"12\" cy=\"12\" r=\"8\"/><circle cx=\"12\" cy=\"12\" r=\"4\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/><path d=\"M12 1v3m0 16v3M1 12h3m16 0h3\"/>",
+  "funken": "<path d=\"m12 2 2 7 7 3-7 2-2 8-2-8-7-2 7-3z\"/>",
+  "raster": "<rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/>",
+  "liste": "<path d=\"M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01\"/>",
+  "filter": "<path d=\"M3 4h18l-7 8v7l-4 2v-9z\"/>",
+  "suche": "<circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m16 16 5 5\"/>",
+  "kamera": "<path d=\"M3 7h4l2-3h6l2 3h4v13H3z\"/><circle cx=\"12\" cy=\"13\" r=\"4\"/>",
+  "kamera-scannen": "<path d=\"M3 8V4h4m10 0h4v4M3 16v4h4m10 0h4v-4\"/><circle cx=\"12\" cy=\"12\" r=\"4\"/>",
+  "check": "<path d=\"m4 12 5 5L20 6\"/>",
+  "zurueck": "<path d=\"m15 18-6-6 6-6\"/>",
 } as const;
 
 export type LinienIconName = keyof typeof ICONS;
