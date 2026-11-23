@@ -9,7 +9,8 @@ import { Icon } from "@/components/icon";
 import { lilaSchrift, LILA_RAND, useLila } from "@/components/lila-teile";
 import { useInhaltUnten } from "@/components/tab-leiste";
 import { FIGUR } from "@/components/start-teile";
-import { useFenster } from "@/lib/fenster";
+import { useDesktop, useFenster } from "@/lib/fenster";
+import { CoachWeb } from "@/components/web/coach-web";
 import { tippen } from "@/lib/haptik";
 import { dauerLang, restVon, useKurse, weiterlernen, type Kurs, type KursVideo } from "@/lib/kurse";
 import { KATEGORIEN, themaBild, type Kategorie } from "@/lib/lernthemen";
@@ -162,6 +163,10 @@ function KursZeile({ kurs }: { kurs: Kurs }) {
 }
 
 export default function Coach() {
+  return useDesktop() ? <CoachWeb /> : <CoachHandy />;
+}
+
+function CoachHandy() {
   const insets = useSafeAreaInsets();
   const inhaltUnten = useInhaltUnten();
   const fokus = useIsFocused();

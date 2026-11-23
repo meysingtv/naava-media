@@ -90,6 +90,7 @@ export function WebSeitenleiste() {
   const { width } = useWindowDimensions();
   const schmal = width < 1200;
   const { anzeigeName } = useKonto();
+  const { stand } = useStand();
   const rechte = useClipRechte();
   const { live } = useLive();
   const mehr = rechte.inhaber ? [...MEHR, { pfad: "/manager", titel: "Manager", an: "grid", aus: "grid-outline", ton: TOENE.gelb } as Punkt] : MEHR;
@@ -123,10 +124,13 @@ export function WebSeitenleiste() {
         <ProfilBild name={anzeigeName} groesse={42} rand={0} />
         {schmal ? null : (
           <>
-            <Text style={{ flex: 1, fontFamily: "Nunito_800ExtraBold", fontSize: 17, color: "#1F1530" }} numberOfLines={1}>
-              {anzeigeName}
-            </Text>
-            <Icon name="chevron-down" size={20} color="#1F1530" />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 17, color: "#1F1530" }} numberOfLines={1}>
+                {anzeigeName}
+              </Text>
+              <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 13.5, color: "#6F6783" }}>Klasse {stand.klasse || "B"}</Text>
+            </View>
+            <Icon name="chevron-forward" size={20} color="#1F1530" />
           </>
         )}
       </Pressable>
