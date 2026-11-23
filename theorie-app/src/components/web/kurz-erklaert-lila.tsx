@@ -119,7 +119,7 @@ export function KurzErklaertLila() {
   const bildB = breite || 630;
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#FBF9FF" }} contentContainerStyle={{ paddingLeft: 36, paddingRight: 36, paddingBottom: 48 }}>
-      <View style={{ width: "100%", maxWidth: 1150 }}>
+      <View style={{ width: "100%", maxWidth: 1500, alignSelf: "center" }}>
         {/* Kopf */}
         <View style={{ height: 176 }}>
           <View style={{ position: "absolute", right: -40, top: 60, width: 620, height: 130, borderTopLeftRadius: 400, backgroundColor: "#F1EAFE", transform: [{ rotate: "-4deg" }] }} />
@@ -134,7 +134,7 @@ export function KurzErklaertLila() {
 
         {/* Player + Text */}
         <View style={{ flexDirection: "row", gap: 20, marginTop: 8 }}>
-          <View onLayout={(e) => setBreite(Math.round(e.nativeEvent.layout.width))} style={{ flex: 632, height: 408, borderRadius: 22, overflow: "hidden", backgroundColor: "#1A1230", shadowColor: "#2A1260", shadowOpacity: 0.25, shadowRadius: 20, shadowOffset: { width: 0, height: 8 } }}>
+          <View onLayout={(e) => setBreite(Math.round(e.nativeEvent.layout.width))} style={{ flex: 632, height: breite ? Math.round((breite * 220) / 300) : 408, borderRadius: 22, overflow: "hidden", backgroundColor: "#1A1230", shadowColor: "#2A1260", shadowOpacity: 0.25, shadowRadius: 20, shadowOffset: { width: 0, height: 8 } }}>
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
               <ClipBild key={clip.id} bild={clip.bild} breite={bildB} aktiv={laeuft} />
             </View>

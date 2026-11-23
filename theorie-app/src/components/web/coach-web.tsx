@@ -90,7 +90,7 @@ export function CoachWeb() {
       <View style={{ height: 352, overflow: "hidden" }}>
         <LinearGradient colors={["#F2EAFF", "#F6F1FF", "#F3EEFD"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
         <Image source={HELD} style={{ position: "absolute", right: 0, top: 0, width: 665, height: 351 }} resizeMode="cover" />
-        <View style={{ paddingLeft: 46, paddingTop: 26, maxWidth: 700 }}>
+        <View style={{ width: "100%", maxWidth: 1500, alignSelf: "center", paddingLeft: 46, paddingTop: 26 }}>
           <View style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 10, height: 34, paddingHorizontal: 16, borderRadius: 17, backgroundColor: "rgba(255,255,255,0.8)", borderWidth: 1.5, borderColor: "#E6DCFA" }}>
             <Icon name="play" size={14} color={L.tinte} />
             <Text style={{ ...s.halb, fontSize: 15, color: L.tinte }}>Videokurse</Text>
@@ -110,7 +110,7 @@ export function CoachWeb() {
         </View>
       </View>
 
-      <View style={{ paddingLeft: 40, paddingRight: 32, maxWidth: 1214 }}>
+      <View style={{ paddingLeft: 40, paddingRight: 40, width: "100%", maxWidth: 1500, alignSelf: "center" }}>
         {/* Weiterlernen */}
         <View style={{ marginTop: 18 }}>
           <Kopf titel="WEITERLERNEN" link="Lernfortschritt ansehen" linkIcon="stats-chart" onLink={() => router.navigate("/heute")} />

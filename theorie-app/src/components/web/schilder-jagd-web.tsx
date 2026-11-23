@@ -174,7 +174,7 @@ export function SchilderJagdWeb() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#FBF9FF" }} contentContainerStyle={{ paddingLeft: 28, paddingRight: 24, paddingBottom: 48 }}>
-      <View style={{ width: "100%", maxWidth: 1180 }}>
+      <View style={{ width: "100%", maxWidth: 1500, alignSelf: "center" }}>
         {/* Kopf */}
         <View style={{ height: 190 }}>
           <Image source={BILD.held} style={{ position: "absolute", right: -24, top: 0, width: 680, height: 185 }} resizeMode="cover" />

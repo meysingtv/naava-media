@@ -185,7 +185,7 @@ export function HomeWebLila() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: L.grund }} contentContainerStyle={{ paddingLeft: 46, paddingRight: 22, paddingTop: 24, paddingBottom: 48 }}>
-      <View style={{ width: "100%", maxWidth: 1170, gap: 0 }}>
+      <View style={{ width: "100%", maxWidth: 1500, alignSelf: "center" }}>
         {/* Kopf */}
         <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 26 }}>
           <View style={{ flex: 1 }}>

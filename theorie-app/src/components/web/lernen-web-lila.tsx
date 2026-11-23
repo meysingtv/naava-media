@@ -128,7 +128,7 @@ export function LernenWebLila() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#FBF9FF" }} contentContainerStyle={{ paddingLeft: 20, paddingRight: 22, paddingBottom: 48 }}>
-      <View style={{ width: "100%", maxWidth: 1190 }}>
+      <View style={{ width: "100%", maxWidth: 1500, alignSelf: "center" }}>
         {/* Kopf */}
         <View style={{ height: 222, flexDirection: "row" }}>
           <View style={{ paddingLeft: 20, paddingTop: 50, width: 330 }}>
@@ -171,19 +171,18 @@ export function LernenWebLila() {
         {/* Lernhilfen */}
         <View style={{ flexDirection: "row", gap: 12, marginTop: 10 }}>
           {HILFEN.map((h) => (
-            <Pressable key={h.titel} onPress={() => router.push(h.pfad as never)} style={(z: Zustand) => ({ flex: 1, height: 158, borderRadius: 20, borderWidth: 1.5, borderColor: z.hovered ? "#CDB8F5" : h.rand, overflow: "hidden", shadowColor: "#5B2BB5", shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } })}>
+            <Pressable key={h.titel} onPress={() => router.push(h.pfad as never)} style={(z: Zustand) => ({ flex: 1, minHeight: 150, borderRadius: 20, borderWidth: 1.5, borderColor: z.hovered ? "#CDB8F5" : h.rand, overflow: "hidden", shadowColor: "#5B2BB5", shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } })}>
               <LinearGradient colors={h.grund} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }} />
-              <View style={{ position: "absolute", right: -40, bottom: -70, width: 260, height: 140, borderRadius: 120, backgroundColor: "rgba(255,255,255,0.55)", transform: [{ rotate: "-18deg" }] }} />
-              <View style={{ flexDirection: "row", gap: 16, padding: 18 }}>
+              <View style={{ flexDirection: "row", gap: 16, padding: 18, paddingBottom: 6 }}>
                 <LinearGradient colors={h.farbe} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 62, height: 62, borderRadius: 16, alignItems: "center", justifyContent: "center" }}>
                   <Icon name={h.icon} size={34} color="#FFFFFF" />
                 </LinearGradient>
                 <View style={{ flex: 1, paddingTop: 4 }}>
-                  <Text style={{ ...s.schwarz, fontSize: 20, color: L.tinte }}>{h.titel}</Text>
+                  <Text style={{ ...s.schwarz, fontSize: 20, color: L.tinte }} numberOfLines={1}>{h.titel}</Text>
                   <Text style={{ ...s.text, fontSize: 15, lineHeight: 19, color: "#3D3350", marginTop: 2 }}>{h.unter}</Text>
                 </View>
               </View>
-              <View style={{ position: "absolute", right: 16, bottom: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center", shadowColor: "#5B2BB5", shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } }}>
+              <View style={{ alignSelf: "flex-end", marginRight: 16, marginBottom: 14, width: 40, height: 40, borderRadius: 20, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center", shadowColor: "#5B2BB5", shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } }}>
                 <Icon name="chevron-forward" size={22} color={L.lila} />
               </View>
             </Pressable>

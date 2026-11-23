@@ -120,7 +120,7 @@ export function KursWebLila({ id }: { id: string }) {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#FBF9FF" }} contentContainerStyle={{ paddingLeft: 26, paddingRight: 20, paddingBottom: 48 }}>
-      <View style={{ width: "100%", maxWidth: 1160 }}>
+      <View style={{ width: "100%", maxWidth: 1500, alignSelf: "center" }}>
         {/* Kopfzeile */}
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 18 }}>
           <Pressable onPress={() => (router.canGoBack() ? router.back() : router.navigate("/lernen"))} style={{ flexDirection: "row", alignItems: "center", gap: 10, marginLeft: 16 }}>
