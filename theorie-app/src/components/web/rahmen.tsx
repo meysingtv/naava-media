@@ -51,7 +51,7 @@ const MEHR: Punkt[] = FRAGEN_AKTIV
     ];
 
 /** Punkt der Seitenleiste – auch für den Manager. */
-export function LeistenPunkt({ titel, an, aus, ton, aktiv, schmal, punkt, zahl, onPress }: { titel: string; an: IconName; aus: IconName; ton: Ton; aktiv: boolean; schmal: boolean; punkt?: boolean; zahl?: number; onPress: () => void }) {
+export function LeistenPunkt({ titel, an, aus, ton, aktiv, schmal, punkt, zahl, gross, onPress }: { titel: string; an: IconName; aus: IconName; ton: Ton; aktiv: boolean; schmal: boolean; punkt?: boolean; zahl?: number; gross?: boolean; onPress: () => void }) {
   return (
     <Pressable
       onPress={onPress}
@@ -63,17 +63,17 @@ export function LeistenPunkt({ titel, an, aus, ton, aktiv, schmal, punkt, zahl, 
         alignItems: "center",
         justifyContent: schmal ? "center" : "flex-start",
         gap: 18,
-        height: 46,
+        height: gross ? 50 : 46,
         paddingHorizontal: schmal ? 0 : 12,
         borderRadius: 10,
         backgroundColor: aktiv ? "#ECE4FC" : z.hovered ? "#F5F1FD" : "transparent",
       })}
     >
       <View>
-        <Icon name={aktiv ? an : aus} size={23} color={aktiv ? "#7C3AED" : "#3B3350"} />
+        <Icon name={aktiv ? an : aus} size={gross ? 25 : 23} color={aktiv ? "#7C3AED" : "#3B3350"} />
         {punkt ? <View style={{ position: "absolute", top: -2, right: -3, width: 10, height: 10, borderRadius: 5, backgroundColor: "#FF2D55", borderWidth: 2, borderColor: B.grund }} /> : null}
       </View>
-      {schmal ? null : <Text style={{ flex: 1, fontFamily: aktiv ? "Nunito_800ExtraBold" : "Nunito_700Bold", fontSize: 16.5, color: "#1F1530" }}>{titel}</Text>}
+      {schmal ? null : <Text style={{ flex: 1, fontFamily: aktiv ? "Nunito_800ExtraBold" : "Nunito_700Bold", fontSize: gross ? 18 : 16.5, color: "#1F1530" }}>{titel}</Text>}
       {!schmal && zahl != null ? (
         <View style={{ minWidth: 26, height: 26, paddingHorizontal: 7, borderRadius: 13, backgroundColor: "#EDE4FD", alignItems: "center", justifyContent: "center" }}>
           <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13.5, color: "#6D28D9", fontVariant: ["tabular-nums"] }}>{zahl}</Text>

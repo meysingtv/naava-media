@@ -4,6 +4,7 @@ import { ManagerDashboard } from "@/components/web/manager-dashboard";
 
 const LOGO_APP = require("../../assets/images/web/logo-app.png");
 import { router, useLocalSearchParams } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { GrossKopf, Seite } from "@/components/seite";
 import { Icon, type IconName } from "@/components/icon";
@@ -43,8 +44,6 @@ const BEREICHE: { id: Bereich; titel: string; unter: string; an: IconName; aus: 
   { id: "videos", titel: "Kurse & Videos", unter: "Videokurse für den Coach: Kategorie, Bild, Kapitel und Videos", an: "film", aus: "film-outline", ton: TOENE.pink },
 ];
 
-/** Nach diesen Bereichen kommt in der Seitenleiste ein Trennstrich. */
-const GRUPPEN_ENDE: Bereich[] = ["termine", "mitteilungen"];
 
 export default function ManagerSeite() {
   if (Platform.OS !== "web") {
@@ -80,6 +79,7 @@ function Inhalt() {
   const [filter, setFilter] = useState<ListenFilter>("alle");
   const [lehrerFilter, setLehrerFilter] = useState<string | null>(null);
   const videos = useVideoZahlen();
+  const [schule, schuleAendern] = useSchule();
   const [zaehler, setZaehler] = useState<Zaehler | null>(null);
   // Zählt hoch bei „Aktualisieren“ – die Bereiche laden dann ihre Daten neu.
   const [tick, setTick] = useState(0);
@@ -182,14 +182,13 @@ function Inhalt() {
         <View style={{ gap: 4 }}>
           {BEREICHE.map((x) => (
             <View key={x.id}>
-              <LeistenPunkt titel={x.titel} an={x.an} aus={x.aus} ton={x.ton} aktiv={x.id === bereich} schmal={schmal} zahl={x.id === "meldungen" || x.id === "freigaben" ? zahlen[x.id] : undefined} onPress={() => wechseln(x.id)} />
-              {GRUPPEN_ENDE.includes(x.id) ? <View style={{ height: 1.5, backgroundColor: "#E6DFF2", marginVertical: 10, marginHorizontal: 4 }} /> : null}
+              <LeistenPunkt titel={x.titel} an={x.an} aus={x.aus} ton={x.ton} aktiv={x.id === bereich} schmal={schmal} gross zahl={x.id === "meldungen" || x.id === "freigaben" ? zahlen[x.id] : undefined} onPress={() => wechseln(x.id)} />
             </View>
           ))}
         </View>
-        <View style={{ height: 1.5, backgroundColor: "#E6DFF2", marginVertical: 12, marginHorizontal: 4 }} />
-        <LeistenPunkt titel="Zur App" an="arrow-back" aus="arrow-back" ton={TOENE.orange} aktiv={false} schmal={schmal} onPress={() => router.navigate("/heute")} />
-        <LeistenPunkt titel="Einstellungen" an="settings" aus="settings-outline" ton={TOENE.orange} aktiv={false} schmal={schmal} onPress={() => router.navigate("/einstellungen")} />
+        <View style={{ height: 1.5, backgroundColor: "#E6DFF2", marginVertical: 16, marginHorizontal: 4 }} />
+        <LeistenPunkt titel="Einstellungen" an="settings" aus="settings-outline" ton={TOENE.orange} aktiv={false} schmal={schmal} gross onPress={() => router.navigate("/einstellungen")} />
+        <LeistenPunkt titel="Zur App" an="arrow-back" aus="arrow-back" ton={TOENE.orange} aktiv={false} schmal={schmal} gross onPress={() => router.navigate("/heute")} />
         <View style={{ flex: 1 }} />
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: schmal ? "center" : "flex-start", gap: 12, padding: 6 }}>
           <MAvatar pfad={ich?.bild_pfad} name={name} groesse={42} />
@@ -198,9 +197,12 @@ function Inhalt() {
               <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 16.5, color: "#1F1530" }} numberOfLines={1}>
                 {name}
               </Text>
-              <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 13, color: "#6F6783" }}>Inhaber</Text>
+              <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 13, color: "#6F6783" }} numberOfLines={1}>
+                {schule || "Inhaber"}
+              </Text>
             </View>
           )}
+          {schmal ? null : <Icon name="chevron-down" size={20} color="#1F1530" />}
         </View>
       </View>
 
@@ -209,7 +211,9 @@ function Inhalt() {
         <View style={{ width: "100%", maxWidth: 1320, alignSelf: "center", gap: 28 }}>
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 14 }}>
             <View style={{ flex: 1, minWidth: 260 }}>
-              <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 13.5, letterSpacing: 1.2, color: "#6F6783" }}>FAHRSCHUL PRO · MANAGER</Text>
+              <Pressable onPress={schuleAendern} accessibilityLabel="Name der Fahrschule ändern" style={{ alignSelf: "flex-start" }}>
+                <Text style={{ fontFamily: "Nunito_800ExtraBold", fontSize: 14, letterSpacing: 1.2, color: "#6F6783" }}>{(schule || "Fahrschule · Namen eintragen").toUpperCase()}</Text>
+              </Pressable>
               <Text style={{ fontFamily: "Nunito_900Black", fontSize: 38, lineHeight: 44, color: "#1F1530", letterSpacing: -0.6 }}>{bereich === "uebersicht" ? "Manager Dashboard" : b.titel}</Text>
               <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 16, color: "#5E5670", marginTop: 2 }}>
                 {bereich === "uebersicht" ? "Alle wichtigen Informationen, Vorgänge und Aufgaben auf einen Blick." : b.unter}
@@ -219,8 +223,9 @@ function Inhalt() {
               <Text style={{ fontFamily: "Nunito_600SemiBold", fontSize: 15, color: "#5E5670" }}>
                 {(stand ?? new Date()).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "long", year: "numeric" })} · {(stand ?? new Date()).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr
               </Text>
-              <IconTaste icon="refresh" label="Aktualisieren" onPress={laden} aus={laedt} groesse={44} />
-              <IconTaste icon="notifications-outline" label="Meldungen" onPress={() => wechseln("meldungen")} groesse={44} />
+              <RundTaste icon="refresh" label="Aktualisieren" onPress={laden} />
+              <RundTaste icon="notifications-outline" label="Meldungen" punkt={(zaehler?.meldungen ?? 0) > 0} onPress={() => wechseln("meldungen")} />
+              <RundTaste icon="help-circle-outline" label="Hilfe" onPress={() => wechseln("uebersicht")} />
               {bereich === "zugaenge" ? <MKnopf titel="Zugang anlegen" icon="person-add" onPress={() => setAnlegen(true)} /> : null}
             </View>
           </View>
@@ -264,6 +269,34 @@ function Inhalt() {
       <AnlegenFenster offen={anlegen} fahrlehrer={fahrlehrer} vorgabeLehrer={lehrerFilter} onSchliessen={() => setAnlegen(false)} onAngelegt={laden} />
     </View>
   );
+}
+
+/** Runde weiße Taste oben rechts (Glocke, Hilfe, Aktualisieren). */
+function RundTaste({ icon, label, punkt, onPress }: { icon: IconName; label: string; punkt?: boolean; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} accessibilityLabel={label} style={(z: Zustand) => ({ width: 46, height: 46, borderRadius: 23, backgroundColor: z.hovered ? "#F4EEFF" : "#FFFFFF", borderWidth: 1.5, borderColor: "#EEE8F7", alignItems: "center", justifyContent: "center", shadowColor: "#5B2BB5", shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } })}>
+      <Icon name={icon} size={22} color="#1F1530" />
+      {punkt ? <View style={{ position: "absolute", top: 7, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: "#7C3AED", borderWidth: 1.5, borderColor: "#FFFFFF" }} /> : null}
+    </Pressable>
+  );
+}
+
+/** Name der Fahrschule – nur auf diesem Gerät gespeichert. */
+const SCHULE = "spur-fahrschule-name";
+function useSchule(): [string, () => void] {
+  const [name, setName] = useState("");
+  useEffect(() => {
+    AsyncStorage.getItem(SCHULE).then((x) => setName(x ?? ""), () => {});
+  }, []);
+  const aendern = () => {
+    if (Platform.OS !== "web" || typeof window === "undefined") return;
+    const neu = window.prompt("Name deiner Fahrschule", name);
+    if (neu == null) return;
+    const sauber = neu.trim().slice(0, 60);
+    setName(sauber);
+    AsyncStorage.setItem(SCHULE, sauber).catch(() => {});
+  };
+  return [name, aendern];
 }
 
 function Mitte({ children }: { children: ReactNode }) {
