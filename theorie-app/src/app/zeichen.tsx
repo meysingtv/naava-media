@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { LilaLeisteSeite } from "@/components/lila-leiste";
 import { LilaFigurBlase, LilaKarte, LilaKnopf, LILA_RAND, LilaTitel, LilaZurueck, lilaSchrift, useLila } from "@/components/lila-teile";
-import { ZeichenWeb } from "@/components/web/zeichen-web";
+import { ZeichenWebLila } from "@/components/web/zeichen-web-lila";
 import { Verkehrszeichen, ZEICHEN_INFO, type ZeichenInfo } from "@/components/zeichen";
 import { useDesktop, useFenster } from "@/lib/fenster";
 import { tippen } from "@/lib/haptik";
@@ -19,7 +19,7 @@ const GRUPPEN: { id: "alle" | ZeichenInfo["gruppe"]; titel: string }[] = [
 
 /** Alle Verkehrszeichen als Raster – ein Tipp zeigt die Bedeutung. Am PC eine eigene Fassung. */
 export default function Zeichen() {
-  return useDesktop() ? <ZeichenWeb /> : <ZeichenHandy />;
+  return useDesktop() ? <ZeichenWebLila /> : <ZeichenHandy />;
 }
 
 /** Verkehrszeichen im lila Design: Figur mit Sprechblase, Filter, Raster. Ein Tipp zeigt die Bedeutung. */
